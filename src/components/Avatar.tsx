@@ -1,0 +1,40 @@
+import { StyleSheet, Text, View, Image, type ImageStyle, type StyleProp, type ViewStyle } from 'react-native';
+import { Colors } from '@/theme';
+
+type AvatarProps = {
+  name: string;
+  url?: string | null;
+  size?: number;
+  style?: StyleProp<ViewStyle>;
+};
+
+export function Avatar({ name, url, size = 52, style }: AvatarProps) {
+  const initial = name.trim().charAt(0).toUpperCase() || '?';
+
+  if (url) {
+    return (
+      <Image
+        source={{ uri: url }}
+        style={[{ width: size, height: size, borderRadius: size / 2 }, style as StyleProp<ImageStyle>]}
+      />
+    );
+  }
+
+  return (
+    <View style={[styles.container, { width: size, height: size, borderRadius: size / 2 }, style]}>
+      <Text style={[styles.initial, { fontSize: size * 0.4 }]}>{initial}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  initial: {
+    color: Colors.secondaryForeground,
+    fontWeight: '700',
+  },
+});

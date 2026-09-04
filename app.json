@@ -2,7 +2,7 @@
   "expo": {
     "name": "broto",
     "slug": "broto",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -17,7 +17,14 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ],
+      "package": "com.byjhona.broto",
+      "versionCode": 9,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -25,6 +32,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
@@ -32,11 +40,32 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O broto usa suas fotos para você adicionar uma imagem da sua planta."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O broto usa a câmera para você fotografar suas plantas.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-image",
+      "./plugins/withReleaseSigning.js"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e55984d0-bebe-4ae4-a7b0-1ad075624206"
+      }
     }
   }
 }
