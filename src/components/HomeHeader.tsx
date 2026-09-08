@@ -1,12 +1,11 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Metrics } from '@/theme';
 import { useAuth, useCareTasks, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getDailyMessage, getProfile } from '@/services';
-import type { UserProfile } from '@/types';
 import { NotificationBell } from './NotificationBell';
 import { ProfileIcon } from './ProfileIcon';
 import { SkeletonBlock } from './Skeleton';
@@ -19,17 +18,13 @@ export function HomeHeader() {
   const { pendingCount } = useCareTasks();
   const { user } = useAuth();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { data: profile = null } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: () => getProfile(user!.id),
+    enabled: !!user?.id,
+  });
   const [dailyMessage, setDailyMessage] = useState<string | null>(null);
   const [isLoadingMessage, setIsLoadingMessage] = useState(true);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (user?.id) {
-        getProfile(user.id).then(setProfile).catch(console.error);
-      }
-    }, [user])
-  );
 
   useEffect(() => {
     getDailyMessage()

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
+import { SkeletonBlock } from './Skeleton';
 
 type CreditPackCardProps = {
   icon: LucideIcon;
@@ -24,6 +25,17 @@ export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }
       <Pressable style={styles.cta} onPress={onPressCta}>
         <Text style={styles.ctaText}>{ctaLabel}</Text>
       </Pressable>
+    </View>
+  );
+}
+
+export function CreditPackCardSkeleton() {
+  return (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} style={styles.skeletonIconGap} />
+        <SkeletonBlock width="40%" height={16} />
+      </View>
     </View>
   );
 }
@@ -71,5 +83,8 @@ const styles = StyleSheet.create({
     color: Colors.primaryForeground,
     fontWeight: '600',
     fontSize: 15,
+  },
+  skeletonIconGap: {
+    marginRight: Metrics.spacing.md,
   },
 });

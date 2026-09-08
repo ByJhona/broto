@@ -1,19 +1,34 @@
 import { File } from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { deleteCareTasksByPlantId } from './careTasks';
-import type { Plant } from '@/types';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
+import type { Plant, PlantCommonProblem, PlantSummary } from '@/types';
 
-const PLANTS_CACHE_KEY = '@broto/plants_cache';
+const PLANT_SUMMARY_SELECT = 'id, created_at, name, species, common_name, photo_url, watering_days, sun_level';
 
-async function readCachedPlants(userId: string): Promise<Plant[]> {
-  const raw = await AsyncStorage.getItem(`${PLANTS_CACHE_KEY}/${userId}`);
-  return raw ? (JSON.parse(raw) as Plant[]) : [];
-}
+type PlantSummaryRow = {
+  id: string;
+  created_at: string;
+  name: string;
+  species: string | null;
+  common_name: string | null;
+  photo_url: string | null;
+  watering_days: number | null;
+  sun_level: Plant['sunLevel'];
+};
 
-async function writeCachedPlants(userId: string, plants: Plant[]): Promise<void> {
-  await AsyncStorage.setItem(`${PLANTS_CACHE_KEY}/${userId}`, JSON.stringify(plants));
+function mapPlantSummaryRow(row: PlantSummaryRow): PlantSummary {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name,
+    species: row.species,
+    commonName: row.common_name,
+    photoUrl: row.photo_url,
+    wateringDays: row.watering_days,
+    sunLevel: row.sun_level,
+  };
 }
 
 type PlantRow = {
@@ -26,6 +41,15 @@ type PlantRow = {
   watering_days: number | null;
   sun_level: Plant['sunLevel'];
   origin: string | null;
+  description: string | null;
+  watering_description: string | null;
+  care_level: Plant['careLevel'];
+  toxic_to_pets: boolean | null;
+  toxic_to_pets_notes: string | null;
+  toxic_to_humans: boolean | null;
+  toxic_to_humans_notes: string | null;
+  fun_facts: string[] | null;
+  common_problems: PlantCommonProblem[] | null;
 };
 
 function mapPlantRow(row: PlantRow): Plant {
@@ -39,10 +63,19 @@ function mapPlantRow(row: PlantRow): Plant {
     wateringDays: row.watering_days,
     sunLevel: row.sun_level,
     origin: row.origin,
+    description: row.description,
+    wateringDescription: row.watering_description,
+    careLevel: row.care_level,
+    toxicToPets: row.toxic_to_pets,
+    toxicToPetsNotes: row.toxic_to_pets_notes,
+    toxicToHumans: row.toxic_to_humans,
+    toxicToHumansNotes: row.toxic_to_humans_notes,
+    funFacts: row.fun_facts,
+    commonProblems: row.common_problems,
   };
 }
 
-export async function getPlants(): Promise<Plant[]> {
+export async function getPlants(): Promise<PlantSummary[]> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -52,25 +85,19 @@ export async function getPlants(): Promise<Plant[]> {
 
   const { data, error } = await supabase
     .from('plants')
-    .select('*')
+    .select(PLANT_SUMMARY_SELECT)
     .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
-  if (error) {
-    console.warn('Não foi possível buscar plantas do Supabase, usando cache local:', error);
-    return readCachedPlants(user.id);
-  }
+  if (error) throw error;
 
-  const plants = (data as PlantRow[]).map(mapPlantRow);
-  await writeCachedPlants(user.id, plants);
-
-  return plants;
+  return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
 }
 
-export async function getPlantsByUserId(userId: string): Promise<Plant[]> {
+export async function getPlantsByUserId(userId: string): Promise<PlantSummary[]> {
   const { data, error } = await supabase
     .from('plants')
-    .select('*')
+    .select(PLANT_SUMMARY_SELECT)
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
@@ -79,7 +106,7 @@ export async function getPlantsByUserId(userId: string): Promise<Plant[]> {
     throw error;
   }
 
-  return (data as PlantRow[]).map(mapPlantRow);
+  return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
 }
 
 export async function getPlant(id: string): Promise<Plant | null> {
@@ -101,7 +128,8 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
 
   if (!user) throw new Error('Usuário não autenticado.');
 
-  const file = new File(localUri);
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
   const base64 = await file.base64();
   const path = `${user.id}/${plantId}.jpg`;
 
@@ -143,7 +171,12 @@ export async function updatePlantPhoto(plantId: string, localUri: string): Promi
   return photoUrl;
 }
 
-type CreatePlantInput = {
+export async function updatePlantName(plantId: string, name: string): Promise<void> {
+  const { error } = await supabase.from('plants').update({ name }).eq('id', plantId);
+  if (error) throw error;
+}
+
+export type CreatePlantInput = {
   name: string;
   species?: string | null;
   commonName?: string | null;
@@ -152,6 +185,15 @@ type CreatePlantInput = {
   photoUrl?: string | null;
   sunLevel?: Plant['sunLevel'];
   origin?: string | null;
+  description?: string | null;
+  wateringDescription?: string | null;
+  careLevel?: Plant['careLevel'];
+  toxicToPets?: boolean | null;
+  toxicToPetsNotes?: string | null;
+  toxicToHumans?: boolean | null;
+  toxicToHumansNotes?: string | null;
+  funFacts?: string[] | null;
+  commonProblems?: PlantCommonProblem[] | null;
 };
 
 export async function createPlant(input: CreatePlantInput): Promise<Plant> {
@@ -164,25 +206,39 @@ export async function createPlant(input: CreatePlantInput): Promise<Plant> {
       sun_level: input.sunLevel ?? null,
       origin: input.origin ?? null,
       watering_days: input.wateringDays ?? null,
+      description: input.description ?? null,
+      watering_description: input.wateringDescription ?? null,
+      care_level: input.careLevel ?? null,
+      toxic_to_pets: input.toxicToPets ?? null,
+      toxic_to_pets_notes: input.toxicToPetsNotes ?? null,
+      toxic_to_humans: input.toxicToHumans ?? null,
+      toxic_to_humans_notes: input.toxicToHumansNotes ?? null,
+      fun_facts: input.funFacts ?? null,
+      common_problems: input.commonProblems ?? null,
     })
     .select()
     .single();
 
   if (error) throw error;
 
-  let photoUrl: string | null = input.photoUrl ?? null;
-  if (!photoUrl && input.photoUri) {
-    photoUrl = await uploadPlantPhoto(plant.id, input.photoUri);
+  try {
+    let photoUrl: string | null = input.photoUrl ?? null;
+    if (!photoUrl && input.photoUri) {
+      photoUrl = await uploadPlantPhoto(plant.id, input.photoUri);
+    }
+
+    if (photoUrl) {
+      const { error: photoError } = await supabase
+        .from('plants')
+        .update({ photo_url: photoUrl })
+        .eq('id', plant.id);
+
+      if (photoError) throw photoError;
+    }
+
+    return mapPlantRow({ ...(plant as PlantRow), photo_url: photoUrl });
+  } catch (photoErr) {
+    await supabase.from('plants').delete().eq('id', plant.id);
+    throw photoErr;
   }
-
-  if (photoUrl) {
-    const { error: photoError } = await supabase
-      .from('plants')
-      .update({ photo_url: photoUrl })
-      .eq('id', plant.id);
-
-    if (photoError) throw photoError;
-  }
-
-  return mapPlantRow({ ...(plant as PlantRow), photo_url: photoUrl });
 }

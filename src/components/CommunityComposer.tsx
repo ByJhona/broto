@@ -84,7 +84,11 @@ export function CommunityComposer({ onPost }: CommunityComposerProps) {
           <Text style={styles.attachButtonText}>Foto</Text>
         </Pressable>
 
-        <Pressable style={styles.postButton} onPress={handlePost} disabled={!canPost}>
+        <Pressable
+          style={[styles.postButton, !canPost && styles.postButtonDisabled]}
+          onPress={handlePost}
+          disabled={!canPost}
+        >
           <Text style={styles.postButtonText}>Publicar</Text>
         </Pressable>
       </View>
@@ -187,6 +191,9 @@ const styles = StyleSheet.create({
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.lg,
+  },
+  postButtonDisabled: {
+    opacity: 0.5,
   },
   postButtonText: {
     color: Colors.primaryForeground,

@@ -36,10 +36,14 @@ export async function sendExpoPushNotifications(
     const tickets = (result.data ?? []) as ExpoPushTicket[];
 
     chunk.forEach((message, index) => {
-      deliveredTokens.push(message.to);
-      if (tickets[index]?.status === 'error' && tickets[index]?.details?.error === 'DeviceNotRegistered') {
-        staleTokens.push(message.to);
+      const ticket = tickets[index];
+      if (ticket?.status === 'error') {
+        if (ticket.details?.error === 'DeviceNotRegistered') {
+          staleTokens.push(message.to);
+        }
+        return;
       }
+      deliveredTokens.push(message.to);
     });
   }
 

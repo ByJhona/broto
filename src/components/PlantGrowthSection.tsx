@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import { useCredits } from '@/hooks';
-import {
-  analyzePlantGrowth,
-  canAfford,
-  CREDIT_COSTS,
-  getPlantGrowthCheckins,
-  InsufficientCreditsError,
-} from '@/services';
+import { useCreditsGate } from '@/hooks';
+import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
 import { Alert, formatShortDate, Toast } from '@/utils';
 import { LockedFeatureCard } from './LockedFeatureCard';
@@ -27,7 +22,7 @@ type PlantGrowthSectionProps = {
 
 export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps) {
   const router = useRouter();
-  const { credits, refresh: refreshCredits } = useCredits();
+  const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const [checkins, setCheckins] = useState<PlantGrowthCheckin[]>([]);
   const [isCheckinsLoading, setIsCheckinsLoading] = useState(true);
   const [expandedCheckinId, setExpandedCheckinId] = useState<string | null>(null);
@@ -60,7 +55,7 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
   };
 
   const handleAnalyzeGrowth = () => {
-    if (!canAfford(credits, GROWTH_ANALYSIS_CREDIT_COST)) {
+    if (!canAffordCost(GROWTH_ANALYSIS_CREDIT_COST)) {
       showInsufficientCreditsAlert();
       return;
     }
@@ -82,8 +77,8 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
 
       setIsAnalyzing(true);
       try {
-        const checkin = await analyzePlantGrowth(plant.id, result.assets[0].uri);
-        await refreshCredits();
+        const { checkin, newCreditBalance } = await analyzePlantGrowth(plant.id, result.assets[0].uri);
+        applyCreditBalance(newCreditBalance);
         setCheckins((current) => [checkin, ...current]);
         setExpandedCheckinId(checkin.id);
       } catch (err) {
@@ -147,7 +142,7 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
                   </Pressable>
                   {isExpanded ? (
                     <>
-                      <Image source={{ uri: checkin.photoUrl }} style={styles.checkinPhoto} />
+                      <Image source={{ uri: checkin.photoUrl }} style={styles.checkinPhoto} contentFit="cover" />
                       <View style={styles.checkinContent}>
                         {checkin.observations.map((observation) => (
                           <View key={observation} style={styles.checkinObservationRow}>

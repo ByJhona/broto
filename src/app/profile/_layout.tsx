@@ -9,7 +9,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="edit" options={{ title: 'Editar perfil' }} />
       <Stack.Screen name="notifications" options={{ title: 'Notificações' }} />
       <Stack.Screen name="privacy" options={{ title: 'Privacidade e segurança' }} />
-      <Stack.Screen name="plans" options={{ title: '' }} />
+      <Stack.Screen name="plans" options={{ title: 'Planos' }} />
     </Stack>
   );
 }

@@ -11,7 +11,6 @@ export function useCareTasks() {
   const {
     data: tasks = [],
     isLoading,
-    isRefetching: isRefreshing,
     refetch,
   } = useQuery({
     queryKey,
@@ -45,8 +44,14 @@ export function useCareTasks() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteCareTask(id),
-    onSuccess: (_data, id) => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<CareTask[]>(queryKey);
       queryClient.setQueryData<CareTask[]>(queryKey, (current = []) => current.filter((item) => item.id !== id));
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
     },
   });
 
@@ -59,7 +64,6 @@ export function useCareTasks() {
   return {
     tasks,
     isLoading,
-    isRefreshing,
     toggleTask,
     createTask: createMutation.mutateAsync,
     deleteTask: deleteMutation.mutateAsync,

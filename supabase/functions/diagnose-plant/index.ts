@@ -134,9 +134,18 @@ Deno.serve(async (req) => {
   }
 
   if (!diagnosis.isPlant) {
-    return new Response(JSON.stringify({ isPlant: false }), {
+    return new Response(JSON.stringify({ isPlant: false, newCreditBalance: null }), {
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  const { data: newCreditBalance, error: consumeError } = await userClient.rpc('consume_credit', {
+    credit_reason: DIAGNOSIS_CREDIT_REASON,
+  });
+
+  if (consumeError) {
+    console.error('Erro descontando crédito do diagnóstico:', consumeError);
+    return new Response('Não foi possível descontar o crédito', { status: 500 });
   }
 
   const { data: row, error: insertError } = await supabaseAdmin
@@ -157,14 +166,5 @@ Deno.serve(async (req) => {
     return new Response('Não foi possível salvar o diagnóstico', { status: 500 });
   }
 
-  const { error: consumeError } = await userClient.rpc('consume_credit', {
-    credit_reason: DIAGNOSIS_CREDIT_REASON,
-  });
-
-  if (consumeError) {
-    console.error('Erro descontando crédito do diagnóstico:', consumeError);
-    return new Response('Não foi possível descontar o crédito', { status: 500 });
-  }
-
-  return new Response(JSON.stringify(row), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ ...row, newCreditBalance }), { headers: { 'Content-Type': 'application/json' } });
 });

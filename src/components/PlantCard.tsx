@@ -1,18 +1,20 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Droplet, Leaf, Sun } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { Plant } from '@/types';
+import type { PlantSummary } from '@/types';
 import { sunLevelLabel } from '@/utils';
+import { SkeletonBlock } from './Skeleton';
 
 type PlantCardProps = {
-  plant: Plant;
+  plant: PlantSummary;
   readOnly?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function PlantCard({ plant, readOnly = false, style }: PlantCardProps) {
+export const PlantCard = memo(function PlantCard({ plant, readOnly = false, style }: PlantCardProps) {
   const router = useRouter();
   const hasTags = plant.sunLevel != null || plant.wateringDays != null;
 
@@ -69,6 +71,22 @@ export function PlantCard({ plant, readOnly = false, style }: PlantCardProps) {
     >
       {content}
     </Pressable>
+  );
+});
+
+export function PlantCardSkeleton({ style }: { style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.card, style]}>
+      <View style={styles.photo} />
+      <View style={styles.info}>
+        <SkeletonBlock width="70%" height={16} />
+        <SkeletonBlock width="50%" height={12} style={styles.skeletonGap} />
+        <View style={[styles.tagRow, styles.skeletonGap]}>
+          <SkeletonBlock width={50} height={22} radius={Metrics.radius.full} />
+          <SkeletonBlock width={70} height={22} radius={Metrics.radius.full} />
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -130,5 +148,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: Colors.leaf,
+  },
+  skeletonGap: {
+    marginTop: Metrics.spacing.sm,
   },
 });

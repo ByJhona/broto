@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChevronRight, Sparkles } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import { EmptyState, LoadingScreen, SectionTitle } from '@/components';
+import { EmptyState, SectionTitle, SkeletonBlock } from '@/components';
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
@@ -20,11 +21,28 @@ function formatDiagnosisDate(iso: string): string {
   return `${dayMonth} ${date.getFullYear()}`;
 }
 
+function DiagnosisHistorySkeleton() {
+  return (
+    <>
+      {[0, 1].map((key) => (
+        <View key={key} style={styles.historyRow}>
+          <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} />
+          <View style={styles.historyTextBox}>
+            <SkeletonBlock width="60%" height={13} />
+            <SkeletonBlock width="40%" height={12} style={styles.skeletonGap} />
+          </View>
+        </View>
+      ))}
+    </>
+  );
+}
+
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const [history, setHistory] = useState<PlantDiagnosis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showSkeleton = isLoading && history.length === 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -42,13 +60,14 @@ export default function DiagnosisHistoryScreen() {
     router.push({ pathname: '/diagnose/result', params: { diagnosis: JSON.stringify(item) } });
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {history.length === 0 ? (
+      {showSkeleton ? (
+        <>
+          <SectionTitle>Histórico</SectionTitle>
+          <DiagnosisHistorySkeleton />
+        </>
+      ) : history.length === 0 ? (
         <EmptyState
           icon={Sparkles}
           message='Você ainda não fez nenhum diagnóstico. Vá na aba Foto e escolha "Diagnosticar" pra começar.'
@@ -61,7 +80,7 @@ export default function DiagnosisHistoryScreen() {
             const meta = HEALTH_STATUS_META[item.healthStatus];
             return (
               <Pressable key={item.id} style={styles.historyRow} onPress={() => openResult(item)}>
-                <Image source={{ uri: item.photoUrl }} style={styles.historyThumb} />
+                <Image source={{ uri: item.photoUrl }} style={styles.historyThumb} contentFit="cover" />
                 <View style={styles.historyTextBox}>
                   <Text style={[styles.historyStatus, { color: meta.color }]}>{meta.label}</Text>
                   <Text style={styles.historyDate}>{formatDiagnosisDate(item.createdAt)}</Text>
@@ -115,5 +134,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.mutedForeground,
     marginTop: 2,
+  },
+  skeletonGap: {
+    marginTop: Metrics.spacing.xs,
   },
 });

@@ -22,15 +22,20 @@ export default function SearchScreen() {
   useEffect(() => {
     if (!trimmedQuery) return;
 
+    let cancelled = false;
     const timeout = setTimeout(() => {
       setIsLoading(true);
       searchProfiles(trimmedQuery, user?.id).then((profiles) => {
+        if (cancelled) return;
         setRawResults(profiles);
         setIsLoading(false);
       });
     }, 300);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [trimmedQuery, user?.id]);
 
   return (

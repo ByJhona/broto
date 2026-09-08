@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Plus } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { CareTaskItem, CreditsCard, HomeHeader } from '@/components';
@@ -9,19 +9,15 @@ import { confirm } from '@/utils';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { tasks, isLoading, isRefreshing, toggleTask, deleteTask, refresh } = useCareTasks();
+  const { tasks, isLoading, toggleTask, deleteTask, refresh } = useCareTasks();
   const [showCompleted, setShowCompleted] = useState(false);
-  const isFirstFocus = useRef(true);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (isFirstFocus.current) {
-        isFirstFocus.current = false;
-        return;
-      }
-      refresh();
-    }, [refresh])
-  );
+  const handlePullRefresh = async () => {
+    setIsPullRefreshing(true);
+    await refresh();
+    setIsPullRefreshing(false);
+  };
 
   const pendingTasks = tasks.filter((task) => !task.done);
   const completedTasks = tasks.filter((task) => task.done);
@@ -40,7 +36,7 @@ export default function HomeScreen() {
       bounces
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
       }
     >
       <HomeHeader />

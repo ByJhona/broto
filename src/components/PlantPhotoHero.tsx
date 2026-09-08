@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Leaf, X } from 'lucide-react-native';
+import { Camera, Leaf, Pencil, X } from 'lucide-react-native';
 import { Colors, Metrics, Overlays } from '@/theme';
 import { updatePlantPhoto } from '@/services';
 import type { Plant } from '@/types';
@@ -12,9 +13,10 @@ import { PlantHero } from './PlantHero';
 type PlantPhotoHeroProps = {
   plant: Plant;
   onPhotoUrlChange: (photoUrl: string) => void;
+  onEditName: () => void;
 };
 
-export function PlantPhotoHero({ plant, onPhotoUrlChange }: PlantPhotoHeroProps) {
+export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPhotoHeroProps) {
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
@@ -72,6 +74,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange }: PlantPhotoHeroProps)
           species={plant.species}
           onPress={handlePhotoPress}
           disabled={isUpdatingPhoto}
+          onEditName={onEditName}
         >
           <IconBadge backgroundColor={Overlays.scrimMedium} style={styles.heroEditBadge}>
             {isUpdatingPhoto ? (
@@ -94,7 +97,12 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange }: PlantPhotoHeroProps)
             )}
           </Pressable>
           <View style={styles.plainHeader}>
-            <Text style={styles.name}>{plant.name}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{plant.name}</Text>
+              <Pressable onPress={onEditName} hitSlop={8} style={styles.editNameButton}>
+                <Pencil size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              </Pressable>
+            </View>
             {plant.species ? <Text style={styles.scientificName}>{plant.species}</Text> : null}
           </View>
         </>
@@ -105,7 +113,9 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange }: PlantPhotoHeroProps)
           <Pressable style={styles.viewerClose} onPress={() => setIsViewerOpen(false)}>
             <X size={Metrics.icon.large} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
           </Pressable>
-          {plant.photoUrl ? <Image source={{ uri: plant.photoUrl }} style={styles.viewerImage} /> : null}
+          {plant.photoUrl ? (
+            <Image source={{ uri: plant.photoUrl }} style={styles.viewerImage} contentFit="contain" />
+          ) : null}
         </View>
       </Modal>
     </>
@@ -134,11 +144,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: Metrics.spacing.lg,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.xs,
+  },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.foreground,
     textAlign: 'center',
+  },
+  editNameButton: {
+    padding: 4,
   },
   scientificName: {
     fontSize: 14,
@@ -162,6 +180,5 @@ const styles = StyleSheet.create({
     width: '90%',
     height: '60%',
     borderRadius: Metrics.radius.lg,
-    resizeMode: 'contain',
   },
 });

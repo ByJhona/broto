@@ -140,8 +140,10 @@ Deno.serve(async (req) => {
       }))
     : [];
 
+  let newCreditBalance: number | null = null;
+
   if (candidates.length > 0) {
-    const { error: consumeError } = await userClient.rpc('consume_credit', {
+    const { data: balance, error: consumeError } = await userClient.rpc('consume_credit', {
       credit_reason: IDENTIFICATION_CREDIT_REASON,
     });
 
@@ -149,7 +151,10 @@ Deno.serve(async (req) => {
       console.error('Erro descontando crédito da identificação:', consumeError);
       return new Response('Não foi possível descontar o crédito', { status: 500 });
     }
+    newCreditBalance = balance;
   }
 
-  return new Response(JSON.stringify(candidates), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ candidates, newCreditBalance }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 });

@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { CreditCard, LogOut, User } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { UserProfile } from '@/types';
 import { Avatar, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';
 import { manageSubscriptions, getProfile } from '@/services';
@@ -12,19 +11,14 @@ import { Toast } from '@/utils';
 export default function ProfileScreen() {
   const router = useRouter();
   const { session, user, signOut } = useAuth();
-  const { credits, refresh } = useCredits();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { credits } = useCredits();
+  const { data: profile = null } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: () => getProfile(user!.id),
+    enabled: !!user?.id,
+  });
 
   const name = profile?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
-
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-      if (user?.id) {
-        getProfile(user.id).then(setProfile).catch(console.error);
-      }
-    }, [refresh, user])
-  );
 
   if (!session) {
     return <Redirect href="/(auth)/login" />;

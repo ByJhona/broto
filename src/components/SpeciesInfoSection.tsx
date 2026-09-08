@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { AlertTriangle, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react-native';
+import { AlertTriangle, Bug, ChevronDown, ChevronUp, Droplet, Lightbulb } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { PlantSpeciesInfo } from '@/types';
+import type { SpeciesInfoDisplay } from '@/types';
 import { SkeletonBlock } from './Skeleton';
 import { ExpandableCard } from './ExpandableCard';
 
 type SpeciesInfoSectionProps = {
-  info: PlantSpeciesInfo;
+  info: SpeciesInfoDisplay;
 };
 
 export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
@@ -24,7 +24,17 @@ export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
             <ChevronDown size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
           )}
         </Pressable>
-        {isAboutExpanded ? <Text style={styles.description}>{info.description}</Text> : null}
+        {isAboutExpanded ? (
+          <>
+            <Text style={styles.description}>{info.description}</Text>
+            {info.wateringDescription ? (
+              <View style={styles.wateringRow}>
+                <Droplet size={16} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Text style={styles.wateringText}>{info.wateringDescription}</Text>
+              </View>
+            ) : null}
+          </>
+        ) : null}
       </View>
 
       {info.toxicToPets || info.toxicToHumans ? (
@@ -74,6 +84,23 @@ export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
           </ExpandableCard>
         </View>
       ) : null}
+
+      {info.commonProblems.length > 0 ? (
+        <View style={styles.section}>
+          <ExpandableCard
+            title="Problemas comuns"
+            icon={<Bug size={Metrics.icon.normal} color={Colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
+            color={Colors.secondary}
+          >
+            {info.commonProblems.map((problem) => (
+              <View key={problem.issue} style={styles.problemRow}>
+                <Text style={styles.problemIssue}>{problem.issue}</Text>
+                <Text style={styles.problemCause}>{problem.likelyCause}</Text>
+              </View>
+            ))}
+          </ExpandableCard>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -101,6 +128,17 @@ export function SpeciesInfoSkeleton() {
           <SkeletonBlock height={14} style={styles.skeletonGap} />
           <SkeletonBlock height={14} style={styles.skeletonGap} />
           <SkeletonBlock width="60%" height={14} />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.factsCard}>
+          <View style={styles.factsHeader}>
+            <SkeletonBlock width={Metrics.icon.normal} height={Metrics.icon.normal} radius={Metrics.radius.sm} />
+            <SkeletonBlock width={130} height={15} />
+          </View>
+          <SkeletonBlock width="50%" height={14} style={styles.skeletonGap} />
+          <SkeletonBlock height={14} />
         </View>
       </View>
     </View>
@@ -139,6 +177,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Colors.foreground,
     marginBottom: Metrics.spacing.sm,
+  },
+  wateringRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Metrics.spacing.sm,
+    marginTop: Metrics.spacing.xs,
+    paddingTop: Metrics.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  wateringText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.foreground,
   },
   chipRow: {
     flexDirection: 'row',
@@ -183,5 +236,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Metrics.spacing.sm,
     marginBottom: Metrics.spacing.sm,
+  },
+  problemRow: {
+    marginBottom: Metrics.spacing.sm,
+  },
+  problemIssue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.foreground,
+  },
+  problemCause: {
+    fontSize: 14,
+    lineHeight: 19,
+    color: Colors.foreground,
+    marginTop: 2,
   },
 });

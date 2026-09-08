@@ -1,18 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Leaf, MessageCircle, Send } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { IconBadge } from './IconBadge';
-import { useCredits } from '@/hooks';
-import {
-  askPlantQuestion,
-  canAfford,
-  CREDIT_COSTS,
-  getPlantChatMessages,
-  InsufficientCreditsError,
-  type PlantChatMessage,
-} from '@/services';
+import { useCreditsGate } from '@/hooks';
+import { askPlantQuestion, CREDIT_COSTS, InsufficientCreditsError, type PlantChatMessage } from '@/services';
 import { Alert, Toast } from '@/utils';
 
 const MAX_VISIBLE_MESSAGES = 50;
@@ -24,25 +17,17 @@ type PlantChatProps = {
 
 export function PlantChat({ plantId }: PlantChatProps) {
   const router = useRouter();
-  const { credits, refresh: refreshCredits } = useCredits();
+  const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const scrollRef = useRef<ScrollView>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PlantChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  useEffect(() => {
-    if (!isUnlocked) return;
-
-    getPlantChatMessages(plantId).then((result) => {
-      setMessages(result);
-      setIsLoading(false);
-    });
-  }, [isUnlocked, plantId]);
-
   const handleUnlock = () => {
-    setIsLoading(true);
+    setSessionId(null);
+    setMessages([]);
     setIsUnlocked(true);
   };
 
@@ -67,7 +52,7 @@ export function PlantChat({ plantId }: PlantChatProps) {
     const question = draft.trim();
     if (!question || isSending) return;
 
-    if (!canAfford(credits, creditCost)) {
+    if (!canAffordCost(creditCost)) {
       showInsufficientCreditsAlert();
       return;
     }
@@ -84,9 +69,14 @@ export function PlantChat({ plantId }: PlantChatProps) {
     appendMessage(optimisticMessage);
 
     try {
-      const answer = await askPlantQuestion(plantId, question);
+      const { message: answer, sessionId: activeSessionId, newCreditBalance } = await askPlantQuestion(
+        plantId,
+        question,
+        sessionId
+      );
+      setSessionId(activeSessionId);
       appendMessage(answer);
-      await refreshCredits();
+      applyCreditBalance(newCreditBalance);
     } catch (err) {
       setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
       setDraft(question);
@@ -115,9 +105,7 @@ export function PlantChat({ plantId }: PlantChatProps) {
   return (
     <View>
       <View style={styles.chatBox}>
-        {isLoading ? (
-          <ActivityIndicator style={styles.loader} color={Colors.leaf} />
-        ) : messages.length === 0 ? (
+        {messages.length === 0 ? (
           <Text style={styles.emptyText}>Nenhuma pergunta ainda. Pergunte algo sobre o cuidado dessa planta.</Text>
         ) : (
           <ScrollView

@@ -7,7 +7,6 @@ type NotificationRow = {
   message: string | null;
   type: Notification['type'];
   post_id: string | null;
-  read: boolean;
   created_at: string;
   actor: { name: string | null; username: string | null } | null;
 };
@@ -20,7 +19,6 @@ function mapNotificationRow(row: NotificationRow): Notification {
     postId: row.post_id ?? null,
     title: row.title,
     message: row.message,
-    read: row.read,
     createdAt: row.created_at,
   };
 }

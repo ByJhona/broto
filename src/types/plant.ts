@@ -8,6 +8,26 @@ export type Plant = {
   wateringDays: number | null;
   sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
   origin: string | null;
+  description: string | null;
+  wateringDescription: string | null;
+  careLevel: 'easy' | 'moderate' | 'hard' | null;
+  toxicToPets: boolean | null;
+  toxicToPetsNotes: string | null;
+  toxicToHumans: boolean | null;
+  toxicToHumansNotes: string | null;
+  funFacts: string[] | null;
+  commonProblems: PlantCommonProblem[] | null;
+};
+
+export type PlantSummary = {
+  id: string;
+  createdAt: string;
+  name: string;
+  species: string | null;
+  commonName: string | null;
+  photoUrl: string | null;
+  wateringDays: number | null;
+  sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
 };
 
 export type PlantCandidate = {
@@ -39,6 +59,17 @@ export type PlantSpeciesInfo = {
   funFacts: string[];
   commonProblems: PlantCommonProblem[];
   origin: string | null;
+};
+
+export type SpeciesInfoDisplay = {
+  description: string;
+  wateringDescription: string | null;
+  toxicToPets: boolean;
+  toxicToPetsNotes: string | null;
+  toxicToHumans: boolean;
+  toxicToHumansNotes: string | null;
+  funFacts: string[];
+  commonProblems: PlantCommonProblem[];
 };
 
 export type PlantGrowthCheckin = {

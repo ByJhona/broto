@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
@@ -12,6 +13,7 @@ import { normalizeUsername, Toast, validateUsername } from '@/utils';
 export default function EditProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -87,11 +89,12 @@ export default function EditProfileScreen() {
         setUploadingAvatar(false);
       }
 
-      await updateProfile(user.id, {
+      const updated = await updateProfile(user.id, {
         name: trimmedName,
         username: normalizeUsername(username),
         avatar_url: finalAvatarUrl,
       });
+      queryClient.setQueryData(['profile', user.id], updated);
       Toast.success('Perfil atualizado com sucesso!');
       router.back();
     } catch (err: any) {

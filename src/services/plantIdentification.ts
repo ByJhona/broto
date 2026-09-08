@@ -3,6 +3,8 @@ import { decode } from 'base64-arraybuffer';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
+import { toFunctionError } from './functionErrors';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { PlantCandidate } from '@/types';
 
 async function uploadIdentificationPhoto(localUri: string): Promise<string> {
@@ -13,7 +15,8 @@ async function uploadIdentificationPhoto(localUri: string): Promise<string> {
 
   if (!user) throw new Error('Usuário não autenticado.');
 
-  const file = new File(localUri);
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
   const base64 = await file.base64();
   const path = `${user.id}/identifications/${Date.now()}.jpg`;
 
@@ -30,10 +33,20 @@ async function uploadIdentificationPhoto(localUri: string): Promise<string> {
   return publicUrl;
 }
 
-export async function identifyPlant(photoUri: string): Promise<PlantCandidate[]> {
+type IdentifyPlantResponse = {
+  candidates: PlantCandidate[];
+  newCreditBalance: number | null;
+};
+
+export type IdentifyPlantResult = {
+  candidates: PlantCandidate[];
+  newCreditBalance: number | null;
+};
+
+export async function identifyPlant(photoUri: string): Promise<IdentifyPlantResult> {
   const photoUrl = await uploadIdentificationPhoto(photoUri);
 
-  const { data, error } = await supabase.functions.invoke<PlantCandidate[]>('identify-plant', {
+  const { data, error } = await supabase.functions.invoke<IdentifyPlantResponse>('identify-plant', {
     body: { photoUrl },
   });
 
@@ -41,8 +54,8 @@ export async function identifyPlant(photoUri: string): Promise<PlantCandidate[]>
     if (error instanceof FunctionsHttpError && error.context?.status === 402) {
       throw new InsufficientCreditsError();
     }
-    throw error;
+    throw await toFunctionError(error);
   }
 
-  return data ?? [];
+  return data ?? { candidates: [], newCreditBalance: null };
 }

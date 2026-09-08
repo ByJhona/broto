@@ -53,6 +53,7 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="plant" options={{ headerShown: false }} />
+          <Stack.Screen name="post" options={{ headerShown: false }} />
           <Stack.Screen name="identify" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />

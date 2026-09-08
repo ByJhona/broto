@@ -3,6 +3,8 @@ import { decode } from 'base64-arraybuffer';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
+import { toFunctionError } from './functionErrors';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { PlantGrowthCheckin } from '@/types';
 
 type CheckinRow = {
@@ -31,7 +33,8 @@ async function uploadCheckinPhoto(plantId: string, localUri: string): Promise<st
 
   if (!user) throw new Error('Usuário não autenticado.');
 
-  const file = new File(localUri);
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
   const base64 = await file.base64();
   const path = `${user.id}/${plantId}/checkins/${Date.now()}.jpg`;
 
@@ -48,25 +51,32 @@ async function uploadCheckinPhoto(plantId: string, localUri: string): Promise<st
   return publicUrl;
 }
 
-export async function analyzePlantGrowth(plantId: string, photoUri: string): Promise<PlantGrowthCheckin> {
+export type AnalyzePlantGrowthResult = {
+  checkin: PlantGrowthCheckin;
+  newCreditBalance: number | null;
+};
+
+export async function analyzePlantGrowth(plantId: string, photoUri: string): Promise<AnalyzePlantGrowthResult> {
   const photoUrl = await uploadCheckinPhoto(plantId, photoUri);
 
-  const { data, error } = await supabase.functions.invoke<CheckinRow>('analyze-plant-growth', {
-    body: { plantId, photoUrl },
-  });
+  const { data, error } = await supabase.functions.invoke<CheckinRow & { newCreditBalance: number | null }>(
+    'analyze-plant-growth',
+    { body: { plantId, photoUrl } }
+  );
 
   if (error) {
     if (error instanceof FunctionsHttpError && error.context?.status === 402) {
       throw new InsufficientCreditsError();
     }
-    throw error;
+    throw await toFunctionError(error);
   }
 
   if (!data) {
     throw new Error('Não foi possível analisar a foto.');
   }
 
-  return mapRow(data);
+  const { newCreditBalance, ...row } = data;
+  return { checkin: mapRow(row), newCreditBalance };
 }
 
 export async function getPlantGrowthCheckins(plantId: string): Promise<PlantGrowthCheckin[]> {

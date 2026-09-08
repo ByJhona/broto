@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Image, type ImageStyle, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, View, type ImageStyle, type StyleProp, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { Colors } from '@/theme';
 
 type AvatarProps = {
@@ -16,6 +17,7 @@ export function Avatar({ name, url, size = 52, style }: AvatarProps) {
       <Image
         source={{ uri: url }}
         style={[{ width: size, height: size, borderRadius: size / 2 }, style as StyleProp<ImageStyle>]}
+        contentFit="cover"
       />
     );
   }

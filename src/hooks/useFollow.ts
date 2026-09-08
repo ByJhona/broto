@@ -27,7 +27,7 @@ export function useFollow(targetUserId: string | null) {
 
   const { mutate: triggerToggle } = useMutation({
     mutationFn: async () => {
-      if (!user?.id || !targetUserId) return;
+      if (!user?.id || !targetUserId) throw new Error('not_ready');
       if (following) {
         await unfollowUser(user.id, targetUserId);
       } else {

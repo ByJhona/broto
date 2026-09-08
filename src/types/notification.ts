@@ -7,6 +7,5 @@ export type Notification = {
   postId: string | null;
   title: string | null;
   message: string | null;
-  read: boolean;
   createdAt: string;
 };

@@ -3,6 +3,8 @@ import { decode } from 'base64-arraybuffer';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
+import { toFunctionError } from './functionErrors';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { PlantDiagnosis } from '@/types';
 
 type DiagnosisRow = {
@@ -28,7 +30,8 @@ function mapRow(row: DiagnosisRow): PlantDiagnosis {
 }
 
 async function uploadDiagnosisPhoto(userId: string, localUri: string): Promise<string> {
-  const file = new File(localUri);
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
   const base64 = await file.base64();
   const path = `${userId}/diagnoses/${Date.now()}.jpg`;
 
@@ -45,10 +48,17 @@ async function uploadDiagnosisPhoto(userId: string, localUri: string): Promise<s
   return publicUrl;
 }
 
-export async function diagnosePlant(userId: string, photoUri: string): Promise<PlantDiagnosis | null> {
+export type DiagnosePlantResult = {
+  diagnosis: PlantDiagnosis | null;
+  newCreditBalance: number | null;
+};
+
+type DiagnoseResponse = (DiagnosisRow & { newCreditBalance: number | null }) | { isPlant: false; newCreditBalance: null };
+
+export async function diagnosePlant(userId: string, photoUri: string): Promise<DiagnosePlantResult> {
   const photoUrl = await uploadDiagnosisPhoto(userId, photoUri);
 
-  const { data, error } = await supabase.functions.invoke<DiagnosisRow | { isPlant: false }>('diagnose-plant', {
+  const { data, error } = await supabase.functions.invoke<DiagnoseResponse>('diagnose-plant', {
     body: { photoUrl },
   });
 
@@ -56,7 +66,7 @@ export async function diagnosePlant(userId: string, photoUri: string): Promise<P
     if (error instanceof FunctionsHttpError && error.context?.status === 402) {
       throw new InsufficientCreditsError();
     }
-    throw error;
+    throw await toFunctionError(error);
   }
 
   if (!data) {
@@ -64,10 +74,11 @@ export async function diagnosePlant(userId: string, photoUri: string): Promise<P
   }
 
   if ('isPlant' in data && data.isPlant === false) {
-    return null;
+    return { diagnosis: null, newCreditBalance: data.newCreditBalance };
   }
 
-  return mapRow(data as DiagnosisRow);
+  const { newCreditBalance, ...row } = data as DiagnosisRow & { newCreditBalance: number | null };
+  return { diagnosis: mapRow(row), newCreditBalance };
 }
 
 export async function getDiagnosisHistory(userId: string): Promise<PlantDiagnosis[]> {

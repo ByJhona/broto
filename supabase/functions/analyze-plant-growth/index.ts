@@ -114,6 +114,15 @@ Deno.serve(async (req) => {
     return new Response('Não foi possível analisar a foto', { status: 502 });
   }
 
+  const { data: newCreditBalance, error: consumeError } = await userClient.rpc('consume_credit', {
+    credit_reason: GROWTH_CHECK_CREDIT_REASON,
+  });
+
+  if (consumeError) {
+    console.error('Erro descontando crédito da análise de evolução:', consumeError);
+    return new Response('Não foi possível descontar o crédito', { status: 500 });
+  }
+
   const { data: checkin, error: insertError } = await supabaseAdmin
     .from('plant_growth_checkins')
     .insert({ plant_id: plantId, user_id: user.id, photo_url: photoUrl, observations })
@@ -125,14 +134,5 @@ Deno.serve(async (req) => {
     return new Response('Não foi possível salvar a análise', { status: 500 });
   }
 
-  const { error: consumeError } = await userClient.rpc('consume_credit', {
-    credit_reason: GROWTH_CHECK_CREDIT_REASON,
-  });
-
-  if (consumeError) {
-    console.error('Erro descontando crédito da análise de evolução:', consumeError);
-    return new Response('Não foi possível descontar o crédito', { status: 500 });
-  }
-
-  return new Response(JSON.stringify(checkin), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ ...checkin, newCreditBalance }), { headers: { 'Content-Type': 'application/json' } });
 });

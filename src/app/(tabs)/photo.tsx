@@ -6,8 +6,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image as ImageIcon, Scan, Stethoscope } from 'lucide-react-native';
 import { Colors, Metrics, Overlays } from '@/theme';
 import { OfflineBanner } from '@/components';
-import { useAuth, useCredits, useNetworkStatus } from '@/hooks';
-import { canAfford, CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
+import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
+import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
 import { Alert, requireLogin } from '@/utils';
 
 type CaptureMode = 'identify' | 'diagnose';
@@ -61,18 +61,17 @@ export default function PhotoScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const { session, user } = useAuth();
   const { isOffline } = useNetworkStatus();
-  const { credits, refresh: refreshCredits } = useCredits();
+  const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const [mode, setMode] = useState<CaptureMode>(params.mode === 'diagnose' ? 'diagnose' : 'identify');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      refreshCredits();
       if (params.mode === 'diagnose' || params.mode === 'identify') {
         setMode(params.mode);
       }
-    }, [refreshCredits, params.mode])
+    }, [params.mode])
   );
 
   const copy = MODE_COPY[mode];
@@ -95,19 +94,19 @@ export default function PhotoScreen() {
 
     try {
       if (mode === 'identify') {
-        const candidates = await identifyPlant(photoUri);
-        await refreshCredits();
+        const { candidates, newCreditBalance } = await identifyPlant(photoUri);
+        applyCreditBalance(newCreditBalance);
         router.push({
           pathname: '/identify/result',
           params: { candidates: JSON.stringify(candidates) },
         });
       } else {
         if (!user?.id) return;
-        const result = await diagnosePlant(user.id, photoUri);
-        await refreshCredits();
+        const { diagnosis, newCreditBalance } = await diagnosePlant(user.id, photoUri);
+        applyCreditBalance(newCreditBalance);
         router.push({
           pathname: '/diagnose/result',
-          params: result ? { diagnosis: JSON.stringify(result) } : {},
+          params: diagnosis ? { diagnosis: JSON.stringify(diagnosis) } : {},
         });
       }
     } catch (err) {
@@ -122,7 +121,7 @@ export default function PhotoScreen() {
   };
 
   const hasCredits = () => {
-    if (!canAfford(credits, creditCost)) {
+    if (!canAffordCost(creditCost)) {
       showInsufficientCreditsAlert();
       return false;
     }

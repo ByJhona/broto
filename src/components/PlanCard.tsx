@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Crown, Gift } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import type { Plan } from '@/types';
+import { SkeletonBlock } from './Skeleton';
 
 type PlanCardProps = {
   plan: Plan;
@@ -39,6 +40,20 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: PlanCardProp
           <Text style={styles.ctaText}>{ctaLabel}</Text>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+export function PlanCardSkeleton() {
+  return (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} style={styles.skeletonIconGap} />
+        <View style={styles.info}>
+          <SkeletonBlock width="50%" height={16} />
+          <SkeletonBlock width="80%" height={13} style={styles.skeletonGap} />
+        </View>
+      </View>
     </View>
   );
 }
@@ -113,5 +128,11 @@ const styles = StyleSheet.create({
     color: Colors.primaryForeground,
     fontWeight: '600',
     fontSize: 15,
+  },
+  skeletonIconGap: {
+    marginRight: Metrics.spacing.md,
+  },
+  skeletonGap: {
+    marginTop: Metrics.spacing.xs,
   },
 });

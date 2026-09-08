@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { getCareTaskPlantId } from './careTasks';
+import { getNotificationById } from './notifications';
 import { getNotificationsModule } from './notificationsModule';
 
 type NotificationTapData = {
@@ -26,7 +27,12 @@ async function handleNotificationTap(data: NotificationTapData): Promise<void> {
   }
 
   if (data.notificationId) {
-    router.push('/(tabs)/community');
+    const notification = await getNotificationById(data.notificationId);
+    if (notification?.postId) {
+      router.push({ pathname: '/post/[id]', params: { id: notification.postId } });
+    } else {
+      router.push('/(tabs)/community');
+    }
   }
 }
 

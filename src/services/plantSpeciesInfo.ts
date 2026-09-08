@@ -52,15 +52,3 @@ export async function getPlantSpeciesInfo(
 
   return mapRow(data);
 }
-
-export async function getCachedPlantSpeciesInfo(scientificName: string): Promise<PlantSpeciesInfo | null> {
-  const { data, error } = await supabase
-    .from('plant_species_info')
-    .select('*')
-    .eq('scientific_name', scientificName)
-    .maybeSingle<PlantSpeciesInfoRow>();
-
-  if (error || !data) return null;
-
-  return mapRow(data);
-}

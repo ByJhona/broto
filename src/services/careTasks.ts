@@ -1,12 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { addDays, daysBetween, today } from '@/utils';
-import { deleteMostRecentCompletion, recordTaskCompletion } from './careTaskHistory';
 import { getNotificationsModule } from './notificationsModule';
 import { supabase } from './supabase';
 import type { CareTask, TaskCategory } from '@/types';
 
-const LEGACY_STORAGE_KEY = '@broto/care_tasks';
-const CACHE_KEY = '@broto/care_tasks_cache';
 const DEFAULT_REMINDER_HOUR = 9;
 
 type CareTaskRow = {
@@ -45,56 +41,6 @@ async function getCurrentUserId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-async function readCachedTasks(userId: string): Promise<CareTaskRow[]> {
-  const raw = await AsyncStorage.getItem(`${CACHE_KEY}/${userId}`);
-  return raw ? (JSON.parse(raw) as CareTaskRow[]) : [];
-}
-
-async function writeCachedTasks(userId: string, rows: CareTaskRow[]): Promise<void> {
-  await AsyncStorage.setItem(`${CACHE_KEY}/${userId}`, JSON.stringify(rows));
-}
-
-async function migrateLegacyTasks(userId: string): Promise<void> {
-  const migratedFlagKey = `${LEGACY_STORAGE_KEY}/${userId}/migrated`;
-  if (await AsyncStorage.getItem(migratedFlagKey)) return;
-
-  const raw = await AsyncStorage.getItem(`${LEGACY_STORAGE_KEY}/${userId}`);
-  if (raw) {
-    const legacyTasks = JSON.parse(raw) as {
-      title: string;
-      plantId: string | null;
-      plantName: string | null;
-      plantPhotoUrl: string | null;
-      category: TaskCategory;
-      notes: string | null;
-      startDate: string;
-      recurrenceDays: number | null;
-      reminderHour?: number;
-      lastCompletedOccurrence: string | null;
-    }[];
-
-    if (legacyTasks.length > 0) {
-      await supabase.from('care_tasks').insert(
-        legacyTasks.map((task) => ({
-          user_id: userId,
-          plant_id: task.plantId,
-          title: task.title,
-          plant_name: task.plantName,
-          plant_photo_url: task.plantPhotoUrl,
-          category: task.category,
-          notes: task.notes,
-          start_date: task.startDate,
-          recurrence_days: task.recurrenceDays,
-          reminder_hour: task.reminderHour ?? DEFAULT_REMINDER_HOUR,
-          last_completed_occurrence: task.lastCompletedOccurrence,
-        }))
-      );
-    }
-  }
-
-  await AsyncStorage.setItem(migratedFlagKey, '1');
-}
-
 function currentOccurrenceDate(row: Pick<CareTaskRow, 'start_date' | 'recurrence_days'>, todayDate: string): string {
   if (!row.recurrence_days) return row.start_date;
 
@@ -127,21 +73,14 @@ export async function getCareTasks(): Promise<CareTask[]> {
   const userId = await getCurrentUserId();
   if (!userId) return [];
 
-  await migrateLegacyTasks(userId);
-
   const todayDate = today();
   const { data, error } = await supabase.from('care_tasks').select(CARE_TASK_SELECT).eq('user_id', userId);
 
-  if (error) {
-    console.warn('Não foi possível buscar lembretes do Supabase, usando cache local:', error);
-    const cached = await readCachedTasks(userId);
-    return cached.map((row) => toCareTask(row, todayDate)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }
+  if (error) throw error;
 
-  const rows = data as CareTaskRow[];
-  await writeCachedTasks(userId, rows);
-
-  return rows.map((row) => toCareTask(row, todayDate)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  return (data as CareTaskRow[])
+    .map((row) => toCareTask(row, todayDate))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
 
 export async function toggleCareTask(task: CareTask, done: boolean): Promise<void> {
@@ -151,12 +90,6 @@ export async function toggleCareTask(task: CareTask, done: boolean): Promise<voi
     .eq('id', task.id);
 
   if (error) throw error;
-
-  if (done) {
-    await recordTaskCompletion(task);
-  } else {
-    await deleteMostRecentCompletion(task.id);
-  }
 }
 
 export async function getCareTaskPlantId(id: string): Promise<string | null> {
@@ -176,8 +109,6 @@ export async function markCareTaskDoneById(id: string): Promise<void> {
     .update({ last_completed_occurrence: dueDate })
     .eq('id', id);
   if (updateError) return;
-
-  await recordTaskCompletion(toCareTask(taskRow, today()));
 }
 
 const CARE_TASK_CATEGORY = 'care-task';

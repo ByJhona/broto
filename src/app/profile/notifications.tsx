@@ -63,7 +63,7 @@ export default function NotificationsScreen() {
             <Card
               style={styles.item}
               disabled={!item.postId}
-              onPress={() => item.postId && router.push('/(tabs)/community')}
+              onPress={() => item.postId && router.push({ pathname: '/post/[id]', params: { id: item.postId } })}
             >
               <IconBadge size={32}>
                 <Icon size={Metrics.icon.small} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />

@@ -1,27 +1,28 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Leaf } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import { EmptyState, OfflineBanner, PlantCard } from '@/components';
+import { EmptyState, OfflineBanner, PlantCard, PlantCardSkeleton } from '@/components';
 import { useNetworkStatus, usePlants } from '@/hooks';
+import type { PlantSummary } from '@/types';
+
+const SKELETON_PLACEHOLDERS = [0, 1];
 
 export default function GardenScreen() {
   const insets = useSafeAreaInsets();
-  const { plants, isLoading, isRefreshing, refresh } = usePlants();
+  const { plants, isLoading, refresh } = usePlants();
   const { isOffline } = useNetworkStatus();
-  const isFirstFocus = useRef(true);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const showSkeleton = isLoading && plants.length === 0;
 
-  useFocusEffect(
-    useCallback(() => {
-      if (isFirstFocus.current) {
-        isFirstFocus.current = false;
-        return;
-      }
-      refresh();
-    }, [refresh])
-  );
+  const handlePullRefresh = async () => {
+    setIsPullRefreshing(true);
+    await refresh();
+    setIsPullRefreshing(false);
+  };
+
+  const renderPlantCard = useCallback(({ item }: { item: PlantSummary }) => <PlantCard plant={item} />, []);
 
   return (
     <View style={styles.container}>
@@ -35,27 +36,32 @@ export default function GardenScreen() {
         </View>
       ) : null}
 
-      <FlatList
-        contentContainerStyle={styles.list}
-        columnWrapperStyle={plants.length > 0 ? styles.row : undefined}
-        numColumns={2}
-        data={plants}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PlantCard plant={item} />}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={refresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
-        }
-        ListEmptyComponent={
-          !isLoading ? (
+      {showSkeleton ? (
+        <FlatList
+          contentContainerStyle={styles.list}
+          data={SKELETON_PLACEHOLDERS}
+          keyExtractor={(item) => `skeleton-${item}`}
+          renderItem={() => <PlantCardSkeleton />}
+        />
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.list}
+          data={plants}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPlantCard}
+          refreshControl={
+            <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+          }
+          ListEmptyComponent={
             <EmptyState
               icon={Leaf}
               title="Nenhuma planta ainda"
               message="Toque na câmera aqui embaixo pra identificar e cadastrar a primeira."
               style={styles.empty}
             />
-          ) : null
-        }
-      />
+          }
+        />
+      )}
     </View>
   );
 }
@@ -85,9 +91,6 @@ const styles = StyleSheet.create({
   list: {
     flexGrow: 1,
     padding: Metrics.spacing.lg,
-    gap: Metrics.spacing.md,
-  },
-  row: {
     gap: Metrics.spacing.md,
   },
 });

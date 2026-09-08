@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { memo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Heart, HelpCircle, Lightbulb, MessageCircle, MoreVertical, Send, Trash2, Trophy } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import type { CommunityPost } from '@/types';
@@ -10,28 +11,38 @@ type CommunityPostCardProps = {
   post: CommunityPost;
   currentUserId?: string | null;
   onToggleLike: (postId: string) => void;
-  onAddComment: (postId: string, text: string) => void;
+  onAddComment: (postId: string, text: string) => Promise<void>;
   onPressAuthor?: (authorId: string) => void;
   onDelete?: (postId: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 };
 
-export function CommunityPostCard({
+export const CommunityPostCard = memo(function CommunityPostCard({
   post,
   currentUserId,
   onToggleLike,
   onAddComment,
   onPressAuthor,
   onDelete,
+  onDeleteComment,
 }: CommunityPostCardProps) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [isSendingComment, setIsSendingComment] = useState(false);
   const isOwnPost = !!currentUserId && currentUserId === post.authorId;
 
-  const handleSendComment = () => {
-    if (!draft.trim()) return;
-    onAddComment(post.id, draft.trim());
-    setDraft('');
+  const handleSendComment = async () => {
+    const text = draft.trim();
+    if (!text || isSendingComment) return;
+    setIsSendingComment(true);
+    try {
+      await onAddComment(post.id, text);
+      setDraft('');
+    } finally {
+      setIsSendingComment(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -42,6 +53,16 @@ export function CommunityPostCard({
       { confirmLabel: 'Excluir', destructive: true }
     );
     if (confirmed) onDelete?.(post.id);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    setOpenCommentMenuId(null);
+    const confirmed = await confirm(
+      'Excluir recado',
+      'Tem certeza que quer excluir esse recado? Essa ação não pode ser desfeita.',
+      { confirmLabel: 'Excluir', destructive: true }
+    );
+    if (confirmed) onDeleteComment?.(commentId);
   };
 
   const TypeIcon =
@@ -86,7 +107,7 @@ export function CommunityPostCard({
         ) : null}
       </View>
 
-      {post.imageUrl ? <Image source={{ uri: post.imageUrl }} style={styles.photo} /> : null}
+      {post.imageUrl ? <Image source={{ uri: post.imageUrl }} style={styles.photo} contentFit="cover" /> : null}
 
       <Text style={[styles.caption, !post.imageUrl && styles.captionNoPhoto]}>{post.caption}</Text>
 
@@ -109,36 +130,67 @@ export function CommunityPostCard({
 
       {isCommentsOpen ? (
         <View style={styles.comments}>
-          {post.comments.map((comment) => (
-            <View key={comment.id} style={styles.comment}>
-              <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
-              <View style={styles.commentBody}>
-                <Text style={styles.commentAuthor}>
-                  {comment.authorName} <Text style={styles.commentTime}>· {comment.createdAt}</Text>
-                </Text>
-                <Text style={styles.commentText}>{comment.text}</Text>
+          {post.comments.map((comment) => {
+            const isOwnComment = !!currentUserId && currentUserId === comment.authorId;
+            return (
+              <View key={comment.id} style={styles.comment}>
+                <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
+                <View style={styles.commentBody}>
+                  <Text style={styles.commentAuthor}>
+                    {comment.authorName} <Text style={styles.commentTime}>· {comment.createdAt}</Text>
+                  </Text>
+                  <Text style={styles.commentText}>{comment.text}</Text>
+                </View>
+                {isOwnComment ? (
+                  <View>
+                    <Pressable
+                      style={styles.commentMenuButton}
+                      onPress={() => setOpenCommentMenuId((current) => (current === comment.id ? null : comment.id))}
+                      hitSlop={8}
+                    >
+                      <MoreVertical size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                    </Pressable>
+                    {openCommentMenuId === comment.id ? (
+                      <View style={styles.menu}>
+                        <Pressable style={styles.menuItem} onPress={() => handleDeleteComment(comment.id)}>
+                          <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+                          <Text style={styles.menuItemText}>Excluir</Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
               </View>
-            </View>
-          ))}
+            );
+          })}
 
           <View style={styles.commentInputRow}>
             <TextInput
-              style={styles.commentInput}
+              style={[styles.commentInput, isSendingComment && styles.commentInputDisabled]}
               value={draft}
               onChangeText={setDraft}
               placeholder="Deixe um recadinho..."
               placeholderTextColor={Colors.mutedForeground}
               onSubmitEditing={handleSendComment}
+              editable={!isSendingComment}
             />
-            <Pressable style={styles.commentSend} onPress={handleSendComment}>
-              <Send size={Metrics.icon.small} color={Colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+            <Pressable
+              style={[styles.commentSend, (isSendingComment || !draft.trim()) && styles.commentSendDisabled]}
+              onPress={handleSendComment}
+              disabled={isSendingComment || !draft.trim()}
+            >
+              {isSendingComment ? (
+                <ActivityIndicator size="small" color={Colors.primaryForeground} />
+              ) : (
+                <Send size={Metrics.icon.small} color={Colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              )}
             </Pressable>
           </View>
         </View>
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -269,6 +321,9 @@ const styles = StyleSheet.create({
   commentBody: {
     flex: 1,
   },
+  commentMenuButton: {
+    padding: 4,
+  },
   commentAuthor: {
     fontSize: 13,
     fontWeight: '700',
@@ -301,6 +356,9 @@ const styles = StyleSheet.create({
     color: Colors.foreground,
     backgroundColor: Colors.white,
   },
+  commentInputDisabled: {
+    opacity: 0.5,
+  },
   commentSend: {
     width: 36,
     height: 36,
@@ -308,5 +366,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  commentSendDisabled: {
+    opacity: 0.5,
   },
 });

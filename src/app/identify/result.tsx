@@ -102,6 +102,15 @@ export default function IdentifyResultScreen() {
         photoUrl: selected.imageUrl,
         sunLevel: lightLevel,
         origin: speciesInfo?.origin ?? null,
+        description: speciesInfo?.description ?? null,
+        wateringDescription: speciesInfo?.wateringDescription ?? null,
+        careLevel: speciesInfo?.careLevel ?? null,
+        toxicToPets: speciesInfo?.toxicToPets ?? null,
+        toxicToPetsNotes: speciesInfo?.toxicToPetsNotes ?? null,
+        toxicToHumans: speciesInfo?.toxicToHumans ?? null,
+        toxicToHumansNotes: speciesInfo?.toxicToHumansNotes ?? null,
+        funFacts: speciesInfo?.funFacts ?? null,
+        commonProblems: speciesInfo?.commonProblems ?? null,
       });
       router.replace(`/plant/${plant.id}`);
     } catch (err) {
@@ -122,7 +131,7 @@ export default function IdentifyResultScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {selected.imageUrl ? (
           <PlantHero
@@ -198,7 +207,7 @@ export default function IdentifyResultScreen() {
       >
         <KeyboardAvoidingView
           style={styles.modalBackdrop}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Como você quer chamar essa planta?</Text>

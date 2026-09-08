@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search } from 'lucide-react-native';
+import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
 import { CommunityComposer, CommunityPostCard, SectionTitle } from '@/components';
 import type { CommunityPost, CommunityPostType } from '@/types';
@@ -13,13 +14,12 @@ import {
   toggleLike,
   addComment,
   deletePost,
+  deleteComment,
   getFollowingIds,
-  supabase,
+  type CommunityFeedPage,
 } from '@/services';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Toast } from '@/utils';
-
-let channelInstanceCounter = 0;
 
 type FeedScope = 'todos' | 'seguindo';
 
@@ -30,139 +30,132 @@ const FEED_FILTERS: { value: CommunityPostType | null; label: string }[] = [
   { value: 'dica', label: 'Dicas' },
 ];
 
+const POSTS_STALE_TIME = 30_000;
+const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
+
+type PostsQueryData = InfiniteData<CommunityFeedPage>;
+
+function updatePostInAllFeeds(queryClient: QueryClient, postId: string, updater: (post: CommunityPost) => CommunityPost) {
+  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        posts: page.posts.map((post) => (post.id === postId ? updater(post) : post)),
+      })),
+    };
+  });
+}
+
+function removePostFromAllFeeds(queryClient: QueryClient, postId: string) {
+  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({ ...page, posts: page.posts.filter((post) => post.id !== postId) })),
+    };
+  });
+}
+
+function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: string) {
+  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        posts: page.posts.map((post) => ({ ...post, comments: post.comments.filter((c) => c.id !== commentId) })),
+      })),
+    };
+  });
+}
+
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
-  const [instanceId] = useState(() => ++channelInstanceCounter);
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<CommunityPostType | null>(null);
   const [scope, setScope] = useState<FeedScope>('todos');
-  const [followedAuthorIds, setFollowedAuthorIds] = useState<string[] | null>(null);
 
-  const fetchFirstPage = useCallback(async () => {
-    if (!user?.id) return;
-    setIsInitialLoading(true);
-    try {
-      const authorIds = scope === 'seguindo' ? await getFollowingIds(user.id) : null;
-      const { posts: firstPage, nextCursor } = await getCommunityPosts(user.id, null, filter, authorIds);
-      setPosts(firstPage);
-      setCursor(nextCursor);
-      setHasMore(nextCursor !== null);
-      setFollowedAuthorIds(authorIds);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsInitialLoading(false);
-    }
-  }, [user, filter, scope]);
+  const followingIdsQuery = useQuery({
+    queryKey: ['following-ids', user?.id],
+    queryFn: () => getFollowingIds(user!.id),
+    enabled: !!user?.id && scope === 'seguindo',
+    staleTime: FOLLOWING_IDS_STALE_TIME,
+  });
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchFirstPage();
-    }, [fetchFirstPage])
+  const followedAuthorIds = followingIdsQuery.data ?? null;
+
+  const queryKey = useMemo(
+    () => ['community-posts', scope, filter, user?.id] as const,
+    [scope, filter, user?.id]
   );
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const userId = user.id;
+  const postsQuery = useInfiniteQuery({
+    queryKey,
+    queryFn: ({ pageParam }) =>
+      getCommunityPosts(user!.id, pageParam, filter, scope === 'seguindo' ? followedAuthorIds : null),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!user?.id && (scope === 'todos' || followedAuthorIds !== null),
+    staleTime: POSTS_STALE_TIME,
+  });
 
-    const upsertPost = async (postId: string) => {
-      const post = await getPostById(postId, userId);
-      if (!post) return;
-      setPosts((current) =>
-        current.some((p) => p.id === post.id) ? current.map((p) => (p.id === post.id ? post : p)) : current
-      );
-    };
-
-    const belongsToFeed = (post: CommunityPost) =>
-      (!filter || post.postType === filter) && (scope !== 'seguindo' || !!followedAuthorIds?.includes(post.authorId));
-
-    const channel = supabase
-      .channel(`posts:${userId}:${instanceId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
-        const post = await getPostById(payload.new.id, userId);
-        if (post && belongsToFeed(post)) {
-          setPosts((current) => (current.some((p) => p.id === post.id) ? current : [post, ...current]));
-        }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload) => {
-        upsertPost(payload.new.id);
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload) => {
-        setPosts((current) => current.filter((p) => p.id !== payload.old.id));
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, (payload) => {
-        const postId = (payload.new as { post_id?: string })?.post_id ?? (payload.old as { post_id?: string })?.post_id;
-        if (postId) upsertPost(postId);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, (payload) => {
-        const postId = (payload.new as { post_id?: string })?.post_id ?? (payload.old as { post_id?: string })?.post_id;
-        if (postId) upsertPost(postId);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, filter, scope, followedAuthorIds, instanceId]);
+  const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
+  const isInitialLoading =
+    posts.length === 0 && (postsQuery.isFetching || (scope === 'seguindo' && followingIdsQuery.isFetching));
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchFirstPage();
+    await postsQuery.refetch();
     setRefreshing(false);
   };
 
-  const handleLoadMore = async () => {
-    if (!hasMore || isLoadingMore || !user?.id || !cursor) return;
-    setIsLoadingMore(true);
-    try {
-      const { posts: nextPage, nextCursor } = await getCommunityPosts(user.id, cursor, filter, followedAuthorIds);
-      setPosts((current) => [...current, ...nextPage]);
-      setCursor(nextCursor);
-      setHasMore(nextCursor !== null);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingMore(false);
+  const handleLoadMore = () => {
+    if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
+      postsQuery.fetchNextPage();
     }
   };
 
-  const handleToggleLike = async (postId: string) => {
-    if (!user?.id) return;
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+  const handleToggleLike = useCallback(
+    async (postId: string) => {
+      if (!user?.id) return;
+      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
+      const post = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
+      if (!post) return;
 
-    setPosts(current => current.map(p =>
-      p.id === postId ? { ...p, liked: !p.liked, likeCount: p.likeCount + (p.liked ? -1 : 1) } : p
-    ));
+      const wasLiked = post.liked;
+      updatePostInAllFeeds(queryClient, postId, (p) => ({
+        ...p,
+        liked: !p.liked,
+        likeCount: p.likeCount + (p.liked ? -1 : 1),
+      }));
 
-    try {
-      await toggleLike(postId, user.id, post.liked);
-    } catch {
-      setPosts(current => current.map(p =>
-        p.id === postId ? { ...p, liked: post.liked, likeCount: post.likeCount } : p
-      ));
-    }
-  };
-
-  const handleAddComment = async (postId: string, text: string) => {
-    if (!user?.id) return;
-    try {
-      await addComment(postId, user.id, text);
-      const updated = await getPostById(postId, user.id);
-      if (updated) {
-        setPosts((current) => current.map((p) => (p.id === postId ? updated : p)));
+      try {
+        await toggleLike(postId, user.id, wasLiked);
+      } catch {
+        updatePostInAllFeeds(queryClient, postId, () => post);
       }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    },
+    [user, queryClient, queryKey]
+  );
+
+  const handleAddComment = useCallback(
+    async (postId: string, text: string) => {
+      if (!user?.id) return;
+      try {
+        await addComment(postId, user.id, text);
+        const updated = await getPostById(postId, user.id);
+        if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    [user, queryClient]
+  );
 
   const handleCreatePost = async (text: string, imageUri: string | null, postType: CommunityPostType | null) => {
     if (!user?.id) return;
@@ -170,27 +163,76 @@ export default function CommunityScreen() {
       const newPostId = await createPost(user.id, text, imageUri, postType);
       const newPost = await getPostById(newPostId, user.id);
       if (newPost && scope === 'todos' && (!filter || newPost.postType === filter)) {
-        setPosts((current) => [newPost, ...current]);
+        queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
+          if (!old) return old;
+          const [firstPage, ...restPages] = old.pages;
+          return { ...old, pages: [{ ...firstPage, posts: [newPost, ...firstPage.posts] }, ...restPages] };
+        });
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handlePressAuthor = (authorId: string) => {
-    router.push({ pathname: '/profile/[id]', params: { id: authorId } });
-  };
+  const handlePressAuthor = useCallback(
+    (authorId: string) => {
+      router.push({ pathname: '/profile/[id]', params: { id: authorId } });
+    },
+    [router]
+  );
 
-  const handleDeletePost = async (postId: string) => {
-    const previousPosts = posts;
-    setPosts((current) => current.filter((p) => p.id !== postId));
-    try {
-      await deletePost(postId);
-    } catch {
-      setPosts(previousPosts);
-      Toast.error('Não foi possível excluir a publicação.');
-    }
-  };
+  const handleDeletePost = useCallback(
+    async (postId: string) => {
+      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
+      const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
+      removePostFromAllFeeds(queryClient, postId);
+      try {
+        await deletePost(postId);
+      } catch {
+        if (previousPost) {
+          queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
+            if (!old) return old;
+            const [firstPage, ...restPages] = old.pages;
+            return { ...old, pages: [{ ...firstPage, posts: [previousPost, ...firstPage.posts] }, ...restPages] };
+          });
+        }
+        Toast.error('Não foi possível excluir a publicação.');
+      }
+    },
+    [queryClient, queryKey]
+  );
+
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
+      const previousPost = cached?.pages
+        .flatMap((page) => page.posts)
+        .find((post) => post.comments.some((comment) => comment.id === commentId));
+      removeCommentFromAllFeeds(queryClient, commentId);
+      try {
+        await deleteComment(commentId);
+      } catch {
+        if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
+        Toast.error('Não foi possível excluir o recado.');
+      }
+    },
+    [queryClient, queryKey]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <CommunityPostCard
+        post={item}
+        currentUserId={user?.id}
+        onToggleLike={handleToggleLike}
+        onAddComment={handleAddComment}
+        onDelete={handleDeletePost}
+        onDeleteComment={handleDeleteComment}
+        onPressAuthor={handlePressAuthor}
+      />
+    ),
+    [user?.id, handleToggleLike, handleAddComment, handleDeletePost, handleDeleteComment, handlePressAuthor]
+  );
 
   return (
     <FlatList
@@ -199,16 +241,7 @@ export default function CommunityScreen() {
       showsVerticalScrollIndicator={false}
       data={posts}
       keyExtractor={(post) => post.id}
-      renderItem={({ item }) => (
-        <CommunityPostCard
-          post={item}
-          currentUserId={user?.id}
-          onToggleLike={handleToggleLike}
-          onAddComment={handleAddComment}
-          onDelete={handleDeletePost}
-          onPressAuthor={handlePressAuthor}
-        />
-      )}
+      renderItem={renderItem}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
       refreshControl={
@@ -268,7 +301,7 @@ export default function CommunityScreen() {
           {isInitialLoading ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
         </View>
       }
-      ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
     />
   );
 }

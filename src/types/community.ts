@@ -2,6 +2,7 @@ export type CommunityPostType = 'conquista' | 'duvida' | 'dica';
 
 export type CommunityComment = {
   id: string;
+  authorId: string;
   authorName: string;
   authorAvatarUrl?: string | null;
   text: string;

@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
   }
   const { userClient, user } = auth;
 
-  let body: { plantId?: string; question?: string };
+  let body: { plantId?: string; question?: string; sessionId?: string };
   try {
     body = await req.json();
   } catch {
@@ -78,6 +78,8 @@ Deno.serve(async (req) => {
   if (!plantId || !question) {
     return new Response('Missing plantId or question', { status: 400 });
   }
+
+  const sessionId = body.sessionId?.trim() || crypto.randomUUID();
 
   const { data: plant, error: plantError } = await supabaseAdmin
     .from('plants')
@@ -106,6 +108,7 @@ Deno.serve(async (req) => {
     .from('plant_chat_messages')
     .select('id, role, content, created_at')
     .eq('plant_id', plantId)
+    .eq('session_id', sessionId)
     .order('created_at', { ascending: false })
     .limit(MAX_HISTORY_MESSAGES);
 
@@ -119,27 +122,7 @@ Deno.serve(async (req) => {
     return new Response('Não foi possível responder agora', { status: 502 });
   }
 
-  const { error: insertError } = await supabaseAdmin
-    .from('plant_chat_messages')
-    .insert({ plant_id: plantId, user_id: user.id, role: 'user', content: question });
-
-  if (insertError) {
-    console.error('Erro salvando pergunta:', insertError);
-    return new Response('Não foi possível salvar a pergunta', { status: 500 });
-  }
-
-  const { data: assistantMessage, error: assistantInsertError } = await supabaseAdmin
-    .from('plant_chat_messages')
-    .insert({ plant_id: plantId, user_id: user.id, role: 'assistant', content: answer })
-    .select()
-    .single();
-
-  if (assistantInsertError || !assistantMessage) {
-    console.error('Erro salvando resposta:', assistantInsertError);
-    return new Response('Não foi possível salvar a resposta', { status: 500 });
-  }
-
-  const { error: consumeError } = await userClient.rpc('consume_credit', {
+  const { data: newCreditBalance, error: consumeError } = await userClient.rpc('consume_credit', {
     credit_reason: CHAT_QUESTION_CREDIT_REASON,
   });
 
@@ -148,5 +131,27 @@ Deno.serve(async (req) => {
     return new Response('Não foi possível descontar o crédito', { status: 500 });
   }
 
-  return new Response(JSON.stringify(assistantMessage), { headers: { 'Content-Type': 'application/json' } });
+  const { error: insertError } = await supabaseAdmin
+    .from('plant_chat_messages')
+    .insert({ plant_id: plantId, user_id: user.id, session_id: sessionId, role: 'user', content: question });
+
+  if (insertError) {
+    console.error('Erro salvando pergunta:', insertError);
+    return new Response('Não foi possível salvar a pergunta', { status: 500 });
+  }
+
+  const { data: assistantMessage, error: assistantInsertError } = await supabaseAdmin
+    .from('plant_chat_messages')
+    .insert({ plant_id: plantId, user_id: user.id, session_id: sessionId, role: 'assistant', content: answer })
+    .select()
+    .single();
+
+  if (assistantInsertError || !assistantMessage) {
+    console.error('Erro salvando resposta:', assistantInsertError);
+    return new Response('Não foi possível salvar a resposta', { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ ...assistantMessage, sessionId, newCreditBalance }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 });

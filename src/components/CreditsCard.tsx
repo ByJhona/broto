@@ -1,6 +1,5 @@
-import { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Coins } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { useAuth, useCredits } from '@/hooks';
@@ -8,13 +7,7 @@ import { useAuth, useCredits } from '@/hooks';
 export function CreditsCard() {
   const router = useRouter();
   const { session } = useAuth();
-  const { credits, refresh } = useCredits();
-
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh])
-  );
+  const { credits } = useCredits();
 
   if (!session) {
     return (

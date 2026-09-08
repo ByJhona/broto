@@ -1,12 +1,21 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Sprout } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { CommunityPost, Plant, UserProfile } from '@/types';
+import type { CommunityPost, PlantSummary, UserProfile } from '@/types';
 import { Avatar, CommunityPostCard, EmptyState, LoadingScreen, PlantCard, SectionTitle } from '@/components';
 import { useAuth, useFollow } from '@/hooks';
-import { getProfile, getCommunityPosts, getPostById, getPlantsByUserId, toggleLike, addComment, deletePost } from '@/services';
+import {
+  getProfile,
+  getCommunityPosts,
+  getPostById,
+  getPlantsByUserId,
+  toggleLike,
+  addComment,
+  deletePost,
+  deleteComment,
+} from '@/services';
 import { Toast } from '@/utils';
 
 export default function PublicProfileScreen() {
@@ -14,13 +23,17 @@ export default function PublicProfileScreen() {
   const { user } = useAuth();
   const { following, counts, toggle } = useFollow(id ?? null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [plants, setPlants] = useState<Plant[]>([]);
+  const [plants, setPlants] = useState<PlantSummary[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const postsRef = useRef<CommunityPost[]>([]);
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
 
   const isOwnProfile = id === user?.id;
 
@@ -72,9 +85,9 @@ export default function PublicProfileScreen() {
     }
   };
 
-  const handleToggleLike = async (postId: string) => {
+  const handleToggleLike = useCallback(async (postId: string) => {
     if (!user?.id) return;
-    const post = posts.find((p) => p.id === postId);
+    const post = postsRef.current.find((p) => p.id === postId);
     if (!post) return;
 
     setPosts((current) =>
@@ -86,9 +99,9 @@ export default function PublicProfileScreen() {
     } catch {
       setPosts((current) => current.map((p) => (p.id === postId ? { ...p, liked: post.liked, likeCount: post.likeCount } : p)));
     }
-  };
+  }, [user]);
 
-  const handleAddComment = async (postId: string, text: string) => {
+  const handleAddComment = useCallback(async (postId: string, text: string) => {
     if (!user?.id) return;
     try {
       await addComment(postId, user.id, text);
@@ -99,10 +112,10 @@ export default function PublicProfileScreen() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [user]);
 
-  const handleDeletePost = async (postId: string) => {
-    const previousPosts = posts;
+  const handleDeletePost = useCallback(async (postId: string) => {
+    const previousPosts = postsRef.current;
     setPosts((current) => current.filter((p) => p.id !== postId));
     try {
       await deletePost(postId);
@@ -110,7 +123,34 @@ export default function PublicProfileScreen() {
       setPosts(previousPosts);
       Toast.error('Não foi possível excluir a publicação.');
     }
-  };
+  }, []);
+
+  const handleDeleteComment = useCallback(async (commentId: string) => {
+    const previousPosts = postsRef.current;
+    setPosts((current) =>
+      current.map((post) => ({ ...post, comments: post.comments.filter((comment) => comment.id !== commentId) }))
+    );
+    try {
+      await deleteComment(commentId);
+    } catch {
+      setPosts(previousPosts);
+      Toast.error('Não foi possível excluir o recado.');
+    }
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <CommunityPostCard
+        post={item}
+        currentUserId={user?.id}
+        onToggleLike={handleToggleLike}
+        onAddComment={handleAddComment}
+        onDelete={handleDeletePost}
+        onDeleteComment={handleDeleteComment}
+      />
+    ),
+    [user?.id, handleToggleLike, handleAddComment, handleDeletePost, handleDeleteComment]
+  );
 
   if (isLoading && !profile) {
     return <LoadingScreen />;
@@ -125,15 +165,7 @@ export default function PublicProfileScreen() {
       showsVerticalScrollIndicator={false}
       data={posts}
       keyExtractor={(post) => post.id}
-      renderItem={({ item }) => (
-        <CommunityPostCard
-          post={item}
-          currentUserId={user?.id}
-          onToggleLike={handleToggleLike}
-          onAddComment={handleAddComment}
-          onDelete={handleDeletePost}
-        />
-      )}
+      renderItem={renderItem}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
       refreshControl={

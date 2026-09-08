@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Droplet,
   MapPin,
@@ -12,30 +13,32 @@ import {
   Trash2,
   type LucideIcon,
 } from 'lucide-react-native';
-import { Colors, Metrics } from '@/theme';
+import { Colors, Metrics, Overlays } from '@/theme';
 import {
+  FormError,
+  FormField,
   InfoChip,
-  LoadingScreen,
   PlantChat,
   PlantGrowthSection,
   PlantPhotoHero,
   PlantRemindersSection,
   SectionTitle,
+  SkeletonBlock,
   SpeciesInfoSection,
-  SpeciesInfoSkeleton,
+  SubmitButton,
 } from '@/components';
-import { useCareTasks, useCredits } from '@/hooks';
-import { deletePlant, getPlant, getPlantSpeciesInfo } from '@/services';
-import type { Plant, PlantSpeciesInfo } from '@/types';
+import { useAuth, useCareTasks, useCredits } from '@/hooks';
+import { deletePlant, getPlant, updatePlantName } from '@/services';
+import type { Plant, PlantSummary } from '@/types';
 import { confirm, daysBetween, sunLevelLabel, Toast, today } from '@/utils';
 
-const CARE_LEVEL_LABEL: Record<PlantSpeciesInfo['careLevel'], string> = {
+const CARE_LEVEL_LABEL: Record<NonNullable<Plant['careLevel']>, string> = {
   easy: 'Fácil de cuidar',
   moderate: 'Cuidado moderado',
   hard: 'Exige experiência',
 };
 
-const CARE_LEVEL_ICON: Record<PlantSpeciesInfo['careLevel'], LucideIcon> = {
+const CARE_LEVEL_ICON: Record<NonNullable<Plant['careLevel']>, LucideIcon> = {
   easy: SignalLow,
   moderate: SignalMedium,
   hard: SignalHigh,
@@ -54,9 +57,44 @@ type StatTile = {
   icon: LucideIcon;
 };
 
+function PlantDetailSkeleton() {
+  return (
+    <>
+      <View style={styles.heroSkeleton} />
+      <View style={styles.content}>
+        <SkeletonBlock width={140} height={13} style={styles.skeletonGap} />
+
+        <View style={styles.section}>
+          <View style={styles.chipRow}>
+            <SkeletonBlock width={150} height={26} radius={Metrics.radius.full} />
+            <SkeletonBlock width={110} height={26} radius={Metrics.radius.full} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <SkeletonBlock width={130} height={14} style={styles.skeletonGap} />
+          <SkeletonBlock height={48} radius={Metrics.radius.md} />
+        </View>
+
+        <View style={styles.section}>
+          <SkeletonBlock width={180} height={14} style={styles.skeletonGap} />
+          <SkeletonBlock height={80} radius={Metrics.radius.md} />
+        </View>
+
+        <View style={styles.section}>
+          <SkeletonBlock width={150} height={14} style={styles.skeletonGap} />
+          <SkeletonBlock height={100} radius={Metrics.radius.md} />
+        </View>
+      </View>
+    </>
+  );
+}
+
 export default function PlantDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { credits } = useCredits();
   const {
     tasks: careTasksList,
@@ -67,35 +105,36 @@ export default function PlantDetailScreen() {
   } = useCareTasks();
   const isPremium = credits?.planId === 'premium';
 
-  const [plant, setPlant] = useState<Plant | null>(null);
-  const [speciesInfo, setSpeciesInfo] = useState<PlantSpeciesInfo | null>(null);
-  const [isSpeciesInfoLoading, setIsSpeciesInfoLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [isSavingName, setIsSavingName] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
+  const plantsListKey = ['plants', user?.id] as const;
 
-    getPlant(id).then((result) => {
-      if (isMounted) {
-        setPlant(result);
-        setIsLoading(false);
-      }
-      if (result?.species) {
-        setIsSpeciesInfoLoading(true);
-        getPlantSpeciesInfo(result.species, result.commonName).then((info) => {
-          if (isMounted) {
-            setSpeciesInfo(info);
-            setIsSpeciesInfoLoading(false);
-          }
-        });
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  const { data: plant = null, isLoading } = useQuery({
+    queryKey: ['plant', id],
+    queryFn: () => getPlant(id!),
+    enabled: !!id,
+    placeholderData: () => {
+      const summary = queryClient.getQueryData<PlantSummary[]>(plantsListKey)?.find((item) => item.id === id);
+      if (!summary) return undefined;
+      return {
+        ...summary,
+        origin: null,
+        description: null,
+        wateringDescription: null,
+        careLevel: null,
+        toxicToPets: null,
+        toxicToPetsNotes: null,
+        toxicToHumans: null,
+        toxicToHumansNotes: null,
+        funFacts: null,
+        commonProblems: null,
+      };
+    },
+  });
 
   useEffect(() => {
     if (!plant || !isPremium || isCareTasksLoading) return;
@@ -114,6 +153,39 @@ export default function PlantDetailScreen() {
     });
   }, [plant, isPremium, isCareTasksLoading, careTasksList, createTask]);
 
+  const handleOpenRename = () => {
+    if (!plant) return;
+    setNameDraft(plant.name);
+    setRenameError(null);
+    setIsRenameModalOpen(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!plant) return;
+
+    const trimmed = nameDraft.trim();
+    if (!trimmed) {
+      setRenameError('Dá um nome pra sua planta.');
+      return;
+    }
+
+    setIsSavingName(true);
+    try {
+      await updatePlantName(plant.id, trimmed);
+      queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
+        current ? { ...current, name: trimmed } : current
+      );
+      queryClient.setQueryData<PlantSummary[]>(plantsListKey, (current = []) =>
+        current.map((item) => (item.id === plant.id ? { ...item, name: trimmed } : item))
+      );
+      setIsRenameModalOpen(false);
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : 'Não foi possível salvar o nome.');
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!plant) return;
 
@@ -127,6 +199,7 @@ export default function PlantDetailScreen() {
     setIsDeleting(true);
     try {
       await deletePlant(plant.id);
+      queryClient.removeQueries({ queryKey: ['plant', plant.id] });
       await refreshCareTasks();
       router.replace('/garden');
     } catch (err) {
@@ -135,13 +208,19 @@ export default function PlantDetailScreen() {
     }
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
+  if (isLoading && !plant) {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <Stack.Screen options={{ title: '' }} />
+        <PlantDetailSkeleton />
+      </ScrollView>
+    );
   }
 
   if (!plant) {
     return (
       <View style={styles.centered}>
+        <Stack.Screen options={{ title: '' }} />
         <Text style={styles.emptyText}>Planta não encontrada.</Text>
       </View>
     );
@@ -155,12 +234,14 @@ export default function PlantDetailScreen() {
     careStats.push({ key: 'light', icon: Sun, value: sunLevelLabel(plant.sunLevel) });
   }
   if (plant.origin) careStats.push({ key: 'origin', icon: MapPin, value: plant.origin });
-  if (speciesInfo) {
-    careStats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[speciesInfo.careLevel], value: CARE_LEVEL_LABEL[speciesInfo.careLevel] });
+  if (plant.careLevel) {
+    careStats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[plant.careLevel], value: CARE_LEVEL_LABEL[plant.careLevel] });
+  }
+  if (plant.toxicToPets != null) {
     careStats.push({
       key: 'petSafety',
       icon: PawPrint,
-      value: speciesInfo.toxicToPets ? 'Não é segura para pets' : 'Segura para pets',
+      value: plant.toxicToPets ? 'Não é segura para pets' : 'Segura para pets',
     });
   }
 
@@ -179,8 +260,36 @@ export default function PlantDetailScreen() {
 
       <PlantPhotoHero
         plant={plant}
-        onPhotoUrlChange={(photoUrl) => setPlant((current) => (current ? { ...current, photoUrl } : current))}
+        onPhotoUrlChange={(photoUrl) =>
+          queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
+            current ? { ...current, photoUrl } : current
+          )
+        }
+        onEditName={handleOpenRename}
       />
+
+      <Modal
+        visible={isRenameModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsRenameModalOpen(false)}
+      >
+        <KeyboardAvoidingView style={styles.modalBackdrop} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Como você quer chamar essa planta?</Text>
+            <FormField label="Nome" value={nameDraft} onChangeText={setNameDraft} placeholder="Samba" autoFocus />
+            <FormError>{renameError}</FormError>
+            <SubmitButton label="Salvar" onPress={handleSaveName} loading={isSavingName} />
+            <Pressable
+              style={styles.modalCancel}
+              onPress={() => setIsRenameModalOpen(false)}
+              disabled={isSavingName}
+            >
+              <Text style={styles.modalCancelText}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <View style={styles.content}>
         <Text style={styles.sinceLabel}>{daysWithYouLabel(plant.createdAt)}</Text>
@@ -205,10 +314,19 @@ export default function PlantDetailScreen() {
 
         <PlantGrowthSection plant={plant} isPremium={isPremium} />
 
-        {speciesInfo ? (
-          <SpeciesInfoSection info={speciesInfo} />
-        ) : isSpeciesInfoLoading ? (
-          <SpeciesInfoSkeleton />
+        {plant.description ? (
+          <SpeciesInfoSection
+            info={{
+              description: plant.description,
+              wateringDescription: plant.wateringDescription,
+              toxicToPets: plant.toxicToPets ?? false,
+              toxicToPetsNotes: plant.toxicToPetsNotes,
+              toxicToHumans: plant.toxicToHumans ?? false,
+              toxicToHumansNotes: plant.toxicToHumansNotes,
+              funFacts: plant.funFacts ?? [],
+              commonProblems: plant.commonProblems ?? [],
+            }}
+          />
         ) : null}
       </View>
     </ScrollView>
@@ -236,6 +354,14 @@ const styles = StyleSheet.create({
   content: {
     padding: Metrics.spacing.lg,
   },
+  heroSkeleton: {
+    width: '100%',
+    height: 260,
+    backgroundColor: Colors.muted,
+  },
+  skeletonGap: {
+    marginBottom: Metrics.spacing.sm,
+  },
   sinceLabel: {
     fontSize: 13,
     fontWeight: '600',
@@ -254,5 +380,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Metrics.spacing.sm,
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Overlays.scrim,
+    padding: Metrics.spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: Colors.background,
+    borderRadius: Metrics.radius.lg,
+    padding: Metrics.spacing.lg,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.foreground,
+    marginBottom: Metrics.spacing.md,
+  },
+  modalCancel: {
+    alignItems: 'center',
+    marginTop: Metrics.spacing.sm,
+    padding: Metrics.spacing.sm,
+  },
+  modalCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.mutedForeground,
   },
 });

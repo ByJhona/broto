@@ -1,4 +1,5 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { AlertTriangle, CheckCircle2, Sparkles, type LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
@@ -45,7 +46,7 @@ export default function DiagnosisResultScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <Image source={{ uri: diagnosis.photoUrl }} style={styles.photo} />
+      <Image source={{ uri: diagnosis.photoUrl }} style={styles.photo} contentFit="cover" />
 
       <View style={[styles.statusBadge, { backgroundColor: `${meta.color}1A`, borderColor: meta.color }]}>
         <StatusIcon size={Metrics.icon.normal} color={meta.color} strokeWidth={Metrics.icon.strokeWidth} />

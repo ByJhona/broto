@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { CommunityPost, CommunityPostType } from '@/types';
 
 const PAGE_SIZE = 10;
@@ -9,7 +10,7 @@ const POST_SELECT = `
   post_likes!post_likes_post_id_fkey (count),
   likedByUser:post_likes!post_likes_post_id_fkey (count),
   post_comments!post_comments_post_id_fkey (
-    id, text, created_at,
+    id, text, created_at, user_id,
     profiles!post_comments_user_id_fkey (name, username, avatar_url)
   )
 `;
@@ -57,6 +58,7 @@ type PostRow = {
     id: string;
     text: string;
     created_at: string;
+    user_id: string;
     profiles: {
       name: string | null;
       username: string | null;
@@ -85,6 +87,7 @@ function formatPost(row: PostRow): CommunityPost {
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
       .map(comment => ({
         id: comment.id,
+        authorId: comment.user_id,
         text: comment.text,
         createdAt: formatRelativeTime(comment.created_at),
         authorName: comment.profiles?.name || comment.profiles?.username || 'Jardineiro',
@@ -112,6 +115,8 @@ export async function getCommunityPosts(
     .from('posts')
     .select(POST_SELECT)
     .eq('likedByUser.user_id', userId)
+    .is('deleted_at', null)
+    .is('post_comments.deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
@@ -146,6 +151,8 @@ export async function getPostById(postId: string, userId: string): Promise<Commu
     .from('posts')
     .select(POST_SELECT)
     .eq('likedByUser.user_id', userId)
+    .is('deleted_at', null)
+    .is('post_comments.deleted_at', null)
     .eq('id', postId)
     .maybeSingle();
 
@@ -169,7 +176,8 @@ export async function createPost(
     const { File } = await import('expo-file-system');
     const { decode } = await import('base64-arraybuffer');
 
-    const file = new File(localUri);
+    const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+    const file = new File(resizedUri);
     const base64 = await file.base64();
     const filename = `${userId}/${Date.now()}.jpg`;
 
@@ -212,6 +220,14 @@ export async function addComment(postId: string, userId: string, text: string): 
 }
 
 export async function deletePost(postId: string): Promise<void> {
-  const { error } = await supabase.from('posts').delete().eq('id', postId);
+  const { error } = await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', postId);
+  if (error) throw error;
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  const { error } = await supabase
+    .from('post_comments')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', commentId);
   if (error) throw error;
 }
