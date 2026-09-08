@@ -1,13 +1,15 @@
-import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { useQueryClient } from '@tanstack/react-query';
 import { Image as ImageIcon, Scan, Stethoscope } from 'lucide-react-native';
 import { Colors, Metrics, Overlays } from '@/theme';
 import { OfflineBanner } from '@/components';
 import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
+import type { PlantDiagnosis } from '@/types';
 import { Alert, requireLogin } from '@/utils';
 
 type CaptureMode = 'identify' | 'diagnose';
@@ -62,6 +64,7 @@ export default function PhotoScreen() {
   const { session, user } = useAuth();
   const { isOffline } = useNetworkStatus();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
+  const queryClient = useQueryClient();
   const [mode, setMode] = useState<CaptureMode>(params.mode === 'diagnose' ? 'diagnose' : 'identify');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +76,18 @@ export default function PhotoScreen() {
       }
     }, [params.mode])
   );
+
+  const [isCameraReady, setIsCameraReady] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const task = InteractionManager.runAfterInteractions(() => setIsCameraReady(true));
+    return () => {
+      task.cancel();
+      setIsCameraReady(false);
+    };
+  }, [isFocused]);
 
   const copy = MODE_COPY[mode];
   const creditCost = mode === 'identify' ? CREDIT_COSTS.identification : CREDIT_COSTS.diagnosis;
@@ -104,6 +119,12 @@ export default function PhotoScreen() {
         if (!user?.id) return;
         const { diagnosis, newCreditBalance } = await diagnosePlant(user.id, photoUri);
         applyCreditBalance(newCreditBalance);
+        if (diagnosis) {
+          queryClient.setQueryData<PlantDiagnosis[]>(['diagnosis-history', user.id], (current = []) => [
+            diagnosis,
+            ...current,
+          ]);
+        }
         router.push({
           pathname: '/diagnose/result',
           params: diagnosis ? { diagnosis: JSON.stringify(diagnosis) } : {},
@@ -188,7 +209,7 @@ export default function PhotoScreen() {
 
   return (
     <View style={styles.container}>
-      {isFocused ? (
+      {isCameraReady ? (
         <CameraView ref={cameraRef} style={styles.camera} facing="back" />
       ) : (
         <View style={styles.camera} />

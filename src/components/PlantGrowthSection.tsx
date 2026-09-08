@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { useCreditsGate } from '@/hooks';
@@ -22,26 +23,17 @@ type PlantGrowthSectionProps = {
 
 export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
-  const [checkins, setCheckins] = useState<PlantGrowthCheckin[]>([]);
-  const [isCheckinsLoading, setIsCheckinsLoading] = useState(true);
-  const [expandedCheckinId, setExpandedCheckinId] = useState<string | null>(null);
+  const checkinsQueryKey = ['plant-growth-checkins', plant.id] as const;
+  const { data: checkins = [], isLoading: isCheckinsLoading } = useQuery({
+    queryKey: checkinsQueryKey,
+    queryFn: () => getPlantGrowthCheckins(plant.id),
+  });
+  // undefined = no explicit choice yet (auto-expand the most recent checkin);
+  // null = user explicitly collapsed everything; otherwise the chosen checkin's id.
+  const [expandedCheckinId, setExpandedCheckinId] = useState<string | null | undefined>(undefined);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    getPlantGrowthCheckins(plant.id).then((result) => {
-      if (!isMounted) return;
-      setCheckins(result);
-      setExpandedCheckinId(result[0]?.id ?? null);
-      setIsCheckinsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [plant.id]);
 
   const showInsufficientCreditsAlert = () => {
     Alert.alert(
@@ -79,7 +71,7 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
       try {
         const { checkin, newCreditBalance } = await analyzePlantGrowth(plant.id, result.assets[0].uri);
         applyCreditBalance(newCreditBalance);
-        setCheckins((current) => [checkin, ...current]);
+        queryClient.setQueryData<PlantGrowthCheckin[]>(checkinsQueryKey, (current = []) => [checkin, ...current]);
         setExpandedCheckinId(checkin.id);
       } catch (err) {
         if (err instanceof InsufficientCreditsError) {
@@ -126,7 +118,8 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
             <Text style={styles.emptyCheckinsText}>Nenhuma análise ainda. Toque no botão acima pra começar.</Text>
           ) : (
             checkins.map((checkin) => {
-              const isExpanded = checkin.id === expandedCheckinId;
+              const isExpanded =
+                expandedCheckinId === undefined ? checkin.id === checkins[0]?.id : checkin.id === expandedCheckinId;
               return (
                 <View key={checkin.id} style={styles.checkinCard}>
                   <Pressable

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Sprout } from 'lucide-react-native';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
-import type { CommunityPost, PlantSummary, UserProfile } from '@/types';
+import type { CommunityPost } from '@/types';
 import { Avatar, CommunityPostCard, EmptyState, LoadingScreen, PlantCard, SectionTitle } from '@/components';
 import { useAuth, useFollow } from '@/hooks';
 import {
@@ -15,128 +16,132 @@ import {
   addComment,
   deletePost,
   deleteComment,
+  updatePostInAllFeeds,
+  removePostFromAllFeeds,
+  removeCommentFromAllFeeds,
+  type CommunityPostsQueryData,
 } from '@/services';
 import { Toast } from '@/utils';
+
+const PROFILE_STALE_TIME = 60_000;
+const POSTS_STALE_TIME = 30_000;
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { following, counts, toggle } = useFollow(id ?? null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [plants, setPlants] = useState<PlantSummary[]>([]);
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const postsRef = useRef<CommunityPost[]>([]);
-  useEffect(() => {
-    postsRef.current = posts;
-  }, [posts]);
 
   const isOwnProfile = id === user?.id;
 
-  const fetchAll = useCallback(async () => {
-    if (!id || !user?.id) return;
-    setIsLoading(true);
-    try {
-      const [profileData, plantsData, feedPage] = await Promise.all([
-        getProfile(id),
-        getPlantsByUserId(id),
-        getCommunityPosts(user.id, null, null, [id]),
-      ]);
-      setProfile(profileData);
-      setPlants(plantsData);
-      setPosts(feedPage.posts);
-      setCursor(feedPage.nextCursor);
-      setHasMore(feedPage.nextCursor !== null);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id, user]);
+  const profileQuery = useQuery({
+    queryKey: ['profile', id],
+    queryFn: () => getProfile(id!),
+    enabled: !!id,
+    staleTime: PROFILE_STALE_TIME,
+  });
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchAll();
-    }, [fetchAll])
-  );
+  const plantsQuery = useQuery({
+    queryKey: ['plants-by-user', id],
+    queryFn: () => getPlantsByUserId(id!),
+    enabled: !!id,
+    staleTime: PROFILE_STALE_TIME,
+  });
+
+  const postsQueryKey = useMemo(() => ['community-posts', 'author', id, user?.id] as const, [id, user?.id]);
+
+  const postsQuery = useInfiniteQuery({
+    queryKey: postsQueryKey,
+    queryFn: ({ pageParam }) => getCommunityPosts(user!.id, pageParam, null, [id!]),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!id && !!user?.id,
+    staleTime: POSTS_STALE_TIME,
+  });
+
+  const profile = profileQuery.data ?? null;
+  const plants = plantsQuery.data ?? [];
+  const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
+  const isLoading = profileQuery.isLoading || plantsQuery.isLoading || (posts.length === 0 && postsQuery.isFetching);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchAll();
-    setRefreshing(false);
+    await Promise.all([profileQuery.refetch(), plantsQuery.refetch(), postsQuery.refetch()]);
   };
 
-  const handleLoadMore = async () => {
-    if (!hasMore || isLoadingMore || !user?.id || !cursor || !id) return;
-    setIsLoadingMore(true);
-    try {
-      const { posts: nextPage, nextCursor } = await getCommunityPosts(user.id, cursor, null, [id]);
-      setPosts((current) => [...current, ...nextPage]);
-      setCursor(nextCursor);
-      setHasMore(nextCursor !== null);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingMore(false);
+  const handleLoadMore = () => {
+    if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
+      postsQuery.fetchNextPage();
     }
   };
 
-  const handleToggleLike = useCallback(async (postId: string) => {
-    if (!user?.id) return;
-    const post = postsRef.current.find((p) => p.id === postId);
-    if (!post) return;
+  const handleToggleLike = useCallback(
+    async (postId: string) => {
+      if (!user?.id) return;
+      const cached = queryClient.getQueryData<CommunityPostsQueryData>(postsQueryKey);
+      const post = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
+      if (!post) return;
 
-    setPosts((current) =>
-      current.map((p) => (p.id === postId ? { ...p, liked: !p.liked, likeCount: p.likeCount + (p.liked ? -1 : 1) } : p))
-    );
+      const wasLiked = post.liked;
+      updatePostInAllFeeds(queryClient, postId, (p) => ({
+        ...p,
+        liked: !p.liked,
+        likeCount: p.likeCount + (p.liked ? -1 : 1),
+      }));
 
-    try {
-      await toggleLike(postId, user.id, post.liked);
-    } catch {
-      setPosts((current) => current.map((p) => (p.id === postId ? { ...p, liked: post.liked, likeCount: post.likeCount } : p)));
-    }
-  }, [user]);
-
-  const handleAddComment = useCallback(async (postId: string, text: string) => {
-    if (!user?.id) return;
-    try {
-      await addComment(postId, user.id, text);
-      const updated = await getPostById(postId, user.id);
-      if (updated) {
-        setPosts((current) => current.map((p) => (p.id === postId ? updated : p)));
+      try {
+        await toggleLike(postId, user.id, wasLiked);
+      } catch {
+        updatePostInAllFeeds(queryClient, postId, () => post);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [user]);
+    },
+    [user, queryClient, postsQueryKey]
+  );
 
-  const handleDeletePost = useCallback(async (postId: string) => {
-    const previousPosts = postsRef.current;
-    setPosts((current) => current.filter((p) => p.id !== postId));
-    try {
-      await deletePost(postId);
-    } catch {
-      setPosts(previousPosts);
-      Toast.error('Não foi possível excluir a publicação.');
-    }
-  }, []);
+  const handleAddComment = useCallback(
+    async (postId: string, text: string) => {
+      if (!user?.id) return;
+      try {
+        await addComment(postId, user.id, text);
+        const updated = await getPostById(postId, user.id);
+        if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    [user, queryClient]
+  );
 
-  const handleDeleteComment = useCallback(async (commentId: string) => {
-    const previousPosts = postsRef.current;
-    setPosts((current) =>
-      current.map((post) => ({ ...post, comments: post.comments.filter((comment) => comment.id !== commentId) }))
-    );
-    try {
-      await deleteComment(commentId);
-    } catch {
-      setPosts(previousPosts);
-      Toast.error('Não foi possível excluir o recado.');
-    }
-  }, []);
+  const handleDeletePost = useCallback(
+    async (postId: string) => {
+      const cached = queryClient.getQueryData<CommunityPostsQueryData>(postsQueryKey);
+      const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
+      removePostFromAllFeeds(queryClient, postId);
+      try {
+        await deletePost(postId);
+      } catch {
+        if (previousPost) updatePostInAllFeeds(queryClient, postId, () => previousPost);
+        Toast.error('Não foi possível excluir a publicação.');
+      }
+    },
+    [queryClient, postsQueryKey]
+  );
+
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      const cached = queryClient.getQueryData<CommunityPostsQueryData>(postsQueryKey);
+      const previousPost = cached?.pages
+        .flatMap((page) => page.posts)
+        .find((post) => post.comments.some((comment) => comment.id === commentId));
+      removeCommentFromAllFeeds(queryClient, commentId);
+      try {
+        await deleteComment(commentId);
+      } catch {
+        if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
+        Toast.error('Não foi possível excluir o recado.');
+      }
+    },
+    [queryClient, postsQueryKey]
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: CommunityPost }) => (
@@ -169,7 +174,12 @@ export default function PublicProfileScreen() {
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl
+          refreshing={profileQuery.isRefetching || plantsQuery.isRefetching || postsQuery.isRefetching}
+          onRefresh={handleRefresh}
+          tintColor={Colors.leaf}
+          colors={[Colors.leaf]}
+        />
       }
       ListHeaderComponent={
         <View>
@@ -224,7 +234,7 @@ export default function PublicProfileScreen() {
           ) : null}
         </View>
       }
-      ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
     />
   );
 }

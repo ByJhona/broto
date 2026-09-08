@@ -1,3 +1,4 @@
+import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { CommunityPost, CommunityPostType } from '@/types';
@@ -230,4 +231,50 @@ export async function deleteComment(commentId: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', commentId);
   if (error) throw error;
+}
+
+export type CommunityPostsQueryData = InfiniteData<CommunityFeedPage>;
+
+// Broad-matches every cached feed (main community feed, per-profile feeds, ...) that
+// starts with this key, so an edit made from any screen stays in sync everywhere.
+const COMMUNITY_POSTS_QUERY_PREFIX = ['community-posts'] as const;
+
+export function updatePostInAllFeeds(
+  queryClient: QueryClient,
+  postId: string,
+  updater: (post: CommunityPost) => CommunityPost
+) {
+  queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        posts: page.posts.map((post) => (post.id === postId ? updater(post) : post)),
+      })),
+    };
+  });
+}
+
+export function removePostFromAllFeeds(queryClient: QueryClient, postId: string) {
+  queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({ ...page, posts: page.posts.filter((post) => post.id !== postId) })),
+    };
+  });
+}
+
+export function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: string) {
+  queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
+    if (!old) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        posts: page.posts.map((post) => ({ ...post, comments: post.comments.filter((c) => c.id !== commentId) })),
+      })),
+    };
+  });
 }

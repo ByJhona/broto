@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search } from 'lucide-react-native';
-import { type InfiniteData, type QueryClient, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
 import { CommunityComposer, CommunityPostCard, SectionTitle } from '@/components';
 import type { CommunityPost, CommunityPostType } from '@/types';
@@ -16,7 +16,10 @@ import {
   deletePost,
   deleteComment,
   getFollowingIds,
-  type CommunityFeedPage,
+  updatePostInAllFeeds,
+  removePostFromAllFeeds,
+  removeCommentFromAllFeeds,
+  type CommunityPostsQueryData,
 } from '@/services';
 import { useRouter } from 'expo-router';
 import { Toast } from '@/utils';
@@ -33,43 +36,7 @@ const FEED_FILTERS: { value: CommunityPostType | null; label: string }[] = [
 const POSTS_STALE_TIME = 30_000;
 const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
 
-type PostsQueryData = InfiniteData<CommunityFeedPage>;
-
-function updatePostInAllFeeds(queryClient: QueryClient, postId: string, updater: (post: CommunityPost) => CommunityPost) {
-  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        posts: page.posts.map((post) => (post.id === postId ? updater(post) : post)),
-      })),
-    };
-  });
-}
-
-function removePostFromAllFeeds(queryClient: QueryClient, postId: string) {
-  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({ ...page, posts: page.posts.filter((post) => post.id !== postId) })),
-    };
-  });
-}
-
-function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: string) {
-  queryClient.setQueriesData<PostsQueryData>({ queryKey: ['community-posts'] }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        posts: page.posts.map((post) => ({ ...post, comments: post.comments.filter((c) => c.id !== commentId) })),
-      })),
-    };
-  });
-}
+type PostsQueryData = CommunityPostsQueryData;
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();

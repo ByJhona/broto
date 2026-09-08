@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Sparkles } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { EmptyState, SectionTitle, SkeletonBlock } from '@/components';
@@ -40,21 +40,12 @@ function DiagnosisHistorySkeleton() {
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [history, setHistory] = useState<PlantDiagnosis[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ['diagnosis-history', user?.id],
+    queryFn: () => getDiagnosisHistory(user!.id),
+    enabled: !!user?.id,
+  });
   const showSkeleton = isLoading && history.length === 0;
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
-      getDiagnosisHistory(user.id)
-        .then(setHistory)
-        .finally(() => setIsLoading(false));
-    }, [user])
-  );
 
   const openResult = (item: PlantDiagnosis) => {
     router.push({ pathname: '/diagnose/result', params: { diagnosis: JSON.stringify(item) } });
