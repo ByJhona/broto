@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -36,7 +36,7 @@ type ModeToggleProps = {
   onChange: (mode: CaptureMode) => void;
 };
 
-function ModeToggle({ mode, onChange }: ModeToggleProps) {
+function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
   return (
     <View style={styles.toggle}>
       <Pressable
@@ -89,9 +89,9 @@ export default function PhotoScreen() {
   useEffect(() => {
     if (!isFocused) return;
 
-    const task = InteractionManager.runAfterInteractions(() => setIsCameraReady(true));
+    const immediate = setImmediate(() => setIsCameraReady(true));
     return () => {
-      task.cancel();
+      clearImmediate(immediate);
       setIsCameraReady(false);
     };
   }, [isFocused]);
