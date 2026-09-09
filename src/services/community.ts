@@ -178,12 +178,11 @@ export async function createPost(
 
     const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
     const file = new File(resizedUri);
-    const bytes = await file.bytes();
     const filename = `${userId}/${Date.now()}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('posts')
-      .upload(filename, bytes, { contentType: 'image/jpeg' });
+      .upload(filename, file, { contentType: 'image/jpeg' });
 
     if (uploadError) throw uploadError;
 

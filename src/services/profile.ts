@@ -66,12 +66,11 @@ export async function uploadAvatar(userId: string, localUri: string): Promise<st
 
   const resizedUri = await resizeImageForUpload(localUri, AVATAR_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
-  const bytes = await file.bytes();
   const path = `${userId}/avatar.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
-    .upload(path, bytes, { contentType: 'image/jpeg', upsert: true });
+    .upload(path, file, { contentType: 'image/jpeg', upsert: true });
 
   if (uploadError) throw uploadError;
 

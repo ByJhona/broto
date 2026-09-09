@@ -23,6 +23,7 @@ import {
   SectionTitle,
   SkeletonBlock,
   SpeciesInfoSection,
+  SpeciesInfoSkeleton,
   SubmitButton,
 } from '@/components';
 import { useAuth, useCareTasks, useCredits } from '@/hooks';
@@ -115,7 +116,7 @@ export default function PlantDetailScreen() {
 
   const plantsListKey = ['plants', user?.id] as const;
 
-  const { data: plant = null, isLoading } = useQuery({
+  const { data: plant = null, isLoading, isPlaceholderData } = useQuery({
     queryKey: ['plant', id],
     queryFn: () => getPlant(id!),
     enabled: !!id,
@@ -329,6 +330,8 @@ export default function PlantDetailScreen() {
               commonProblems: plant.commonProblems ?? [],
             }}
           />
+        ) : isPlaceholderData ? (
+          <SpeciesInfoSkeleton />
         ) : null}
       </View>
     </ScrollView>

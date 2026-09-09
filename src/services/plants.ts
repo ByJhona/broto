@@ -129,12 +129,11 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
-  const bytes = await file.bytes();
   const path = `${user.id}/${plantId}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')
-    .upload(path, bytes, { contentType: 'image/jpeg', upsert: true });
+    .upload(path, file, { contentType: 'image/jpeg', upsert: true });
 
   if (uploadError) throw uploadError;
 

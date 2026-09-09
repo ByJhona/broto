@@ -31,12 +31,11 @@ function mapRow(row: DiagnosisRow): PlantDiagnosis {
 async function uploadDiagnosisPhoto(userId: string, localUri: string): Promise<string> {
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
-  const bytes = await file.bytes();
   const path = `${userId}/diagnoses/${Date.now()}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')
-    .upload(path, bytes, { contentType: 'image/jpeg' });
+    .upload(path, file, { contentType: 'image/jpeg' });
 
   if (uploadError) throw uploadError;
 

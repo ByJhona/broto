@@ -12,7 +12,15 @@ export default function TabLayout() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.tabIconSelected, tabBarShowLabel: true, headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colors.tabIconSelected,
+        tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+        tabBarShowLabel: true,
+        headerShown: false,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
