@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
@@ -5,21 +6,27 @@ import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import type { LucideIcon } from 'lucide-react-native';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, EmptyState, SectionTitle } from '@/components';
 import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis } from '@/types';
 
-const HEALTH_STATUS_META: Record<DiagnosisHealthStatus, { label: string; color: string; icon: LucideIcon }> = {
-  healthy: { label: 'Sua planta está saudável', color: Colors.leaf, icon: CheckCircle2 },
-  attention: { label: 'Precisa de um pouco de atenção', color: Colors.secondary, icon: AlertTriangle },
-  urgent: { label: 'Precisa de cuidado urgente', color: Colors.destructive, icon: AlertTriangle },
-};
+function getHealthStatusMeta(
+  colors: ThemeColors
+): Record<DiagnosisHealthStatus, { label: string; color: string; icon: LucideIcon }> {
+  return {
+    healthy: { label: 'Sua planta está saudável', color: colors.leaf, icon: CheckCircle2 },
+    attention: { label: 'Precisa de um pouco de atenção', color: colors.secondary, icon: AlertTriangle },
+    urgent: { label: 'Precisa de cuidado urgente', color: colors.destructive, icon: AlertTriangle },
+  };
+}
 
-const SEVERITY_COLOR: Record<DiagnosisSeverity, string> = {
-  low: Colors.leaf,
-  medium: Colors.secondary,
-  high: Colors.destructive,
-};
+function getSeverityColor(colors: ThemeColors): Record<DiagnosisSeverity, string> {
+  return {
+    low: colors.leaf,
+    medium: colors.secondary,
+    high: colors.destructive,
+  };
+}
 
 function parseDiagnosis(raw: string | string[] | undefined): PlantDiagnosis | null {
   if (!raw || Array.isArray(raw)) return null;
@@ -32,6 +39,10 @@ function parseDiagnosis(raw: string | string[] | undefined): PlantDiagnosis | nu
 
 export default function DiagnosisResultScreen() {
   const params = useLocalSearchParams<{ diagnosis: string }>();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
+  const severityColor = useMemo(() => getSeverityColor(colors), [colors]);
   const diagnosis = parseDiagnosis(params.diagnosis);
 
   if (!diagnosis) {
@@ -44,7 +55,7 @@ export default function DiagnosisResultScreen() {
     );
   }
 
-  const meta = HEALTH_STATUS_META[diagnosis.healthStatus];
+  const meta = healthStatusMeta[diagnosis.healthStatus];
   const StatusIcon = meta.icon;
 
   return (
@@ -64,7 +75,7 @@ export default function DiagnosisResultScreen() {
           {diagnosis.issues.map((issue) => (
             <Card key={issue.title} style={styles.issueCard}>
               <View style={styles.issueHeader}>
-                <View style={[styles.severityDot, { backgroundColor: SEVERITY_COLOR[issue.severity] }]} />
+                <View style={[styles.severityDot, { backgroundColor: severityColor[issue.severity] }]} />
                 <Text style={styles.issueTitle}>{issue.title}</Text>
               </View>
               <Text style={styles.issueDescription}>{issue.description}</Text>
@@ -77,7 +88,7 @@ export default function DiagnosisResultScreen() {
         <SectionTitle>Próximos passos</SectionTitle>
         {diagnosis.recommendedActions.map((action) => (
           <View key={action} style={styles.actionRow}>
-            <CheckCircle2 size={18} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <CheckCircle2 size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.actionText}>{action}</Text>
           </View>
         ))}
@@ -86,10 +97,11 @@ export default function DiagnosisResultScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -98,13 +110,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: Metrics.spacing.xl,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   photo: {
     width: '100%',
     aspectRatio: 1,
     borderRadius: Metrics.radius.lg,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     marginBottom: Metrics.spacing.md,
   },
   statusBadge: {
@@ -122,7 +134,7 @@ const styles = StyleSheet.create({
   summary: {
     fontSize: 15,
     lineHeight: 22,
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: Metrics.spacing.md,
   },
   section: {
@@ -144,11 +156,11 @@ const styles = StyleSheet.create({
   issueTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   issueDescription: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
     paddingLeft: 8 + Metrics.spacing.sm,
     lineHeight: 19,
@@ -163,6 +175,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
-});
+  });

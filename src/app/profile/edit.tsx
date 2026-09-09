@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import Camera from 'lucide-react-native/icons/camera';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Avatar, LoadingScreen } from '@/components';
 import { useAuth } from '@/hooks';
 import { getProfile, updateProfile, uploadAvatar } from '@/services';
@@ -12,6 +12,8 @@ import { normalizeUsername, Toast, validateUsername } from '@/utils';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -120,7 +122,7 @@ export default function EditProfileScreen() {
               size={100} 
             />
             <View style={styles.cameraBadge}>
-              <Camera size={20} color={Colors.white} />
+              <Camera size={20} color={colors.white} />
             </View>
           </Pressable>
           <Text style={styles.avatarHint}>Toque para alterar a foto</Text>
@@ -132,7 +134,7 @@ export default function EditProfileScreen() {
             value={name}
             onChangeText={setName}
             placeholder="Seu nome"
-            placeholderTextColor={Colors.mutedForeground}
+            placeholderTextColor={colors.mutedForeground}
             autoCorrect={false}
           />
         </View>
@@ -144,7 +146,7 @@ export default function EditProfileScreen() {
             value={username}
             onChangeText={setUsername}
             placeholder="seunome"
-            placeholderTextColor={Colors.mutedForeground}
+            placeholderTextColor={colors.mutedForeground}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -160,7 +162,7 @@ export default function EditProfileScreen() {
           disabled={saving}
         >
           {saving || uploadingAvatar ? (
-            <ActivityIndicator size="small" color={Colors.white} />
+            <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <Text style={styles.saveButtonText}>Salvar alterações</Text>
           )}
@@ -170,10 +172,11 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   form: {
     padding: Metrics.spacing.lg,
@@ -191,18 +194,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: Colors.background,
+    borderColor: colors.background,
   },
   avatarHint: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   inputGroup: {
     gap: Metrics.spacing.sm,
@@ -210,24 +213,24 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   input: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.md,
     paddingHorizontal: Metrics.spacing.md,
     paddingVertical: Metrics.spacing.md,
     fontSize: 16,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   hint: {
     fontSize: 12,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.md,
     alignItems: 'center',
@@ -240,6 +243,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.white,
+    color: colors.white,
   },
-});
+  });

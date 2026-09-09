@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { FormError, FormField, SubmitButton } from '@/components';
 import { useCareTasks, usePlants } from '@/hooks';
 import { TASK_CATEGORIES } from '@/utils';
@@ -13,6 +13,8 @@ const REMINDER_HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 
 export default function NewTaskScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const params = useLocalSearchParams<{ plantId?: string }>();
   const { createTask } = useCareTasks();
   const { plants } = usePlants();
@@ -70,7 +72,7 @@ export default function NewTaskScreen() {
                 {selectedPlant.photoUrl ? (
                   <Image source={{ uri: selectedPlant.photoUrl }} style={styles.plantAvatarImage} contentFit="cover" />
                 ) : (
-                  <Leaf size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                 )}
               </View>
               <Text style={styles.lockedPlantName}>{selectedPlant.name}</Text>
@@ -95,7 +97,7 @@ export default function NewTaskScreen() {
                       {plant.photoUrl ? (
                         <Image source={{ uri: plant.photoUrl }} style={styles.plantAvatarImage} contentFit="cover" />
                       ) : (
-                        <Leaf size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                        <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                       )}
                     </View>
                     <Text style={styles.plantOptionText} numberOfLines={1}>
@@ -168,10 +170,11 @@ export default function NewTaskScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.xs,
   },
   pillRow: {
@@ -199,10 +202,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.sm,
     alignSelf: 'flex-start',
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
   lockedPlantName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
     paddingRight: Metrics.spacing.md,
   },
   plantOption: {
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   plantAvatarSelected: {
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   plantAvatarImage: {
     width: '100%',
@@ -238,22 +241,22 @@ const styles = StyleSheet.create({
   plantAvatarEmptyText: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
   },
   plantOptionText: {
     fontSize: 12,
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: Metrics.spacing.xs,
     textAlign: 'center',
   },
   pill: {
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.full,
     paddingVertical: 8,
     paddingHorizontal: Metrics.spacing.md,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
   },
   hourRow: {
     flexDirection: 'row',
@@ -262,24 +265,24 @@ const styles = StyleSheet.create({
   },
   hourPill: {
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.full,
     paddingVertical: 8,
     paddingHorizontal: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     minWidth: 44,
     alignItems: 'center',
   },
   pillSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
   pillText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   pillTextSelected: {
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
   },
-});
+  });

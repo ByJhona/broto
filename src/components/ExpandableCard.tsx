@@ -18,7 +18,7 @@ export function ExpandableCard({
   color,
   defaultExpanded = true,
   children,
-}: ExpandableCardProps) {
+}: Readonly<ExpandableCardProps>) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (

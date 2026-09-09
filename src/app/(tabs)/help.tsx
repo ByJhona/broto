@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -19,7 +19,7 @@ import Trash2 from 'lucide-react-native/icons/trash-2';
 import TrendingUp from 'lucide-react-native/icons/trending-up';
 import X from 'lucide-react-native/icons/x';
 import type { LucideIcon } from 'lucide-react-native';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, IconBadge } from '@/components';
 import { CREDIT_COSTS } from '@/services';
 
@@ -47,7 +47,9 @@ const CURIOSITIES: string[] = [
   'Debaixo da terra, raízes de plantas diferentes podem trocar nutrientes através de redes de fungos.',
 ];
 
-const CURIOSITY_COLORS = [Colors.leaf, Colors.primary, Colors.secondary, Colors.accent];
+function getCuriosityColors(colors: ThemeColors): string[] {
+  return [colors.leaf, colors.primary, colors.secondary, colors.accent];
+}
 
 type BenefitItem = {
   icon: LucideIcon;
@@ -123,6 +125,9 @@ const FAQ_ITEMS: FaqItem[] = [
 export default function HelpScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const curiosityColors = useMemo(() => getCuriosityColors(colors), [colors]);
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
@@ -140,14 +145,14 @@ export default function HelpScreen() {
         style={styles.diagnosisCard}
         onPress={() => router.push({ pathname: '/(tabs)/photo', params: { mode: 'diagnose' } })}
       >
-        <IconBadge size={52} backgroundColor={Colors.leafForeground}>
-          <Stethoscope size={Metrics.icon.large} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <IconBadge size={52} backgroundColor={colors.leafForeground}>
+          <Stethoscope size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
         <View style={styles.diagnosisTextBox}>
           <Text style={styles.diagnosisTitle}>Diagnosticar minha planta</Text>
           <Text style={styles.diagnosisSubtitle}>Tire uma foto e receba um diagnóstico com IA na hora</Text>
         </View>
-        <ArrowRight size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
       </Pressable>
 
       <Pressable style={styles.historyLink} onPress={() => router.push('/diagnose')}>
@@ -165,7 +170,7 @@ export default function HelpScreen() {
             const Icon = need.icon;
             return (
               <View key={need.label} style={styles.needChip}>
-                <Icon size={18} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Icon size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                 <Text style={styles.needChipText}>{need.label}</Text>
               </View>
             );
@@ -178,12 +183,12 @@ export default function HelpScreen() {
 
       <View style={styles.mistakesCard}>
         <View style={styles.mistakesHeader}>
-          <AlertTriangle size={18} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+          <AlertTriangle size={18} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
           <Text style={styles.mistakesTitle}>Erros comuns de quem tá começando</Text>
         </View>
         {COMMON_MISTAKES.map((mistake) => (
           <View key={mistake} style={styles.mistakeRow}>
-            <X size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+            <X size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.mistakeText}>{mistake}</Text>
           </View>
         ))}
@@ -197,7 +202,7 @@ export default function HelpScreen() {
         style={styles.curiosityScroll}
       >
         {CURIOSITIES.map((fact, index) => {
-          const color = CURIOSITY_COLORS[index % CURIOSITY_COLORS.length];
+          const color = curiosityColors[index % curiosityColors.length];
           return (
             <View key={fact} style={[styles.curiosityCard, { backgroundColor: `${color}1A`, borderColor: color }]}>
               <Lightbulb size={20} color={color} strokeWidth={Metrics.icon.strokeWidth} />
@@ -213,8 +218,8 @@ export default function HelpScreen() {
           const Icon = benefit.icon;
           return (
             <View key={benefit.title} style={styles.benefitTile}>
-              <IconBadge size={36} backgroundColor={`${Colors.accent}22`}>
-                <Icon size={18} color={Colors.accent} strokeWidth={Metrics.icon.strokeWidth} />
+              <IconBadge size={36} backgroundColor={`${colors.accent}22`}>
+                <Icon size={18} color={colors.accent} strokeWidth={Metrics.icon.strokeWidth} />
               </IconBadge>
               <Text style={styles.benefitTitle}>{benefit.title}</Text>
               <Text style={styles.benefitText}>{benefit.description}</Text>
@@ -235,12 +240,12 @@ export default function HelpScreen() {
           <Card key={item.id} style={styles.card} onPress={() => setOpenId(isOpen ? null : item.id)}>
             <View style={styles.row}>
               <IconBadge>
-                <Icon size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Icon size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
               </IconBadge>
               <Text style={styles.question}>{item.question}</Text>
               <ChevronDown
                 size={Metrics.icon.normal}
-                color={Colors.mutedForeground}
+                color={colors.mutedForeground}
                 strokeWidth={Metrics.icon.strokeWidth}
                 style={isOpen ? styles.chevronOpen : undefined}
               />
@@ -254,10 +259,11 @@ export default function HelpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -268,18 +274,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
   },
   diagnosisCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.md,
-    backgroundColor: Colors.leaf,
+    backgroundColor: colors.leaf,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.xl,
@@ -290,11 +296,11 @@ const styles = StyleSheet.create({
   diagnosisTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.leafForeground,
+    color: colors.leafForeground,
   },
   diagnosisSubtitle: {
     fontSize: 13,
-    color: Colors.leafForeground,
+    color: colors.leafForeground,
     opacity: 0.85,
     marginTop: 2,
   },
@@ -306,7 +312,7 @@ const styles = StyleSheet.create({
   historyLinkText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.leaf,
+    color: colors.leaf,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -317,21 +323,21 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
   },
   needsCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.md,
   },
   needsTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.sm,
   },
   needsRow: {
@@ -343,7 +349,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.xs,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.xs,
     paddingHorizontal: Metrics.spacing.md,
@@ -351,19 +357,19 @@ const styles = StyleSheet.create({
   needChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   needsCaption: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     lineHeight: 18,
     marginTop: Metrics.spacing.sm,
   },
   mistakesCard: {
-    backgroundColor: `${Colors.destructive}0D`,
+    backgroundColor: `${colors.destructive}0D`,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: `${Colors.destructive}33`,
+    borderColor: `${colors.destructive}33`,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.md,
   },
@@ -376,7 +382,7 @@ const styles = StyleSheet.create({
   mistakesTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.destructive,
+    color: colors.destructive,
     flex: 1,
   },
   mistakeRow: {
@@ -389,12 +395,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   subsectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.sm,
   },
   curiosityScroll: {
@@ -414,7 +420,7 @@ const styles = StyleSheet.create({
   curiosityText: {
     fontSize: 13,
     lineHeight: 19,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   benefitsGrid: {
     flexDirection: 'row',
@@ -424,22 +430,22 @@ const styles = StyleSheet.create({
   },
   benefitTile: {
     width: '48%',
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
   },
   benefitTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: Metrics.spacing.sm,
   },
   benefitText: {
     fontSize: 12,
     lineHeight: 16,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   card: {
@@ -455,16 +461,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   chevronOpen: {
     transform: [{ rotate: '180deg' }],
   },
   answer: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     lineHeight: 19,
     marginTop: Metrics.spacing.sm,
     paddingLeft: 40 + Metrics.spacing.sm,
   },
-});
+  });

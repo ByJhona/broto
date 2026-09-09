@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import MailCheck from 'lucide-react-native/icons/mail-check';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { AuthFooterLink, AuthLayout, FormError, FormField, SubmitButton } from '@/components';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { isUsernameAvailable } from '@/services';
@@ -10,6 +10,8 @@ import { authErrorMessage, normalizeUsername, validateUsername } from '@/utils';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { signUp } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [name, setName] = useState('');
@@ -71,7 +73,7 @@ export default function SignupScreen() {
   if (awaitingConfirmation) {
     return (
       <View style={styles.confirmContainer}>
-        <MailCheck size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <MailCheck size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         <Text style={styles.confirmTitle}>Confirme seu e-mail</Text>
         <Text style={styles.confirmSubtitle}>
           Enviamos um link de confirmação para {email}. Abra-o para ativar sua conta e depois volte para entrar.
@@ -132,24 +134,25 @@ export default function SignupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   confirmContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Metrics.spacing.xl,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   confirmTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     textAlign: 'center',
     marginTop: Metrics.spacing.md,
   },
   confirmSubtitle: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
     marginBottom: Metrics.spacing.xl,
@@ -159,14 +162,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   confirmLinkText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 14,
   },
   hint: {
     fontSize: 12,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: -Metrics.spacing.sm,
     marginBottom: Metrics.spacing.md,
   },
-});
+  });

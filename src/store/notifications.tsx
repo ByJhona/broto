@@ -6,7 +6,7 @@ import type { Notification } from '@/types';
 
 let channelInstanceCounter = 0;
 
-export function NotificationsProvider({ children }: PropsWithChildren) {
+export function NotificationsProvider({ children }: Readonly<PropsWithChildren>) {
   const { session } = useAuthContext();
   const userId = session?.user?.id;
   const queryClient = useQueryClient();

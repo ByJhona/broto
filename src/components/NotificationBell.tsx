@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import Bell from 'lucide-react-native/icons/bell';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 
 type NotificationBellProps = {
   hasUnread?: boolean;
@@ -9,8 +10,10 @@ type NotificationBellProps = {
   style?: ViewStyle;
 };
 
-export function NotificationBell({ hasUnread = false, size = Metrics.icon.normal, style }: NotificationBellProps) {
+export function NotificationBell({ hasUnread = false, size = Metrics.icon.normal, style }: Readonly<NotificationBellProps>) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <Pressable
@@ -20,26 +23,27 @@ export function NotificationBell({ hasUnread = false, size = Metrics.icon.normal
       accessibilityLabel={hasUnread ? 'Notificações, você tem novidades' : 'Notificações'}
       style={({ pressed }) => [styles.container, { opacity: pressed ? 0.7 : 1 }, style]}
     >
-      <Bell size={size} color={Colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Bell size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
       {hasUnread && <View style={styles.badge} />}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 10,
-    height: 10,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.destructive,
-    borderWidth: 1.5,
-    borderColor: Colors.leaf,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    badge: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      width: 10,
+      height: 10,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: colors.destructive,
+      borderWidth: 1.5,
+      borderColor: colors.leaf,
+    },
+  });

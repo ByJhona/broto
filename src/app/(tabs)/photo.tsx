@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ImageIcon from 'lucide-react-native/icons/image';
 import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { OfflineBanner } from '@/components';
 import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
@@ -37,20 +37,22 @@ type ModeToggleProps = {
 };
 
 function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.toggle}>
       <Pressable
         style={[styles.toggleOption, mode === 'identify' && styles.toggleOptionActive]}
         onPress={() => onChange('identify')}
       >
-        <Scan size={15} color={mode === 'identify' ? Colors.leaf : Colors.white} strokeWidth={2} />
+        <Scan size={15} color={mode === 'identify' ? colors.leaf : colors.white} strokeWidth={2} />
         <Text style={[styles.toggleText, mode === 'identify' && styles.toggleTextActive]}>Identificar</Text>
       </Pressable>
       <Pressable
         style={[styles.toggleOption, mode === 'diagnose' && styles.toggleOptionActive]}
         onPress={() => onChange('diagnose')}
       >
-        <Stethoscope size={15} color={mode === 'diagnose' ? Colors.leaf : Colors.white} strokeWidth={2} />
+        <Stethoscope size={15} color={mode === 'diagnose' ? colors.leaf : colors.white} strokeWidth={2} />
         <Text style={[styles.toggleText, mode === 'diagnose' && styles.toggleTextActive]}>Diagnosticar</Text>
       </Pressable>
     </View>
@@ -59,6 +61,8 @@ function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
 
 export default function PhotoScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const params = useLocalSearchParams<{ mode?: string }>();
   const cameraRef = useRef<CameraView>(null);
   const isFocused = useIsFocused();
@@ -188,7 +192,7 @@ export default function PhotoScreen() {
   if (isProcessing) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={Colors.primary} size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
         <Text style={styles.loadingText}>{copy.loading}</Text>
       </View>
     );
@@ -237,7 +241,7 @@ export default function PhotoScreen() {
 
       <View style={styles.controls}>
         <Pressable style={styles.galleryButton} onPress={handlePickFromGallery} disabled={isOffline}>
-          <ImageIcon size={Metrics.icon.normal} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <ImageIcon size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
 
         <Pressable style={styles.captureButton} onPress={handleCapture} disabled={isOffline}>
@@ -250,10 +254,11 @@ export default function PhotoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: colors.black,
   },
   camera: {
     flex: 1,
@@ -262,41 +267,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: Metrics.spacing.lg,
   },
   loadingText: {
     fontSize: 15,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: Metrics.spacing.md,
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     textAlign: 'center',
     marginTop: Metrics.spacing.lg,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
     marginBottom: Metrics.spacing.xl,
   },
   permissionButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.md,
     paddingHorizontal: Metrics.spacing.xl,
   },
   permissionButtonText: {
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
     fontWeight: '600',
     fontSize: 16,
   },
   galleryLink: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 14,
     marginTop: Metrics.spacing.lg,
@@ -312,13 +317,13 @@ const styles = StyleSheet.create({
   overlayTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.white,
+    color: colors.white,
     textAlign: 'center',
     marginTop: Metrics.spacing.md,
   },
   overlaySubtitle: {
     fontSize: 13,
-    color: Colors.white,
+    color: colors.white,
     opacity: 0.85,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
@@ -343,15 +348,15 @@ const styles = StyleSheet.create({
     borderRadius: Metrics.radius.full,
   },
   toggleOptionActive: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.white,
   },
   toggleText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.white,
+    color: colors.white,
   },
   toggleTextActive: {
-    color: Colors.leaf,
+    color: colors.leaf,
   },
   controls: {
     position: 'absolute',
@@ -376,7 +381,7 @@ const styles = StyleSheet.create({
     height: 76,
     borderRadius: Metrics.radius.full,
     borderWidth: 4,
-    borderColor: Colors.white,
+    borderColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -384,16 +389,16 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.white,
   },
   controlsSpacer: {
     width: 48,
     height: 48,
   },
   error: {
-    color: Colors.destructive,
+    color: colors.destructive,
     fontSize: 13,
     marginTop: Metrics.spacing.md,
     textAlign: 'center',
   },
-});
+  });

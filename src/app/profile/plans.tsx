@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import Gem from 'lucide-react-native/icons/gem';
 import Zap from 'lucide-react-native/icons/zap';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
 import { useCredits } from '@/hooks';
 import {
@@ -33,6 +33,8 @@ function getPlanCtaLabel(plan: PlanCatalogItem, purchasingId: string | null): st
 }
 
 export default function PlansScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { credits, refresh: refreshCredits } = useCredits();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export default function PlansScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
     >
       {isLoading ? (
@@ -153,10 +155,11 @@ export default function PlansScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -165,4 +168,4 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginTop: Metrics.spacing.sm,
   },
-});
+  });

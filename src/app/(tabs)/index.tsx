@@ -1,16 +1,18 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import Eye from 'lucide-react-native/icons/eye';
 import EyeOff from 'lucide-react-native/icons/eye-off';
 import Plus from 'lucide-react-native/icons/plus';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CareTaskItem, CreditsCard, HomeHeader } from '@/components';
 import { useCareTasks } from '@/hooks';
 import { confirm } from '@/utils';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { tasks, isLoading, toggleTask, deleteTask, refresh } = useCareTasks();
   const [showCompleted, setShowCompleted] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -41,7 +43,7 @@ export default function HomeScreen() {
       bounces
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
     >
       <HomeHeader />
@@ -57,14 +59,14 @@ export default function HomeScreen() {
             {completedTasks.length > 0 ? (
               <Pressable style={styles.addButton} onPress={() => setShowCompleted((current) => !current)} hitSlop={8}>
                 {showCompleted ? (
-                  <Eye size={Metrics.icon.small} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+                  <Eye size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
                 ) : (
-                  <EyeOff size={Metrics.icon.small} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+                  <EyeOff size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
                 )}
               </Pressable>
             ) : null}
             <Pressable style={styles.addButton} onPress={() => router.push('/task/new')} hitSlop={8}>
-              <Plus size={Metrics.icon.small} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+              <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           </View>
         </View>
@@ -94,10 +96,11 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   shortcut: {
     paddingHorizontal: Metrics.spacing.lg,
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
     marginBottom: Metrics.spacing.sm,
   },
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
     gap: Metrics.spacing.sm,
   },
   emptyText: {
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     fontSize: 14,
   },
-});
+  });

@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { SkeletonBlock } from './Skeleton';
 
 type CreditPackCardProps = {
@@ -11,12 +12,14 @@ type CreditPackCardProps = {
   onPressCta: () => void;
 };
 
-export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }: CreditPackCardProps) {
+export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }: Readonly<CreditPackCardProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <View style={styles.row}>
         <View style={styles.icon}>
-          <Icon size={Metrics.icon.normal} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.price}>{price}</Text>
@@ -30,6 +33,8 @@ export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }
 }
 
 export function CreditPackCardSkeleton() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -40,13 +45,14 @@ export function CreditPackCardSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   row: {
     flexDirection: 'row',
@@ -56,7 +62,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Metrics.spacing.md,
@@ -65,26 +71,26 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   price: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   cta: {
     marginTop: Metrics.spacing.md,
     alignItems: 'center',
     paddingVertical: Metrics.spacing.sm,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   ctaText: {
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
     fontWeight: '600',
     fontSize: 15,
   },
   skeletonIconGap: {
     marginRight: Metrics.spacing.md,
   },
-});
+  });

@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useAuth, useCareTasks, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getDailyMessage, getProfile } from '@/services';
@@ -20,6 +20,8 @@ function getHighlightText(pendingCount: number): string {
 
 export function HomeHeader() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { hasUnread } = useNotifications();
   const { pendingCount } = useCareTasks();
   const { user } = useAuth();
@@ -62,9 +64,10 @@ export function HomeHeader() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   header: {
-    backgroundColor: Colors.leaf,
+    backgroundColor: colors.leaf,
     paddingHorizontal: Metrics.spacing.lg,
     paddingBottom: 60,
     borderBottomLeftRadius: 40,
@@ -84,12 +87,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.leafForeground,
+    color: colors.leafForeground,
   },
   mainHighlight: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: Colors.white,
+    color: colors.white,
     lineHeight: 42,
     marginBottom: Metrics.spacing.md,
   },
@@ -98,8 +101,8 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 16,
-    color: Colors.leafForeground,
+    color: colors.leafForeground,
     opacity: 0.9,
     lineHeight: 24,
   },
-});
+  });

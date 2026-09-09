@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ import SignalMedium from 'lucide-react-native/icons/signal-medium';
 import Sun from 'lucide-react-native/icons/sun';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import type { LucideIcon } from 'lucide-react-native';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import {
   FormError,
   FormField,
@@ -56,6 +56,8 @@ type StatTile = {
 };
 
 function PlantDetailSkeleton() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <>
       <View style={styles.heroSkeleton} />
@@ -90,6 +92,8 @@ function PlantDetailSkeleton() {
 
 export default function PlantDetailScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -250,7 +254,7 @@ export default function PlantDetailScreen() {
           title: '',
           headerRight: () => (
             <Pressable onPress={handleDelete} disabled={isDeleting} hitSlop={8}>
-              <Trash2 size={Metrics.icon.normal} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+              <Trash2 size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ),
         }}
@@ -331,10 +335,11 @@ export default function PlantDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   contentContainer: {
     paddingBottom: Metrics.spacing.xl,
@@ -343,10 +348,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   emptyText: {
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     fontSize: 15,
   },
   content: {
@@ -355,7 +360,7 @@ const styles = StyleSheet.create({
   heroSkeleton: {
     width: '100%',
     height: 260,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
   },
   skeletonGap: {
     marginBottom: Metrics.spacing.sm,
@@ -363,14 +368,14 @@ const styles = StyleSheet.create({
   sinceLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.leaf,
+    color: colors.leaf,
     marginBottom: Metrics.spacing.lg,
   },
   section: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
@@ -388,14 +393,14 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.lg,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.md,
   },
   modalCancel: {
@@ -406,6 +411,6 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
-});
+  });

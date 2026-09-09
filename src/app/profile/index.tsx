@@ -1,10 +1,14 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import CreditCard from 'lucide-react-native/icons/credit-card';
 import LogOut from 'lucide-react-native/icons/log-out';
+import Monitor from 'lucide-react-native/icons/monitor';
+import Moon from 'lucide-react-native/icons/moon';
+import Sun from 'lucide-react-native/icons/sun';
 import User from 'lucide-react-native/icons/user';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference } from '@/theme';
 import { Avatar, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';
 import { manageSubscriptions, getProfile, type CreditsState } from '@/services';
@@ -17,8 +21,17 @@ function getPlanDescription(credits: CreditsState | null): string {
   return `${credits.monthlyCredits} créditos por ${period}`;
 }
 
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Claro', icon: Sun },
+  { value: 'dark', label: 'Escuro', icon: Moon },
+  { value: 'system', label: 'Sistema', icon: Monitor },
+];
+
 export default function ProfileScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { preference, setPreference } = useAppTheme();
   const { session, user, signOut } = useAuth();
   const { credits } = useCredits();
   const { data: profile = null } = useQuery({
@@ -78,6 +91,32 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Aparência</Text>
+        <View style={styles.themeRow}>
+          {THEME_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const selected = preference === option.value;
+            return (
+              <Pressable
+                key={option.value}
+                style={[styles.themeOption, selected && styles.themeOptionSelected]}
+                onPress={() => setPreference(option.value)}
+              >
+                <Icon
+                  size={Metrics.icon.normal}
+                  color={selected ? colors.primary : colors.mutedForeground}
+                  strokeWidth={Metrics.icon.strokeWidth}
+                />
+                <Text style={[styles.themeOptionText, selected && styles.themeOptionTextSelected]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configurações</Text>
         <View style={styles.list}>
           {settingsItems.map((item, index) => (
@@ -87,17 +126,18 @@ export default function ProfileScreen() {
       </View>
 
       <Pressable style={styles.logoutButton} onPress={handleSignOut}>
-        <LogOut size={Metrics.icon.normal} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+        <LogOut size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
         <Text style={styles.logoutText}>Sair da conta</Text>
       </Pressable>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   profileHeader: {
     alignItems: 'center',
@@ -109,12 +149,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   username: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.leaf,
+    color: colors.leaf,
     marginTop: 4,
   },
   section: {
@@ -124,19 +164,45 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
     marginBottom: Metrics.spacing.sm,
   },
   list: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   manageSubscriptionList: {
     marginTop: Metrics.spacing.sm,
+  },
+  themeRow: {
+    flexDirection: 'row',
+    gap: Metrics.spacing.sm,
+  },
+  themeOption: {
+    flex: 1,
+    alignItems: 'center',
+    gap: Metrics.spacing.xs,
+    backgroundColor: colors.card,
+    borderRadius: Metrics.radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: Metrics.spacing.md,
+  },
+  themeOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}14`,
+  },
+  themeOptionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.mutedForeground,
+  },
+  themeOptionTextSelected: {
+    color: colors.primary,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -148,6 +214,6 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.destructive,
+    color: colors.destructive,
   },
-});
+  });

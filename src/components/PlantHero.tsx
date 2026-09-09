@@ -1,7 +1,7 @@
-import type { PropsWithChildren } from 'react';
+import { useMemo, type PropsWithChildren } from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Pencil from 'lucide-react-native/icons/pencil';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 
 type PlantHeroProps = PropsWithChildren<{
   photoUrl: string;
@@ -12,7 +12,9 @@ type PlantHeroProps = PropsWithChildren<{
   onEditName?: () => void;
 }>;
 
-export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditName, children }: PlantHeroProps) {
+export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditName, children }: Readonly<PlantHeroProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const content = (
     <ImageBackground source={{ uri: photoUrl }} style={styles.hero}>
       <View style={styles.scrim}>
@@ -20,7 +22,7 @@ export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditNa
           <Text style={styles.name}>{name}</Text>
           {onEditName ? (
             <Pressable onPress={onEditName} hitSlop={8} style={styles.editNameButton}>
-              <Pencil size={16} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              <Pencil size={16} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ) : null}
         </View>
@@ -41,12 +43,13 @@ export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditNa
   return content;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   hero: {
     width: '100%',
     height: 340,
     justifyContent: 'flex-end',
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
   },
   scrim: {
     backgroundColor: Overlays.scrim,
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.white,
+    color: colors.white,
   },
   editNameButton: {
     padding: 4,
@@ -69,8 +72,8 @@ const styles = StyleSheet.create({
   species: {
     fontSize: 15,
     fontStyle: 'italic',
-    color: Colors.white,
+    color: colors.white,
     opacity: 0.9,
     marginTop: 2,
   },
-});
+  });

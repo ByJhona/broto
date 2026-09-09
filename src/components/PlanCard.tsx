@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Crown from 'lucide-react-native/icons/crown';
 import Gift from 'lucide-react-native/icons/gift';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { Plan } from '@/types';
 import { SkeletonBlock } from './Skeleton';
 
@@ -12,7 +13,9 @@ type PlanCardProps = {
   isCurrent?: boolean;
 };
 
-export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: PlanCardProps) {
+export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: Readonly<PlanCardProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isPremium = plan.id === 'premium';
   const Icon = isPremium ? Crown : Gift;
 
@@ -20,7 +23,7 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: PlanCardProp
     <View style={[styles.card, isCurrent && styles.cardCurrent]}>
       <View style={styles.row}>
         <View style={styles.icon}>
-          <Icon size={Metrics.icon.normal} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
         <View style={styles.info}>
           <View style={styles.nameRow}>
@@ -46,6 +49,8 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: PlanCardProp
 }
 
 export function PlanCardSkeleton() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -59,16 +64,17 @@ export function PlanCardSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   cardCurrent: {
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     borderWidth: 2,
   },
   row: {
@@ -81,7 +87,7 @@ const styles = StyleSheet.create({
     gap: Metrics.spacing.xs,
   },
   currentBadge: {
-    backgroundColor: `${Colors.primary}1A`,
+    backgroundColor: `${colors.primary}1A`,
     borderRadius: Metrics.radius.full,
     paddingVertical: 2,
     paddingHorizontal: Metrics.spacing.sm,
@@ -89,13 +95,13 @@ const styles = StyleSheet.create({
   currentBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.primary,
+    color: colors.primary,
   },
   icon: {
     width: 48,
     height: 48,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.secondary,
+    backgroundColor: colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Metrics.spacing.md,
@@ -106,27 +112,27 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   description: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   price: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   cta: {
     marginTop: Metrics.spacing.md,
     alignItems: 'center',
     paddingVertical: Metrics.spacing.sm,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   ctaText: {
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
     fontWeight: '600',
     fontSize: 15,
   },
@@ -136,4 +142,4 @@ const styles = StyleSheet.create({
   skeletonGap: {
     marginTop: Metrics.spacing.xs,
   },
-});
+  });

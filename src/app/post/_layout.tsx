@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
-import { themedStackScreenOptions } from '@/theme';
+import { useThemedStackScreenOptions } from '@/theme';
 
 export default function PostLayout() {
+  const screenOptions = useThemedStackScreenOptions();
   return (
-    <Stack screenOptions={themedStackScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="[id]" options={{ title: 'Publicação' }} />
     </Stack>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Camera from 'lucide-react-native/icons/camera';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useCreditsGate } from '@/hooks';
 import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
@@ -23,8 +23,10 @@ type PlantGrowthSectionProps = {
   isPremium: boolean;
 };
 
-export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps) {
+export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSectionProps>) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const checkinsQueryKey = ['plant-growth-checkins', plant.id] as const;
@@ -102,9 +104,9 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
         <>
           <Pressable style={styles.analyzeButton} onPress={handleAnalyzeGrowth} disabled={isAnalyzing}>
             {isAnalyzing ? (
-              <ActivityIndicator color={Colors.primaryForeground} size="small" />
+              <ActivityIndicator color={colors.primaryForeground} size="small" />
             ) : (
-              <Camera size={16} color={Colors.primaryForeground} strokeWidth={2} />
+              <Camera size={16} color={colors.primaryForeground} strokeWidth={2} />
             )}
             <Text style={styles.analyzeButtonText}>
               {isAnalyzing ? 'Analisando...' : `Analisar minha planta · ${GROWTH_ANALYSIS_CREDIT_COST} créditos`}
@@ -133,9 +135,9 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
                   >
                     <Text style={styles.checkinDate}>{formatShortDate(checkin.createdAt)}</Text>
                     {isExpanded ? (
-                      <ChevronUp size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                      <ChevronUp size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
                     ) : (
-                      <ChevronDown size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                      <ChevronDown size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
                     )}
                   </Pressable>
                   {isExpanded ? (
@@ -160,12 +162,13 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   section: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
@@ -174,7 +177,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Metrics.spacing.xs,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.md,
@@ -183,20 +186,20 @@ const styles = StyleSheet.create({
   analyzeButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
   },
   emptyCheckinsText: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   skeletonSpacing: {
     marginBottom: Metrics.spacing.sm,
   },
   checkinCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     overflow: 'hidden',
     marginBottom: Metrics.spacing.md,
   },
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
   checkinPhoto: {
     width: '100%',
     height: 160,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
   },
   checkinContent: {
     padding: Metrics.spacing.md,
@@ -217,7 +220,7 @@ const styles = StyleSheet.create({
   checkinDate: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
   },
   checkinObservationRow: {
@@ -230,13 +233,13 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.leaf,
+    backgroundColor: colors.leaf,
     marginTop: 6,
   },
   checkinObservationText: {
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
-});
+  });

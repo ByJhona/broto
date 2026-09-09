@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Sty
 import { useLocalSearchParams } from 'expo-router';
 import Sprout from 'lucide-react-native/icons/sprout';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { CommunityPost, PlantSummary, UserProfile } from '@/types';
 import { Avatar, CommunityPostCard, EmptyState, LoadingScreen, PlantCard, SectionTitle } from '@/components';
 import { useAuth, useFollow } from '@/hooks';
@@ -48,7 +48,9 @@ function ProfileHeader({
   plants,
   posts,
   isLoading,
-}: ProfileHeaderProps) {
+}: Readonly<ProfileHeaderProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       <View style={styles.header}>
@@ -103,6 +105,8 @@ function ProfileHeader({
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { following, counts, toggle } = useFollow(id ?? null);
@@ -252,8 +256,8 @@ export default function PublicProfileScreen() {
         <RefreshControl
           refreshing={profileQuery.isRefetching || plantsQuery.isRefetching || postsQuery.isRefetching}
           onRefresh={handleRefresh}
-          tintColor={Colors.leaf}
-          colors={[Colors.leaf]}
+          tintColor={colors.leaf}
+          colors={[colors.leaf]}
         />
       }
       ListHeaderComponent={
@@ -269,15 +273,16 @@ export default function PublicProfileScreen() {
           isLoading={isLoading}
         />
       }
-      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     />
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -289,13 +294,13 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: Metrics.spacing.md,
   },
   username: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.leaf,
+    color: colors.leaf,
     marginTop: 2,
   },
   countsRow: {
@@ -309,32 +314,32 @@ const styles = StyleSheet.create({
   countValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   countLabel: {
     fontSize: 12,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   followButton: {
     marginTop: Metrics.spacing.md,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.xl,
   },
   followButtonActive: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   followButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
   },
   followButtonTextActive: {
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   plantsSection: {
     marginBottom: Metrics.spacing.lg,
@@ -344,7 +349,7 @@ const styles = StyleSheet.create({
   },
   plantsEmptyText: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginLeft: Metrics.spacing.xs,
   },
   plantsRow: {
@@ -359,4 +364,4 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: Metrics.spacing.lg,
   },
-});
+  });

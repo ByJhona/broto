@@ -1,9 +1,9 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Circle from 'lucide-react-native/icons/circle';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { addDays, CATEGORY_ICONS, formatShortDate } from '@/utils';
 import type { CareTask } from '@/types';
 
@@ -23,7 +23,9 @@ function statusLabel(task: CareTask): string {
   return `Concluído — próxima em ${formatShortDate(addDays(task.dueDate, task.recurrenceDays))}`;
 }
 
-export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: CareTaskItemProps) {
+export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: Readonly<CareTaskItemProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = CATEGORY_ICONS[task.category];
   const subtitle = task.plantName ? `${task.plantName} · ${statusLabel(task)}` : statusLabel(task);
 
@@ -45,7 +47,7 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
         ) : (
           <Icon
             size={Metrics.icon.normal}
-            color={task.done ? Colors.mutedForeground : Colors.leaf}
+            color={task.done ? colors.mutedForeground : colors.leaf}
             strokeWidth={Metrics.icon.strokeWidth}
           />
         )}
@@ -57,28 +59,29 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
       </View>
 
       {task.done ? (
-        <CheckCircle2 size={Metrics.icon.normal} color={Colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+        <CheckCircle2 size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
       ) : (
-        <Circle size={Metrics.icon.normal} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Circle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
       )}
     </Pressable>
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
   },
   cardDone: {
-    backgroundColor: Colors.muted,
-    borderColor: Colors.muted,
+    backgroundColor: colors.muted,
+    borderColor: colors.muted,
   },
   cardPressed: {
     opacity: 0.8,
@@ -87,13 +90,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   iconDone: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
   },
   iconPhoto: {
     width: '100%',
@@ -105,15 +108,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   textDone: {
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textDecorationLine: 'line-through',
   },
-});
+  });

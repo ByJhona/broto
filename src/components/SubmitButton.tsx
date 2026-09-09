@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 
 type SubmitButtonProps = {
   label: string;
@@ -8,7 +9,9 @@ type SubmitButtonProps = {
   disabled?: boolean;
 };
 
-export function SubmitButton({ label, onPress, loading = false, disabled = false }: SubmitButtonProps) {
+export function SubmitButton({ label, onPress, loading = false, disabled = false }: Readonly<SubmitButtonProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isDisabled = loading || disabled;
 
   return (
@@ -18,7 +21,7 @@ export function SubmitButton({ label, onPress, loading = false, disabled = false
       disabled={isDisabled}
     >
       {loading ? (
-        <ActivityIndicator color={Colors.primaryForeground} />
+        <ActivityIndicator color={colors.primaryForeground} />
       ) : (
         <Text style={styles.text}>{label}</Text>
       )}
@@ -26,20 +29,21 @@ export function SubmitButton({ label, onPress, loading = false, disabled = false
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: Colors.primary,
-    borderRadius: Metrics.radius.md,
-    paddingVertical: Metrics.spacing.md,
-    alignItems: 'center',
-    marginTop: Metrics.spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  text: {
-    color: Colors.primaryForeground,
-    fontWeight: '600',
-    fontSize: 16,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: Metrics.radius.md,
+      paddingVertical: Metrics.spacing.md,
+      alignItems: 'center',
+      marginTop: Metrics.spacing.sm,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    text: {
+      color: colors.primaryForeground,
+      fontWeight: '600',
+      fontSize: 16,
+    },
+  });

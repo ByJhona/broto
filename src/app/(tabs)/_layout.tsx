@@ -1,15 +1,18 @@
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Tabs } from 'expo-router';
 import Home from 'lucide-react-native/icons/house';
 import Users from 'lucide-react-native/icons/users';
 import Camera from 'lucide-react-native/icons/camera';
 import Leaf from 'lucide-react-native/icons/leaf';
 import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
+import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function TabLayout() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: Colors.tabIconSelected, tabBarShowLabel: true, headerShown: false }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: colors.tabIconSelected, tabBarShowLabel: true, headerShown: false }}>
       <Tabs.Screen
         name="index"
         options={{
@@ -44,7 +47,7 @@ export default function TabLayout() {
               style={[props.style, styles.customButtonContainer]}
             >
               <View style={styles.highlightButton}>
-                <Camera size={34} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                <Camera size={34} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
               </View>
             </TouchableOpacity>
           ),
@@ -76,7 +79,8 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   customButtonContainer: {
     top: -10,
     justifyContent: 'center',
@@ -86,21 +90,21 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
   },
   activeTabIcon: {
-    backgroundColor: Colors.tabIconSelected + '24',
+    backgroundColor: colors.tabIconSelected + '24',
     paddingHorizontal: 20,
     paddingVertical: 6,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+  });

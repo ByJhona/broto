@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EmptyState, OfflineBanner, PlantCard, PlantCardSkeleton } from '@/components';
 import { useNetworkStatus, usePlants } from '@/hooks';
 import type { PlantSummary } from '@/types';
@@ -11,6 +11,8 @@ const SKELETON_PLACEHOLDERS = [0, 1];
 
 export default function GardenScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { plants, isLoading, refresh } = usePlants();
   const { isOffline } = useNetworkStatus();
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
@@ -50,7 +52,7 @@ export default function GardenScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderPlantCard}
           refreshControl={
-            <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+            <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
           }
           ListEmptyComponent={
             <EmptyState
@@ -66,10 +68,11 @@ export default function GardenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   header: {
     padding: Metrics.spacing.lg,
@@ -81,7 +84,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   empty: {
     flex: 1,
@@ -93,4 +96,4 @@ const styles = StyleSheet.create({
     padding: Metrics.spacing.lg,
     gap: Metrics.spacing.md,
   },
-});
+  });

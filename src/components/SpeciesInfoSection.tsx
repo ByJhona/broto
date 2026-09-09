@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
 import Bug from 'lucide-react-native/icons/bug';
@@ -6,7 +6,7 @@ import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { PlantCommonProblem, SpeciesInfoDisplay } from '@/types';
 import { SkeletonBlock } from './Skeleton';
 import { ExpandableCard } from './ExpandableCard';
@@ -21,15 +21,17 @@ type AboutCardProps = {
   onToggle: () => void;
 };
 
-function AboutCard({ info, isExpanded, onToggle }: AboutCardProps) {
+function AboutCard({ info, isExpanded, onToggle }: Readonly<AboutCardProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.section, styles.aboutCard]}>
       <Pressable style={styles.sectionHeader} onPress={onToggle}>
         <Text style={styles.sectionTitle}>Sobre a espécie</Text>
         {isExpanded ? (
-          <ChevronUp size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronUp size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         ) : (
-          <ChevronDown size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronDown size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         )}
       </Pressable>
       {isExpanded && (
@@ -37,7 +39,7 @@ function AboutCard({ info, isExpanded, onToggle }: AboutCardProps) {
           <Text style={styles.description}>{info.description}</Text>
           {info.wateringDescription ? (
             <View style={styles.wateringRow}>
-              <Droplet size={16} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Droplet size={16} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
               <Text style={styles.wateringText}>{info.wateringDescription}</Text>
             </View>
           ) : null}
@@ -47,19 +49,21 @@ function AboutCard({ info, isExpanded, onToggle }: AboutCardProps) {
   );
 }
 
-function ToxicityCard({ info }: { info: SpeciesInfoDisplay }) {
+function ToxicityCard({ info }: Readonly<{ info: SpeciesInfoDisplay }>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <ExpandableCard
         title="Atenção: Tóxica"
-        icon={<AlertTriangle size={Metrics.icon.normal} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />}
-        color={Colors.destructive}
+        icon={<AlertTriangle size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={colors.destructive}
         defaultExpanded={true}
       >
         <View style={styles.warningContent}>
           {info.toxicToPets ? (
             <View style={styles.listRow}>
-              <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
+              <View style={[styles.bullet, { backgroundColor: colors.destructive }]} />
               <Text style={styles.listText}>
                 Para pets{info.toxicToPetsNotes ? `: ${info.toxicToPetsNotes}` : ''}
               </Text>
@@ -67,7 +71,7 @@ function ToxicityCard({ info }: { info: SpeciesInfoDisplay }) {
           ) : null}
           {info.toxicToHumans ? (
             <View style={styles.listRow}>
-              <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
+              <View style={[styles.bullet, { backgroundColor: colors.destructive }]} />
               <Text style={styles.listText}>
                 Para humanos{info.toxicToHumansNotes ? `: ${info.toxicToHumansNotes}` : ''}
               </Text>
@@ -79,13 +83,15 @@ function ToxicityCard({ info }: { info: SpeciesInfoDisplay }) {
   );
 }
 
-function FunFactsCard({ funFacts }: { funFacts: string[] }) {
+function FunFactsCard({ funFacts }: Readonly<{ funFacts: string[] }>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <ExpandableCard
         title="Você sabia?"
-        icon={<Lightbulb size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />}
-        color={Colors.leaf}
+        icon={<Lightbulb size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={colors.leaf}
         defaultExpanded={true}
       >
         {funFacts.map((fact) => (
@@ -99,13 +105,15 @@ function FunFactsCard({ funFacts }: { funFacts: string[] }) {
   );
 }
 
-function CommonProblemsCard({ commonProblems }: { commonProblems: PlantCommonProblem[] }) {
+function CommonProblemsCard({ commonProblems }: Readonly<{ commonProblems: PlantCommonProblem[] }>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <ExpandableCard
         title="Problemas comuns"
-        icon={<Bug size={Metrics.icon.normal} color={Colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
-        color={Colors.secondary}
+        icon={<Bug size={Metrics.icon.normal} color={colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={colors.secondary}
       >
         {commonProblems.map((problem) => (
           <View key={problem.issue} style={styles.problemRow}>
@@ -118,7 +126,7 @@ function CommonProblemsCard({ commonProblems }: { commonProblems: PlantCommonPro
   );
 }
 
-export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
+export function SpeciesInfoSection({ info }: Readonly<SpeciesInfoSectionProps>) {
   const [isAboutExpanded, setIsAboutExpanded] = useState(true);
 
   return (
@@ -132,6 +140,8 @@ export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
 }
 
 export function SpeciesInfoSkeleton() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       <View style={[styles.section, styles.aboutCard]}>
@@ -171,7 +181,8 @@ export function SpeciesInfoSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   warningContent: {
     gap: Metrics.spacing.sm,
   },
@@ -179,10 +190,10 @@ const styles = StyleSheet.create({
     marginBottom: Metrics.spacing.lg,
   },
   aboutCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
   },
   sectionHeader: {
@@ -194,14 +205,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textTransform: 'uppercase',
   },
   description: {
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '500',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.sm,
   },
   wateringRow: {
@@ -211,13 +222,13 @@ const styles = StyleSheet.create({
     marginTop: Metrics.spacing.xs,
     paddingTop: Metrics.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
   },
   wateringText: {
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   chipRow: {
     flexDirection: 'row',
@@ -234,7 +245,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.leaf,
+    backgroundColor: colors.leaf,
     marginTop: 7,
   },
   listText: {
@@ -242,7 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '500',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   skeletonGap: {
     marginBottom: Metrics.spacing.xs,
@@ -253,8 +264,8 @@ const styles = StyleSheet.create({
   factsCard: {
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.muted,
+    borderColor: colors.border,
+    backgroundColor: colors.muted,
     padding: Metrics.spacing.md,
   },
   factsHeader: {
@@ -269,12 +280,12 @@ const styles = StyleSheet.create({
   problemIssue: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   problemCause: {
     fontSize: 14,
     lineHeight: 19,
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: 2,
   },
-});
+  });

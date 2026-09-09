@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CommunityPostCard, LoadingScreen } from '@/components';
 import { useAuth } from '@/hooks';
 import {
@@ -22,6 +23,8 @@ const POST_STALE_TIME = 30_000;
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -122,7 +125,7 @@ export default function PostDetailScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={postQuery.isRefetching} onRefresh={handleRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl refreshing={postQuery.isRefetching} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
     >
       <CommunityPostCard
@@ -138,10 +141,11 @@ export default function PostDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -150,10 +154,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   emptyText: {
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     fontSize: 15,
   },
-});
+  });

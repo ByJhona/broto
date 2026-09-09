@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { IconBadge } from './IconBadge';
 import { useCreditsGate } from '@/hooks';
 import { askPlantQuestion, CREDIT_COSTS, InsufficientCreditsError, type PlantChatMessage } from '@/services';
@@ -17,8 +17,10 @@ type PlantChatProps = {
   plantId: string;
 };
 
-export function PlantChat({ plantId }: PlantChatProps) {
+export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const scrollRef = useRef<ScrollView>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -95,8 +97,8 @@ export function PlantChat({ plantId }: PlantChatProps) {
   if (!isUnlocked) {
     return (
       <Pressable style={styles.unlockCard} onPress={handleUnlock}>
-        <IconBadge size={44} backgroundColor={Colors.leafForeground}>
-          <MessageCircle size={20} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <IconBadge size={44} backgroundColor={colors.leafForeground}>
+          <MessageCircle size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
         <Text style={styles.unlockText}>Tire dúvidas sobre o cuidado dessa planta com a IA.</Text>
         <Text style={styles.unlockButtonText}>Toque para conversar</Text>
@@ -123,8 +125,8 @@ export function PlantChat({ plantId }: PlantChatProps) {
                 style={[styles.messageRow, message.role === 'user' && styles.messageRowUser]}
               >
                 {message.role === 'assistant' ? (
-                  <IconBadge size={28} backgroundColor={Colors.leafForeground}>
-                    <Leaf size={14} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  <IconBadge size={28} backgroundColor={colors.leafForeground}>
+                    <Leaf size={14} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                   </IconBadge>
                 ) : null}
                 <View style={[styles.bubble, message.role === 'user' ? styles.bubbleUser : styles.bubbleAssistant]}>
@@ -137,7 +139,7 @@ export function PlantChat({ plantId }: PlantChatProps) {
           </ScrollView>
         )}
 
-        {isSending ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+        {isSending ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
       </View>
 
       <View style={styles.inputRow}>
@@ -146,12 +148,12 @@ export function PlantChat({ plantId }: PlantChatProps) {
           value={draft}
           onChangeText={setDraft}
           placeholder="Pergunte algo sobre essa planta..."
-          placeholderTextColor={Colors.mutedForeground}
+          placeholderTextColor={colors.mutedForeground}
           multiline
           editable={!isSending}
         />
         <Pressable style={styles.sendButton} onPress={handleSend} disabled={isSending || !draft.trim()}>
-          <Send size={Metrics.icon.small} color={Colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       </View>
       <Text style={styles.costHint}>Cada pergunta custa {creditCost} crédito.</Text>
@@ -159,28 +161,29 @@ export function PlantChat({ plantId }: PlantChatProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   unlockCard: {
     alignItems: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.md,
     padding: Metrics.spacing.lg,
     gap: Metrics.spacing.xs,
   },
   unlockText: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
     lineHeight: 18,
   },
   unlockButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.primary,
+    color: colors.primary,
     marginTop: Metrics.spacing.xs,
   },
   chatBox: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.md,
     padding: Metrics.spacing.sm,
     marginBottom: Metrics.spacing.md,
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
   },
   messagesScroll: {
@@ -216,20 +219,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Metrics.spacing.md,
   },
   bubbleAssistant: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   bubbleUser: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   bubbleText: {
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   bubbleTextUser: {
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
   },
   inputRow: {
     flexDirection: 'row',
@@ -237,32 +240,32 @@ const styles = StyleSheet.create({
     gap: Metrics.spacing.sm,
     paddingTop: Metrics.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
   },
   input: {
     flex: 1,
     minHeight: 40,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.lg,
     paddingHorizontal: Metrics.spacing.md,
     paddingVertical: Metrics.spacing.sm,
     fontSize: 14,
-    color: Colors.foreground,
-    backgroundColor: Colors.white,
+    color: colors.foreground,
+    backgroundColor: colors.card,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   costHint: {
     fontSize: 11,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
   },
-});
+  });

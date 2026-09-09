@@ -1,7 +1,10 @@
-import { Colors } from './colors';
+import { useColors } from './ThemeProvider';
 
-export const themedStackScreenOptions = {
-  headerStyle: { backgroundColor: Colors.background },
-  headerTintColor: Colors.foreground,
-  headerShadowVisible: false,
-};
+export function useThemedStackScreenOptions() {
+  const colors = useColors();
+  return {
+    headerStyle: { backgroundColor: colors.background },
+    headerTintColor: colors.foreground,
+    headerShadowVisible: false,
+  };
+}

@@ -14,15 +14,19 @@ import { registerNotificationTapHandler } from '@/services/notificationNavigatio
 import { registerPushToken, watchPushTokenRefresh } from '@/services/pushTokens';
 import { queryClient } from '@/services/queryClient';
 import { AuthProvider, NotificationsProvider } from '@/store';
-import { Colors, themedStackScreenOptions } from '@/theme';
+import { ThemeProvider, useColors, useAppTheme, useThemedStackScreenOptions, type ThemeColors } from '@/theme';
 import { Alert } from '@/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { ActivityIndicator, Linking, StatusBar, StyleSheet, View } from 'react-native';
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();
+  const colors = useColors();
+  const { scheme } = useAppTheme();
+  const searchScreenOptions = useThemedStackScreenOptions();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     registerCareTaskNotificationHandlers();
@@ -48,16 +52,20 @@ function RootNavigator() {
     queryClient.query({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME }).catch(() => {});
   }, [session]);
 
+  const statusBar = <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />;
+
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={Colors.primary} />
+        {statusBar}
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
     <NotificationsProvider>
+      {statusBar}
       <Stack>
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -67,7 +75,7 @@ function RootNavigator() {
           <Stack.Screen name="identify" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />
-          <Stack.Screen name="search" options={{ ...themedStackScreenOptions, title: 'Buscar' }} />
+          <Stack.Screen name="search" options={{ ...searchScreenOptions, title: 'Buscar' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
@@ -82,19 +90,22 @@ function RootNavigator() {
 
 export default function Layout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    loading: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+  });

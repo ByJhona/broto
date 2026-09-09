@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Coins from 'lucide-react-native/icons/coins';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useAuth, useCredits } from '@/hooks';
 import type { CreditsState } from '@/services';
 
@@ -20,6 +21,8 @@ function getCreditsSubtitle(credits: CreditsState | null): string {
 
 export function CreditsCard() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { session } = useAuth();
   const { credits } = useCredits();
 
@@ -30,7 +33,7 @@ export function CreditsCard() {
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       >
         <View style={styles.icon}>
-          <Coins size={Metrics.icon.large} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <Coins size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>Entre pra ver seus créditos</Text>
@@ -49,7 +52,7 @@ export function CreditsCard() {
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={styles.icon}>
-        <Coins size={Metrics.icon.large} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Coins size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
@@ -59,11 +62,12 @@ export function CreditsCard() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.md,
     paddingHorizontal: Metrics.spacing.md,
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Metrics.radius.full,
-    backgroundColor: `${Colors.primaryForeground}26`,
+    backgroundColor: `${colors.primaryForeground}26`,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -86,12 +90,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
   },
   subtitle: {
     fontSize: 13,
-    color: Colors.primaryForeground,
+    color: colors.primaryForeground,
     opacity: 0.85,
     marginTop: 2,
   },
-});
+  });

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { registerAlertHandler, type AlertButton } from '@/utils';
 
 type AlertState = {
@@ -10,6 +10,8 @@ type AlertState = {
 };
 
 export function AlertHost() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [state, setState] = useState<AlertState | null>(null);
 
   useEffect(() => {
@@ -69,65 +71,66 @@ export function AlertHost() {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Overlays.scrim,
-    padding: Metrics.spacing.lg,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 340,
-    backgroundColor: Colors.background,
-    borderRadius: Metrics.radius.lg,
-    paddingTop: Metrics.spacing.lg,
-    paddingHorizontal: Metrics.spacing.lg,
-    overflow: 'hidden',
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: Colors.foreground,
-    textAlign: 'center',
-  },
-  message: {
-    fontSize: 14,
-    color: Colors.mutedForeground,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: Metrics.spacing.xs,
-  },
-  buttons: {
-    marginTop: Metrics.spacing.lg,
-    marginHorizontal: -Metrics.spacing.lg,
-  },
-  buttonsHorizontal: {
-    flexDirection: 'row',
-  },
-  button: {
-    paddingVertical: Metrics.spacing.md,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  buttonHorizontal: {
-    flex: 1,
-  },
-  buttonHorizontalDivider: {
-    borderLeftWidth: 1,
-    borderLeftColor: Colors.border,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.primary,
-  },
-  destructiveText: {
-    color: Colors.destructive,
-  },
-  cancelText: {
-    color: Colors.mutedForeground,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: Overlays.scrim,
+      padding: Metrics.spacing.lg,
+    },
+    card: {
+      width: '100%',
+      maxWidth: 340,
+      backgroundColor: colors.background,
+      borderRadius: Metrics.radius.lg,
+      paddingTop: Metrics.spacing.lg,
+      paddingHorizontal: Metrics.spacing.lg,
+      overflow: 'hidden',
+    },
+    title: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.foreground,
+      textAlign: 'center',
+    },
+    message: {
+      fontSize: 14,
+      color: colors.mutedForeground,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginTop: Metrics.spacing.xs,
+    },
+    buttons: {
+      marginTop: Metrics.spacing.lg,
+      marginHorizontal: -Metrics.spacing.lg,
+    },
+    buttonsHorizontal: {
+      flexDirection: 'row',
+    },
+    button: {
+      paddingVertical: Metrics.spacing.md,
+      alignItems: 'center',
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    buttonHorizontal: {
+      flex: 1,
+    },
+    buttonHorizontalDivider: {
+      borderLeftWidth: 1,
+      borderLeftColor: colors.border,
+    },
+    buttonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    destructiveText: {
+      color: colors.destructive,
+    },
+    cancelText: {
+      color: colors.mutedForeground,
+    },
+  });

@@ -6,7 +6,7 @@ import Droplet from 'lucide-react-native/icons/droplet';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Percent from 'lucide-react-native/icons/percent';
 import Sun from 'lucide-react-native/icons/sun';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import {
   FormError,
   FormField,
@@ -33,6 +33,8 @@ function parseCandidates(raw: string | string[] | undefined): PlantCandidate[] {
 
 export default function IdentifyResultScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { session } = useAuth();
   const { addPlant } = usePlants();
   const params = useLocalSearchParams<{ candidates: string }>();
@@ -146,7 +148,7 @@ export default function IdentifyResultScreen() {
         ) : (
           <>
             <View style={styles.heroPlaceholder}>
-              <Leaf size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
             <View style={styles.plainHeader}>
               <Text style={styles.plainHeaderName}>{selected.commonName ?? selected.scientificName}</Text>
@@ -232,10 +234,11 @@ export default function IdentifyResultScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -245,17 +248,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: Metrics.spacing.xl,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   emptyText: {
     fontSize: 15,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
   },
   heroPlaceholder: {
     width: '100%',
     height: 260,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -266,13 +269,13 @@ const styles = StyleSheet.create({
   plainHeaderName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     textAlign: 'center',
   },
   plainHeaderSpecies: {
     fontSize: 14,
     fontStyle: 'italic',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   content: {
@@ -290,28 +293,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.md,
     marginBottom: Metrics.spacing.xs,
   },
   alternateName: {
     fontSize: 14,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   alternateScore: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   floatingButton: {
     position: 'absolute',
     left: Metrics.spacing.lg,
     right: Metrics.spacing.lg,
     bottom: Metrics.spacing.lg,
-    shadowColor: Colors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -326,14 +329,14 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.lg,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
     marginBottom: Metrics.spacing.md,
   },
   modalCancel: {
@@ -344,6 +347,6 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
-});
+  });

@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import Heart from 'lucide-react-native/icons/heart';
@@ -9,7 +9,7 @@ import MoreVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Send from 'lucide-react-native/icons/send';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { CommunityComment, CommunityPost, CommunityPostType } from '@/types';
 import { confirm } from '@/utils';
 import { Avatar } from './Avatar';
@@ -26,16 +26,18 @@ type PostMenuProps = {
   onDelete: () => void;
 };
 
-function PostMenu({ isOpen, onToggle, onDelete }: PostMenuProps) {
+function PostMenu({ isOpen, onToggle, onDelete }: Readonly<PostMenuProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
       <Pressable style={styles.menuButton} onPress={onToggle} hitSlop={8}>
-        <MoreVertical size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <MoreVertical size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
       </Pressable>
       {isOpen ? (
         <View style={styles.menu}>
           <Pressable style={styles.menuItem} onPress={onDelete}>
-            <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+            <Trash2 size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.menuItemText}>Excluir</Text>
           </Pressable>
         </View>
@@ -52,7 +54,9 @@ type CommentRowProps = {
   onDelete: () => void;
 };
 
-function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete }: CommentRowProps) {
+function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete }: Readonly<CommentRowProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.comment}>
       <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
@@ -65,12 +69,12 @@ function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete 
       {isOwnComment ? (
         <View>
           <Pressable style={styles.commentMenuButton} onPress={onToggleMenu} hitSlop={8}>
-            <MoreVertical size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+            <MoreVertical size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
           </Pressable>
           {isMenuOpen ? (
             <View style={styles.menu}>
               <Pressable style={styles.menuItem} onPress={onDelete}>
-                <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+                <Trash2 size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
                 <Text style={styles.menuItemText}>Excluir</Text>
               </Pressable>
             </View>
@@ -99,7 +103,9 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   onPressAuthor,
   onDelete,
   onDeleteComment,
-}: CommunityPostCardProps) {
+}: Readonly<CommunityPostCardProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
@@ -160,7 +166,7 @@ export const CommunityPostCard = memo(function CommunityPostCard({
         </Pressable>
         {TypeIcon ? (
           <View style={styles.typeBadge}>
-            <TypeIcon size={14} color={Colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+            <TypeIcon size={14} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
           </View>
         ) : null}
         {isOwnPost && (
@@ -184,15 +190,15 @@ export const CommunityPostCard = memo(function CommunityPostCard({
         <Pressable style={styles.footerButton} onPress={() => onToggleLike(post.id)}>
           <Heart
             size={Metrics.icon.normal}
-            color={post.liked ? Colors.primary : Colors.mutedForeground}
-            fill={post.liked ? Colors.primary : 'none'}
+            color={post.liked ? colors.primary : colors.mutedForeground}
+            fill={post.liked ? colors.primary : 'none'}
             strokeWidth={Metrics.icon.strokeWidth}
           />
           <Text style={[styles.footerText, post.liked && styles.footerTextActive]}>{post.likeCount}</Text>
         </Pressable>
 
         <Pressable style={styles.footerButton} onPress={() => setIsCommentsOpen((open) => !open)}>
-          <MessageCircle size={Metrics.icon.normal} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <MessageCircle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
           <Text style={styles.footerText}>{post.comments.length} recados</Text>
         </Pressable>
       </View>
@@ -216,7 +222,7 @@ export const CommunityPostCard = memo(function CommunityPostCard({
               value={draft}
               onChangeText={setDraft}
               placeholder="Deixe um recadinho..."
-              placeholderTextColor={Colors.mutedForeground}
+              placeholderTextColor={colors.mutedForeground}
               onSubmitEditing={handleSendComment}
               editable={!isSendingComment}
             />
@@ -226,9 +232,9 @@ export const CommunityPostCard = memo(function CommunityPostCard({
               disabled={isSendingComment || !draft.trim()}
             >
               {isSendingComment ? (
-                <ActivityIndicator size="small" color={Colors.primaryForeground} />
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
               ) : (
-                <Send size={Metrics.icon.small} color={Colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
               )}
             </Pressable>
           </View>
@@ -238,13 +244,14 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     width: '100%',
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.md,
   },
@@ -266,18 +273,18 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   meta: {
     fontSize: 12,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 1,
   },
   typeBadge: {
     width: 28,
     height: 28,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -289,15 +296,15 @@ const styles = StyleSheet.create({
     top: '100%',
     right: 0,
     marginTop: 4,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingVertical: 4,
     minWidth: 140,
     zIndex: 10,
     elevation: 10,
-    shadowColor: Colors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -312,17 +319,17 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.destructive,
+    color: colors.destructive,
   },
   photo: {
     width: '100%',
     aspectRatio: 1,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
   },
   caption: {
     fontSize: 14,
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: Metrics.spacing.md,
     lineHeight: 20,
   },
@@ -335,7 +342,7 @@ const styles = StyleSheet.create({
     marginTop: Metrics.spacing.md,
     paddingTop: Metrics.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
   },
   footerButton: {
     flexDirection: 'row',
@@ -345,22 +352,22 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   footerTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
   },
   comments: {
     marginTop: Metrics.spacing.md,
     paddingTop: Metrics.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     gap: Metrics.spacing.sm,
   },
   comment: {
     flexDirection: 'row',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: Metrics.radius.md,
     padding: Metrics.spacing.sm,
   },
@@ -373,16 +380,16 @@ const styles = StyleSheet.create({
   commentAuthor: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   commentTime: {
     fontSize: 11,
     fontWeight: '400',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   commentText: {
     fontSize: 13,
-    color: Colors.foreground,
+    color: colors.foreground,
     marginTop: 2,
   },
   commentInputRow: {
@@ -394,13 +401,13 @@ const styles = StyleSheet.create({
   commentInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.full,
     paddingHorizontal: Metrics.spacing.md,
     paddingVertical: Metrics.spacing.sm,
     fontSize: 13,
-    color: Colors.foreground,
-    backgroundColor: Colors.white,
+    color: colors.foreground,
+    backgroundColor: colors.card,
   },
   commentInputDisabled: {
     opacity: 0.5,
@@ -409,11 +416,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   commentSendDisabled: {
     opacity: 0.5,
   },
-});
+  });

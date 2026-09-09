@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -6,7 +6,7 @@ import Camera from 'lucide-react-native/icons/camera';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Pencil from 'lucide-react-native/icons/pencil';
 import X from 'lucide-react-native/icons/x';
-import { Colors, Metrics, Overlays } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { updatePlantPhoto } from '@/services';
 import type { Plant } from '@/types';
 import { Alert, Toast } from '@/utils';
@@ -19,7 +19,9 @@ type PlantPhotoHeroProps = {
   onEditName: () => void;
 };
 
-export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPhotoHeroProps) {
+export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: Readonly<PlantPhotoHeroProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
@@ -81,9 +83,9 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPho
         >
           <IconBadge backgroundColor={Overlays.scrimMedium} style={styles.heroEditBadge}>
             {isUpdatingPhoto ? (
-              <ActivityIndicator color={Colors.white} size="small" />
+              <ActivityIndicator color={colors.white} size="small" />
             ) : (
-              <Camera size={Metrics.icon.small} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              <Camera size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
             )}
           </IconBadge>
         </PlantHero>
@@ -91,10 +93,10 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPho
         <>
           <Pressable onPress={handlePhotoPress} disabled={isUpdatingPhoto} style={styles.heroPlaceholder}>
             {isUpdatingPhoto ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={colors.primary} />
             ) : (
               <>
-                <Leaf size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                 <Text style={styles.heroPlaceholderText}>Toque para adicionar uma foto</Text>
               </>
             )}
@@ -103,7 +105,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPho
             <View style={styles.nameRow}>
               <Text style={styles.name}>{plant.name}</Text>
               <Pressable onPress={onEditName} hitSlop={8} style={styles.editNameButton}>
-                <Pencil size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                <Pencil size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
               </Pressable>
             </View>
             {plant.species ? <Text style={styles.scientificName}>{plant.species}</Text> : null}
@@ -114,7 +116,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPho
       <Modal visible={isViewerOpen} transparent animationType="fade" onRequestClose={() => setIsViewerOpen(false)}>
         <View style={styles.viewerBackdrop}>
           <Pressable style={styles.viewerClose} onPress={() => setIsViewerOpen(false)}>
-            <X size={Metrics.icon.large} color={Colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+            <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
           </Pressable>
           {plant.photoUrl ? (
             <Image source={{ uri: plant.photoUrl }} style={styles.viewerImage} contentFit="contain" />
@@ -125,7 +127,8 @@ export function PlantPhotoHero({ plant, onPhotoUrlChange, onEditName }: PlantPho
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   heroEditBadge: {
     position: 'absolute',
     top: Metrics.spacing.md,
@@ -134,14 +137,14 @@ const styles = StyleSheet.create({
   heroPlaceholder: {
     width: '100%',
     height: 260,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
   },
   heroPlaceholderText: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   plainHeader: {
     alignItems: 'center',
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     textAlign: 'center',
   },
   editNameButton: {
@@ -164,7 +167,7 @@ const styles = StyleSheet.create({
   scientificName: {
     fontSize: 14,
     fontStyle: 'italic',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   viewerBackdrop: {
@@ -184,4 +187,4 @@ const styles = StyleSheet.create({
     height: '60%',
     borderRadius: Metrics.radius.lg,
   },
-});
+  });

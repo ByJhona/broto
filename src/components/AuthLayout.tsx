@@ -1,8 +1,8 @@
-import type { PropsWithChildren } from 'react';
+import { useMemo, type PropsWithChildren } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, type Href } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { OfflineBanner } from './OfflineBanner';
 
 type AuthLayoutProps = PropsWithChildren<{
@@ -12,12 +12,14 @@ type AuthLayoutProps = PropsWithChildren<{
   offlineMessage: string;
 }>;
 
-export function AuthLayout({ title, subtitle, isOffline, offlineMessage, children }: AuthLayoutProps) {
+export function AuthLayout({ title, subtitle, isOffline, offlineMessage, children }: Readonly<AuthLayoutProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logo}>
-          <Leaf size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
 
         <Text style={styles.title}>{title}</Text>
@@ -40,7 +42,9 @@ type AuthFooterLinkProps = {
   label: string;
 };
 
-export function AuthFooterLink({ href, label }: AuthFooterLinkProps) {
+export function AuthFooterLink({ href, label }: Readonly<AuthFooterLinkProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Link href={href} style={styles.link}>
       <Text style={styles.linkText}>{label}</Text>
@@ -48,10 +52,11 @@ export function AuthFooterLink({ href, label }: AuthFooterLinkProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     flexGrow: 1,
@@ -65,12 +70,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
     marginBottom: Metrics.spacing.xl,
@@ -84,8 +89,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   linkText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 14,
   },
-});
+  });

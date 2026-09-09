@@ -1,20 +1,23 @@
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Sparkles from 'lucide-react-native/icons/sparkles';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EmptyState, SectionTitle, SkeletonBlock } from '@/components';
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
 
-const HEALTH_STATUS_META: Record<DiagnosisHealthStatus, { label: string; color: string }> = {
-  healthy: { label: 'Saudável', color: Colors.leaf },
-  attention: { label: 'Precisa de atenção', color: Colors.secondary },
-  urgent: { label: 'Cuidado urgente', color: Colors.destructive },
-};
+function getHealthStatusMeta(colors: ThemeColors): Record<DiagnosisHealthStatus, { label: string; color: string }> {
+  return {
+    healthy: { label: 'Saudável', color: colors.leaf },
+    attention: { label: 'Precisa de atenção', color: colors.secondary },
+    urgent: { label: 'Cuidado urgente', color: colors.destructive },
+  };
+}
 
 function formatDiagnosisDate(iso: string): string {
   const date = new Date(iso);
@@ -23,6 +26,8 @@ function formatDiagnosisDate(iso: string): string {
 }
 
 function DiagnosisHistorySkeleton() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <>
       {[0, 1].map((key) => (
@@ -40,6 +45,9 @@ function DiagnosisHistorySkeleton() {
 
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
   const { user } = useAuth();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['diagnosis-history', user?.id],
@@ -72,7 +80,7 @@ export default function DiagnosisHistoryScreen() {
         <>
           <SectionTitle>Histórico</SectionTitle>
           {history.map((item) => {
-            const meta = HEALTH_STATUS_META[item.healthStatus];
+            const meta = healthStatusMeta[item.healthStatus];
             return (
               <Pressable key={item.id} style={styles.historyRow} onPress={() => openResult(item)}>
                 <Image source={{ uri: item.photoUrl }} style={styles.historyThumb} contentFit="cover" />
@@ -80,7 +88,7 @@ export default function DiagnosisHistoryScreen() {
                   <Text style={[styles.historyStatus, { color: meta.color }]}>{meta.label}</Text>
                   <Text style={styles.historyDate}>{formatDiagnosisDate(item.createdAt)}</Text>
                 </View>
-                <ChevronRight size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                <ChevronRight size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
               </Pressable>
             );
           })}
@@ -90,10 +98,11 @@ export default function DiagnosisHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -105,10 +114,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Metrics.spacing.sm,
     marginBottom: Metrics.spacing.sm,
   },
@@ -116,7 +125,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Metrics.radius.md,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
   },
   historyTextBox: {
     flex: 1,
@@ -127,10 +136,10 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontSize: 12,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   skeletonGap: {
     marginTop: Metrics.spacing.xs,
   },
-});
+  });

@@ -3,7 +3,7 @@ import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Search from 'lucide-react-native/icons/search';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CommunityComposer, CommunityPostCard, SectionTitle } from '@/components';
 import type { CommunityPost, CommunityPostType } from '@/types';
 import { useAuth } from '@/hooks';
@@ -41,6 +41,8 @@ type PostsQueryData = CommunityPostsQueryData;
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
@@ -212,7 +214,7 @@ export default function CommunityScreen() {
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.leaf} colors={[Colors.leaf]} />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
       ListHeaderComponent={
         <View>
@@ -222,7 +224,7 @@ export default function CommunityScreen() {
               <Text style={styles.subtitle}>A comunidade de quem tá aprendendo a cuidar de plantas</Text>
             </View>
             <Pressable style={styles.searchButton} onPress={() => router.push('/search')} hitSlop={8}>
-              <Search size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           </View>
 
@@ -265,18 +267,19 @@ export default function CommunityScreen() {
 
           <SectionTitle style={styles.postsSectionTitle}>Publicações</SectionTitle>
 
-          {isInitialLoading ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+          {isInitialLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
         </View>
       }
-      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     />
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Metrics.spacing.lg,
@@ -293,15 +296,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   searchButton: {
     width: 40,
     height: 40,
     borderRadius: Metrics.radius.full,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -316,7 +319,7 @@ const styles = StyleSheet.create({
   },
   scopeRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     borderRadius: Metrics.radius.full,
     padding: 2,
   },
@@ -327,43 +330,43 @@ const styles = StyleSheet.create({
     borderRadius: Metrics.radius.full,
   },
   scopeTabActive: {
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
   },
   scopeTabText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   scopeTabTextActive: {
-    color: Colors.leaf,
+    color: colors.leaf,
   },
   filterChipRow: {
     flexDirection: 'row',
     gap: 6,
   },
   filterChip: {
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     borderRadius: Metrics.radius.full,
     paddingVertical: 5,
     paddingHorizontal: Metrics.spacing.sm,
   },
   filterChipActive: {
-    backgroundColor: Colors.leafForeground,
+    backgroundColor: colors.leafForeground,
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
   },
   filterChipTextActive: {
-    color: Colors.leaf,
+    color: colors.leaf,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
   },
   loader: {
     marginVertical: Metrics.spacing.lg,
   },
-});
+  });

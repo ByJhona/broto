@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Avatar, EmptyState } from '@/components';
 import { useAuth } from '@/hooks';
 import { searchProfiles } from '@/services';
@@ -13,6 +13,8 @@ const EMPTY_PROFILES: UserProfile[] = [];
 
 export default function SearchScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [rawResults, setRawResults] = useState<UserProfile[]>([]);
@@ -42,25 +44,25 @@ export default function SearchScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchBar}>
-        <Search size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         <TextInput
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
           placeholder="Buscar por @usuário"
-          placeholderTextColor={Colors.mutedForeground}
+          placeholderTextColor={colors.mutedForeground}
           autoFocus
           autoCapitalize="none"
           autoCorrect={false}
         />
         {query.length > 0 ? (
           <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <X size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+            <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
           </Pressable>
         ) : null}
       </View>
 
-      {isLoading ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
+      {isLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
 
       <FlatList
         contentContainerStyle={styles.list}
@@ -94,18 +96,19 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Metrics.radius.full,
     paddingHorizontal: Metrics.spacing.md,
     marginHorizontal: Metrics.spacing.lg,
@@ -115,7 +118,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Metrics.spacing.sm,
     fontSize: 15,
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   loader: {
     marginTop: Metrics.spacing.lg,
@@ -135,14 +138,14 @@ const styles = StyleSheet.create({
   resultName: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   resultUsername: {
     fontSize: 13,
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 1,
   },
   emptyState: {
     marginTop: Metrics.spacing.xl,
   },
-});
+  });

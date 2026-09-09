@@ -1,11 +1,11 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Sun from 'lucide-react-native/icons/sun';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { PlantSummary } from '@/types';
 import { sunLevelLabel } from '@/utils';
 import { SkeletonBlock } from './Skeleton';
@@ -16,8 +16,10 @@ type PlantCardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export const PlantCard = memo(function PlantCard({ plant, readOnly = false, style }: PlantCardProps) {
+export const PlantCard = memo(function PlantCard({ plant, readOnly = false, style }: Readonly<PlantCardProps>) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const hasTags = plant.sunLevel != null || plant.wateringDays != null;
 
   const content = (
@@ -32,7 +34,7 @@ export const PlantCard = memo(function PlantCard({ plant, readOnly = false, styl
             cachePolicy="memory-disk"
           />
         ) : (
-          <Leaf size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         )}
       </View>
 
@@ -50,13 +52,13 @@ export const PlantCard = memo(function PlantCard({ plant, readOnly = false, styl
           <View style={styles.tagRow}>
             {plant.wateringDays ? (
               <View style={styles.tag}>
-                <Droplet size={13} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Droplet size={13} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                 <Text style={styles.tagText}>{plant.wateringDays}d</Text>
               </View>
             ) : null}
             {plant.sunLevel ? (
               <View style={styles.tag}>
-                <Sun size={13} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Sun size={13} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                 <Text style={styles.tagText} numberOfLines={1}>
                   {sunLevelLabel(plant.sunLevel)}
                 </Text>
@@ -82,7 +84,9 @@ export const PlantCard = memo(function PlantCard({ plant, readOnly = false, styl
   );
 });
 
-export function PlantCardSkeleton({ style }: { style?: StyleProp<ViewStyle> }) {
+export function PlantCardSkeleton({ style }: Readonly<{ style?: StyleProp<ViewStyle> }>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={[styles.card, style]}>
       <View style={styles.photo} />
@@ -98,13 +102,14 @@ export function PlantCardSkeleton({ style }: { style?: StyleProp<ViewStyle> }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     overflow: 'hidden',
   },
   cardPressed: {
@@ -113,7 +118,7 @@ const styles = StyleSheet.create({
   photo: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: Colors.muted,
+    backgroundColor: colors.muted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -127,12 +132,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
   species: {
     fontSize: 12,
     fontStyle: 'italic',
-    color: Colors.mutedForeground,
+    color: colors.mutedForeground,
     marginTop: 1,
   },
   tagRow: {
@@ -146,7 +151,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexShrink: 1,
     gap: 4,
-    backgroundColor: `${Colors.leaf}14`,
+    backgroundColor: `${colors.leaf}14`,
     borderRadius: Metrics.radius.full,
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -155,9 +160,9 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.leaf,
+    color: colors.leaf,
   },
   skeletonGap: {
     marginTop: Metrics.spacing.sm,
   },
-});
+  });

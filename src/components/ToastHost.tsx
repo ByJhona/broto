@@ -1,24 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AlertCircle from 'lucide-react-native/icons/circle-alert';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Info from 'lucide-react-native/icons/info';
 import type { LucideIcon } from 'lucide-react-native';
-import { Colors, Metrics } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { registerToastHandler, type ToastType } from '@/utils';
 
-const TOAST_META: Record<ToastType, { icon: LucideIcon; color: string }> = {
-  success: { icon: CheckCircle2, color: Colors.leaf },
-  error: { icon: AlertCircle, color: Colors.destructive },
-  info: { icon: Info, color: Colors.primary },
-};
+function getToastMeta(colors: ThemeColors): Record<ToastType, { icon: LucideIcon; color: string }> {
+  return {
+    success: { icon: CheckCircle2, color: colors.leaf },
+    error: { icon: AlertCircle, color: colors.destructive },
+    info: { icon: Info, color: colors.primary },
+  };
+}
 
 const VISIBLE_DURATION_MS = 2800;
 const HIDDEN_OFFSET = -80;
 
 export function ToastHost() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const toastMeta = useMemo(() => getToastMeta(colors), [colors]);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [translateY] = useState(() => new Animated.Value(HIDDEN_OFFSET));
   const [opacity] = useState(() => new Animated.Value(0));
@@ -55,7 +60,7 @@ export function ToastHost() {
 
   if (!toast) return null;
 
-  const meta = TOAST_META[toast.type];
+  const meta = toastMeta[toast.type];
   const Icon = meta.icon;
 
   return (
@@ -69,7 +74,8 @@ export function ToastHost() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     position: 'absolute',
     left: Metrics.spacing.lg,
@@ -77,10 +83,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: Colors.white,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
-    shadowColor: Colors.black,
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -90,6 +96,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.foreground,
+    color: colors.foreground,
   },
-});
+  });
