@@ -1,10 +1,4 @@
-import { useEffect } from 'react';
-import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
-import { Stack } from 'expo-router';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { Colors, themedStackScreenOptions } from '@/theme';
 import { AlertHost, ToastHost } from '@/components';
-import { AuthProvider, NotificationsProvider } from '@/store';
 import { useAuth } from '@/hooks';
 import {
   checkForAppUpdate,
@@ -14,7 +8,13 @@ import {
   registerPushToken,
   watchPushTokenRefresh,
 } from '@/services';
+import { AuthProvider, NotificationsProvider } from '@/store';
+import { Colors, themedStackScreenOptions } from '@/theme';
 import { Alert } from '@/utils';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();

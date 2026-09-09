@@ -5,8 +5,15 @@ import { CreditCard, LogOut, User } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { Avatar, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';
-import { manageSubscriptions, getProfile } from '@/services';
+import { manageSubscriptions, getProfile, type CreditsState } from '@/services';
 import { Toast } from '@/utils';
+
+function getPlanDescription(credits: CreditsState | null): string {
+  if (!credits) return 'Carregando...';
+  if (credits.monthlyCredits == null) return 'Créditos ilimitados';
+  const period = credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês';
+  return `${credits.monthlyCredits} créditos por ${period}`;
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -27,11 +34,7 @@ export default function ProfileScreen() {
   const currentPlan = {
     id: credits?.planId ?? 'free',
     name: credits?.planName ?? 'Plano Gratuito',
-    description: !credits
-      ? 'Carregando...'
-      : credits.monthlyCredits == null
-        ? 'Créditos ilimitados'
-        : `${credits.monthlyCredits} créditos por ${credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês'}`,
+    description: getPlanDescription(credits),
   };
 
   const settingsItems = [{ icon: User, label: 'Editar perfil', onPress: () => router.push('/profile/edit') }];

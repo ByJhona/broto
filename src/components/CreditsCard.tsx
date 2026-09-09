@@ -3,6 +3,20 @@ import { useRouter } from 'expo-router';
 import { Coins } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { useAuth, useCredits } from '@/hooks';
+import type { CreditsState } from '@/services';
+
+function getCreditsTitle(credits: CreditsState | null): string {
+  if (!credits) return 'Carregando créditos...';
+  if (credits.monthlyCredits == null) return 'Créditos ilimitados';
+  return `${credits.balance} créditos disponíveis`;
+}
+
+function getCreditsSubtitle(credits: CreditsState | null): string {
+  if (!credits) return '';
+  if (credits.monthlyCredits == null) return `${credits.planName} · usados pra identificar plantas`;
+  const period = credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês';
+  return `${credits.planName} · renova ${credits.monthlyCredits} por ${period}`;
+}
 
 export function CreditsCard() {
   const router = useRouter();
@@ -26,17 +40,8 @@ export function CreditsCard() {
     );
   }
 
-  const title = !credits
-    ? 'Carregando créditos...'
-    : credits.monthlyCredits == null
-      ? 'Créditos ilimitados'
-      : `${credits.balance} créditos disponíveis`;
-
-  const subtitle = !credits
-    ? ''
-    : credits.monthlyCredits == null
-      ? `${credits.planName} · usados pra identificar plantas`
-      : `${credits.planName} · renova ${credits.monthlyCredits} por ${credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês'}`;
+  const title = getCreditsTitle(credits);
+  const subtitle = getCreditsSubtitle(credits);
 
   return (
     <Pressable

@@ -49,7 +49,9 @@ export default function PostDetailScreen() {
     if (!user?.id || !post) return;
     const previous = post;
     const updater = (p: CommunityPost) => ({ ...p, liked: !p.liked, likeCount: p.likeCount + (p.liked ? -1 : 1) });
-    queryClient.setQueryData(['post', id], updater);
+    // ['post', id] can still be empty here even though `post` has a value — placeholderData
+    // isn't written to the cache, so the updater must tolerate a missing current entry.
+    queryClient.setQueryData(['post', id], (current: CommunityPost | undefined) => (current ? updater(current) : current));
     updatePostInAllFeeds(queryClient, post.id, updater);
     try {
       await toggleLike(post.id, user.id, previous.liked);
@@ -88,7 +90,7 @@ export default function PostDetailScreen() {
     if (!post) return;
     const previous = post;
     const updater = (p: CommunityPost) => ({ ...p, comments: p.comments.filter((comment) => comment.id !== commentId) });
-    queryClient.setQueryData(['post', id], updater);
+    queryClient.setQueryData(['post', id], (current: CommunityPost | undefined) => (current ? updater(current) : current));
     updatePostInAllFeeds(queryClient, post.id, updater);
     try {
       await deleteComment(commentId);

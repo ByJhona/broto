@@ -3,9 +3,76 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { Image } from 'expo-image';
 import { Heart, HelpCircle, Lightbulb, MessageCircle, MoreVertical, Send, Trash2, Trophy } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { CommunityPost } from '@/types';
+import type { CommunityComment, CommunityPost, CommunityPostType } from '@/types';
 import { confirm } from '@/utils';
 import { Avatar } from './Avatar';
+
+const TYPE_ICONS: Partial<Record<CommunityPostType, typeof Trophy>> = {
+  conquista: Trophy,
+  duvida: HelpCircle,
+  dica: Lightbulb,
+};
+
+type PostMenuProps = {
+  isOpen: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+};
+
+function PostMenu({ isOpen, onToggle, onDelete }: PostMenuProps) {
+  return (
+    <View>
+      <Pressable style={styles.menuButton} onPress={onToggle} hitSlop={8}>
+        <MoreVertical size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      </Pressable>
+      {isOpen ? (
+        <View style={styles.menu}>
+          <Pressable style={styles.menuItem} onPress={onDelete}>
+            <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+            <Text style={styles.menuItemText}>Excluir</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+type CommentRowProps = {
+  comment: CommunityComment;
+  isOwnComment: boolean;
+  isMenuOpen: boolean;
+  onToggleMenu: () => void;
+  onDelete: () => void;
+};
+
+function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete }: CommentRowProps) {
+  return (
+    <View style={styles.comment}>
+      <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
+      <View style={styles.commentBody}>
+        <Text style={styles.commentAuthor}>
+          {comment.authorName} <Text style={styles.commentTime}>· {comment.createdAt}</Text>
+        </Text>
+        <Text style={styles.commentText}>{comment.text}</Text>
+      </View>
+      {isOwnComment ? (
+        <View>
+          <Pressable style={styles.commentMenuButton} onPress={onToggleMenu} hitSlop={8}>
+            <MoreVertical size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          </Pressable>
+          {isMenuOpen ? (
+            <View style={styles.menu}>
+              <Pressable style={styles.menuItem} onPress={onDelete}>
+                <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+                <Text style={styles.menuItemText}>Excluir</Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 type CommunityPostCardProps = {
   post: CommunityPost;
@@ -65,8 +132,7 @@ export const CommunityPostCard = memo(function CommunityPostCard({
     if (confirmed) onDeleteComment?.(commentId);
   };
 
-  const TypeIcon =
-    post.postType === 'conquista' ? Trophy : post.postType === 'duvida' ? HelpCircle : post.postType === 'dica' ? Lightbulb : null;
+  const TypeIcon = post.postType ? TYPE_ICONS[post.postType] : null;
 
   return (
     <View style={styles.card}>
@@ -90,21 +156,9 @@ export const CommunityPostCard = memo(function CommunityPostCard({
             <TypeIcon size={14} color={Colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
           </View>
         ) : null}
-        {isOwnPost ? (
-          <View>
-            <Pressable style={styles.menuButton} onPress={() => setIsMenuOpen((open) => !open)} hitSlop={8}>
-              <MoreVertical size={18} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
-            {isMenuOpen ? (
-              <View style={styles.menu}>
-                <Pressable style={styles.menuItem} onPress={handleDelete}>
-                  <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-                  <Text style={styles.menuItemText}>Excluir</Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+        {isOwnPost && (
+          <PostMenu isOpen={isMenuOpen} onToggle={() => setIsMenuOpen((open) => !open)} onDelete={handleDelete} />
+        )}
       </View>
 
       {post.imageUrl ? <Image source={{ uri: post.imageUrl }} style={styles.photo} contentFit="cover" /> : null}
@@ -130,39 +184,16 @@ export const CommunityPostCard = memo(function CommunityPostCard({
 
       {isCommentsOpen ? (
         <View style={styles.comments}>
-          {post.comments.map((comment) => {
-            const isOwnComment = !!currentUserId && currentUserId === comment.authorId;
-            return (
-              <View key={comment.id} style={styles.comment}>
-                <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
-                <View style={styles.commentBody}>
-                  <Text style={styles.commentAuthor}>
-                    {comment.authorName} <Text style={styles.commentTime}>· {comment.createdAt}</Text>
-                  </Text>
-                  <Text style={styles.commentText}>{comment.text}</Text>
-                </View>
-                {isOwnComment ? (
-                  <View>
-                    <Pressable
-                      style={styles.commentMenuButton}
-                      onPress={() => setOpenCommentMenuId((current) => (current === comment.id ? null : comment.id))}
-                      hitSlop={8}
-                    >
-                      <MoreVertical size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-                    </Pressable>
-                    {openCommentMenuId === comment.id ? (
-                      <View style={styles.menu}>
-                        <Pressable style={styles.menuItem} onPress={() => handleDeleteComment(comment.id)}>
-                          <Trash2 size={14} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-                          <Text style={styles.menuItemText}>Excluir</Text>
-                        </Pressable>
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
-            );
-          })}
+          {post.comments.map((comment) => (
+            <CommentRow
+              key={comment.id}
+              comment={comment}
+              isOwnComment={!!currentUserId && currentUserId === comment.authorId}
+              isMenuOpen={openCommentMenuId === comment.id}
+              onToggleMenu={() => setOpenCommentMenuId((current) => (current === comment.id ? null : comment.id))}
+              onDelete={() => handleDeleteComment(comment.id)}
+            />
+          ))}
 
           <View style={styles.commentInputRow}>
             <TextInput

@@ -46,6 +46,7 @@ export default function DiagnosisHistoryScreen() {
     enabled: !!user?.id,
   });
   const showSkeleton = isLoading && history.length === 0;
+  const isEmpty = !showSkeleton && history.length === 0;
 
   const openResult = (item: PlantDiagnosis) => {
     router.push({ pathname: '/diagnose/result', params: { diagnosis: JSON.stringify(item) } });
@@ -53,18 +54,20 @@ export default function DiagnosisHistoryScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {showSkeleton ? (
+      {showSkeleton && (
         <>
           <SectionTitle>Histórico</SectionTitle>
           <DiagnosisHistorySkeleton />
         </>
-      ) : history.length === 0 ? (
+      )}
+      {isEmpty && (
         <EmptyState
           icon={Sparkles}
           message='Você ainda não fez nenhum diagnóstico. Vá na aba Foto e escolha "Diagnosticar" pra começar.'
           style={styles.empty}
         />
-      ) : (
+      )}
+      {!showSkeleton && !isEmpty && (
         <>
           <SectionTitle>Histórico</SectionTitle>
           {history.map((item) => {

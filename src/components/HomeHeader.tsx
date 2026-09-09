@@ -12,6 +12,12 @@ import { SkeletonBlock } from './Skeleton';
 
 const FALLBACK_MESSAGE = 'Seu jardim está bem cuidado por você';
 
+function getHighlightText(pendingCount: number): string {
+  if (pendingCount === 0) return 'Suas plantas estão em dia hoje';
+  const suffix = pendingCount > 1 ? 's' : '';
+  return `Suas plantas pedem ${pendingCount} cuidado${suffix} hoje`;
+}
+
 export function HomeHeader() {
   const insets = useSafeAreaInsets();
   const { hasUnread } = useNotifications();
@@ -34,10 +40,7 @@ export function HomeHeader() {
   }, []);
 
   const firstName = profile?.name?.split(' ')[0] ?? user?.user_metadata?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Jardineiro';
-  const highlightText =
-    pendingCount === 0
-      ? 'Suas plantas estão em dia hoje'
-      : `Suas plantas pedem ${pendingCount} cuidado${pendingCount > 1 ? 's' : ''} hoje`;
+  const highlightText = getHighlightText(pendingCount);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.xl }]}>
@@ -49,11 +52,10 @@ export function HomeHeader() {
         </View>
       </View>
 
-      {isLoadingMessage ? (
+      {isLoadingMessage && (
         <SkeletonBlock height={42} width="80%" radius={Metrics.radius.md} style={styles.mainHighlightSkeleton} />
-      ) : dailyMessage ? (
-        <Text style={styles.mainHighlight}>{dailyMessage}</Text>
-      ) : null}
+      )}
+      {!isLoadingMessage && dailyMessage && <Text style={styles.mainHighlight}>{dailyMessage}</Text>}
 
       <Text style={styles.subText}>{highlightText}</Text>
     </View>

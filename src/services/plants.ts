@@ -1,5 +1,4 @@
 import { File } from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { deleteCareTasksByPlantId } from './careTasks';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
@@ -130,12 +129,12 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
-  const base64 = await file.base64();
+  const bytes = await file.bytes();
   const path = `${user.id}/${plantId}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')
-    .upload(path, decode(base64), { contentType: 'image/jpeg', upsert: true });
+    .upload(path, bytes, { contentType: 'image/jpeg', upsert: true });
 
   if (uploadError) throw uploadError;
 

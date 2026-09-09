@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useQueryClient } from '@tanstack/react-query';
@@ -60,6 +60,7 @@ export default function PhotoScreen() {
   const params = useLocalSearchParams<{ mode?: string }>();
   const cameraRef = useRef<CameraView>(null);
   const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
   const [permission, requestPermission] = useCameraPermissions();
   const { session, user } = useAuth();
   const { isOffline } = useNetworkStatus();
@@ -76,6 +77,10 @@ export default function PhotoScreen() {
       }
     }, [params.mode])
   );
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
 
   const [isCameraReady, setIsCameraReady] = useState(false);
 
@@ -103,36 +108,37 @@ export default function PhotoScreen() {
     );
   };
 
+  // Switching tabs doesn't unmount this screen, so a stale response must not yank
+  // the user into a result screen (or pop an alert) after they've navigated elsewhere.
+  const navigateIfFocused = (href: Href) => {
+    if (isFocusedRef.current) router.push(href);
+  };
+
+  const processIdentify = async (photoUri: string) => {
+    const { candidates, newCreditBalance } = await identifyPlant(photoUri);
+    applyCreditBalance(newCreditBalance);
+    navigateIfFocused({ pathname: '/identify/result', params: { candidates: JSON.stringify(candidates) } });
+  };
+
+  const processDiagnose = async (photoUri: string) => {
+    if (!user?.id) return;
+    const { diagnosis, newCreditBalance } = await diagnosePlant(user.id, photoUri);
+    applyCreditBalance(newCreditBalance);
+    if (diagnosis) {
+      queryClient.setQueryData<PlantDiagnosis[]>(['diagnosis-history', user.id], (current = []) => [diagnosis, ...current]);
+    }
+    navigateIfFocused({ pathname: '/diagnose/result', params: diagnosis ? { diagnosis: JSON.stringify(diagnosis) } : {} });
+  };
+
   const processPhoto = async (photoUri: string) => {
     setError(null);
     setIsProcessing(true);
 
     try {
-      if (mode === 'identify') {
-        const { candidates, newCreditBalance } = await identifyPlant(photoUri);
-        applyCreditBalance(newCreditBalance);
-        router.push({
-          pathname: '/identify/result',
-          params: { candidates: JSON.stringify(candidates) },
-        });
-      } else {
-        if (!user?.id) return;
-        const { diagnosis, newCreditBalance } = await diagnosePlant(user.id, photoUri);
-        applyCreditBalance(newCreditBalance);
-        if (diagnosis) {
-          queryClient.setQueryData<PlantDiagnosis[]>(['diagnosis-history', user.id], (current = []) => [
-            diagnosis,
-            ...current,
-          ]);
-        }
-        router.push({
-          pathname: '/diagnose/result',
-          params: diagnosis ? { diagnosis: JSON.stringify(diagnosis) } : {},
-        });
-      }
+      await (mode === 'identify' ? processIdentify(photoUri) : processDiagnose(photoUri));
     } catch (err) {
       if (err instanceof InsufficientCreditsError) {
-        showInsufficientCreditsAlert();
+        if (isFocusedRef.current) showInsufficientCreditsAlert();
       } else {
         setError(err instanceof Error ? err.message : 'Não foi possível processar a foto. Tente novamente.');
       }

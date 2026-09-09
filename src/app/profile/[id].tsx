@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Sprout } from 'lucide-react-native';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
-import type { CommunityPost } from '@/types';
+import type { CommunityPost, PlantSummary, UserProfile } from '@/types';
 import { Avatar, CommunityPostCard, EmptyState, LoadingScreen, PlantCard, SectionTitle } from '@/components';
 import { useAuth, useFollow } from '@/hooks';
 import {
@@ -25,6 +25,81 @@ import { Toast } from '@/utils';
 
 const PROFILE_STALE_TIME = 60_000;
 const POSTS_STALE_TIME = 30_000;
+
+type ProfileHeaderProps = {
+  name: string;
+  profile: UserProfile | null;
+  isOwnProfile: boolean;
+  following: boolean;
+  onToggleFollow: () => void;
+  counts: { followers: number; following: number };
+  plants: PlantSummary[];
+  posts: CommunityPost[];
+  isLoading: boolean;
+};
+
+function ProfileHeader({
+  name,
+  profile,
+  isOwnProfile,
+  following,
+  onToggleFollow,
+  counts,
+  plants,
+  posts,
+  isLoading,
+}: ProfileHeaderProps) {
+  return (
+    <View>
+      <View style={styles.header}>
+        <Avatar name={name} url={profile?.avatar_url} size={88} />
+        <Text style={styles.name}>{name}</Text>
+        {profile?.username ? <Text style={styles.username}>@{profile.username}</Text> : null}
+
+        <View style={styles.countsRow}>
+          <View style={styles.countItem}>
+            <Text style={styles.countValue}>{counts.followers}</Text>
+            <Text style={styles.countLabel}>Seguidores</Text>
+          </View>
+          <View style={styles.countItem}>
+            <Text style={styles.countValue}>{counts.following}</Text>
+            <Text style={styles.countLabel}>Seguindo</Text>
+          </View>
+        </View>
+
+        {!isOwnProfile ? (
+          <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
+            <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
+              {following ? 'Seguindo' : 'Seguir'}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+
+      <View style={styles.plantsSection}>
+        <SectionTitle style={styles.plantsSectionTitle}>{isOwnProfile ? 'Minhas plantas' : 'Plantas'}</SectionTitle>
+        {plants.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantsRow}>
+            {plants.map((plant) => (
+              <PlantCard key={plant.id} plant={plant} readOnly style={styles.plantCard} />
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.plantsEmptyText}>Nenhuma planta cadastrada.</Text>
+        )}
+      </View>
+
+      {posts.length === 0 && !isLoading ? (
+        <EmptyState
+          icon={Sprout}
+          title="Nenhum recado ainda"
+          message={isOwnProfile ? 'Você ainda não publicou nada na comunidade.' : `${name} ainda não publicou nada.`}
+          style={styles.emptyState}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -182,57 +257,17 @@ export default function PublicProfileScreen() {
         />
       }
       ListHeaderComponent={
-        <View>
-          <View style={styles.header}>
-            <Avatar name={name} url={profile?.avatar_url} size={88} />
-            <Text style={styles.name}>{name}</Text>
-            {profile?.username ? <Text style={styles.username}>@{profile.username}</Text> : null}
-
-            <View style={styles.countsRow}>
-              <View style={styles.countItem}>
-                <Text style={styles.countValue}>{counts.followers}</Text>
-                <Text style={styles.countLabel}>Seguidores</Text>
-              </View>
-              <View style={styles.countItem}>
-                <Text style={styles.countValue}>{counts.following}</Text>
-                <Text style={styles.countLabel}>Seguindo</Text>
-              </View>
-            </View>
-
-            {!isOwnProfile ? (
-              <Pressable
-                style={[styles.followButton, following && styles.followButtonActive]}
-                onPress={toggle}
-              >
-                <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
-                  {following ? 'Seguindo' : 'Seguir'}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          <View style={styles.plantsSection}>
-            <SectionTitle style={styles.plantsSectionTitle}>{isOwnProfile ? 'Minhas plantas' : 'Plantas'}</SectionTitle>
-            {plants.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantsRow}>
-                {plants.map((plant) => (
-                  <PlantCard key={plant.id} plant={plant} readOnly style={styles.plantCard} />
-                ))}
-              </ScrollView>
-            ) : (
-              <Text style={styles.plantsEmptyText}>Nenhuma planta cadastrada.</Text>
-            )}
-          </View>
-
-          {posts.length === 0 && !isLoading ? (
-            <EmptyState
-              icon={Sprout}
-              title="Nenhum recado ainda"
-              message={isOwnProfile ? 'Você ainda não publicou nada na comunidade.' : `${name} ainda não publicou nada.`}
-              style={styles.emptyState}
-            />
-          ) : null}
-        </View>
+        <ProfileHeader
+          name={name}
+          profile={profile}
+          isOwnProfile={isOwnProfile}
+          following={following}
+          onToggleFollow={toggle}
+          counts={counts}
+          plants={plants}
+          posts={posts}
+          isLoading={isLoading}
+        />
       }
       ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={Colors.leaf} /> : null}
     />

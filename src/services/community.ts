@@ -175,16 +175,15 @@ export async function createPost(
 
   if (localUri) {
     const { File } = await import('expo-file-system');
-    const { decode } = await import('base64-arraybuffer');
 
     const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
     const file = new File(resizedUri);
-    const base64 = await file.base64();
+    const bytes = await file.bytes();
     const filename = `${userId}/${Date.now()}.jpg`;
 
     const { error: uploadError } = await supabase.storage
       .from('posts')
-      .upload(filename, decode(base64), { contentType: 'image/jpeg' });
+      .upload(filename, bytes, { contentType: 'image/jpeg' });
 
     if (uploadError) throw uploadError;
 
@@ -266,6 +265,10 @@ export function removePostFromAllFeeds(queryClient: QueryClient, postId: string)
   });
 }
 
+function withoutComment(post: CommunityPost, commentId: string): CommunityPost {
+  return { ...post, comments: post.comments.filter((comment) => comment.id !== commentId) };
+}
+
 export function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: string) {
   queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
     if (!old) return old;
@@ -273,7 +276,7 @@ export function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: s
       ...old,
       pages: old.pages.map((page) => ({
         ...page,
-        posts: page.posts.map((post) => ({ ...post, comments: post.comments.filter((c) => c.id !== commentId) })),
+        posts: page.posts.map((post) => withoutComment(post, commentId)),
       })),
     };
   });

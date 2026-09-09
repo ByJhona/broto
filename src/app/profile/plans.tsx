@@ -5,7 +5,14 @@ import { Gem, Zap } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
 import { useCredits } from '@/hooks';
-import { getCreditPacks, getOfferings, getPlanCatalog, isPurchasesAvailable, purchasePackage } from '@/services';
+import {
+  getCreditPacks,
+  getOfferings,
+  getPlanCatalog,
+  isPurchasesAvailable,
+  purchasePackage,
+  type PlanCatalogItem,
+} from '@/services';
 import { Toast } from '@/utils';
 
 const CREDIT_PACK_ICONS = [Zap, Gem];
@@ -14,6 +21,11 @@ const CATALOG_STALE_TIME = 10 * 60_000;
 function formatPrice(cents: number): string {
   if (cents === 0) return 'R$ 0';
   return `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+}
+
+function getPlanCtaLabel(plan: PlanCatalogItem, purchasingId: string | null): string | undefined {
+  if (plan.priceCents === 0) return undefined;
+  return purchasingId === plan.id ? 'Processando...' : 'Assinar';
 }
 
 export default function PlansScreen() {
@@ -100,9 +112,7 @@ export default function PlansScreen() {
                 price: plan.priceCents === 0 ? 'Grátis' : `${formatPrice(plan.priceCents)}/mês`,
               }}
               isCurrent={isCurrent}
-              ctaLabel={
-                plan.priceCents === 0 ? undefined : purchasingId === plan.id ? 'Processando...' : 'Assinar'
-              }
+              ctaLabel={getPlanCtaLabel(plan, purchasingId)}
               onPressCta={
                 plan.priceCents === 0 ? undefined : () => handlePurchase(plan.id, 'Sua assinatura foi confirmada.')
               }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, Bug, ChevronDown, ChevronUp, Droplet, Lightbulb } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
-import type { SpeciesInfoDisplay } from '@/types';
+import type { PlantCommonProblem, SpeciesInfoDisplay } from '@/types';
 import { SkeletonBlock } from './Skeleton';
 import { ExpandableCard } from './ExpandableCard';
 
@@ -10,97 +10,118 @@ type SpeciesInfoSectionProps = {
   info: SpeciesInfoDisplay;
 };
 
+type AboutCardProps = {
+  info: SpeciesInfoDisplay;
+  isExpanded: boolean;
+  onToggle: () => void;
+};
+
+function AboutCard({ info, isExpanded, onToggle }: AboutCardProps) {
+  return (
+    <View style={[styles.section, styles.aboutCard]}>
+      <Pressable style={styles.sectionHeader} onPress={onToggle}>
+        <Text style={styles.sectionTitle}>Sobre a espécie</Text>
+        {isExpanded ? (
+          <ChevronUp size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        ) : (
+          <ChevronDown size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        )}
+      </Pressable>
+      {isExpanded && (
+        <>
+          <Text style={styles.description}>{info.description}</Text>
+          {info.wateringDescription ? (
+            <View style={styles.wateringRow}>
+              <Droplet size={16} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Text style={styles.wateringText}>{info.wateringDescription}</Text>
+            </View>
+          ) : null}
+        </>
+      )}
+    </View>
+  );
+}
+
+function ToxicityCard({ info }: { info: SpeciesInfoDisplay }) {
+  return (
+    <View style={styles.section}>
+      <ExpandableCard
+        title="Atenção: Tóxica"
+        icon={<AlertTriangle size={Metrics.icon.normal} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={Colors.destructive}
+        defaultExpanded={true}
+      >
+        <View style={styles.warningContent}>
+          {info.toxicToPets ? (
+            <View style={styles.listRow}>
+              <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
+              <Text style={styles.listText}>
+                Para pets{info.toxicToPetsNotes ? `: ${info.toxicToPetsNotes}` : ''}
+              </Text>
+            </View>
+          ) : null}
+          {info.toxicToHumans ? (
+            <View style={styles.listRow}>
+              <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
+              <Text style={styles.listText}>
+                Para humanos{info.toxicToHumansNotes ? `: ${info.toxicToHumansNotes}` : ''}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </ExpandableCard>
+    </View>
+  );
+}
+
+function FunFactsCard({ funFacts }: { funFacts: string[] }) {
+  return (
+    <View style={styles.section}>
+      <ExpandableCard
+        title="Você sabia?"
+        icon={<Lightbulb size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={Colors.leaf}
+        defaultExpanded={true}
+      >
+        {funFacts.map((fact) => (
+          <View key={fact} style={styles.listRow}>
+            <View style={styles.bullet} />
+            <Text style={styles.listText}>{fact}</Text>
+          </View>
+        ))}
+      </ExpandableCard>
+    </View>
+  );
+}
+
+function CommonProblemsCard({ commonProblems }: { commonProblems: PlantCommonProblem[] }) {
+  return (
+    <View style={styles.section}>
+      <ExpandableCard
+        title="Problemas comuns"
+        icon={<Bug size={Metrics.icon.normal} color={Colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={Colors.secondary}
+      >
+        {commonProblems.map((problem) => (
+          <View key={problem.issue} style={styles.problemRow}>
+            <Text style={styles.problemIssue}>{problem.issue}</Text>
+            <Text style={styles.problemCause}>{problem.likelyCause}</Text>
+          </View>
+        ))}
+      </ExpandableCard>
+    </View>
+  );
+}
+
 export function SpeciesInfoSection({ info }: SpeciesInfoSectionProps) {
   const [isAboutExpanded, setIsAboutExpanded] = useState(true);
 
   return (
     <View>
-      <View style={[styles.section, styles.aboutCard]}>
-        <Pressable style={styles.sectionHeader} onPress={() => setIsAboutExpanded((current) => !current)}>
-          <Text style={styles.sectionTitle}>Sobre a espécie</Text>
-          {isAboutExpanded ? (
-            <ChevronUp size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          ) : (
-            <ChevronDown size={16} color={Colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          )}
-        </Pressable>
-        {isAboutExpanded ? (
-          <>
-            <Text style={styles.description}>{info.description}</Text>
-            {info.wateringDescription ? (
-              <View style={styles.wateringRow}>
-                <Droplet size={16} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                <Text style={styles.wateringText}>{info.wateringDescription}</Text>
-              </View>
-            ) : null}
-          </>
-        ) : null}
-      </View>
-
-      {info.toxicToPets || info.toxicToHumans ? (
-        <View style={styles.section}>
-          <ExpandableCard
-            title="Atenção: Tóxica"
-            icon={<AlertTriangle size={Metrics.icon.normal} color={Colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />}
-            color={Colors.destructive}
-            defaultExpanded={true}
-          >
-            <View style={styles.warningContent}>
-              {info.toxicToPets ? (
-                <View style={styles.listRow}>
-                  <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
-                  <Text style={styles.listText}>
-                    Para pets{info.toxicToPetsNotes ? `: ${info.toxicToPetsNotes}` : ''}
-                  </Text>
-                </View>
-              ) : null}
-              {info.toxicToHumans ? (
-                <View style={styles.listRow}>
-                  <View style={[styles.bullet, { backgroundColor: Colors.destructive }]} />
-                  <Text style={styles.listText}>
-                    Para humanos{info.toxicToHumansNotes ? `: ${info.toxicToHumansNotes}` : ''}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </ExpandableCard>
-        </View>
-      ) : null}
-
-      {info.funFacts.length > 0 ? (
-        <View style={styles.section}>
-          <ExpandableCard
-            title="Você sabia?"
-            icon={<Lightbulb size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />}
-            color={Colors.leaf}
-            defaultExpanded={true}
-          >
-            {info.funFacts.map((fact) => (
-              <View key={fact} style={styles.listRow}>
-                <View style={styles.bullet} />
-                <Text style={styles.listText}>{fact}</Text>
-              </View>
-            ))}
-          </ExpandableCard>
-        </View>
-      ) : null}
-
-      {info.commonProblems.length > 0 ? (
-        <View style={styles.section}>
-          <ExpandableCard
-            title="Problemas comuns"
-            icon={<Bug size={Metrics.icon.normal} color={Colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
-            color={Colors.secondary}
-          >
-            {info.commonProblems.map((problem) => (
-              <View key={problem.issue} style={styles.problemRow}>
-                <Text style={styles.problemIssue}>{problem.issue}</Text>
-                <Text style={styles.problemCause}>{problem.likelyCause}</Text>
-              </View>
-            ))}
-          </ExpandableCard>
-        </View>
-      ) : null}
+      <AboutCard info={info} isExpanded={isAboutExpanded} onToggle={() => setIsAboutExpanded((current) => !current)} />
+      {(info.toxicToPets || info.toxicToHumans) && <ToxicityCard info={info} />}
+      {info.funFacts.length > 0 && <FunFactsCard funFacts={info.funFacts} />}
+      {info.commonProblems.length > 0 && <CommonProblemsCard commonProblems={info.commonProblems} />}
     </View>
   );
 }

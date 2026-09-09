@@ -62,23 +62,23 @@ export default function NewTaskScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <FormField label="Título" value={title} onChangeText={setTitle} placeholder="Regar o Samba" />
 
-        {isPlantLocked ? (
-          selectedPlant ? (
-            <View style={styles.field}>
-              <Text style={styles.label}>Planta</Text>
-              <View style={styles.lockedPlant}>
-                <View style={styles.plantAvatar}>
-                  {selectedPlant.photoUrl ? (
-                    <Image source={{ uri: selectedPlant.photoUrl }} style={styles.plantAvatarImage} contentFit="cover" />
-                  ) : (
-                    <Leaf size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                  )}
-                </View>
-                <Text style={styles.lockedPlantName}>{selectedPlant.name}</Text>
+        {isPlantLocked && selectedPlant && (
+          <View style={styles.field}>
+            <Text style={styles.label}>Planta</Text>
+            <View style={styles.lockedPlant}>
+              <View style={styles.plantAvatar}>
+                {selectedPlant.photoUrl ? (
+                  <Image source={{ uri: selectedPlant.photoUrl }} style={styles.plantAvatarImage} contentFit="cover" />
+                ) : (
+                  <Leaf size={Metrics.icon.normal} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                )}
               </View>
+              <Text style={styles.lockedPlantName}>{selectedPlant.name}</Text>
             </View>
-          ) : null
-        ) : plants.length > 0 ? (
+          </View>
+        )}
+
+        {!isPlantLocked && plants.length > 0 && (
           <View style={styles.field}>
             <Text style={styles.label}>Planta (opcional)</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantRow}>
@@ -106,7 +106,7 @@ export default function NewTaskScreen() {
               })}
             </ScrollView>
           </View>
-        ) : null}
+        )}
 
         <View style={styles.field}>
           <Text style={styles.label}>Categoria</Text>

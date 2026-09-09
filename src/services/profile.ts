@@ -63,16 +63,15 @@ export async function updateProfile(
 
 export async function uploadAvatar(userId: string, localUri: string): Promise<string> {
   const { File } = await import('expo-file-system');
-  const { decode } = await import('base64-arraybuffer');
 
   const resizedUri = await resizeImageForUpload(localUri, AVATAR_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
-  const base64 = await file.base64();
+  const bytes = await file.bytes();
   const path = `${userId}/avatar.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
-    .upload(path, decode(base64), { contentType: 'image/jpeg', upsert: true });
+    .upload(path, bytes, { contentType: 'image/jpeg', upsert: true });
 
   if (uploadError) throw uploadError;
 

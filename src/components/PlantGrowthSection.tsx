@@ -109,14 +109,17 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
             </Text>
           </Pressable>
 
-          {isCheckinsLoading ? (
+          {isCheckinsLoading && (
             <>
               <SkeletonBlock height={160} radius={Metrics.radius.lg} style={styles.skeletonSpacing} />
               <SkeletonBlock height={160} radius={Metrics.radius.lg} />
             </>
-          ) : checkins.length === 0 ? (
+          )}
+          {!isCheckinsLoading && checkins.length === 0 && (
             <Text style={styles.emptyCheckinsText}>Nenhuma análise ainda. Toque no botão acima pra começar.</Text>
-          ) : (
+          )}
+          {!isCheckinsLoading &&
+            checkins.length > 0 &&
             checkins.map((checkin) => {
               const isExpanded =
                 expandedCheckinId === undefined ? checkin.id === checkins[0]?.id : checkin.id === expandedCheckinId;
@@ -148,8 +151,7 @@ export function PlantGrowthSection({ plant, isPremium }: PlantGrowthSectionProps
                   ) : null}
                 </View>
               );
-            })
-          )}
+            })}
         </>
       )}
     </View>
