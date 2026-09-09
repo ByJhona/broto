@@ -248,6 +248,26 @@ export default function PlantDetailScreen() {
     });
   }
 
+  let speciesInfoContent: React.ReactNode = null;
+  if (plant.description) {
+    speciesInfoContent = (
+      <SpeciesInfoSection
+        info={{
+          description: plant.description,
+          wateringDescription: plant.wateringDescription,
+          toxicToPets: plant.toxicToPets ?? false,
+          toxicToPetsNotes: plant.toxicToPetsNotes,
+          toxicToHumans: plant.toxicToHumans ?? false,
+          toxicToHumansNotes: plant.toxicToHumansNotes,
+          funFacts: plant.funFacts ?? [],
+          commonProblems: plant.commonProblems ?? [],
+        }}
+      />
+    );
+  } else if (isPlaceholderData) {
+    speciesInfoContent = <SpeciesInfoSkeleton />;
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Stack.Screen
@@ -317,22 +337,7 @@ export default function PlantDetailScreen() {
 
         <PlantGrowthSection plant={plant} isPremium={isPremium} />
 
-        {plant.description ? (
-          <SpeciesInfoSection
-            info={{
-              description: plant.description,
-              wateringDescription: plant.wateringDescription,
-              toxicToPets: plant.toxicToPets ?? false,
-              toxicToPetsNotes: plant.toxicToPetsNotes,
-              toxicToHumans: plant.toxicToHumans ?? false,
-              toxicToHumansNotes: plant.toxicToHumansNotes,
-              funFacts: plant.funFacts ?? [],
-              commonProblems: plant.commonProblems ?? [],
-            }}
-          />
-        ) : isPlaceholderData ? (
-          <SpeciesInfoSkeleton />
-        ) : null}
+        {speciesInfoContent}
       </View>
     </ScrollView>
   );
