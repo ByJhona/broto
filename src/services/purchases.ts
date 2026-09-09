@@ -1,44 +1,30 @@
-import Constants from 'expo-constants';
+import Purchases from 'react-native-purchases';
 import { Linking, Platform } from 'react-native';
 
 const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
 
-type PurchasesModule = typeof import('react-native-purchases');
-type Purchases = PurchasesModule['default'];
-
-let purchasesModule: Purchases | null | undefined;
-let isConfigured = false;
-
-async function getPurchasesModule(): Promise<Purchases | null> {
-  if (purchasesModule === undefined) {
-    if (Constants.appOwnership === 'expo') {
-      purchasesModule = null;
-    } else {
-      try {
-        purchasesModule = (await import('react-native-purchases')).default;
-      } catch {
-        purchasesModule = null;
-      }
-    }
-  }
-  return purchasesModule;
+function getApiKey(): string | undefined {
+  return Platform.OS === 'ios' ? IOS_API_KEY : ANDROID_API_KEY;
 }
 
 export async function isPurchasesAvailable(): Promise<boolean> {
-  const apiKey = Platform.OS === 'ios' ? IOS_API_KEY : ANDROID_API_KEY;
-  return !!apiKey && (await getPurchasesModule()) !== null;
+  if (!getApiKey()) return false;
+
+  try {
+    return await Purchases.isConfigured();
+  } catch {
+    return false;
+  }
 }
 
 export async function configurePurchases(appUserId: string | null): Promise<void> {
-  const Purchases = await getPurchasesModule();
-  const apiKey = Platform.OS === 'ios' ? IOS_API_KEY : ANDROID_API_KEY;
-  if (!Purchases || !apiKey) return;
+  const apiKey = getApiKey();
+  if (!apiKey) return;
 
   try {
-    if (!isConfigured) {
+    if (!(await Purchases.isConfigured())) {
       Purchases.configure({ apiKey, appUserID: appUserId ?? undefined });
-      isConfigured = true;
     } else if (appUserId) {
       await Purchases.logIn(appUserId);
     } else {
@@ -50,9 +36,6 @@ export async function configurePurchases(appUserId: string | null): Promise<void
 }
 
 export async function getOfferings() {
-  const Purchases = await getPurchasesModule();
-  if (!Purchases) return null;
-
   try {
     return await Purchases.getOfferings();
   } catch (error) {
@@ -61,10 +44,7 @@ export async function getOfferings() {
   }
 }
 
-export async function purchasePackage(pkg: Parameters<Purchases['purchasePackage']>[0]) {
-  const Purchases = await getPurchasesModule();
-  if (!Purchases) throw new Error('Compras não disponíveis nesta build.');
-
+export async function purchasePackage(pkg: Parameters<typeof Purchases.purchasePackage>[0]) {
   return Purchases.purchasePackage(pkg);
 }
 
@@ -72,22 +52,16 @@ export function isUserCancelledPurchase(error: unknown): boolean {
   return (
     typeof error === 'object' &&
     error !== null &&
-    'userCancelled' in error &&
-    (error as { userCancelled?: boolean }).userCancelled === true
+    'code' in error &&
+    (error as { code?: unknown }).code === Purchases.PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
   );
 }
 
 export async function restorePurchases() {
-  const Purchases = await getPurchasesModule();
-  if (!Purchases) return null;
-
   return Purchases.restorePurchases();
 }
 
 export async function manageSubscriptions() {
-  const Purchases = await getPurchasesModule();
-  if (!Purchases) throw new Error('Gerenciamento de assinatura não disponível nesta build.');
-
   const customerInfo = await Purchases.getCustomerInfo();
   if (!customerInfo.managementURL) {
     throw new Error('Não encontramos uma assinatura ativa pra gerenciar.');
