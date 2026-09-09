@@ -101,6 +101,7 @@ const makeStyles = (colors: ThemeColors) =>
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: Metrics.spacing.xl,
+    backgroundColor: colors.background,
   },
   list: {
     padding: Metrics.spacing.lg,

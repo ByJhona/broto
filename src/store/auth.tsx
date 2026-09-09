@@ -20,7 +20,9 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
+      // Token refreshes fire a new session object with the same user; skip the
+      // state update so it doesn't re-render every useAuth() consumer in the app.
+      setSession((current) => (current?.user.id === newSession?.user.id ? current : newSession));
     });
 
     return () => {
