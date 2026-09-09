@@ -3,6 +3,13 @@ import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
 import { checkForAppUpdate } from '@/services/appVersion';
 import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
+import {
+  CATALOG_STALE_TIME,
+  CREDIT_PACKS_QUERY_KEY,
+  getCreditPacks,
+  getPlanCatalog,
+  PLAN_CATALOG_QUERY_KEY,
+} from '@/services/credits';
 import { registerNotificationTapHandler } from '@/services/notificationNavigation';
 import { registerPushToken, watchPushTokenRefresh } from '@/services/pushTokens';
 import { queryClient } from '@/services/queryClient';
@@ -33,7 +40,12 @@ function RootNavigator() {
   }, []);
 
   useEffect(() => {
-    if (session) registerPushToken();
+    if (!session) return;
+    registerPushToken();
+    // Warms the plans-screen cache so it shows cards instantly instead of a
+    // skeleton the first time the user navigates there in this session.
+    queryClient.query({ queryKey: PLAN_CATALOG_QUERY_KEY, queryFn: getPlanCatalog, staleTime: CATALOG_STALE_TIME }).catch(() => {});
+    queryClient.query({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME }).catch(() => {});
   }, [session]);
 
   if (isLoading) {

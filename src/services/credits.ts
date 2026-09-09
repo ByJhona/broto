@@ -71,6 +71,10 @@ export type PlanCatalogItem = {
   revenuecatEntitlementId: string | null;
 };
 
+export const CATALOG_STALE_TIME = 10 * 60_000;
+export const PLAN_CATALOG_QUERY_KEY = ['plan-catalog'] as const;
+export const CREDIT_PACKS_QUERY_KEY = ['credit-packs'] as const;
+
 export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
   const { data, error } = await supabase.from('plans').select('*').order('sort_order');
 

@@ -7,17 +7,20 @@ import { Colors, Metrics } from '@/theme';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
 import { useCredits } from '@/hooks';
 import {
+  CATALOG_STALE_TIME,
+  CREDIT_PACKS_QUERY_KEY,
   getCreditPacks,
   getOfferings,
   getPlanCatalog,
   isPurchasesAvailable,
+  isUserCancelledPurchase,
+  PLAN_CATALOG_QUERY_KEY,
   purchasePackage,
   type PlanCatalogItem,
 } from '@/services';
 import { Toast } from '@/utils';
 
 const CREDIT_PACK_ICONS = [Zap, Gem];
-const CATALOG_STALE_TIME = 10 * 60_000;
 
 function formatPrice(cents: number): string {
   if (cents === 0) return 'R$ 0';
@@ -35,13 +38,13 @@ export default function PlansScreen() {
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const plansQuery = useQuery({
-    queryKey: ['plan-catalog'],
+    queryKey: PLAN_CATALOG_QUERY_KEY,
     queryFn: getPlanCatalog,
     staleTime: CATALOG_STALE_TIME,
   });
 
   const creditPacksQuery = useQuery({
-    queryKey: ['credit-packs'],
+    queryKey: CREDIT_PACKS_QUERY_KEY,
     queryFn: getCreditPacks,
     staleTime: CATALOG_STALE_TIME,
   });
@@ -81,7 +84,9 @@ export default function PlansScreen() {
       setTimeout(refreshCredits, 2500);
       Toast.success(successMessage);
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível concluir a compra.');
+      if (!isUserCancelledPurchase(err)) {
+        Toast.error(err instanceof Error ? err.message : 'Não foi possível concluir a compra.');
+      }
     } finally {
       setPurchasingId(null);
     }

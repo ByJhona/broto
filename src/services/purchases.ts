@@ -68,6 +68,15 @@ export async function purchasePackage(pkg: Parameters<Purchases['purchasePackage
   return Purchases.purchasePackage(pkg);
 }
 
+export function isUserCancelledPurchase(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'userCancelled' in error &&
+    (error as { userCancelled?: boolean }).userCancelled === true
+  );
+}
+
 export async function restorePurchases() {
   const Purchases = await getPurchasesModule();
   if (!Purchases) return null;
