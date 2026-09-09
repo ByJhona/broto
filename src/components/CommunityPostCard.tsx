@@ -1,7 +1,14 @@
 import { memo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
-import { Heart, HelpCircle, Lightbulb, MessageCircle, MoreVertical, Send, Trash2, Trophy } from 'lucide-react-native';
+import Heart from 'lucide-react-native/icons/heart';
+import HelpCircle from 'lucide-react-native/icons/circle-question-mark';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
+import MoreVertical from 'lucide-react-native/icons/ellipsis-vertical';
+import Send from 'lucide-react-native/icons/send';
+import Trash2 from 'lucide-react-native/icons/trash-2';
+import Trophy from 'lucide-react-native/icons/trophy';
 import { Colors, Metrics } from '@/theme';
 import type { CommunityComment, CommunityPost, CommunityPostType } from '@/types';
 import { confirm } from '@/utils';
@@ -161,7 +168,15 @@ export const CommunityPostCard = memo(function CommunityPostCard({
         )}
       </View>
 
-      {post.imageUrl ? <Image source={{ uri: post.imageUrl }} style={styles.photo} contentFit="cover" /> : null}
+      {post.imageUrl ? (
+        <Image
+          source={{ uri: post.imageUrl }}
+          style={styles.photo}
+          contentFit="cover"
+          recyclingKey={post.id}
+          cachePolicy="memory-disk"
+        />
+      ) : null}
 
       <Text style={[styles.caption, !post.imageUrl && styles.captionNoPhoto]}>{post.caption}</Text>
 

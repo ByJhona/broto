@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Lock, Sparkles } from 'lucide-react-native';
+import Lock from 'lucide-react-native/icons/lock';
+import Sparkles from 'lucide-react-native/icons/sparkles';
 import { Colors, Metrics } from '@/theme';
 
 type LockedFeatureCardProps = {

@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import Bell from 'lucide-react-native/icons/bell';
 import { Colors, Metrics } from '@/theme';
 
 type NotificationBellProps = {

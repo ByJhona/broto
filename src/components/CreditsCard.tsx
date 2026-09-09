@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Coins } from 'lucide-react-native';
+import Coins from 'lucide-react-native/icons/coins';
 import { Colors, Metrics } from '@/theme';
 import { useAuth, useCredits } from '@/hooks';
 import type { CreditsState } from '@/services';

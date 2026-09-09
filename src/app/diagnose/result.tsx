@@ -1,7 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { AlertTriangle, CheckCircle2, Sparkles, type LucideIcon } from 'lucide-react-native';
+import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
+import CheckCircle2 from 'lucide-react-native/icons/circle-check';
+import Sparkles from 'lucide-react-native/icons/sparkles';
+import type { LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { Card, EmptyState, SectionTitle } from '@/components';
 import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis } from '@/types';

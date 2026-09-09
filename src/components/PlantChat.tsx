@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Leaf, MessageCircle, Send } from 'lucide-react-native';
+import Leaf from 'lucide-react-native/icons/leaf';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
+import Send from 'lucide-react-native/icons/send';
 import { Colors, Metrics } from '@/theme';
 import { IconBadge } from './IconBadge';
 import { useCreditsGate } from '@/hooks';

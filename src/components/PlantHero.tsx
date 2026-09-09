@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Pencil } from 'lucide-react-native';
+import Pencil from 'lucide-react-native/icons/pencil';
 import { Colors, Metrics, Overlays } from '@/theme';
 
 type PlantHeroProps = PropsWithChildren<{

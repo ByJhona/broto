@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { AlertTriangle, Bug, ChevronDown, ChevronUp, Droplet, Lightbulb } from 'lucide-react-native';
+import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
+import Bug from 'lucide-react-native/icons/bug';
+import ChevronDown from 'lucide-react-native/icons/chevron-down';
+import ChevronUp from 'lucide-react-native/icons/chevron-up';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
 import { Colors, Metrics } from '@/theme';
 import type { PlantCommonProblem, SpeciesInfoDisplay } from '@/types';
 import { SkeletonBlock } from './Skeleton';

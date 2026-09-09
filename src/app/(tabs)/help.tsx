@@ -2,25 +2,23 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import {
-  AlertTriangle,
-  ArrowRight,
-  Bell,
-  Camera,
-  ChevronDown,
-  Clock,
-  Cloud,
-  Droplet,
-  Heart,
-  Lightbulb,
-  Sparkles,
-  Stethoscope,
-  Sun,
-  Trash2,
-  TrendingUp,
-  X,
-  type LucideIcon,
-} from 'lucide-react-native';
+import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
+import ArrowRight from 'lucide-react-native/icons/arrow-right';
+import Bell from 'lucide-react-native/icons/bell';
+import Camera from 'lucide-react-native/icons/camera';
+import ChevronDown from 'lucide-react-native/icons/chevron-down';
+import Clock from 'lucide-react-native/icons/clock';
+import Cloud from 'lucide-react-native/icons/cloud';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Heart from 'lucide-react-native/icons/heart';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import Sparkles from 'lucide-react-native/icons/sparkles';
+import Stethoscope from 'lucide-react-native/icons/stethoscope';
+import Sun from 'lucide-react-native/icons/sun';
+import Trash2 from 'lucide-react-native/icons/trash-2';
+import TrendingUp from 'lucide-react-native/icons/trending-up';
+import X from 'lucide-react-native/icons/x';
+import type { LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { Card, IconBadge } from '@/components';
 import { CREDIT_COSTS } from '@/services';

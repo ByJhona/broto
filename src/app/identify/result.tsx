@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Dna, Droplet, Leaf, Percent, Sun } from 'lucide-react-native';
+import Dna from 'lucide-react-native/icons/dna';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Leaf from 'lucide-react-native/icons/leaf';
+import Percent from 'lucide-react-native/icons/percent';
+import Sun from 'lucide-react-native/icons/sun';
 import { Colors, Metrics, Overlays } from '@/theme';
 import {
   FormError,

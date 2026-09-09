@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { ImagePlus, X } from 'lucide-react-native';
+import ImagePlus from 'lucide-react-native/icons/image-plus';
+import X from 'lucide-react-native/icons/x';
 import { Colors, Metrics } from '@/theme';
 import type { CommunityPostType } from '@/types';
 import { COMMUNITY_POST_TYPES } from '@/utils';

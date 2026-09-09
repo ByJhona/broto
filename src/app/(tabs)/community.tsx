@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search } from 'lucide-react-native';
+import Search from 'lucide-react-native/icons/search';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
 import { CommunityComposer, CommunityPostCard, SectionTitle } from '@/components';

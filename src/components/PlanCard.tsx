@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Crown, Gift } from 'lucide-react-native';
+import Crown from 'lucide-react-native/icons/crown';
+import Gift from 'lucide-react-native/icons/gift';
 import { Colors, Metrics } from '@/theme';
 import type { Plan } from '@/types';
 import { SkeletonBlock } from './Skeleton';

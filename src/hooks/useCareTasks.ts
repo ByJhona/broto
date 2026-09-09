@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createCareTask, deleteCareTask, getCareTasks, toggleCareTask, type CreateCareTaskInput } from '@/services';
 import type { CareTask } from '@/types';
@@ -55,11 +56,14 @@ export function useCareTasks() {
     },
   });
 
-  const toggleTask = (id: string) => {
-    const task = tasks.find((item) => item.id === id);
-    if (!task) return;
-    toggleMutation.mutate({ task, done: !task.done });
-  };
+  const toggleTask = useCallback(
+    (id: string) => {
+      const task = tasks.find((item) => item.id === id);
+      if (!task) return;
+      toggleMutation.mutate({ task, done: !task.done });
+    },
+    [tasks, toggleMutation]
+  );
 
   return {
     tasks,

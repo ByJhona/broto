@@ -4,7 +4,9 @@ import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Hre
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useQueryClient } from '@tanstack/react-query';
-import { Image as ImageIcon, Scan, Stethoscope } from 'lucide-react-native';
+import ImageIcon from 'lucide-react-native/icons/image';
+import Scan from 'lucide-react-native/icons/scan';
+import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Colors, Metrics, Overlays } from '@/theme';
 import { OfflineBanner } from '@/components';
 import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';

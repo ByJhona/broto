@@ -1,13 +1,11 @@
-import { AlertHost, ToastHost } from '@/components';
+import { AlertHost } from '@/components/AlertHost';
+import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
-import {
-  checkForAppUpdate,
-  queryClient,
-  registerCareTaskNotificationHandlers,
-  registerNotificationTapHandler,
-  registerPushToken,
-  watchPushTokenRefresh,
-} from '@/services';
+import { checkForAppUpdate } from '@/services/appVersion';
+import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
+import { registerNotificationTapHandler } from '@/services/notificationNavigation';
+import { registerPushToken, watchPushTokenRefresh } from '@/services/pushTokens';
+import { queryClient } from '@/services/queryClient';
 import { AuthProvider, NotificationsProvider } from '@/store';
 import { Colors, themedStackScreenOptions } from '@/theme';
 import { Alert } from '@/utils';

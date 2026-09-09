@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertCircle, CheckCircle2, Info, type LucideIcon } from 'lucide-react-native';
+import AlertCircle from 'lucide-react-native/icons/circle-alert';
+import CheckCircle2 from 'lucide-react-native/icons/circle-check';
+import Info from 'lucide-react-native/icons/info';
+import type { LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics } from '@/theme';
 import { registerToastHandler, type ToastType } from '@/utils';
 

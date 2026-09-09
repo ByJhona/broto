@@ -1,6 +1,8 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import { CheckCircle2, Circle } from 'lucide-react-native';
+import CheckCircle2 from 'lucide-react-native/icons/circle-check';
+import Circle from 'lucide-react-native/icons/circle';
 import { Colors, Metrics } from '@/theme';
 import { addDays, CATEGORY_ICONS, formatShortDate } from '@/utils';
 import type { CareTask } from '@/types';
@@ -21,7 +23,7 @@ function statusLabel(task: CareTask): string {
   return `Concluído — próxima em ${formatShortDate(addDays(task.dueDate, task.recurrenceDays))}`;
 }
 
-export function CareTaskItem({ task, onToggle, onLongPress }: CareTaskItemProps) {
+export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: CareTaskItemProps) {
   const Icon = CATEGORY_ICONS[task.category];
   const subtitle = task.plantName ? `${task.plantName} · ${statusLabel(task)}` : statusLabel(task);
 
@@ -33,7 +35,13 @@ export function CareTaskItem({ task, onToggle, onLongPress }: CareTaskItemProps)
     >
       <View style={[styles.icon, task.done && styles.iconDone]}>
         {task.plantPhotoUrl ? (
-          <Image source={{ uri: task.plantPhotoUrl }} style={styles.iconPhoto} contentFit="cover" />
+          <Image
+            source={{ uri: task.plantPhotoUrl }}
+            style={styles.iconPhoto}
+            contentFit="cover"
+            recyclingKey={task.id}
+            cachePolicy="memory-disk"
+          />
         ) : (
           <Icon
             size={Metrics.icon.normal}
@@ -55,7 +63,7 @@ export function CareTaskItem({ task, onToggle, onLongPress }: CareTaskItemProps)
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {

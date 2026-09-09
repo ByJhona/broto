@@ -1,6 +1,11 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Bell, BellOff, Heart, MessageCircle, Trash2, X } from 'lucide-react-native';
+import Bell from 'lucide-react-native/icons/bell';
+import BellOff from 'lucide-react-native/icons/bell-off';
+import Heart from 'lucide-react-native/icons/heart';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
+import Trash2 from 'lucide-react-native/icons/trash-2';
+import X from 'lucide-react-native/icons/x';
 import { Colors, Metrics } from '@/theme';
 import { Card, EmptyState, IconBadge, LoadingScreen } from '@/components';
 import { useNotifications } from '@/hooks';

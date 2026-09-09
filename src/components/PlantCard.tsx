@@ -2,7 +2,9 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Droplet, Leaf, Sun } from 'lucide-react-native';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Leaf from 'lucide-react-native/icons/leaf';
+import Sun from 'lucide-react-native/icons/sun';
 import { Colors, Metrics } from '@/theme';
 import type { PlantSummary } from '@/types';
 import { sunLevelLabel } from '@/utils';
@@ -22,7 +24,13 @@ export const PlantCard = memo(function PlantCard({ plant, readOnly = false, styl
     <>
       <View style={styles.photo}>
         {plant.photoUrl ? (
-          <Image source={{ uri: plant.photoUrl }} style={styles.photoImage} contentFit="cover" />
+          <Image
+            source={{ uri: plant.photoUrl }}
+            style={styles.photoImage}
+            contentFit="cover"
+            recyclingKey={plant.id}
+            cachePolicy="memory-disk"
+          />
         ) : (
           <Leaf size={Metrics.icon.xl} color={Colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         )}

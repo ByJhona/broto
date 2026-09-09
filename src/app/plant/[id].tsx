@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Droplet,
-  MapPin,
-  PawPrint,
-  SignalHigh,
-  SignalLow,
-  SignalMedium,
-  Sun,
-  Trash2,
-  type LucideIcon,
-} from 'lucide-react-native';
+import Droplet from 'lucide-react-native/icons/droplet';
+import MapPin from 'lucide-react-native/icons/map-pin';
+import PawPrint from 'lucide-react-native/icons/paw-print';
+import SignalHigh from 'lucide-react-native/icons/signal-high';
+import SignalLow from 'lucide-react-native/icons/signal-low';
+import SignalMedium from 'lucide-react-native/icons/signal-medium';
+import Sun from 'lucide-react-native/icons/sun';
+import Trash2 from 'lucide-react-native/icons/trash-2';
+import type { LucideIcon } from 'lucide-react-native';
 import { Colors, Metrics, Overlays } from '@/theme';
 import {
   FormError,

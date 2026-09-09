@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
-import { UserRound } from 'lucide-react-native';
+import UserRound from 'lucide-react-native/icons/user-round';
 import { Colors } from '@/theme';
 import { Avatar } from './Avatar';
 

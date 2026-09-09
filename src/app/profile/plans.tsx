@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Gem, Zap } from 'lucide-react-native';
+import Gem from 'lucide-react-native/icons/gem';
+import Zap from 'lucide-react-native/icons/zap';
 import { Colors, Metrics } from '@/theme';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
 import { useCredits } from '@/hooks';

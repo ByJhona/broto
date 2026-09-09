@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Leaf } from 'lucide-react-native';
+import Leaf from 'lucide-react-native/icons/leaf';
 import { Colors, Metrics } from '@/theme';
 import { FormError, FormField, SubmitButton } from '@/components';
 import { useCareTasks, usePlants } from '@/hooks';

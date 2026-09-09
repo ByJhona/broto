@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { MailCheck } from 'lucide-react-native';
+import MailCheck from 'lucide-react-native/icons/mail-check';
 import { Colors, Metrics } from '@/theme';
 import { AuthFooterLink, AuthLayout, FormError, FormField, SubmitButton } from '@/components';
 import { useAuth, useNetworkStatus } from '@/hooks';

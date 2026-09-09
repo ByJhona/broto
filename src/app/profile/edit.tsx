@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera } from 'lucide-react-native';
+import Camera from 'lucide-react-native/icons/camera';
 import { Colors, Metrics } from '@/theme';
 import { Avatar, LoadingScreen } from '@/components';
 import { useAuth } from '@/hooks';

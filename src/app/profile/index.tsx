@@ -1,7 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, LogOut, User } from 'lucide-react-native';
+import CreditCard from 'lucide-react-native/icons/credit-card';
+import LogOut from 'lucide-react-native/icons/log-out';
+import User from 'lucide-react-native/icons/user';
 import { Colors, Metrics } from '@/theme';
 import { Avatar, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';

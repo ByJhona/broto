@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Sprout } from 'lucide-react-native';
+import Sprout from 'lucide-react-native/icons/sprout';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Colors, Metrics } from '@/theme';
 import type { CommunityPost, PlantSummary, UserProfile } from '@/types';

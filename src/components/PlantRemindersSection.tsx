@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import Plus from 'lucide-react-native/icons/plus';
 import { Colors, Metrics } from '@/theme';
 import type { CareTask } from '@/types';
 import { CareTaskItem } from './CareTaskItem';

@@ -1,14 +1,12 @@
-import {
-  Camera,
-  CircleDot,
-  Droplet,
-  Leaf,
-  Scissors,
-  ShoppingCart,
-  SprayCan,
-  Sprout,
-  type LucideIcon,
-} from 'lucide-react-native';
+import Camera from 'lucide-react-native/icons/camera';
+import CircleDot from 'lucide-react-native/icons/circle-dot';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Leaf from 'lucide-react-native/icons/leaf';
+import Scissors from 'lucide-react-native/icons/scissors';
+import ShoppingCart from 'lucide-react-native/icons/shopping-cart';
+import SprayCan from 'lucide-react-native/icons/spray-can';
+import Sprout from 'lucide-react-native/icons/sprout';
+import type { LucideIcon } from 'lucide-react-native';
 import type { TaskCategory } from '@/types';
 
 export const TASK_CATEGORIES: { value: TaskCategory; label: string; icon: LucideIcon }[] = [

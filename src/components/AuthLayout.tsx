@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, type Href } from 'expo-router';
-import { Leaf } from 'lucide-react-native';
+import Leaf from 'lucide-react-native/icons/leaf';
 import { Colors, Metrics } from '@/theme';
 import { OfflineBanner } from './OfflineBanner';
 

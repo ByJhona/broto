@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Leaf } from 'lucide-react-native';
+import Leaf from 'lucide-react-native/icons/leaf';
 import { Colors, Metrics } from '@/theme';
 import { EmptyState, OfflineBanner, PlantCard, PlantCardSkeleton } from '@/components';
 import { useNetworkStatus, usePlants } from '@/hooks';

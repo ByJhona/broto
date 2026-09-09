@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { WifiOff } from 'lucide-react-native';
+import WifiOff from 'lucide-react-native/icons/wifi-off';
 import { Colors, Metrics } from '@/theme';
 
 type OfflineBannerProps = {

@@ -1,6 +1,10 @@
 import { Colors, Metrics } from '@/theme';
 import { Tabs } from 'expo-router';
-import { Home, Users, Camera, Leaf, CircleHelp } from 'lucide-react-native';
+import Home from 'lucide-react-native/icons/house';
+import Users from 'lucide-react-native/icons/users';
+import Camera from 'lucide-react-native/icons/camera';
+import Leaf from 'lucide-react-native/icons/leaf';
+import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function TabLayout() {

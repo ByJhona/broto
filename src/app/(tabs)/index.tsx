@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, Plus } from 'lucide-react-native';
+import Eye from 'lucide-react-native/icons/eye';
+import EyeOff from 'lucide-react-native/icons/eye-off';
+import Plus from 'lucide-react-native/icons/plus';
 import { Colors, Metrics } from '@/theme';
 import { CareTaskItem, CreditsCard, HomeHeader } from '@/components';
 import { useCareTasks } from '@/hooks';
@@ -22,13 +24,16 @@ export default function HomeScreen() {
   const pendingTasks = tasks.filter((task) => !task.done);
   const completedTasks = tasks.filter((task) => task.done);
 
-  const handleLongPress = async (id: string) => {
-    const confirmed = await confirm('Excluir lembrete', 'Você não vai mais receber lembretes pra essa tarefa.', {
-      confirmLabel: 'Excluir',
-      destructive: true,
-    });
-    if (confirmed) deleteTask(id);
-  };
+  const handleLongPress = useCallback(
+    async (id: string) => {
+      const confirmed = await confirm('Excluir lembrete', 'Você não vai mais receber lembretes pra essa tarefa.', {
+        confirmLabel: 'Excluir',
+        destructive: true,
+      });
+      if (confirmed) deleteTask(id);
+    },
+    [deleteTask]
+  );
 
   return (
     <ScrollView

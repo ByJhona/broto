@@ -1,4 +1,7 @@
-import { HelpCircle, Lightbulb, Trophy, type LucideIcon } from 'lucide-react-native';
+import HelpCircle from 'lucide-react-native/icons/circle-question-mark';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import Trophy from 'lucide-react-native/icons/trophy';
+import type { LucideIcon } from 'lucide-react-native';
 
 export type CommunityPostType = 'conquista' | 'duvida' | 'dica';
 
