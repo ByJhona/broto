@@ -140,6 +140,8 @@ export default function CommunityScreen() {
       }
     } catch (err) {
       console.error(err);
+      Toast.error('Não foi possível publicar. Tente novamente.');
+      throw err;
     }
   };
 

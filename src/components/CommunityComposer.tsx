@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import ImagePlus from 'lucide-react-native/icons/image-plus';
 import X from 'lucide-react-native/icons/x';
@@ -8,7 +8,7 @@ import type { CommunityPostType } from '@/types';
 import { COMMUNITY_POST_TYPES } from '@/utils';
 
 type CommunityComposerProps = {
-  onPost: (text: string, imageUri: string | null, postType: CommunityPostType | null) => void;
+  onPost: (text: string, imageUri: string | null, postType: CommunityPostType | null) => Promise<void>;
 };
 
 export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) {
@@ -17,7 +17,8 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
   const [text, setText] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [postType, setPostType] = useState<CommunityPostType | null>(null);
-  const canPost = text.trim().length > 0 || imageUri != null;
+  const [isPosting, setIsPosting] = useState(false);
+  const canPost = (text.trim().length > 0 || imageUri != null) && !isPosting;
 
   const handleAttachPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -29,12 +30,18 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
     }
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!canPost) return;
-    onPost(text.trim(), imageUri, postType);
-    setText('');
-    setImageUri(null);
-    setPostType(null);
+    setIsPosting(true);
+    try {
+      await onPost(text.trim(), imageUri, postType);
+      setText('');
+      setImageUri(null);
+      setPostType(null);
+    } catch {
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -67,6 +74,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
           onChangeText={setText}
           placeholder="No que você está pensando, jardineiro?"
           placeholderTextColor={colors.mutedForeground}
+          editable={!isPosting}
           multiline
           textAlignVertical="top"
         />
@@ -82,7 +90,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
       ) : null}
 
       <View style={styles.actions}>
-        <Pressable style={styles.attachButton} onPress={handleAttachPhoto}>
+        <Pressable style={styles.attachButton} onPress={handleAttachPhoto} disabled={isPosting}>
           <ImagePlus size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
           <Text style={styles.attachButtonText}>Foto</Text>
         </Pressable>
@@ -92,7 +100,11 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
           onPress={handlePost}
           disabled={!canPost}
         >
-          <Text style={styles.postButtonText}>Publicar</Text>
+          {isPosting ? (
+            <ActivityIndicator size="small" color={colors.primaryForeground} />
+          ) : (
+            <Text style={styles.postButtonText}>Publicar</Text>
+          )}
         </Pressable>
       </View>
     </View>
@@ -195,6 +207,8 @@ const makeStyles = (colors: ThemeColors) =>
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.sm,
     paddingHorizontal: Metrics.spacing.lg,
+    minWidth: 84,
+    alignItems: 'center',
   },
   postButtonDisabled: {
     opacity: 0.5,
