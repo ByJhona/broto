@@ -3,8 +3,11 @@ import * as Device from 'expo-device';
 import { getNotificationsModule } from './notificationsModule';
 import { supabase } from './supabase';
 
+let isRegistering = false;
+
 export async function registerPushToken(): Promise<void> {
   if (!Device.isDevice) return;
+  if (isRegistering) return;
 
   const notifications = await getNotificationsModule();
   if (!notifications) return;
@@ -12,6 +15,7 @@ export async function registerPushToken(): Promise<void> {
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
   if (!projectId) return;
 
+  isRegistering = true;
   try {
     const permission = await notifications.getPermissionsAsync();
     const granted = permission.granted || (await notifications.requestPermissionsAsync()).granted;
@@ -31,6 +35,8 @@ export async function registerPushToken(): Promise<void> {
     }
   } catch (error) {
     console.warn('[push] erro inesperado registrando token:', error);
+  } finally {
+    isRegistering = false;
   }
 }
 
