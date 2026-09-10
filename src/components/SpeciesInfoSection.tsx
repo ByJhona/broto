@@ -112,8 +112,8 @@ function CommonProblemsCard({ commonProblems }: Readonly<{ commonProblems: Plant
     <View style={styles.section}>
       <ExpandableCard
         title="Problemas comuns"
-        icon={<Bug size={Metrics.icon.normal} color={colors.secondary} strokeWidth={Metrics.icon.strokeWidth} />}
-        color={colors.secondary}
+        icon={<Bug size={Metrics.icon.normal} color={colors.secondaryForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+        color={colors.secondaryForeground}
       >
         {commonProblems.map((problem) => (
           <View key={problem.issue} style={styles.problemRow}>
