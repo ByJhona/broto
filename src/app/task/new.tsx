@@ -2,14 +2,27 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import Clock from 'lucide-react-native/icons/clock';
 import Leaf from 'lucide-react-native/icons/leaf';
+import Minus from 'lucide-react-native/icons/minus';
+import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { FormError, FormField, SubmitButton } from '@/components';
 import { useCareTasks, usePlants } from '@/hooks';
+import { requestExactAlarmAccessOnce } from '@/services';
 import { TASK_CATEGORIES } from '@/utils';
 import type { TaskCategory } from '@/types';
 
-const REMINDER_HOURS = Array.from({ length: 24 }, (_, hour) => hour);
+function dateForTime(hour: number, minute: number): Date {
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+  return date;
+}
+
+const DEFAULT_RECURRENCE_DAYS = 3;
+const MIN_RECURRENCE_DAYS = 1;
+const MAX_RECURRENCE_DAYS = 365;
 
 export default function NewTaskScreen() {
   const router = useRouter();
@@ -24,13 +37,44 @@ export default function NewTaskScreen() {
   const [title, setTitle] = useState('');
   const [plantId, setPlantId] = useState<string | null>(params.plantId ?? null);
   const [category, setCategory] = useState<TaskCategory>('watering');
-  const [recurrenceDays, setRecurrenceDays] = useState('3');
+  const [recurrenceDays, setRecurrenceDays] = useState<number | null>(DEFAULT_RECURRENCE_DAYS);
+  const [hasEditedRecurrence, setHasEditedRecurrence] = useState(false);
+  const [lastSuggestedRecurrenceDays, setLastSuggestedRecurrenceDays] = useState<number | null>(null);
   const [reminderHour, setReminderHour] = useState(9);
+  const [reminderMinute, setReminderMinute] = useState(0);
+  const [isIosTimePickerOpen, setIsIosTimePickerOpen] = useState(false);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedPlant = plants.find((plant) => plant.id === plantId) ?? null;
+
+  const suggestedRecurrenceDays = selectedPlant?.wateringDays ?? null;
+  if (suggestedRecurrenceDays !== lastSuggestedRecurrenceDays) {
+    setLastSuggestedRecurrenceDays(suggestedRecurrenceDays);
+    if (!hasEditedRecurrence && suggestedRecurrenceDays) setRecurrenceDays(suggestedRecurrenceDays);
+  }
+
+  const setRecurrence = (value: number | null) => {
+    setRecurrenceDays(value);
+    setHasEditedRecurrence(true);
+  };
+
+  const openTimePicker = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: dateForTime(reminderHour, reminderMinute),
+        mode: 'time',
+        is24Hour: true,
+        onValueChange: (_event, date) => {
+          setReminderHour(date.getHours());
+          setReminderMinute(date.getMinutes());
+        },
+      });
+      return;
+    }
+    setIsIosTimePickerOpen(true);
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {
@@ -48,9 +92,11 @@ export default function NewTaskScreen() {
         plantPhotoUrl: selectedPlant?.photoUrl ?? null,
         category,
         notes: notes.trim() || null,
-        recurrenceDays: recurrenceDays.trim() ? Number(recurrenceDays) : null,
+        recurrenceDays,
         reminderHour,
+        reminderMinute,
       });
+      requestExactAlarmAccessOnce();
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar o lembrete. Tente novamente.');
@@ -128,30 +174,71 @@ export default function NewTaskScreen() {
           </View>
         </View>
 
-        <FormField
-          label="Repetir a cada quantos dias? (vazio = só uma vez)"
-          value={recurrenceDays}
-          onChangeText={setRecurrenceDays}
-          placeholder="3"
-          keyboardType="number-pad"
-        />
+        <View style={styles.field}>
+          <Text style={styles.label}>Repetir?</Text>
+          <View style={styles.pillRow}>
+            <Pressable
+              style={[styles.pill, recurrenceDays === null && styles.pillSelected]}
+              onPress={() => setRecurrence(null)}
+            >
+              <Text style={[styles.pillText, recurrenceDays === null && styles.pillTextSelected]}>Só uma vez</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.pill, recurrenceDays !== null && styles.pillSelected]}
+              onPress={() => setRecurrence(recurrenceDays ?? selectedPlant?.wateringDays ?? DEFAULT_RECURRENCE_DAYS)}
+            >
+              <Text style={[styles.pillText, recurrenceDays !== null && styles.pillTextSelected]}>Repetir</Text>
+            </Pressable>
+          </View>
+
+          {recurrenceDays !== null && (
+            <View style={styles.stepperRow}>
+              <Pressable
+                style={styles.stepperButton}
+                onPress={() => setRecurrence(Math.max(MIN_RECURRENCE_DAYS, recurrenceDays - 1))}
+                hitSlop={8}
+              >
+                <Minus size={16} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              </Pressable>
+              <Text style={styles.stepperValue}>{recurrenceDays === 1 ? '1 dia' : `${recurrenceDays} dias`}</Text>
+              <Pressable
+                style={styles.stepperButton}
+                onPress={() => setRecurrence(Math.min(MAX_RECURRENCE_DAYS, recurrenceDays + 1))}
+                hitSlop={8}
+              >
+                <Plus size={16} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              </Pressable>
+            </View>
+          )}
+
+          {recurrenceDays !== null && selectedPlant?.wateringDays && recurrenceDays !== selectedPlant.wateringDays && (
+            <Text style={styles.hint}>Recomendado pra essa planta: a cada {selectedPlant.wateringDays} dias</Text>
+          )}
+        </View>
 
         <View style={styles.field}>
           <Text style={styles.label}>Que horas o lembrete deve aparecer?</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourRow}>
-            {REMINDER_HOURS.map((hour) => {
-              const selected = reminderHour === hour;
-              return (
-                <Pressable
-                  key={hour}
-                  style={[styles.hourPill, selected && styles.pillSelected]}
-                  onPress={() => setReminderHour(hour)}
-                >
-                  <Text style={[styles.pillText, selected && styles.pillTextSelected]}>{`${hour}h`}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          <Pressable style={styles.timeButton} onPress={openTimePicker}>
+            <Clock size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <Text style={styles.timeButtonText}>
+              {`${String(reminderHour).padStart(2, '0')}:${String(reminderMinute).padStart(2, '0')}`}
+            </Text>
+          </Pressable>
+
+          {Platform.OS === 'ios' && isIosTimePickerOpen && (
+            <DateTimePicker
+              value={dateForTime(reminderHour, reminderMinute)}
+              mode="time"
+              is24Hour
+              display="spinner"
+              onValueChange={(_event, date) => {
+                setIsIosTimePickerOpen(false);
+                setReminderHour(date.getHours());
+                setReminderMinute(date.getMinutes());
+              }}
+              onDismiss={() => setIsIosTimePickerOpen(false)}
+            />
+          )}
         </View>
 
         <FormField
@@ -258,20 +345,50 @@ const makeStyles = (colors: ThemeColors) =>
     paddingHorizontal: Metrics.spacing.md,
     backgroundColor: colors.card,
   },
-  hourRow: {
+  timeButton: {
     flexDirection: 'row',
-    gap: Metrics.spacing.xs,
-    paddingRight: Metrics.spacing.md,
-  },
-  hourPill: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: Metrics.spacing.sm,
     borderWidth: 2,
     borderColor: colors.border,
     borderRadius: Metrics.radius.full,
-    paddingVertical: 8,
-    paddingHorizontal: Metrics.spacing.sm,
+    paddingVertical: Metrics.spacing.sm,
+    paddingHorizontal: Metrics.spacing.md,
     backgroundColor: colors.card,
-    minWidth: 44,
+  },
+  timeButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.foreground,
+  },
+  stepperRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Metrics.spacing.md,
+    marginTop: Metrics.spacing.sm,
+  },
+  stepperButton: {
+    width: 36,
+    height: 36,
+    borderRadius: Metrics.radius.full,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepperValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.foreground,
+    minWidth: 72,
+    textAlign: 'center',
+  },
+  hint: {
+    fontSize: 12,
+    color: colors.mutedForeground,
+    marginTop: Metrics.spacing.xs,
   },
   pillSelected: {
     borderColor: colors.primary,

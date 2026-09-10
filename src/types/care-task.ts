@@ -19,6 +19,7 @@ export type CareTask = {
   dueDate: string;
   recurrenceDays: number | null;
   reminderHour: number;
+  reminderMinute: number;
   done: boolean;
   lastCompletedOccurrence: string | null;
 };

@@ -1,6 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createCareTask, deleteCareTask, getCareTasks, toggleCareTask, type CreateCareTaskInput } from '@/services';
+import {
+  createCareTask,
+  deleteCareTask,
+  getCareTasks,
+  syncLocalReminders,
+  toggleCareTask,
+  type CreateCareTaskInput,
+} from '@/services';
 import type { CareTask } from '@/types';
 import { useAuth } from './useAuth';
 
@@ -18,6 +25,10 @@ export function useCareTasks() {
     queryFn: getCareTasks,
     enabled: !!user,
   });
+
+  useEffect(() => {
+    syncLocalReminders(tasks);
+  }, [tasks]);
 
   const toggleMutation = useMutation({
     mutationFn: ({ task, done }: { task: CareTask; done: boolean }) => toggleCareTask(task, done),

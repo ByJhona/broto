@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import type { CareTask, TaskCategory } from '@/types';
 
 const DEFAULT_REMINDER_HOUR = 9;
+const DEFAULT_REMINDER_MINUTE = 0;
 
 type CareTaskRow = {
   id: string;
@@ -16,11 +17,12 @@ type CareTaskRow = {
   start_date: string;
   recurrence_days: number | null;
   reminder_hour: number;
+  reminder_minute: number;
   last_completed_occurrence: string | null;
 };
 
 const CARE_TASK_SELECT =
-  'id, plant_id, title, plant_name, plant_photo_url, category, notes, start_date, recurrence_days, reminder_hour, last_completed_occurrence';
+  'id, plant_id, title, plant_name, plant_photo_url, category, notes, start_date, recurrence_days, reminder_hour, reminder_minute, last_completed_occurrence';
 
 export type CreateCareTaskInput = {
   title: string;
@@ -31,6 +33,7 @@ export type CreateCareTaskInput = {
   notes?: string | null;
   recurrenceDays?: number | null;
   reminderHour?: number;
+  reminderMinute?: number;
 };
 
 async function getCurrentUserId(): Promise<string | null> {
@@ -64,6 +67,7 @@ function toCareTask(row: CareTaskRow, todayDate: string): CareTask {
     dueDate,
     recurrenceDays: row.recurrence_days,
     reminderHour: row.reminder_hour,
+    reminderMinute: row.reminder_minute,
     done: row.last_completed_occurrence === dueDate,
     lastCompletedOccurrence: row.last_completed_occurrence,
   };
@@ -111,7 +115,7 @@ export async function markCareTaskDoneById(id: string): Promise<void> {
   if (updateError) return;
 }
 
-const CARE_TASK_CATEGORY = 'care-task';
+export const CARE_TASK_CATEGORY = 'care-task';
 const MARK_DONE_ACTION = 'mark-done';
 export const REMINDERS_CHANNEL_ID = 'reminders';
 
@@ -148,6 +152,7 @@ export async function createCareTask(input: CreateCareTaskInput): Promise<CareTa
   const startDate = today();
   const recurrenceDays = input.recurrenceDays ?? null;
   const reminderHour = input.reminderHour ?? DEFAULT_REMINDER_HOUR;
+  const reminderMinute = input.reminderMinute ?? DEFAULT_REMINDER_MINUTE;
 
   const { data: row, error } = await supabase
     .from('care_tasks')
@@ -161,6 +166,7 @@ export async function createCareTask(input: CreateCareTaskInput): Promise<CareTa
       start_date: startDate,
       recurrence_days: recurrenceDays,
       reminder_hour: reminderHour,
+      reminder_minute: reminderMinute,
     })
     .select(CARE_TASK_SELECT)
     .single();

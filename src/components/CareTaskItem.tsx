@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Circle from 'lucide-react-native/icons/circle';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { addDays, CATEGORY_ICONS, formatShortDate } from '@/utils';
+import { addDays, CATEGORY_ICONS, daysBetween, formatShortDate, today } from '@/utils';
 import type { CareTask } from '@/types';
 
 type CareTaskItemProps = {
@@ -13,14 +13,31 @@ type CareTaskItemProps = {
   onLongPress?: (id: string) => void;
 };
 
+function timeOfDay(task: CareTask): string {
+  return `${String(task.reminderHour).padStart(2, '0')}:${String(task.reminderMinute).padStart(2, '0')}`;
+}
+
+function dueLabel(task: CareTask): string {
+  const daysUntilDue = daysBetween(today(), task.dueDate);
+  if (daysUntilDue < 0) return `Atrasado há ${-daysUntilDue} dia${-daysUntilDue === 1 ? '' : 's'}`;
+  if (daysUntilDue === 0) return `Vence hoje às ${timeOfDay(task)}`;
+  if (daysUntilDue === 1) return `Vence amanhã às ${timeOfDay(task)}`;
+  return `Vence em ${daysUntilDue} dias`;
+}
+
+function recurrenceLabel(task: CareTask): string | null {
+  return task.recurrenceDays ? `a cada ${task.recurrenceDays} dias` : null;
+}
+
 function statusLabel(task: CareTask): string {
+  const recurrence = recurrenceLabel(task);
   if (!task.done) {
-    return task.lastCompletedOccurrence
-      ? `Última vez: ${formatShortDate(task.lastCompletedOccurrence)}`
-      : 'Ainda não feito';
+    return [dueLabel(task), recurrence].filter(Boolean).join(' · ');
   }
   if (!task.recurrenceDays) return 'Concluído';
-  return `Concluído — próxima em ${formatShortDate(addDays(task.dueDate, task.recurrenceDays))}`;
+  return [`Concluído — próxima em ${formatShortDate(addDays(task.dueDate, task.recurrenceDays))}`, recurrence]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: Readonly<CareTaskItemProps>) {
@@ -28,6 +45,7 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = CATEGORY_ICONS[task.category];
   const subtitle = task.plantName ? `${task.plantName} · ${statusLabel(task)}` : statusLabel(task);
+  const isOverdue = !task.done && daysBetween(today(), task.dueDate) < 0;
 
   return (
     <Pressable
@@ -55,7 +73,7 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
 
       <View style={styles.textContainer}>
         <Text style={[styles.title, task.done && styles.textDone]}>{task.title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.subtitle, isOverdue && styles.subtitleOverdue]}>{subtitle}</Text>
       </View>
 
       {task.done ? (
@@ -114,6 +132,10 @@ const makeStyles = (colors: ThemeColors) =>
     fontSize: 13,
     color: colors.mutedForeground,
     marginTop: 2,
+  },
+  subtitleOverdue: {
+    color: colors.destructive,
+    fontWeight: '600',
   },
   textDone: {
     color: colors.mutedForeground,

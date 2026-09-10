@@ -7,7 +7,7 @@ import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CareTaskItem, CreditsCard, HomeHeader } from '@/components';
 import { useCareTasks } from '@/hooks';
-import { confirm } from '@/utils';
+import { confirm, today } from '@/utils';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,7 +23,10 @@ export default function HomeScreen() {
     setIsPullRefreshing(false);
   };
 
-  const pendingTasks = tasks.filter((task) => !task.done);
+  const todayDate = today();
+  const pendingTasks = tasks.filter((task) => !task.done).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const dueTasks = pendingTasks.filter((task) => task.dueDate <= todayDate);
+  const upcomingTasks = pendingTasks.filter((task) => task.dueDate > todayDate);
   const completedTasks = tasks.filter((task) => task.done);
 
   const handleLongPress = useCallback(
@@ -71,16 +74,27 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {!isLoading && pendingTasks.length === 0 ? (
+        {!isLoading && dueTasks.length === 0 ? (
           <Text style={styles.emptyText}>Tudo em dia por hoje.</Text>
         ) : (
           <View style={styles.taskList}>
-            {pendingTasks.map((task) => (
+            {dueTasks.map((task) => (
               <CareTaskItem key={task.id} task={task} onToggle={toggleTask} onLongPress={handleLongPress} />
             ))}
           </View>
         )}
       </View>
+
+      {upcomingTasks.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Próximos</Text>
+          <View style={styles.taskList}>
+            {upcomingTasks.map((task) => (
+              <CareTaskItem key={task.id} task={task} onToggle={toggleTask} onLongPress={handleLongPress} />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {showCompleted && completedTasks.length > 0 ? (
         <View style={styles.section}>
