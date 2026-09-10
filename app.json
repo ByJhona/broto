@@ -2,7 +2,7 @@
   "expo": {
     "name": "broto",
     "slug": "broto",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -20,7 +20,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 22,
+      "versionCode": 23,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

@@ -16,11 +16,12 @@ async function uploadIdentificationPhoto(localUri: string): Promise<string> {
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
+  const bytes = await file.bytes();
   const path = `${user.id}/identifications/${Date.now()}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')
-    .upload(path, file, { contentType: 'image/jpeg' });
+    .upload(path, bytes, { contentType: 'image/jpeg' });
 
   if (uploadError) throw uploadError;
 
