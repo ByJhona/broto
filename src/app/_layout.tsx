@@ -29,6 +29,7 @@ function RootNavigator() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
+    console.log('[push] mount effect rodou');
     registerCareTaskNotificationHandlers();
     registerNotificationTapHandler();
     watchPushTokenRefresh();
@@ -45,6 +46,7 @@ function RootNavigator() {
 
   useEffect(() => {
     if (!session) return;
+    console.log('[push] session effect chamou registerPushToken');
     registerPushToken();
     // Warms the plans-screen cache so it shows cards instantly instead of a
     // skeleton the first time the user navigates there in this session.

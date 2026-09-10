@@ -7,7 +7,10 @@ let isRegistering = false;
 
 export async function registerPushToken(): Promise<void> {
   if (!Device.isDevice) return;
-  if (isRegistering) return;
+  if (isRegistering) {
+    console.log('[push] registerPushToken ignorado, já em andamento');
+    return;
+  }
 
   const notifications = await getNotificationsModule();
   if (!notifications) return;
@@ -29,7 +32,7 @@ export async function registerPushToken(): Promise<void> {
     const user = session?.user ?? null;
     if (!user) return;
 
-    const { error } = await supabase.from('push_tokens').upsert({ user_id: user.id, token }, { onConflict: 'token' });
+    const { error } = await supabase.rpc('register_push_token', { p_token: token });
     if (error) {
       console.warn('[push] erro salvando token no Supabase:', error);
     }
@@ -45,6 +48,7 @@ export async function watchPushTokenRefresh(): Promise<void> {
   if (!notifications) return;
 
   notifications.addPushTokenListener(() => {
+    console.log('[push] addPushTokenListener disparou');
     registerPushToken();
   });
 }
