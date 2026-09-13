@@ -4,9 +4,16 @@ import { Image } from 'expo-image';
 import Users from 'lucide-react-native/icons/users';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EVENT_COLOR, EVENT_ICON, formatEventDateTime } from '@/utils';
-import type { PlantEvent } from '@/types';
+import { EVENT_STATUS, type PlantEvent } from '@/types';
+import { StatusBadge } from './StatusBadge';
 
 const EVENT_CARD_WIDTH = 220;
+
+function eventStatusLabel(event: PlantEvent, isPast: boolean): string | null {
+  if (event.status === EVENT_STATUS.CANCELLED) return 'Cancelado';
+  if (isPast) return 'Encerrado';
+  return null;
+}
 
 type EventCardProps = {
   event: PlantEvent;
@@ -20,6 +27,9 @@ export function EventCard({ event, distanceLabel, onPress }: Readonly<EventCardP
   const Icon = EVENT_ICON;
   const attendeesLabel = event.attendeeCount === 1 ? '1 confirmado' : `${event.attendeeCount} confirmados`;
   const metaLine = [attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
+  // eslint-disable-next-line react-hooks/purity -- reading the wall clock to check if the event date already passed
+  const isPast = new Date(event.eventDate).getTime() < Date.now();
+  const statusLabel = eventStatusLabel(event, isPast);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -30,6 +40,8 @@ export function EventCard({ event, distanceLabel, onPress }: Readonly<EventCardP
           <Icon size={28} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
       )}
+
+      {statusLabel ? <StatusBadge label={statusLabel} /> : null}
 
       <View style={styles.body}>
         <Text style={styles.date}>{formatEventDateTime(event.eventDate)}</Text>

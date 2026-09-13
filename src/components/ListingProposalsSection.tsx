@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import type { OfferStatus } from '@/types';
+import { OFFER_STATUS, type OfferStatus } from '@/types';
 import { Avatar } from './Avatar';
 import { Card } from './Card';
 import { ListRow } from './ListRow';
@@ -63,7 +63,7 @@ export function ListingProposalsSection({
               }
               onPress={() => onOpenChat(proposal.userId)}
             />
-            {proposal.status === 'pending' && (proposal.onAccept || proposal.onDecline) ? (
+            {proposal.status === OFFER_STATUS.PENDING && (proposal.onAccept || proposal.onDecline) ? (
               <View style={styles.actions}>
                 <Pressable style={styles.declineButton} onPress={proposal.onDecline}>
                   <Text style={styles.declineButtonText}>Recusar</Text>

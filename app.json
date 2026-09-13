@@ -2,7 +2,7 @@
   "expo": {
     "name": "Broto",
     "slug": "broto",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -21,7 +21,7 @@
         "android.permission.SCHEDULE_EXACT_ALARM"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 27,
+      "versionCode": 28,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
@@ -41,7 +41,7 @@
         {
           "backgroundColor": "#EAF1E3",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 96
+          "imageWidth": 320
         }
       ],
       [

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { FlatList, StyleSheet, Text } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
@@ -43,6 +43,7 @@ export default function MessagesScreen() {
           title={item.otherUserName}
           titleTrailing={<Text style={styles.date}>{formatShortDate(item.lastMessageAt)}</Text>}
           subtitle={item.lastMessagePreview}
+          trailing={item.lastMessageMine ? null : <View style={styles.unreadDot} />}
           onPress={() => router.push({ pathname: '/chat', params: { otherUserId: item.otherUserId } })}
         />
       )}
@@ -71,5 +72,11 @@ const makeStyles = (colors: ThemeColors) =>
     date: {
       fontSize: 12,
       color: colors.mutedForeground,
+    },
+    unreadDot: {
+      width: 10,
+      height: 10,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: colors.destructive,
     },
   });

@@ -6,7 +6,6 @@ import Bell from 'lucide-react-native/icons/bell';
 import BellOff from 'lucide-react-native/icons/bell-off';
 import Heart from 'lucide-react-native/icons/heart';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
-import MessageSquare from 'lucide-react-native/icons/message-square';
 import Sprout from 'lucide-react-native/icons/sprout';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import X from 'lucide-react-native/icons/x';
@@ -16,12 +15,11 @@ import { useNotifications } from '@/hooks';
 import { confirm, notificationCopy } from '@/utils';
 import type { NotificationType } from '@/types';
 
-const TYPE_ICONS: Record<NotificationType, typeof Heart> = {
+const TYPE_ICONS: Partial<Record<NotificationType, typeof Heart>> = {
   like: Heart,
   comment: MessageCircle,
   system: Bell,
   listing_interest: Sprout,
-  listing_message: MessageSquare,
 };
 
 export default function NotificationsScreen() {
@@ -71,18 +69,16 @@ export default function NotificationsScreen() {
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const Icon = TYPE_ICONS[item.type];
+          const Icon = TYPE_ICONS[item.type] ?? Bell;
           const { title, message } = notificationCopy(item);
           const handlePress = () => {
             if (item.postId) {
               router.push({ pathname: '/post/[id]', params: { id: item.postId } });
-            } else if (item.type === 'listing_message' && item.actorId) {
-              router.push({ pathname: '/chat', params: { otherUserId: item.actorId } });
             } else if (item.listingId) {
               router.push({ pathname: '/listing/[id]', params: { id: item.listingId } });
             }
           };
-          const isPressable = !!item.postId || !!item.listingId || (item.type === 'listing_message' && !!item.actorId);
+          const isPressable = !!item.postId || !!item.listingId;
           return (
             <Card style={styles.item} disabled={!isPressable} onPress={handlePress}>
               <IconBadge size={32}>

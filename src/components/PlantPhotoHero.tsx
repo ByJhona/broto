@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Plus from 'lucide-react-native/icons/plus';
 import Trash2 from 'lucide-react-native/icons/trash-2';
-import X from 'lucide-react-native/icons/x';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { addPlantPhoto, MAX_PLANT_PHOTOS, removePlantPhoto } from '@/services';
 import type { Plant } from '@/types';
-import { Alert, Toast } from '@/utils';
+import { pickPhoto, Toast } from '@/utils';
 import { IconBadge } from './IconBadge';
+import { PhotoViewerModal } from './PhotoViewerModal';
 
 const HERO_HEIGHT = 260;
 
@@ -27,43 +26,19 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
   const [photoIndex, setPhotoIndex] = useState(0);
   const [viewerPhotoUrl, setViewerPhotoUrl] = useState<string | null>(null);
 
-  const handlePickAndUpload = async (source: 'camera' | 'gallery') => {
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) return;
-
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] })
-        : await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            quality: 0.7,
-            allowsEditing: true,
-            aspect: [4, 3],
-          });
-
-    if (result.canceled) return;
+  const handleAddPhoto = async () => {
+    const uri = await pickPhoto();
+    if (!uri) return;
 
     setIsUpdatingPhoto(true);
     try {
-      const updated = await addPlantPhoto(plant.id, result.assets[0].uri);
+      const updated = await addPlantPhoto(plant.id, uri);
       onPhotoUrlsChange(updated.photoUrls);
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : 'Não foi possível salvar a foto.');
     } finally {
       setIsUpdatingPhoto(false);
     }
-  };
-
-  const handleAddPhoto = () => {
-    Alert.alert('Adicionar foto', undefined, [
-      { text: 'Tirar foto', onPress: () => handlePickAndUpload('camera') },
-      { text: 'Escolher da galeria', onPress: () => handlePickAndUpload('gallery') },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
   };
 
   const handleRemovePhoto = async (photoUrl: string) => {
@@ -136,14 +111,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
         </View>
       </View>
 
-      <Modal visible={!!viewerPhotoUrl} transparent animationType="fade" onRequestClose={() => setViewerPhotoUrl(null)}>
-        <View style={styles.viewerBackdrop}>
-          <Pressable style={styles.viewerClose} onPress={() => setViewerPhotoUrl(null)}>
-            <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
-          {viewerPhotoUrl ? <Image source={{ uri: viewerPhotoUrl }} style={styles.viewerImage} resizeMode="contain" /> : null}
-        </View>
-      </Modal>
+      <PhotoViewerModal photoUrl={viewerPhotoUrl} onClose={() => setViewerPhotoUrl(null)} />
     </>
   );
 }
@@ -218,22 +186,5 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.white,
       opacity: 0.9,
       marginTop: 2,
-    },
-    viewerBackdrop: {
-      flex: 1,
-      backgroundColor: Overlays.scrimStrong,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    viewerClose: {
-      position: 'absolute',
-      top: 60,
-      right: Metrics.spacing.lg,
-      zIndex: 1,
-    },
-    viewerImage: {
-      width: '90%',
-      height: '60%',
-      borderRadius: Metrics.radius.lg,
     },
   });

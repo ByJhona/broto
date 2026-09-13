@@ -32,7 +32,7 @@ import {
 } from '@/components';
 import { useAuth, useCareTasks, useCredits } from '@/hooks';
 import { deletePlant, getPlant, updatePlantName } from '@/services';
-import type { Plant, PlantSummary } from '@/types';
+import { TASK_CATEGORY, type Plant, type PlantSummary } from '@/types';
 import { Alert, confirm, daysBetween, sunLevelLabel, Toast, today } from '@/utils';
 
 const CARE_LEVEL_LABEL: Record<NonNullable<Plant['careLevel']>, string> = {
@@ -148,7 +148,9 @@ export default function PlantDetailScreen() {
   useEffect(() => {
     if (!plant || !isPremium || isCareTasksLoading) return;
 
-    const hasReminder = careTasksList.some((task) => task.plantId === plant.id && task.category === 'growth_check');
+    const hasReminder = careTasksList.some(
+      (task) => task.plantId === plant.id && task.category === TASK_CATEGORY.GROWTH_CHECK
+    );
     if (hasReminder) return;
 
     createTask({
@@ -156,7 +158,7 @@ export default function PlantDetailScreen() {
       plantId: plant.id,
       plantName: plant.name,
       plantPhotoUrl: plant.photoUrls[0] ?? null,
-      category: 'growth_check',
+      category: TASK_CATEGORY.GROWTH_CHECK,
       notes: 'Tire uma foto pra IA acompanhar a evolução dessa planta.',
       recurrenceDays: 14,
     });

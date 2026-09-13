@@ -1,4 +1,10 @@
-export type OfferStatus = 'pending' | 'accepted' | 'declined';
+export const OFFER_STATUS = {
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  DECLINED: 'declined',
+} as const;
+
+export type OfferStatus = (typeof OFFER_STATUS)[keyof typeof OFFER_STATUS];
 
 export type ChatMessage = {
   id: string;
@@ -21,4 +27,5 @@ export type ChatConversation = {
   otherUserAvatarUrl: string | null;
   lastMessagePreview: string;
   lastMessageAt: string;
+  lastMessageMine: boolean;
 };

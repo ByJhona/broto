@@ -30,7 +30,11 @@ const IDENTIFICATION_JSON_SCHEMA = {
           type: 'object',
           properties: {
             scientificName: { type: 'string', description: 'Nome científico (binomial), ex: "Monstera deliciosa".' },
-            commonName: { type: ['string', 'null'], description: 'Nome popular em português do Brasil.' },
+            commonName: {
+              type: ['string', 'null'],
+              description:
+                'O nome popular MAIS conhecido dessa planta no Brasil — o que uma pessoa comum usaria, não um nome regional raro, não uma tradução literal do nome científico. Exemplos do padrão esperado: "Jiboia" (não "Epipremnum"), "Costela-de-adão" (não "Monstera"), "Espada-de-São-Jorge" (não "Sansevieria"). Só retorne null se a planta realmente não tiver nenhum nome popular conhecido em português.',
+            },
             family: { type: ['string', 'null'], description: 'Família botânica, ex: "Araceae".' },
             genus: { type: ['string', 'null'], description: 'Gênero botânico, ex: "Monstera".' },
             confidence: {
@@ -78,7 +82,7 @@ async function classifyPhoto(photoUrl: string): Promise<IdentificationPayload> {
       {
         role: 'system',
         content:
-          'Você é um botânico especialista em identificar plantas a partir de fotos. Primeiro avalie se a foto realmente mostra uma planta (folha, flor, caule) — se for uma pessoa, objeto, chão, animal ou qualquer coisa sem planta reconhecível, marque isPlant como false e devolva candidates como uma lista vazia. Se a foto mostrar uma planta, identifique a espécie mais provável pelo nome científico. Se houver dúvida razoável entre espécies parecidas, liste até 5 candidatas, da mais pra menos provável, cada uma com confidence de 0 a 1 refletindo sua certeza real. Nunca invente um nome científico que não existe — se não tiver certeza da espécie exata, prefira indicar o gênero ou família mais prováveis com confidence mais baixo. Nomes populares em português do Brasil.',
+          'Você é um botânico especialista em identificar plantas a partir de fotos. Primeiro avalie se a foto realmente mostra uma planta (folha, flor, caule) — se for uma pessoa, objeto, chão, animal ou qualquer coisa sem planta reconhecível, marque isPlant como false e devolva candidates como uma lista vazia. Se a foto mostrar uma planta, identifique a espécie mais provável pelo nome científico. Se houver dúvida razoável entre espécies parecidas, liste até 5 candidatas, da mais pra menos provável, cada uma com confidence de 0 a 1 refletindo sua certeza real. Nunca invente um nome científico que não existe — se não tiver certeza da espécie exata, prefira indicar o gênero ou família mais prováveis com confidence mais baixo. Para commonName, use sempre o nome popular mais falado e reconhecido no Brasil (o que apareceria numa loja de plantas ou que a vizinhança usaria), nunca um nome científico latinizado disfarçado de popular nem uma variante regional obscura — pense em como um brasileiro comum, sem conhecimento técnico, chamaria essa planta.',
       },
       {
         role: 'user',

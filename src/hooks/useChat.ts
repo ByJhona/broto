@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getChatMessages, respondToOffer, sendChatMessage, subscribeToChatMessages } from '@/services';
-import type { ChatMessage } from '@/types';
+import { OFFER_STATUS, type ChatMessage } from '@/types';
 import { useAuth } from './useAuth';
 
 function upsertMessage(current: ChatMessage[], message: ChatMessage): ChatMessage[] {
@@ -44,13 +44,13 @@ export function useChat(otherUserId: string) {
 
   const { mutateAsync: respondToOfferMessage } = useMutation({
     mutationFn: ({ messageId, accept }: { messageId: string; accept: boolean }) => respondToOffer(messageId, accept),
-    onSuccess: (message) => {
+    onSuccess: ({ offerMessage, confirmationMessage }) => {
       queryClient.setQueryData<ChatMessage[]>(queryKey, (current = []) =>
-        current.map((item) => (item.id === message.id ? message : item))
+        upsertMessage(current.map((item) => (item.id === offerMessage.id ? offerMessage : item)), confirmationMessage)
       );
-      if (message.offerStatus === 'accepted' && message.listingId) {
+      if (offerMessage.offerStatus === OFFER_STATUS.ACCEPTED && offerMessage.listingId) {
         queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
-        queryClient.invalidateQueries({ queryKey: ['plant-listing', message.listingId] });
+        queryClient.invalidateQueries({ queryKey: ['plant-listing', offerMessage.listingId] });
       }
     },
   });

@@ -1,12 +1,15 @@
-export type TaskCategory =
-  | 'watering'
-  | 'misting'
-  | 'soil_check'
-  | 'fertilizing'
-  | 'pruning'
-  | 'purchase'
-  | 'growth_check'
-  | 'other';
+export const TASK_CATEGORY = {
+  WATERING: 'watering',
+  MISTING: 'misting',
+  SOIL_CHECK: 'soil_check',
+  FERTILIZING: 'fertilizing',
+  PRUNING: 'pruning',
+  PURCHASE: 'purchase',
+  GROWTH_CHECK: 'growth_check',
+  OTHER: 'other',
+} as const;
+
+export type TaskCategory = (typeof TASK_CATEGORY)[keyof typeof TASK_CATEGORY];
 
 export type CareTask = {
   id: string;

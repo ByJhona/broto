@@ -4,18 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Users from 'lucide-react-native/icons/users';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
-  Avatar,
   Card,
   EmptyState,
   EventAttendeesSection,
-  ListRow,
   LoadingScreen,
+  OwnerRow,
   PlantHero,
   PromptModal,
   ScreenContent,
@@ -25,6 +23,97 @@ import {
 import { useAuth, useEvents } from '@/hooks';
 import { cancelAttendance, confirmAttendance, createPost, getEventAttendees, getEventById } from '@/services';
 import { Alert, confirm, EVENT_COLOR, EVENT_ICON, formatEventDateTime, Toast, type AlertButton } from '@/utils';
+import { EVENT_STATUS } from '@/types';
+
+async function performEventDelete(
+  eventId: string,
+  removeEvent: (id: string) => Promise<unknown>,
+  setIsActing: (value: boolean) => void,
+  onDone: () => void
+): Promise<void> {
+  const confirmed = await confirm('Excluir evento', 'Isso remove o evento do mapa. Não dá pra desfazer.', {
+    confirmLabel: 'Excluir',
+    destructive: true,
+  });
+  if (!confirmed) return;
+
+  setIsActing(true);
+  try {
+    await removeEvent(eventId);
+    onDone();
+  } catch {
+    Toast.error('Não foi possível excluir o evento.');
+  } finally {
+    setIsActing(false);
+  }
+}
+
+async function performEventCancel(
+  eventId: string,
+  cancelEventById: (id: string) => Promise<unknown>,
+  setIsActing: (value: boolean) => void
+): Promise<void> {
+  const confirmed = await confirm('Cancelar evento', 'As pessoas confirmadas vão ver que o evento foi cancelado.', {
+    confirmLabel: 'Cancelar evento',
+    destructive: true,
+  });
+  if (!confirmed) return;
+
+  setIsActing(true);
+  try {
+    await cancelEventById(eventId);
+    Toast.success('Evento cancelado.');
+  } catch {
+    Toast.error('Não foi possível cancelar o evento.');
+  } finally {
+    setIsActing(false);
+  }
+}
+
+function buildEventActionButtons(
+  isCancelled: boolean,
+  isPast: boolean,
+  handlers: { onShare: () => void; onCancel: () => void; onDelete: () => void }
+): AlertButton[] {
+  const buttons: AlertButton[] = [{ text: 'Compartilhar na Comunidade', onPress: handlers.onShare }];
+  if (!isCancelled && !isPast) {
+    buttons.push({ text: 'Cancelar evento', style: 'destructive', onPress: handlers.onCancel });
+  }
+  buttons.push({ text: 'Excluir evento', style: 'destructive', onPress: handlers.onDelete });
+  buttons.push({ text: 'Fechar', style: 'cancel' });
+  return buttons;
+}
+
+function eventStatusNotice(isCancelled: boolean, isPast: boolean): { text: string; muted: boolean } | null {
+  if (isCancelled) return { text: 'Esse evento foi cancelado pelo organizador.', muted: false };
+  if (isPast) return { text: 'Esse evento já aconteceu.', muted: true };
+  return null;
+}
+
+type EventHeroProps = {
+  photoUrl: string | null;
+  title: string;
+  eventDate: string;
+  styles: ReturnType<typeof makeStyles>;
+};
+
+function EventHero({ photoUrl, title, eventDate, styles }: Readonly<EventHeroProps>) {
+  if (photoUrl) {
+    return <PlantHero photoUrl={photoUrl} name={title} species={formatEventDateTime(eventDate)} />;
+  }
+
+  return (
+    <>
+      <View style={styles.heroPlaceholder}>
+        <EVENT_ICON size={Metrics.icon.xl} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+      </View>
+      <View style={styles.plainHeader}>
+        <Text style={styles.plainHeaderName}>{title}</Text>
+        <Text style={styles.plainHeaderDate}>{formatEventDateTime(eventDate)}</Text>
+      </View>
+    </>
+  );
+}
 
 export default function EventDetailScreen() {
   const router = useRouter();
@@ -34,12 +123,11 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { removeEvent } = useEvents();
+  const { removeEvent, cancelEventById } = useEvents();
   const [isActing, setIsActing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareCaption, setShareCaption] = useState('');
   const [isSharing, setIsSharing] = useState(false);
-  const EventIcon = EVENT_ICON;
 
   const eventQuery = useQuery({
     queryKey: ['event', id, user?.id],
@@ -49,6 +137,10 @@ export default function EventDetailScreen() {
 
   const event = eventQuery.data;
   const isOwner = !!user && event?.userId === user.id;
+  // eslint-disable-next-line react-hooks/purity -- reading the wall clock to check if the event date already passed
+  const isPast = !!event && new Date(event.eventDate).getTime() < Date.now();
+  const isCancelled = event?.status === EVENT_STATUS.CANCELLED;
+  const canRsvp = !isOwner && !isCancelled && !isPast;
 
   const attendeesQuery = useQuery({
     queryKey: ['event-attendees', id],
@@ -98,23 +190,9 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = await confirm('Excluir evento', 'Isso remove o evento do mapa. Não dá pra desfazer.', {
-      confirmLabel: 'Excluir',
-      destructive: true,
-    });
-    if (!confirmed) return;
+  const handleDelete = () => performEventDelete(event.id, removeEvent, setIsActing, () => router.back());
 
-    setIsActing(true);
-    try {
-      await removeEvent(event.id);
-      router.back();
-    } catch {
-      Toast.error('Não foi possível excluir o evento.');
-    } finally {
-      setIsActing(false);
-    }
-  };
+  const handleCancelEvent = () => performEventCancel(event.id, cancelEventById, setIsActing);
 
   const handlePressOwner = () => {
     router.push({ pathname: '/profile/[id]', params: { id: event.userId } });
@@ -133,7 +211,7 @@ export default function EventDetailScreen() {
     if (!user) return;
     setIsSharing(true);
     try {
-      await createPost(user.id, shareCaption.trim(), null, null, event.photoUrl, null, event.id);
+      await createPost(user.id, shareCaption.trim(), [], null, event.photoUrl ? [event.photoUrl] : [], null, event.id);
       setIsShareModalOpen(false);
       Toast.success('Evento compartilhado na Comunidade!');
     } catch {
@@ -144,13 +222,15 @@ export default function EventDetailScreen() {
   };
 
   const handleOpenActions = () => {
-    const buttons: AlertButton[] = [
-      { text: 'Compartilhar na Comunidade', onPress: handleOpenShareModal },
-      { text: 'Excluir evento', style: 'destructive', onPress: handleDelete },
-      { text: 'Cancelar', style: 'cancel' },
-    ];
+    const buttons = buildEventActionButtons(isCancelled, isPast, {
+      onShare: handleOpenShareModal,
+      onCancel: handleCancelEvent,
+      onDelete: handleDelete,
+    });
     Alert.alert('Editar evento', undefined, buttons);
   };
+
+  const statusNotice = eventStatusNotice(isCancelled, isPast);
 
   return (
     <ScrollView
@@ -171,34 +251,16 @@ export default function EventDetailScreen() {
         }
       />
 
-      {event.photoUrl ? (
-        <PlantHero photoUrl={event.photoUrl} name={event.title} species={formatEventDateTime(event.eventDate)} />
-      ) : (
-        <>
-          <View style={styles.heroPlaceholder}>
-            <EventIcon size={Metrics.icon.xl} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-          </View>
-          <View style={styles.plainHeader}>
-            <Text style={styles.plainHeaderName}>{event.title}</Text>
-            <Text style={styles.plainHeaderDate}>{formatEventDateTime(event.eventDate)}</Text>
-          </View>
-        </>
-      )}
+      <EventHero photoUrl={event.photoUrl} title={event.title} eventDate={event.eventDate} styles={styles} />
 
       <ScreenContent>
         <Card style={styles.section}>
-          {event.ownerName ? (
-            <>
-              <ListRow
-                leading={<Avatar name={event.ownerName} url={event.ownerAvatarUrl} size={48} />}
-                eyebrow="Organizado por"
-                title={event.ownerName}
-                trailing={<ChevronRight size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
-                onPress={handlePressOwner}
-              />
-              <View style={styles.divider} />
-            </>
-          ) : null}
+          <OwnerRow
+            eyebrow="Organizado por"
+            ownerName={event.ownerName}
+            ownerAvatarUrl={event.ownerAvatarUrl}
+            onPress={handlePressOwner}
+          />
 
           <View style={styles.locationRow}>
             <MapPin size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
@@ -215,6 +277,10 @@ export default function EventDetailScreen() {
           </View>
         </Card>
 
+        {statusNotice ? (
+          <Text style={statusNotice.muted ? styles.statusNoticeMuted : styles.statusNotice}>{statusNotice.text}</Text>
+        ) : null}
+
         {event.description ? (
           <Card style={styles.section}>
             <SectionTitle>Descrição</SectionTitle>
@@ -224,7 +290,7 @@ export default function EventDetailScreen() {
 
         <EventAttendeesSection attendees={attendeesQuery.data} onPressAttendee={handlePressAttendee} />
 
-        {!isOwner ? (
+        {canRsvp ? (
           <SubmitButton
             label={event.isAttending ? 'Cancelar presença' : 'Confirmar presença'}
             onPress={handleToggleAttendance}
@@ -277,11 +343,6 @@ const makeStyles = (colors: ThemeColors) =>
       color: EVENT_COLOR,
       marginTop: 2,
     },
-    divider: {
-      height: 1,
-      backgroundColor: colors.border,
-      marginVertical: Metrics.spacing.md,
-    },
     section: {
       marginBottom: Metrics.spacing.lg,
     },
@@ -300,5 +361,17 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       fontSize: 15,
       color: colors.foreground,
+    },
+    statusNotice: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.destructive,
+      marginBottom: Metrics.spacing.lg,
+    },
+    statusNoticeMuted: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.mutedForeground,
+      marginBottom: Metrics.spacing.lg,
     },
   });

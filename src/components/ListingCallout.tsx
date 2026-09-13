@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, LISTING_TYPE_LABELS } from '@/utils';
+import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
 import type { PlantListing } from '@/types';
 import { ListRow } from './ListRow';
 
@@ -18,7 +18,7 @@ export function ListingCallout({ listing, distanceLabel, onPress }: Readonly<Lis
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = LISTING_TYPE_ICONS[listing.listingType];
   const color = LISTING_TYPE_COLORS[listing.listingType];
-  const label = LISTING_TYPE_LABELS[listing.listingType];
+  const label = listingBadgeLabel(listing.listingType, listing.priceCents);
   const coverPhotoUrl = listing.photoUrls[0] ?? null;
   const subtitleParts = [listing.ownerName, label, distanceLabel].filter(Boolean);
   const subtitle = subtitleParts.join(' · ');

@@ -2,13 +2,12 @@ import { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Clock from 'lucide-react-native/icons/clock';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, FormError, FormField, PhotoGrid, ScreenContent, SectionTitle, ShareToCommunityToggle, SubmitButton } from '@/components';
-import { Alert, EVENT_COLOR, EVENT_ICON } from '@/utils';
+import { EVENT_COLOR, EVENT_ICON, pickPhoto } from '@/utils';
 
 const MAX_EVENT_PHOTOS = 1;
 
@@ -34,6 +33,7 @@ export default function NewEventScreen() {
   const [eventDate, setEventDate] = useState<Date>(defaultEventDate);
   const [iosPickerMode, setIosPickerMode] = useState<PickerMode | null>(null);
   const [shareToCommunity, setShareToCommunity] = useState(true);
+  const [communityCaption, setCommunityCaption] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const applyDatePart = (mode: PickerMode, date: Date) => {
@@ -64,28 +64,9 @@ export default function NewEventScreen() {
     setIosPickerMode(mode);
   };
 
-  const handlePickPhoto = async (source: 'camera' | 'gallery') => {
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] })
-        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [4, 3] });
-
-    if (result.canceled) return;
-    setImageUris([result.assets[0].uri]);
-  };
-
-  const handleAddPhoto = () => {
-    Alert.alert('Adicionar foto', undefined, [
-      { text: 'Tirar foto', onPress: () => handlePickPhoto('camera') },
-      { text: 'Escolher da galeria', onPress: () => handlePickPhoto('gallery') },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+  const handleAddPhoto = async () => {
+    const uri = await pickPhoto();
+    if (uri) setImageUris([uri]);
   };
 
   const handleRemovePhoto = (uri: string) => {
@@ -114,6 +95,7 @@ export default function NewEventScreen() {
         photoUrls: JSON.stringify([]),
         photoUris: JSON.stringify(imageUris),
         shareToCommunity: shareToCommunity ? '1' : '0',
+        communityCaption: communityCaption.trim(),
       },
     });
   };
@@ -178,6 +160,16 @@ export default function NewEventScreen() {
           onValueChange={setShareToCommunity}
           description="Compartilha esse evento também no feed da Comunidade."
         />
+
+        {shareToCommunity ? (
+          <FormField
+            label="Comentário na Comunidade (opcional)"
+            value={communityCaption}
+            onChangeText={setCommunityCaption}
+            placeholder={`Marquei um evento: "${title || 'seu evento'}"!`}
+            multiline
+          />
+        ) : null}
 
         <FormError>{error}</FormError>
 

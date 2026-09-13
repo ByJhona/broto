@@ -1,43 +1,41 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import ImagePlus from 'lucide-react-native/icons/image-plus';
-import X from 'lucide-react-native/icons/x';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { MAX_POST_PHOTOS } from '@/services';
 import type { CommunityPostType } from '@/types';
-import { COMMUNITY_POST_TYPES } from '@/utils';
+import { COMMUNITY_POST_TYPES, pickPhoto } from '@/utils';
 import { Card } from './Card';
+import { PhotoGrid } from './PhotoGrid';
 
 type CommunityComposerProps = {
-  onPost: (text: string, imageUri: string | null, postType: CommunityPostType | null) => Promise<void>;
+  onPost: (text: string, imageUris: string[], postType: CommunityPostType | null) => Promise<void>;
 };
 
 export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [text, setText] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUris, setImageUris] = useState<string[]>([]);
   const [postType, setPostType] = useState<CommunityPostType | null>(null);
   const [isPosting, setIsPosting] = useState(false);
-  const canPost = (text.trim().length > 0 || imageUri != null) && !isPosting;
+  const canPost = (text.trim().length > 0 || imageUris.length > 0) && !isPosting;
 
   const handleAttachPhoto = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
+    const uri = await pickPhoto();
+    if (uri) setImageUris((current) => [...current, uri]);
+  };
 
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
+  const handleRemovePhoto = (uri: string) => {
+    setImageUris((current) => current.filter((item) => item !== uri));
   };
 
   const handlePost = async () => {
     if (!canPost) return;
     setIsPosting(true);
     try {
-      await onPost(text.trim(), imageUri, postType);
+      await onPost(text.trim(), imageUris, postType);
       setText('');
-      setImageUri(null);
+      setImageUris([]);
       setPostType(null);
     } catch {
     } finally {
@@ -81,21 +79,11 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
         />
       </View>
 
-      {imageUri ? (
-        <View style={styles.preview}>
-          <Image source={{ uri: imageUri }} style={styles.previewImage} />
-          <Pressable style={styles.previewRemove} onPress={() => setImageUri(null)}>
-            <X size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
-        </View>
-      ) : null}
+      <View style={styles.photoGrid}>
+        <PhotoGrid photoUrls={imageUris} onAdd={handleAttachPhoto} onRemove={handleRemovePhoto} max={MAX_POST_PHOTOS} disabled={isPosting} />
+      </View>
 
       <View style={styles.actions}>
-        <Pressable style={styles.attachButton} onPress={handleAttachPhoto} disabled={isPosting}>
-          <ImagePlus size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.attachButtonText}>Foto</Text>
-        </Pressable>
-
         <Pressable
           style={[styles.postButton, !canPost && styles.postButtonDisabled]}
           onPress={handlePost}
@@ -160,45 +148,17 @@ const makeStyles = (colors: ThemeColors) =>
     fontSize: 14,
     color: colors.foreground,
   },
-  preview: {
+  photoGrid: {
     marginTop: Metrics.spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  previewImage: {
-    width: 96,
-    height: 96,
-    borderRadius: Metrics.radius.md,
-    backgroundColor: colors.muted,
-  },
-  previewRemove: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 22,
-    height: 22,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.destructive,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginTop: Metrics.spacing.sm,
     paddingTop: Metrics.spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.primary,
-  },
-  attachButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.xs,
-  },
-  attachButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
   },
   postButton: {
     backgroundColor: colors.primary,

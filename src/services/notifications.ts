@@ -40,6 +40,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
     .select(NOTIFICATION_SELECT)
     .eq('user_id', userId)
     .is('deleted_at', null)
+    .neq('type', 'listing_message')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -47,6 +48,8 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
     console.error('Error fetching notifications:', error);
     return [];
   }
+
+  console.log('MARKER_9f31 raw types from query:', (data as unknown as NotificationRow[]).map((r) => r.type));
 
   return (data as unknown as NotificationRow[]).map(mapNotificationRow);
 }

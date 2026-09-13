@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import X from 'lucide-react-native/icons/x';
+import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { PhotoViewerModal } from './PhotoViewerModal';
 
 const HERO_HEIGHT = 260;
 
@@ -12,9 +12,17 @@ type ListingPhotoGalleryProps = {
   typeIcon: LucideIcon;
   typeColor: string;
   typeLabel: string;
+  priceLabel?: string | null;
 };
 
-export function ListingPhotoGallery({ photoUrls, title, typeIcon: TypeIcon, typeColor, typeLabel }: Readonly<ListingPhotoGalleryProps>) {
+export function ListingPhotoGallery({
+  photoUrls,
+  title,
+  typeIcon: TypeIcon,
+  typeColor,
+  typeLabel,
+  priceLabel,
+}: Readonly<ListingPhotoGalleryProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const windowWidth = useWindowDimensions().width;
@@ -60,17 +68,15 @@ export function ListingPhotoGallery({ photoUrls, title, typeIcon: TypeIcon, type
 
         <View style={styles.scrim} pointerEvents="none">
           <Text style={styles.name}>{title}</Text>
+          {priceLabel ? (
+            <View style={[styles.priceBadge, { backgroundColor: typeColor }]}>
+              <Text style={styles.priceBadgeText}>{priceLabel}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
-      <Modal visible={!!viewerPhotoUrl} transparent animationType="fade" onRequestClose={() => setViewerPhotoUrl(null)}>
-        <View style={styles.viewerBackdrop}>
-          <Pressable style={styles.viewerClose} onPress={() => setViewerPhotoUrl(null)}>
-            <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
-          {viewerPhotoUrl ? <Image source={{ uri: viewerPhotoUrl }} style={styles.viewerImage} resizeMode="contain" /> : null}
-        </View>
-      </Modal>
+      <PhotoViewerModal photoUrl={viewerPhotoUrl} onClose={() => setViewerPhotoUrl(null)} />
     </>
   );
 }
@@ -121,6 +127,18 @@ const makeStyles = (colors: ThemeColors) =>
       fontWeight: 'bold',
       color: colors.white,
     },
+    priceBadge: {
+      alignSelf: 'flex-start',
+      marginTop: Metrics.spacing.xs,
+      borderRadius: Metrics.radius.full,
+      paddingVertical: 4,
+      paddingHorizontal: Metrics.spacing.md,
+    },
+    priceBadgeText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.white,
+    },
     typeBadgeFloating: {
       position: 'absolute',
       top: Metrics.spacing.md,
@@ -138,22 +156,5 @@ const makeStyles = (colors: ThemeColors) =>
       fontSize: 13,
       fontWeight: '700',
       color: colors.white,
-    },
-    viewerBackdrop: {
-      flex: 1,
-      backgroundColor: Overlays.scrimStrong,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    viewerClose: {
-      position: 'absolute',
-      top: 60,
-      right: Metrics.spacing.lg,
-      zIndex: 1,
-    },
-    viewerImage: {
-      width: '90%',
-      height: '60%',
-      borderRadius: Metrics.radius.lg,
     },
   });

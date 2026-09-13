@@ -1,7 +1,15 @@
 import type { ListingStatus, ListingType } from './plant-listing';
 
-export type CommunityPostType = 'conquista' | 'duvida' | 'dica';
-export type CommunityFeedFilter = CommunityPostType | 'oferta';
+export const COMMUNITY_POST_TYPE = {
+  CONQUISTA: 'conquista',
+  DUVIDA: 'duvida',
+  DICA: 'dica',
+} as const;
+
+export type CommunityPostType = (typeof COMMUNITY_POST_TYPE)[keyof typeof COMMUNITY_POST_TYPE];
+
+export const OFFER_FEED_FILTER = 'oferta' as const;
+export type CommunityFeedFilter = CommunityPostType | typeof OFFER_FEED_FILTER;
 
 export type CommunityComment = {
   id: string;
@@ -17,6 +25,7 @@ export type CommunityPostListingSummary = {
   title: string;
   photoUrl: string | null;
   listingType: ListingType;
+  priceCents: number | null;
   status: ListingStatus;
 };
 
@@ -35,7 +44,7 @@ export type CommunityPost = {
   authorAvatarUrl?: string | null;
   postType: CommunityPostType | null;
   createdAt: string;
-  imageUrl: string | null;
+  imageUrls: string[];
   caption: string;
   listingId: string | null;
   listingSummary: CommunityPostListingSummary | null;

@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, LISTING_TYPE_LABELS } from '@/utils';
-import type { PlantListing } from '@/types';
+import { LISTING_STATUS_LABELS, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
+import { LISTING_STATUS, type PlantListing } from '@/types';
+import { StatusBadge } from './StatusBadge';
 
 const LISTING_CARD_WIDTH = 220;
 
@@ -18,9 +19,10 @@ export function ListingCard({ listing, distanceLabel, onPress }: Readonly<Listin
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = LISTING_TYPE_ICONS[listing.listingType];
   const color = LISTING_TYPE_COLORS[listing.listingType];
-  const label = LISTING_TYPE_LABELS[listing.listingType];
+  const label = listingBadgeLabel(listing.listingType, listing.priceCents);
   const coverPhotoUrl = listing.photoUrls[0] ?? null;
   const metaLine = [listing.ownerName, distanceLabel].filter(Boolean).join(' · ');
+  const statusLabel = listing.status === LISTING_STATUS.AVAILABLE ? null : LISTING_STATUS_LABELS[listing.status];
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -31,6 +33,8 @@ export function ListingCard({ listing, distanceLabel, onPress }: Readonly<Listin
           <Icon size={28} color={color} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
       )}
+
+      {statusLabel ? <StatusBadge label={statusLabel} /> : null}
 
       <View style={styles.body}>
         <View style={[styles.badge, { backgroundColor: color }]}>

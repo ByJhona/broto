@@ -4,21 +4,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
-  Avatar,
   Card,
   EmptyState,
   ExchangePlantPickerModal,
   ListingActionFooter,
   ListingPhotoGallery,
   ListingProposalsSection,
-  ListRow,
   LoadingScreen,
+  OwnerRow,
   PromptModal,
   ScreenContent,
   SectionTitle,
@@ -30,6 +28,8 @@ import {
   getListingById,
   getListingInterests,
   getListingOfferProposals,
+  hasExpressedInterest,
+  hasProposedOffer,
   respondToInterest,
   respondToOffer,
   sendOfferMessage,
@@ -39,14 +39,20 @@ import {
 import {
   Alert,
   confirm,
+  formatPrice,
   LISTING_SHARE_VERB,
+  LISTING_STATUS_NOTICES,
   LISTING_TYPE_COLORS,
   LISTING_TYPE_ICONS,
   LISTING_TYPE_LABELS,
   Toast,
   type AlertButton,
 } from '@/utils';
-import type { PlantSummary } from '@/types';
+import { LISTING_STATUS, LISTING_TYPE, OFFER_STATUS, type PlantSummary } from '@/types';
+
+function fetchMyListingAction(isExchange: boolean, listingId: string, userId: string): Promise<boolean> {
+  return isExchange ? hasProposedOffer(listingId, userId) : hasExpressedInterest(listingId, userId);
+}
 
 function buildProposals(
   isExchange: boolean,
@@ -63,8 +69,8 @@ function buildProposals(
       avatarUrl: offer.senderAvatarUrl,
       detail: offer.offeredPlantName ? `Quer trocar por: ${offer.offeredPlantName}` : null,
       status: offer.status,
-      onAccept: offer.status === 'pending' ? () => onRespondOffer(offer.id, true) : undefined,
-      onDecline: offer.status === 'pending' ? () => onRespondOffer(offer.id, false) : undefined,
+      onAccept: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, true) : undefined,
+      onDecline: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, false) : undefined,
     }));
   }
 
@@ -75,8 +81,8 @@ function buildProposals(
     avatarUrl: interest.avatarUrl,
     detail: interest.message,
     status: interest.status,
-    onAccept: interest.status === 'pending' ? () => onRespondInterest(interest.id, true) : undefined,
-    onDecline: interest.status === 'pending' ? () => onRespondInterest(interest.id, false) : undefined,
+    onAccept: interest.status === OFFER_STATUS.PENDING ? () => onRespondInterest(interest.id, true) : undefined,
+    onDecline: interest.status === OFFER_STATUS.PENDING ? () => onRespondInterest(interest.id, false) : undefined,
   }));
 }
 
@@ -90,7 +96,7 @@ export default function ListingDetailScreen() {
   const queryClient = useQueryClient();
   const { setListingStatus, removeListing, sendInterest } = useListings();
   const { plants } = usePlants();
-  const [hasSentInterest, setHasSentInterest] = useState(false);
+  const [hasActedThisSession, setHasActedThisSession] = useState(false);
   const [isActing, setIsActing] = useState(false);
   const [isPlantPickerOpen, setIsPlantPickerOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -105,7 +111,7 @@ export default function ListingDetailScreen() {
 
   const listing = listingQuery.data;
   const isOwner = !!user && listing?.userId === user.id;
-  const isExchange = listing?.listingType === 'exchange';
+  const isExchange = listing?.listingType === LISTING_TYPE.EXCHANGE;
 
   const interestsQuery = useQuery({
     queryKey: ['plant-listing-interests', id],
@@ -118,6 +124,14 @@ export default function ListingDetailScreen() {
     queryFn: () => getListingOfferProposals(id),
     enabled: !!id && isOwner && isExchange,
   });
+
+  const myActionQuery = useQuery({
+    queryKey: ['plant-listing-my-action', id, user?.id, isExchange],
+    queryFn: () => fetchMyListingAction(isExchange, id, user!.id),
+    enabled: !!id && !!user && !isOwner,
+  });
+
+  const hasSentInterest = hasActedThisSession || !!myActionQuery.data;
 
   const addressQuery = useQuery({
     queryKey: ['listing-address', listing?.latitude, listing?.longitude],
@@ -142,8 +156,9 @@ export default function ListingDetailScreen() {
     setIsActing(true);
     try {
       await sendInterest({ listingId: listing.id });
-      setHasSentInterest(true);
+      setHasActedThisSession(true);
       Toast.success('Interesse enviado! O dono vai ser avisado.');
+      handleOpenChat(listing.userId);
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : 'Não foi possível enviar seu interesse.');
     } finally {
@@ -184,7 +199,7 @@ export default function ListingDetailScreen() {
     setIsActing(true);
     try {
       await sendOfferMessage({ recipientId: listing.userId, listingId: listing.id, offeredPlantId: plant.id });
-      setHasSentInterest(true);
+      setHasActedThisSession(true);
       handleOpenChat(listing.userId);
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : 'Não foi possível propor a troca.');
@@ -194,10 +209,48 @@ export default function ListingDetailScreen() {
   };
 
   const handleMarkCompleted = async () => {
+    const confirmed = await confirm(
+      'Marcar como concluída',
+      'Use isso quando a troca ou doação já foi concretizada. A oferta sai da lista de disponíveis e não pode ser reativada depois — pra oferecer de novo, você precisa criar uma nova oferta.',
+      { confirmLabel: 'Concluir' }
+    );
+    if (!confirmed) return;
+
     setIsActing(true);
     try {
-      await setListingStatus({ id: listing.id, status: 'completed' });
+      await setListingStatus({ id: listing.id, status: LISTING_STATUS.COMPLETED });
       router.back();
+    } catch {
+      Toast.error('Não foi possível atualizar a oferta.');
+    } finally {
+      setIsActing(false);
+    }
+  };
+
+  const handleMarkExpired = async () => {
+    const confirmed = await confirm(
+      'Marcar como expirada',
+      'Use isso quando ninguém mais demonstrou interesse por enquanto. A oferta sai da lista de disponíveis, mas você pode reativá-la depois.',
+      { confirmLabel: 'Marcar como expirada' }
+    );
+    if (!confirmed) return;
+
+    setIsActing(true);
+    try {
+      await setListingStatus({ id: listing.id, status: LISTING_STATUS.EXPIRED });
+      Toast.success('Oferta marcada como expirada.');
+    } catch {
+      Toast.error('Não foi possível atualizar a oferta.');
+    } finally {
+      setIsActing(false);
+    }
+  };
+
+  const handleReactivate = async () => {
+    setIsActing(true);
+    try {
+      await setListingStatus({ id: listing.id, status: LISTING_STATUS.AVAILABLE });
+      Toast.success('Oferta reativada!');
     } catch {
       Toast.error('Não foi possível atualizar a oferta.');
     } finally {
@@ -236,7 +289,7 @@ export default function ListingDetailScreen() {
     if (!user) return;
     setIsSharing(true);
     try {
-      await createPost(user.id, shareCaption.trim(), null, null, listing.photoUrls[0] ?? null, listing.id);
+      await createPost(user.id, shareCaption.trim(), [], null, listing.photoUrls, listing.id);
       setIsShareModalOpen(false);
       Toast.success('Oferta compartilhada na Comunidade!');
     } catch {
@@ -248,12 +301,16 @@ export default function ListingDetailScreen() {
 
   const handleOpenActions = () => {
     const buttons: AlertButton[] = [];
-    if (listing.status === 'available') {
+    if (listing.status === LISTING_STATUS.AVAILABLE) {
       buttons.push({ text: 'Marcar como concluída', onPress: handleMarkCompleted });
+      buttons.push({ text: 'Marcar como expirada', onPress: handleMarkExpired });
+    }
+    if (listing.status === LISTING_STATUS.EXPIRED) {
+      buttons.push({ text: 'Reativar oferta', onPress: handleReactivate });
     }
     buttons.push({ text: 'Compartilhar na Comunidade', onPress: handleOpenShareModal });
     buttons.push({ text: 'Excluir oferta', style: 'destructive', onPress: handleDelete });
-    buttons.push({ text: 'Cancelar', style: 'cancel' });
+    buttons.push({ text: 'Fechar', style: 'cancel' });
     Alert.alert('Editar oferta', undefined, buttons);
   };
 
@@ -290,22 +347,17 @@ export default function ListingDetailScreen() {
         typeIcon={LISTING_TYPE_ICONS[listing.listingType]}
         typeColor={LISTING_TYPE_COLORS[listing.listingType]}
         typeLabel={LISTING_TYPE_LABELS[listing.listingType]}
+        priceLabel={listing.priceCents != null ? formatPrice(listing.priceCents) : null}
       />
 
       <ScreenContent>
         <Card style={styles.section}>
-          {listing.ownerName ? (
-            <>
-              <ListRow
-                leading={<Avatar name={listing.ownerName} url={listing.ownerAvatarUrl} size={48} />}
-                eyebrow="Oferecido por"
-                title={listing.ownerName}
-                trailing={<ChevronRight size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
-                onPress={handlePressOwner}
-              />
-              <View style={styles.divider} />
-            </>
-          ) : null}
+          <OwnerRow
+            eyebrow="Oferecido por"
+            ownerName={listing.ownerName}
+            ownerAvatarUrl={listing.ownerAvatarUrl}
+            onPress={handlePressOwner}
+          />
 
           <View style={styles.locationRow}>
             <MapPin size={16} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
@@ -315,8 +367,8 @@ export default function ListingDetailScreen() {
           </View>
         </Card>
 
-        {listing.status !== 'available' ? (
-          <Text style={styles.statusNotice}>Essa oferta não está mais disponível.</Text>
+        {listing.status !== LISTING_STATUS.AVAILABLE ? (
+          <Text style={styles.statusNotice}>{LISTING_STATUS_NOTICES[listing.status]}</Text>
         ) : null}
 
         {listing.description ? (
@@ -374,11 +426,6 @@ const makeStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    divider: {
-      height: 1,
-      backgroundColor: colors.border,
-      marginVertical: Metrics.spacing.md,
     },
     section: {
       marginBottom: Metrics.spacing.lg,

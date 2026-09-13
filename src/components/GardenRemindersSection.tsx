@@ -8,36 +8,29 @@ import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
 import { SectionTitle } from './SectionTitle';
 
-type PlantRemindersSectionProps = {
-  plantId: string;
+type GardenRemindersSectionProps = {
   tasks: CareTask[];
   onToggle: (id: string) => void;
 };
 
-export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<PlantRemindersSectionProps>) {
+export function GardenRemindersSection({ tasks, onToggle }: Readonly<GardenRemindersSectionProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const reminders = tasks
-    .filter((task) => task.plantId === plantId)
-    .sort((a, b) => Number(a.done) - Number(b.done));
+  const reminders = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
 
   return (
     <Card style={styles.section}>
       <View style={styles.remindersHeader}>
         <SectionTitle style={styles.remindersSectionTitle}>Lembretes</SectionTitle>
-        <Pressable
-          style={styles.addReminderButton}
-          onPress={() => router.push({ pathname: '/task/new', params: { plantId } })}
-          hitSlop={8}
-        >
+        <Pressable style={styles.addReminderButton} onPress={() => router.push('/task/new')} hitSlop={8}>
           <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       </View>
 
       {reminders.length === 0 ? (
-        <Text style={styles.emptyRemindersText}>Nenhum lembrete pra essa planta ainda.</Text>
+        <Text style={styles.emptyRemindersText}>Nenhum lembrete ainda. Toque no + pra criar o primeiro.</Text>
       ) : (
         reminders.map((task) => (
           <View key={task.id} style={styles.reminderItemSpacing}>
@@ -51,31 +44,31 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  section: {
-    marginBottom: Metrics.spacing.lg,
-  },
-  remindersHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  remindersSectionTitle: {
-    marginBottom: 0,
-  },
-  addReminderButton: {
-    width: 28,
-    height: 28,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyRemindersText: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginTop: Metrics.spacing.sm,
-  },
-  reminderItemSpacing: {
-    marginTop: Metrics.spacing.sm,
-  },
+    section: {
+      marginBottom: Metrics.spacing.lg,
+    },
+    remindersHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    remindersSectionTitle: {
+      marginBottom: 0,
+    },
+    addReminderButton: {
+      width: 28,
+      height: 28,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: colors.muted,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyRemindersText: {
+      fontSize: 13,
+      color: colors.mutedForeground,
+      marginTop: Metrics.spacing.sm,
+    },
+    reminderItemSpacing: {
+      marginTop: Metrics.spacing.sm,
+    },
   });

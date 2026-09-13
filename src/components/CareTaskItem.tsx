@@ -5,7 +5,7 @@ import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Circle from 'lucide-react-native/icons/circle';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { addDays, CATEGORY_ICONS, daysBetween, formatShortDate, today } from '@/utils';
-import type { CareTask } from '@/types';
+import { TASK_CATEGORY, type CareTask } from '@/types';
 import { IconBadge } from './IconBadge';
 
 type CareTaskItemProps = {
@@ -41,11 +41,16 @@ function statusLabel(task: CareTask): string {
     .join(' · ');
 }
 
+function subtitleFor(task: CareTask): string {
+  const isAutomatic = task.category === TASK_CATEGORY.GROWTH_CHECK;
+  return [task.plantName, statusLabel(task), isAutomatic ? 'Automático' : null].filter(Boolean).join(' · ');
+}
+
 export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: Readonly<CareTaskItemProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = CATEGORY_ICONS[task.category];
-  const subtitle = task.plantName ? `${task.plantName} · ${statusLabel(task)}` : statusLabel(task);
+  const subtitle = subtitleFor(task);
   const isOverdue = !task.done && daysBetween(today(), task.dueDate) < 0;
 
   return (

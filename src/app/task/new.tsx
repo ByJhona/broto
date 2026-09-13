@@ -14,7 +14,7 @@ import { FormError, FormField, PillSelector, PlantPickerRow, SubmitButton } from
 import { useCareTasks, usePlants } from '@/hooks';
 import { requestExactAlarmAccessOnce } from '@/services';
 import { TASK_CATEGORIES } from '@/utils';
-import type { TaskCategory } from '@/types';
+import { TASK_CATEGORY, type TaskCategory } from '@/types';
 
 type RecurrenceMode = 'once' | 'repeat';
 
@@ -46,7 +46,7 @@ export default function NewTaskScreen() {
 
   const [title, setTitle] = useState('');
   const [plantId, setPlantId] = useState<string | null>(params.plantId ?? null);
-  const [category, setCategory] = useState<TaskCategory>('watering');
+  const [category, setCategory] = useState<TaskCategory>(TASK_CATEGORY.WATERING);
   const [recurrenceDays, setRecurrenceDays] = useState<number | null>(DEFAULT_RECURRENCE_DAYS);
   const [hasEditedRecurrence, setHasEditedRecurrence] = useState(false);
   const [lastSuggestedRecurrenceDays, setLastSuggestedRecurrenceDays] = useState<number | null>(null);

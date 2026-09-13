@@ -12,12 +12,12 @@ import { Avatar, Card, EmptyState, IconButton, LoadingScreen } from '@/component
 import { useChat } from '@/hooks';
 import { getProfile } from '@/services';
 import { Toast } from '@/utils';
-import type { ChatMessage, OfferStatus } from '@/types';
+import { OFFER_STATUS, type ChatMessage, type OfferStatus } from '@/types';
 
 const OFFER_STATUS_LABEL: Record<OfferStatus, string> = {
-  pending: 'Aguardando resposta',
-  accepted: 'Troca aceita',
-  declined: 'Troca recusada',
+  [OFFER_STATUS.PENDING]: 'Aguardando resposta',
+  [OFFER_STATUS.ACCEPTED]: 'Troca aceita',
+  [OFFER_STATUS.DECLINED]: 'Troca recusada',
 };
 
 export default function ChatScreen() {
@@ -82,7 +82,7 @@ export default function ChatScreen() {
         </View>
       </View>
 
-      {!isMine && message.offerStatus === 'pending' ? (
+      {!isMine && message.offerStatus === OFFER_STATUS.PENDING ? (
         <View style={styles.offerActions}>
           <Pressable style={styles.offerDecline} onPress={() => handleRespond(message.id, false)}>
             <Text style={styles.offerDeclineText}>Recusar</Text>
@@ -92,7 +92,7 @@ export default function ChatScreen() {
           </Pressable>
         </View>
       ) : (
-        <Text style={styles.offerStatus}>{OFFER_STATUS_LABEL[message.offerStatus ?? 'pending']}</Text>
+        <Text style={styles.offerStatus}>{OFFER_STATUS_LABEL[message.offerStatus ?? OFFER_STATUS.PENDING]}</Text>
       )}
     </Card>
   );

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Camera from 'lucide-react-native/icons/camera';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
@@ -11,7 +10,7 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useCreditsGate } from '@/hooks';
 import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
-import { Alert, formatShortDate, Toast } from '@/utils';
+import { Alert, formatShortDate, pickPhoto, Toast } from '@/utils';
 import { Card } from './Card';
 import { LockedFeatureCard } from './LockedFeatureCard';
 import { SectionTitle } from './SectionTitle';
@@ -51,49 +50,30 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
     );
   };
 
-  const handleAnalyzeGrowth = () => {
+  const handleAnalyzeGrowth = async () => {
     if (!canAffordCost(GROWTH_ANALYSIS_CREDIT_COST)) {
       showInsufficientCreditsAlert();
       return;
     }
 
-    const runAnalysis = async (source: 'camera' | 'gallery') => {
-      const permission =
-        source === 'camera'
-          ? await ImagePicker.requestCameraPermissionsAsync()
-          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const uri = await pickPhoto('Analisar planta');
+    if (!uri) return;
 
-      if (!permission.granted) return;
-
-      const result =
-        source === 'camera'
-          ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
-          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-
-      if (result.canceled) return;
-
-      setIsAnalyzing(true);
-      try {
-        const { checkin, newCreditBalance } = await analyzePlantGrowth(plant.id, result.assets[0].uri);
-        applyCreditBalance(newCreditBalance);
-        queryClient.setQueryData<PlantGrowthCheckin[]>(checkinsQueryKey, (current = []) => [checkin, ...current]);
-        setExpandedCheckinId(checkin.id);
-      } catch (err) {
-        if (err instanceof InsufficientCreditsError) {
-          showInsufficientCreditsAlert();
-        } else {
-          Toast.error(err instanceof Error ? err.message : 'Não foi possível analisar a foto.');
-        }
-      } finally {
-        setIsAnalyzing(false);
+    setIsAnalyzing(true);
+    try {
+      const { checkin, newCreditBalance } = await analyzePlantGrowth(plant.id, uri);
+      applyCreditBalance(newCreditBalance);
+      queryClient.setQueryData<PlantGrowthCheckin[]>(checkinsQueryKey, (current = []) => [checkin, ...current]);
+      setExpandedCheckinId(checkin.id);
+    } catch (err) {
+      if (err instanceof InsufficientCreditsError) {
+        showInsufficientCreditsAlert();
+      } else {
+        Toast.error(err instanceof Error ? err.message : 'Não foi possível analisar a foto.');
       }
-    };
-
-    Alert.alert('Analisar planta', undefined, [
-      { text: 'Tirar foto', onPress: () => runAnalysis('camera') },
-      { text: 'Escolher da galeria', onPress: () => runAnalysis('gallery') },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (

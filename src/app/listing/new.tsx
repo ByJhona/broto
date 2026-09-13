@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
@@ -12,6 +11,7 @@ import {
   PhotoGrid,
   PillSelector,
   PlantPickerRow,
+  PriceField,
   ScreenContent,
   SectionTitle,
   ShareToCommunityToggle,
@@ -19,8 +19,8 @@ import {
 } from '@/components';
 import { usePlants } from '@/hooks';
 import { MAX_LISTING_PHOTOS } from '@/services';
-import { Alert, LISTING_TYPES } from '@/utils';
-import type { ListingType } from '@/types';
+import { LISTING_SHARE_VERB, LISTING_TYPES, pickPhoto } from '@/utils';
+import { LISTING_TYPE, type ListingType } from '@/types';
 
 export default function NewListingScreen() {
   const router = useRouter();
@@ -29,12 +29,15 @@ export default function NewListingScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { plants } = usePlants();
 
-  const [listingType, setListingType] = useState<ListingType>('donation');
+  const [listingType, setListingType] = useState<ListingType>(LISTING_TYPE.DONATION);
   const [plantId, setPlantId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [priceCents, setPriceCents] = useState(0);
   const [imageUris, setImageUris] = useState<string[]>([]);
+  const isSale = listingType === LISTING_TYPE.SALE;
   const [shareToCommunity, setShareToCommunity] = useState(true);
+  const [communityCaption, setCommunityCaption] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleSelectPlant = (selectedPlantId: string | null) => {
@@ -46,28 +49,9 @@ export default function NewListingScreen() {
     }
   };
 
-  const handlePickPhoto = async (source: 'camera' | 'gallery') => {
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] })
-        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [4, 3] });
-
-    if (result.canceled) return;
-    setImageUris((current) => [...current, result.assets[0].uri]);
-  };
-
-  const handleAddPhoto = () => {
-    Alert.alert('Adicionar foto', undefined, [
-      { text: 'Tirar foto', onPress: () => handlePickPhoto('camera') },
-      { text: 'Escolher da galeria', onPress: () => handlePickPhoto('gallery') },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+  const handleAddPhoto = async () => {
+    const uri = await pickPhoto();
+    if (uri) setImageUris((current) => [...current, uri]);
   };
 
   const handleRemovePhoto = (uri: string) => {
@@ -77,6 +61,11 @@ export default function NewListingScreen() {
   const handleContinue = () => {
     if (!title.trim()) {
       setError('Dá um título pra oferta.');
+      return;
+    }
+
+    if (isSale && priceCents <= 0) {
+      setError('Informa o preço da planta.');
       return;
     }
 
@@ -93,7 +82,9 @@ export default function NewListingScreen() {
         description: description.trim(),
         photoUrls: JSON.stringify(remotePhotoUrls),
         photoUris: JSON.stringify(localPhotoUris),
+        priceCents: isSale ? String(priceCents) : '',
         shareToCommunity: shareToCommunity ? '1' : '0',
+        communityCaption: communityCaption.trim(),
       },
     });
   };
@@ -119,6 +110,12 @@ export default function NewListingScreen() {
         <Card style={styles.section}>
           <SectionTitle>Tipo de oferta</SectionTitle>
           <PillSelector options={LISTING_TYPES} value={listingType} onChange={setListingType} />
+
+          {isSale ? (
+            <View style={styles.priceField}>
+              <PriceField label="Preço" cents={priceCents} onChangeCents={setPriceCents} />
+            </View>
+          ) : null}
         </Card>
 
         {plants.length > 0 && (
@@ -144,6 +141,16 @@ export default function NewListingScreen() {
           description="Compartilha essa oferta também no feed da Comunidade."
         />
 
+        {shareToCommunity ? (
+          <FormField
+            label="Comentário na Comunidade (opcional)"
+            value={communityCaption}
+            onChangeText={setCommunityCaption}
+            placeholder={`${LISTING_SHARE_VERB[listingType]} "${title || 'sua planta'}"!`}
+            multiline
+          />
+        ) : null}
+
         <FormError>{error}</FormError>
 
         <SubmitButton label="Escolher local no mapa" onPress={handleContinue} />
@@ -160,5 +167,8 @@ const makeStyles = (colors: ThemeColors) =>
     },
     section: {
       marginBottom: Metrics.spacing.lg,
+    },
+    priceField: {
+      marginTop: Metrics.spacing.md,
     },
   });

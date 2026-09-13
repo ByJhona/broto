@@ -1,14 +1,16 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
-import type { CommunityFeedFilter, CommunityPost, CommunityPostType, ListingStatus, ListingType } from '@/types';
+import { uniquePhotoFilename } from './storagePath';
+import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType, type ListingStatus, type ListingType } from '@/types';
 
 const PAGE_SIZE = 10;
+export const MAX_POST_PHOTOS = 5;
 
 const POST_SELECT = `
   *,
   profiles!posts_user_id_fkey (name, username, avatar_url),
-  listing:plant_listings!listing_id (id, title, photo_urls, listing_type, status),
+  listing:plant_listings!listing_id (id, title, photo_urls, listing_type, price_cents, status),
   event:events!event_id (id, title, photo_url, event_date),
   post_likes!post_likes_post_id_fkey (count),
   likedByUser:post_likes!post_likes_post_id_fkey (count),
@@ -46,7 +48,7 @@ function formatRelativeTime(dateString: string): string {
 type PostRow = {
   id: string;
   user_id: string;
-  image_url: string | null;
+  image_urls: string[];
   caption: string;
   post_type: CommunityPostType | null;
   listing_id: string | null;
@@ -62,6 +64,7 @@ type PostRow = {
     title: string;
     photo_urls: string[];
     listing_type: ListingType;
+    price_cents: number | null;
     status: ListingStatus;
   } | null;
   event: {
@@ -96,7 +99,7 @@ function formatPost(row: PostRow): CommunityPost {
     authorAvatarUrl: row.profiles?.avatar_url,
     postType: row.post_type,
     createdAt: formatRelativeTime(row.created_at),
-    imageUrl: row.image_url,
+    imageUrls: row.image_urls,
     caption: row.caption,
     listingId: row.listing_id,
     listingSummary: row.listing
@@ -105,6 +108,7 @@ function formatPost(row: PostRow): CommunityPost {
           title: row.listing.title,
           photoUrl: row.listing.photo_urls?.[0] ?? null,
           listingType: row.listing.listing_type,
+          priceCents: row.listing.price_cents,
           status: row.listing.status,
         }
       : null,
@@ -157,7 +161,7 @@ export async function getCommunityPosts(
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
-  if (filter === 'oferta') {
+  if (filter === OFFER_FEED_FILTER) {
     query = query.not('listing_id', 'is', null);
   } else if (filter) {
     query = query.eq('post_type', filter);
@@ -203,41 +207,42 @@ export async function getPostById(postId: string, userId: string): Promise<Commu
   return data ? formatPost(data as unknown as PostRow) : null;
 }
 
+async function uploadPostPhoto(userId: string, localUri: string): Promise<string> {
+  const { File } = await import('expo-file-system');
+
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
+  const bytes = await file.bytes();
+  const filename = `${userId}/${uniquePhotoFilename()}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('posts')
+    .upload(filename, bytes, { contentType: 'image/jpeg' });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('posts').getPublicUrl(filename);
+  return data.publicUrl;
+}
+
 export async function createPost(
   userId: string,
   caption: string,
-  localUri: string | null,
+  localUris: string[],
   postType: CommunityPostType | null,
-  existingImageUrl?: string | null,
+  existingImageUrls: string[] = [],
   listingId?: string | null,
   eventId?: string | null
 ): Promise<string> {
-  let imageUrl: string | null = existingImageUrl ?? null;
-
-  if (!imageUrl && localUri) {
-    const { File } = await import('expo-file-system');
-
-    const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
-    const file = new File(resizedUri);
-    const bytes = await file.bytes();
-    const filename = `${userId}/${Date.now()}.jpg`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('posts')
-      .upload(filename, bytes, { contentType: 'image/jpeg' });
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from('posts').getPublicUrl(filename);
-    imageUrl = data.publicUrl;
-  }
+  const uploadedImageUrls = await Promise.all(localUris.map((localUri) => uploadPostPhoto(userId, localUri)));
+  const imageUrls = [...existingImageUrls, ...uploadedImageUrls];
 
   const { data, error } = await supabase
     .from('posts')
     .insert({
       user_id: userId,
       caption,
-      image_url: imageUrl,
+      image_urls: imageUrls,
       post_type: postType,
       listing_id: listingId ?? null,
       event_id: eventId ?? null,

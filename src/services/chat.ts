@@ -1,7 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import { updateListingStatus } from './plantListings';
 import { supabase } from './supabase';
-import type { ChatConversation, ChatMessage, OfferStatus } from '@/types';
+import { LISTING_STATUS, OFFER_STATUS, type ChatConversation, type ChatMessage, type OfferStatus } from '@/types';
 
 const CHAT_MESSAGE_SELECT =
   'id, sender_id, recipient_id, body, message_type, listing_id, offered_plant_id, offer_status, created_at, listing:plant_listings(title), offered_plant:plants(name, photo_urls)';
@@ -73,7 +73,7 @@ export async function sendOfferMessage(input: {
       listing_id: input.listingId,
       offered_plant_id: input.offeredPlantId,
       message_type: 'offer',
-      offer_status: 'pending',
+      offer_status: OFFER_STATUS.PENDING,
     })
     .select(CHAT_MESSAGE_SELECT)
     .single();
@@ -83,29 +83,48 @@ export async function sendOfferMessage(input: {
   return mapChatMessageRow(data as unknown as ChatMessageRow);
 }
 
-export async function respondToOffer(messageId: string, accept: boolean): Promise<ChatMessage> {
+export type RespondToOfferResult = {
+  offerMessage: ChatMessage;
+  confirmationMessage: ChatMessage;
+};
+
+export async function respondToOffer(messageId: string, accept: boolean): Promise<RespondToOfferResult> {
   const { data, error } = await supabase
     .from('chat_messages')
-    .update({ offer_status: accept ? 'accepted' : 'declined' })
+    .update({ offer_status: accept ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.DECLINED })
     .eq('id', messageId)
     .select(CHAT_MESSAGE_SELECT)
     .single();
 
   if (error) throw error;
 
-  const message = mapChatMessageRow(data as unknown as ChatMessageRow);
+  const offerMessage = mapChatMessageRow(data as unknown as ChatMessageRow);
 
-  if (accept && message.listingId) {
-    await updateListingStatus(message.listingId, 'completed');
+  const { data: confirmationData, error: confirmationError } = await supabase
+    .from('chat_messages')
+    .insert({
+      recipient_id: offerMessage.senderId,
+      body: accept ? 'Troca aceita' : 'Troca recusada',
+      message_type: 'text',
+    })
+    .select(CHAT_MESSAGE_SELECT)
+    .single();
+
+  if (confirmationError) throw confirmationError;
+
+  const confirmationMessage = mapChatMessageRow(confirmationData as unknown as ChatMessageRow);
+
+  if (accept && offerMessage.listingId) {
+    await updateListingStatus(offerMessage.listingId, LISTING_STATUS.COMPLETED);
     await supabase
       .from('chat_messages')
-      .update({ offer_status: 'declined' })
-      .eq('listing_id', message.listingId)
+      .update({ offer_status: OFFER_STATUS.DECLINED })
+      .eq('listing_id', offerMessage.listingId)
       .eq('message_type', 'offer')
-      .eq('offer_status', 'pending');
+      .eq('offer_status', OFFER_STATUS.PENDING);
   }
 
-  return message;
+  return { offerMessage, confirmationMessage };
 }
 
 export type ListingOfferProposal = {
@@ -127,6 +146,19 @@ type ListingOfferRow = {
   sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
   offered_plant: { name: string; photo_urls: string[] } | null;
 };
+
+export async function hasProposedOffer(listingId: string, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('id')
+    .eq('listing_id', listingId)
+    .eq('sender_id', userId)
+    .eq('message_type', 'offer')
+    .limit(1);
+
+  if (error) throw error;
+  return (data?.length ?? 0) > 0;
+}
 
 export async function getListingOfferProposals(listingId: string): Promise<ListingOfferProposal[]> {
   const { data, error } = await supabase
@@ -217,6 +249,7 @@ export async function getConversations(userId: string): Promise<ChatConversation
       otherUserAvatarUrl: otherProfile?.avatar_url ?? null,
       lastMessagePreview: conversationPreview(row),
       lastMessageAt: row.created_at,
+      lastMessageMine: isSender,
     });
   }
 

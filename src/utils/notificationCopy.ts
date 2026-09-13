@@ -10,8 +10,6 @@ export function notificationCopy(notification: Notification): { title: string; m
       return { title: 'Novo recado', message: `${actor} deixou um recado na sua foto!` };
     case 'listing_interest':
       return { title: 'Interesse na sua oferta', message: `${actor} se interessou pela planta que você ofereceu!` };
-    case 'listing_message':
-      return { title: 'Nova mensagem', message: `${actor} te enviou uma mensagem sobre uma oferta.` };
     case 'system':
     default:
       return { title: notification.title ?? '', message: notification.message ?? '' };

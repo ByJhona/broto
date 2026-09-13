@@ -2,7 +2,7 @@ import { File } from 'expo-file-system';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
-import type { ListingStatus, ListingType, OfferStatus, PlantListing } from '@/types';
+import { LISTING_STATUS, OFFER_STATUS, type ListingStatus, type ListingType, type OfferStatus, type PlantListing } from '@/types';
 
 export const MAX_LISTING_PHOTOS = 5;
 
@@ -14,6 +14,7 @@ type PlantListingRow = {
   title: string;
   description: string | null;
   photo_urls: string[];
+  price_cents: number | null;
   latitude: number;
   longitude: number;
   status: ListingStatus;
@@ -22,7 +23,7 @@ type PlantListingRow = {
 };
 
 const PLANT_LISTING_SELECT =
-  'id, user_id, plant_id, listing_type, title, description, photo_urls, latitude, longitude, status, created_at, owner:profiles!user_id(name, username, avatar_url)';
+  'id, user_id, plant_id, listing_type, title, description, photo_urls, price_cents, latitude, longitude, status, created_at, owner:profiles!user_id(name, username, avatar_url)';
 
 function mapPlantListingRow(row: PlantListingRow): PlantListing {
   return {
@@ -33,6 +34,7 @@ function mapPlantListingRow(row: PlantListingRow): PlantListing {
     title: row.title,
     description: row.description,
     photoUrls: row.photo_urls,
+    priceCents: row.price_cents,
     latitude: row.latitude,
     longitude: row.longitude,
     status: row.status,
@@ -46,7 +48,7 @@ export async function getAvailableListings(): Promise<PlantListing[]> {
   const { data, error } = await supabase
     .from('plant_listings')
     .select(PLANT_LISTING_SELECT)
-    .eq('status', 'available')
+    .eq('status', LISTING_STATUS.AVAILABLE)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
@@ -107,6 +109,7 @@ export type CreateListingInput = {
   description?: string | null;
   photoUris?: string[];
   photoUrls?: string[];
+  priceCents?: number | null;
   latitude: number;
   longitude: number;
 };
@@ -126,6 +129,7 @@ export async function createListing(input: CreateListingInput): Promise<PlantLis
       title: input.title,
       description: input.description ?? null,
       photo_urls: input.photoUrls ?? [],
+      price_cents: input.priceCents ?? null,
       latitude: input.latitude,
       longitude: input.longitude,
     })
@@ -171,6 +175,18 @@ export async function expressInterest(listingId: string, message?: string | null
   if (error) throw error;
 }
 
+export async function hasExpressedInterest(listingId: string, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('plant_listing_interests')
+    .select('id')
+    .eq('listing_id', listingId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !!data;
+}
+
 export type ListingInterest = {
   id: string;
   userId: string;
@@ -213,17 +229,17 @@ export async function getListingInterests(listingId: string): Promise<ListingInt
 export async function respondToInterest(interestId: string, listingId: string, accept: boolean): Promise<void> {
   const { error } = await supabase
     .from('plant_listing_interests')
-    .update({ status: accept ? 'accepted' : 'declined' })
+    .update({ status: accept ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.DECLINED })
     .eq('id', interestId);
 
   if (error) throw error;
 
   if (accept) {
-    await updateListingStatus(listingId, 'completed');
+    await updateListingStatus(listingId, LISTING_STATUS.COMPLETED);
     await supabase
       .from('plant_listing_interests')
-      .update({ status: 'declined' })
+      .update({ status: OFFER_STATUS.DECLINED })
       .eq('listing_id', listingId)
-      .eq('status', 'pending');
+      .eq('status', OFFER_STATUS.PENDING);
   }
 }

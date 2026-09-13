@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Coins from 'lucide-react-native/icons/coins';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { useAuth, useCredits, useNotifications } from '@/hooks';
+import { useAuth, useConversations, useCredits, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getProfile } from '@/services';
 import { ChatButton } from './ChatButton';
@@ -32,6 +32,7 @@ export function HomeHeader({ expanded, onExpand, onHeightChange }: Readonly<Home
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { hasUnread } = useNotifications();
+  const { hasUnread: hasUnreadMessages } = useConversations();
   const { user } = useAuth();
   const { credits } = useCredits();
 
@@ -82,7 +83,7 @@ export function HomeHeader({ expanded, onExpand, onHeightChange }: Readonly<Home
             </Text>
             <View style={styles.headerActions}>
               <NotificationBell hasUnread={hasUnread} />
-              <ChatButton />
+              <ChatButton hasUnread={hasUnreadMessages} />
               <ProfileIcon name={firstName} url={profile?.avatar_url} loggedIn={!!user} />
             </View>
           </View>

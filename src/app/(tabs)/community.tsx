@@ -6,7 +6,7 @@ import Search from 'lucide-react-native/icons/search';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
-import type { CommunityFeedFilter, CommunityPost, CommunityPostType } from '@/types';
+import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
 import { useAuth, useEvents, useListings, useUserLocation } from '@/hooks';
 import {
   getCommunityPosts,
@@ -29,10 +29,10 @@ type FeedScope = 'todos' | 'seguindo';
 
 const FEED_FILTERS: { value: CommunityFeedFilter | null; label: string }[] = [
   { value: null, label: 'Tudo' },
-  { value: 'oferta', label: 'Ofertas' },
-  { value: 'conquista', label: 'Conquistas' },
-  { value: 'duvida', label: 'Dúvidas' },
-  { value: 'dica', label: 'Dicas' },
+  { value: OFFER_FEED_FILTER, label: 'Ofertas' },
+  { value: COMMUNITY_POST_TYPE.CONQUISTA, label: 'Conquistas' },
+  { value: COMMUNITY_POST_TYPE.DUVIDA, label: 'Dúvidas' },
+  { value: COMMUNITY_POST_TYPE.DICA, label: 'Dicas' },
 ];
 
 const POSTS_STALE_TIME = 30_000;
@@ -160,12 +160,12 @@ export default function CommunityScreen() {
     [user, queryClient]
   );
 
-  const handleCreatePost = async (text: string, imageUri: string | null, postType: CommunityPostType | null) => {
+  const handleCreatePost = async (text: string, imageUris: string[], postType: CommunityPostType | null) => {
     if (!user?.id) return;
     try {
-      const newPostId = await createPost(user.id, text, imageUri, postType);
+      const newPostId = await createPost(user.id, text, imageUris, postType);
       const newPost = await getPostById(newPostId, user.id);
-      const matchesFilter = filter === 'oferta' ? !!newPost?.listingId : newPost?.postType === filter;
+      const matchesFilter = filter === OFFER_FEED_FILTER ? !!newPost?.listingId : newPost?.postType === filter;
       if (newPost && scope === 'todos' && (!filter || matchesFilter)) {
         queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
           if (!old) return old;

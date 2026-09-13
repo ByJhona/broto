@@ -52,7 +52,9 @@ type PlacingParams = {
   eventDate?: string;
   photoUrls?: string;
   photoUris?: string;
+  priceCents?: string;
   shareToCommunity?: string;
+  communityCaption?: string;
 };
 
 function parsePhotoList(value: string | undefined): string[] {
@@ -236,9 +238,9 @@ export default function HomeScreen() {
       });
 
       if (params.shareToCommunity === '1' && user) {
-        const caption = `Marquei um evento: "${params.title}"!`;
+        const caption = params.communityCaption || `Marquei um evento: "${params.title}"!`;
         try {
-          await createPost(user.id, caption, null, null, newEvent.photoUrl, null, newEvent.id);
+          await createPost(user.id, caption, [], null, newEvent.photoUrl ? [newEvent.photoUrl] : [], null, newEvent.id);
         } catch {
           Toast.error('Evento publicado, mas não deu pra compartilhar na Comunidade.');
         }
@@ -265,14 +267,15 @@ export default function HomeScreen() {
         description: params.description || null,
         photoUrls: draftPhotoUrls,
         photoUris: draftPhotoUris,
+        priceCents: params.priceCents ? Number(params.priceCents) : null,
         latitude: mapCenter.latitude,
         longitude: mapCenter.longitude,
       });
 
       if (params.shareToCommunity === '1' && user) {
-        const caption = `${LISTING_SHARE_VERB[params.listingType]} "${params.title}"!`;
+        const caption = params.communityCaption || `${LISTING_SHARE_VERB[params.listingType]} "${params.title}"!`;
         try {
-          await createPost(user.id, caption, null, null, newListing.photoUrls[0] ?? null, newListing.id);
+          await createPost(user.id, caption, [], null, newListing.photoUrls, newListing.id);
         } catch {
           Toast.error('Oferta publicada, mas não deu pra compartilhar na Comunidade.');
         }

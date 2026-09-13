@@ -18,12 +18,11 @@ export function ListingMarkerPin({
   highlighted = false,
 }: Readonly<ListingMarkerPinProps>) {
   const colors = useColors();
-  const pinSize = highlighted ? size * 1.15 : size;
-  const headSize = pinSize * 0.85;
+  const headSize = size * 0.85;
   const tipSize = headSize * 0.36;
 
   return (
-    <View style={[styles.container, { width: pinSize, height: pinSize * 1.3 }]}>
+    <View style={[styles.container, { width: size, height: size * 1.3 }]}>
       <View
         style={[
           styles.head,
@@ -33,7 +32,6 @@ export function ListingMarkerPin({
             borderRadius: headSize / 2,
             backgroundColor: color,
             borderColor: highlighted ? colors.card : color,
-            borderWidth: highlighted ? 4 : 3,
           },
           highlighted ? { shadowColor: color, shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 8 } : null,
         ]}

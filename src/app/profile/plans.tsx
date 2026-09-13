@@ -19,14 +19,9 @@ import {
   purchasePackage,
   type PlanCatalogItem,
 } from '@/services';
-import { Toast } from '@/utils';
+import { formatPrice, Toast } from '@/utils';
 
 const CREDIT_PACK_ICONS = [Zap, Gem];
-
-function formatPrice(cents: number): string {
-  if (cents === 0) return 'R$ 0';
-  return `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
-}
 
 function getPlanCtaLabel(plan: PlanCatalogItem, purchasingId: string | null): string | undefined {
   if (plan.priceCents === 0) return undefined;

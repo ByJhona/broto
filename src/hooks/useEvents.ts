@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { cancelAttendance, confirmAttendance, createEvent, deleteEvent, getUpcomingEvents, type CreateEventInput } from '@/services';
+import {
+  cancelAttendance,
+  cancelEvent,
+  confirmAttendance,
+  createEvent,
+  deleteEvent,
+  getUpcomingEvents,
+  type CreateEventInput,
+} from '@/services';
 import { useAuth } from './useAuth';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
@@ -32,6 +40,13 @@ export function useEvents() {
     },
   });
 
+  const { mutateAsync: cancelEventById } = useMutation({
+    mutationFn: (id: string) => cancelEvent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
+    },
+  });
+
   const { mutateAsync: rsvpToEvent } = useMutation({
     mutationFn: (eventId: string) => confirmAttendance(eventId),
     onSuccess: () => {
@@ -52,6 +67,7 @@ export function useEvents() {
     refresh: refetch,
     addEvent,
     removeEvent,
+    cancelEventById,
     rsvpToEvent,
     cancelRsvp,
   };

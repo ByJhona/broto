@@ -2,7 +2,7 @@ import { File } from 'expo-file-system';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
-import type { PlantEvent } from '@/types';
+import { EVENT_STATUS, type EventStatus, type PlantEvent } from '@/types';
 
 type EventRow = {
   id: string;
@@ -13,13 +13,14 @@ type EventRow = {
   event_date: string;
   latitude: number;
   longitude: number;
+  status: EventStatus;
   created_at: string;
   owner: { name: string | null; username: string | null; avatar_url: string | null } | null;
   attendees: { count: number }[];
 };
 
 const EVENT_SELECT =
-  'id, user_id, title, description, photo_url, event_date, latitude, longitude, created_at, owner:profiles!user_id(name, username, avatar_url), attendees:event_attendees(count)';
+  'id, user_id, title, description, photo_url, event_date, latitude, longitude, status, created_at, owner:profiles!user_id(name, username, avatar_url), attendees:event_attendees(count)';
 
 async function getAttendingEventIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('event_attendees').select('event_id').eq('user_id', userId);
@@ -37,6 +38,7 @@ function mapEventRow(row: EventRow, attendingEventIds: Set<string>): PlantEvent 
     eventDate: row.event_date,
     latitude: row.latitude,
     longitude: row.longitude,
+    status: row.status,
     createdAt: row.created_at,
     ownerName: row.owner?.name || row.owner?.username || null,
     ownerAvatarUrl: row.owner?.avatar_url ?? null,
@@ -50,6 +52,7 @@ export async function getUpcomingEvents(userId?: string | null): Promise<PlantEv
     .from('events')
     .select(EVENT_SELECT)
     .gte('event_date', new Date().toISOString())
+    .eq('status', EVENT_STATUS.ACTIVE)
     .is('deleted_at', null)
     .order('event_date', { ascending: true });
 
@@ -150,6 +153,11 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
 
 export async function deleteEvent(id: string): Promise<void> {
   const { error } = await supabase.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function cancelEvent(id: string): Promise<void> {
+  const { error } = await supabase.from('events').update({ status: EVENT_STATUS.CANCELLED }).eq('id', id);
   if (error) throw error;
 }
 

@@ -11,7 +11,14 @@ import Send from 'lucide-react-native/icons/send';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import type { CommunityComment, CommunityPost, CommunityPostEventSummary, CommunityPostListingSummary, CommunityPostType } from '@/types';
+import {
+  COMMUNITY_POST_TYPE,
+  type CommunityComment,
+  type CommunityPost,
+  type CommunityPostEventSummary,
+  type CommunityPostListingSummary,
+  type CommunityPostType,
+} from '@/types';
 import {
   confirm,
   EVENT_COLOR,
@@ -19,17 +26,18 @@ import {
   formatEventDateTime,
   LISTING_TYPE_COLORS,
   LISTING_TYPE_ICONS,
-  LISTING_TYPE_LABELS,
+  listingBadgeLabel,
 } from '@/utils';
 import { Avatar } from './Avatar';
 import { Card } from './Card';
 import { IconBadge } from './IconBadge';
 import { ListRow } from './ListRow';
+import { PostPhotoGallery } from './PostPhotoGallery';
 
 const TYPE_ICONS: Partial<Record<CommunityPostType, typeof Trophy>> = {
-  conquista: Trophy,
-  duvida: HelpCircle,
-  dica: Lightbulb,
+  [COMMUNITY_POST_TYPE.CONQUISTA]: Trophy,
+  [COMMUNITY_POST_TYPE.DUVIDA]: HelpCircle,
+  [COMMUNITY_POST_TYPE.DICA]: Lightbulb,
 };
 
 type PostMenuProps = {
@@ -107,7 +115,7 @@ function PostListingPreview({ listing, onPress }: Readonly<PostListingPreviewPro
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const Icon = LISTING_TYPE_ICONS[listing.listingType];
   const color = LISTING_TYPE_COLORS[listing.listingType];
-  const label = LISTING_TYPE_LABELS[listing.listingType];
+  const label = listingBadgeLabel(listing.listingType, listing.priceCents);
 
   return (
     <Pressable style={styles.listingPreview} onPress={onPress}>
@@ -353,17 +361,9 @@ export const CommunityPostCard = memo(function CommunityPostCard({
         )}
       </View>
 
-      {post.imageUrl ? (
-        <Image
-          source={{ uri: post.imageUrl }}
-          style={styles.photo}
-          contentFit="cover"
-          recyclingKey={post.id}
-          cachePolicy="memory-disk"
-        />
-      ) : null}
+      <PostPhotoGallery imageUrls={post.imageUrls} recyclingKey={post.id} />
 
-      <Text style={[styles.caption, !post.imageUrl && styles.captionNoPhoto]}>{post.caption}</Text>
+      <Text style={[styles.caption, post.imageUrls.length === 0 && styles.captionNoPhoto]}>{post.caption}</Text>
 
       {listingSummary ? <PostListingPreview listing={listingSummary} onPress={() => onPressListing?.(listingSummary.id)} /> : null}
       {eventSummary ? <PostEventPreview event={eventSummary} onPress={() => onPressEvent?.(eventSummary.id)} /> : null}
@@ -440,12 +440,6 @@ const makeStyles = (colors: ThemeColors) =>
     fontSize: 13,
     fontWeight: '600',
     color: colors.destructive,
-  },
-  photo: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: Metrics.radius.md,
-    backgroundColor: colors.muted,
   },
   caption: {
     fontSize: 14,
