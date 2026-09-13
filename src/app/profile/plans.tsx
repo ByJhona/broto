@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Gem from 'lucide-react-native/icons/gem';
 import Zap from 'lucide-react-native/icons/zap';
@@ -34,6 +35,7 @@ function getPlanCtaLabel(plan: PlanCatalogItem, purchasingId: string | null): st
 
 export default function PlansScreen() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { credits, refresh: refreshCredits } = useCredits();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -97,7 +99,7 @@ export default function PlansScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
@@ -162,6 +164,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
     gap: Metrics.spacing.md,
   },

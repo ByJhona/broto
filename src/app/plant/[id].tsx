@@ -1,35 +1,39 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Droplet from 'lucide-react-native/icons/droplet';
+import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import PawPrint from 'lucide-react-native/icons/paw-print';
+import Pencil from 'lucide-react-native/icons/pencil';
 import SignalHigh from 'lucide-react-native/icons/signal-high';
 import SignalLow from 'lucide-react-native/icons/signal-low';
 import SignalMedium from 'lucide-react-native/icons/signal-medium';
 import Sun from 'lucide-react-native/icons/sun';
-import Trash2 from 'lucide-react-native/icons/trash-2';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
-  FormError,
-  FormField,
+  Card,
+  EmptyState,
   InfoChip,
   PlantChat,
   PlantGrowthSection,
   PlantPhotoHero,
   PlantRemindersSection,
+  PromptModal,
+  ScreenContent,
   SectionTitle,
   SkeletonBlock,
   SpeciesInfoSection,
   SpeciesInfoSkeleton,
-  SubmitButton,
 } from '@/components';
 import { useAuth, useCareTasks, useCredits } from '@/hooks';
 import { deletePlant, getPlant, updatePlantName } from '@/services';
 import type { Plant, PlantSummary } from '@/types';
-import { confirm, daysBetween, sunLevelLabel, Toast, today } from '@/utils';
+import { Alert, confirm, daysBetween, sunLevelLabel, Toast, today } from '@/utils';
 
 const CARE_LEVEL_LABEL: Record<NonNullable<Plant['careLevel']>, string> = {
   easy: 'Fácil de cuidar',
@@ -62,7 +66,7 @@ function PlantDetailSkeleton() {
   return (
     <>
       <View style={styles.heroSkeleton} />
-      <View style={styles.content}>
+      <ScreenContent>
         <SkeletonBlock width={140} height={13} style={styles.skeletonGap} />
 
         <View style={styles.section}>
@@ -86,7 +90,7 @@ function PlantDetailSkeleton() {
           <SkeletonBlock width={150} height={14} style={styles.skeletonGap} />
           <SkeletonBlock height={100} radius={Metrics.radius.md} />
         </View>
-      </View>
+      </ScreenContent>
     </>
   );
 }
@@ -94,6 +98,7 @@ function PlantDetailSkeleton() {
 export default function PlantDetailScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -125,6 +130,7 @@ export default function PlantDetailScreen() {
       if (!summary) return undefined;
       return {
         ...summary,
+        photoUrls: summary.photoUrl ? [summary.photoUrl] : [],
         origin: null,
         description: null,
         wateringDescription: null,
@@ -149,7 +155,7 @@ export default function PlantDetailScreen() {
       title: `Analisar ${plant.name}`,
       plantId: plant.id,
       plantName: plant.name,
-      plantPhotoUrl: plant.photoUrl,
+      plantPhotoUrl: plant.photoUrls[0] ?? null,
       category: 'growth_check',
       notes: 'Tire uma foto pra IA acompanhar a evolução dessa planta.',
       recurrenceDays: 14,
@@ -211,9 +217,20 @@ export default function PlantDetailScreen() {
     }
   };
 
+  const handleOpenActions = () => {
+    Alert.alert('Editar planta', undefined, [
+      { text: 'Renomear', onPress: handleOpenRename },
+      { text: 'Excluir planta', style: 'destructive', onPress: handleDelete },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  };
+
   if (isLoading && !plant) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
+      >
         <Stack.Screen options={{ title: '' }} />
         <PlantDetailSkeleton />
       </ScrollView>
@@ -224,7 +241,7 @@ export default function PlantDetailScreen() {
     return (
       <View style={styles.centered}>
         <Stack.Screen options={{ title: '' }} />
-        <Text style={styles.emptyText}>Planta não encontrada.</Text>
+        <EmptyState icon={Leaf} message="Planta não encontrada." />
       </View>
     );
   }
@@ -269,13 +286,18 @@ export default function PlantDetailScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={Metrics.spacing.lg}
+    >
       <Stack.Screen
         options={{
           title: '',
           headerRight: () => (
-            <Pressable onPress={handleDelete} disabled={isDeleting} hitSlop={8}>
-              <Trash2 size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+            <Pressable onPress={handleOpenActions} disabled={isDeleting} hitSlop={8}>
+              <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ),
         }}
@@ -283,63 +305,53 @@ export default function PlantDetailScreen() {
 
       <PlantPhotoHero
         plant={plant}
-        onPhotoUrlChange={(photoUrl) =>
+        onPhotoUrlsChange={(photoUrls) =>
           queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
-            current ? { ...current, photoUrl } : current
+            current ? { ...current, photoUrls } : current
           )
         }
-        onEditName={handleOpenRename}
       />
 
-      <Modal
+      <PromptModal
         visible={isRenameModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsRenameModalOpen(false)}
-      >
-        <KeyboardAvoidingView style={styles.modalBackdrop} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Como você quer chamar essa planta?</Text>
-            <FormField label="Nome" value={nameDraft} onChangeText={setNameDraft} placeholder="Samba" autoFocus />
-            <FormError>{renameError}</FormError>
-            <SubmitButton label="Salvar" onPress={handleSaveName} loading={isSavingName} />
-            <Pressable
-              style={styles.modalCancel}
-              onPress={() => setIsRenameModalOpen(false)}
-              disabled={isSavingName}
-            >
-              <Text style={styles.modalCancelText}>Cancelar</Text>
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        title="Como você quer chamar essa planta?"
+        label="Nome"
+        value={nameDraft}
+        onChangeText={setNameDraft}
+        placeholder="Samba"
+        error={renameError}
+        submitLabel="Salvar"
+        isSubmitting={isSavingName}
+        onSubmit={handleSaveName}
+        onCancel={() => setIsRenameModalOpen(false)}
+      />
 
-      <View style={styles.content}>
+      <ScreenContent>
         <Text style={styles.sinceLabel}>{daysWithYouLabel(plant.createdAt)}</Text>
 
         {careStats.length > 0 ? (
-          <View style={styles.section}>
+          <Card style={styles.section}>
             <SectionTitle>Cuidados ideais</SectionTitle>
             <View style={styles.chipRow}>
               {careStats.map((stat) => (
                 <InfoChip key={stat.key} value={stat.value} icon={stat.icon} />
               ))}
             </View>
-          </View>
+          </Card>
         ) : null}
 
         <PlantRemindersSection plantId={plant.id} tasks={careTasksList} onToggle={toggleTask} />
 
-        <View style={styles.section}>
+        <Card style={styles.section}>
           <SectionTitle>Pergunte sobre sua planta</SectionTitle>
           <PlantChat plantId={plant.id} />
-        </View>
+        </Card>
 
         <PlantGrowthSection plant={plant} isPremium={isPremium} />
 
         {speciesInfoContent}
-      </View>
-    </ScrollView>
+      </ScreenContent>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -349,21 +361,11 @@ const makeStyles = (colors: ThemeColors) =>
     flex: 1,
     backgroundColor: colors.background,
   },
-  contentContainer: {
-    paddingBottom: Metrics.spacing.xl,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background,
-  },
-  emptyText: {
-    color: colors.mutedForeground,
-    fontSize: 15,
-  },
-  content: {
-    padding: Metrics.spacing.lg,
   },
   heroSkeleton: {
     width: '100%',
@@ -380,45 +382,11 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.lg,
   },
   section: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Metrics.spacing.sm,
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Overlays.scrim,
-    padding: Metrics.spacing.lg,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: colors.background,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.lg,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.foreground,
-    marginBottom: Metrics.spacing.md,
-  },
-  modalCancel: {
-    alignItems: 'center',
-    marginTop: Metrics.spacing.sm,
-    padding: Metrics.spacing.sm,
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.mutedForeground,
   },
   });

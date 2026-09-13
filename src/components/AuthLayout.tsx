@@ -1,7 +1,9 @@
 import { useMemo, type PropsWithChildren } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link, type Href } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { OfflineBanner } from './OfflineBanner';
 
@@ -14,26 +16,30 @@ type AuthLayoutProps = PropsWithChildren<{
 
 export function AuthLayout({ title, subtitle, isOffline, offlineMessage, children }: Readonly<AuthLayoutProps>) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.logo}>
-          <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={Metrics.spacing.lg}
+    >
+      <View style={styles.logo}>
+        <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      </View>
+
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
+
+      {isOffline ? (
+        <View style={styles.banner}>
+          <OfflineBanner message={offlineMessage} />
         </View>
+      ) : null}
 
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-
-        {isOffline ? (
-          <View style={styles.banner}>
-            <OfflineBanner message={offlineMessage} />
-          </View>
-        ) : null}
-
-        {children}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      {children}
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -59,6 +65,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     flexGrow: 1,
     justifyContent: 'center',
     padding: Metrics.spacing.lg,

@@ -1,5 +1,6 @@
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Tabs } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import Home from 'lucide-react-native/icons/house';
 import Users from 'lucide-react-native/icons/users';
 import Camera from 'lucide-react-native/icons/camera';
@@ -18,7 +19,13 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
         tabBarShowLabel: true,
+        tabBarHideOnKeyboard: true,
         headerShown: false,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        },
       }}
     >
       <Tabs.Screen

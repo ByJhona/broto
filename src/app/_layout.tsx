@@ -20,6 +20,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Linking, StatusBar, StyleSheet, View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();
@@ -74,10 +75,14 @@ function RootNavigator() {
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="plant" options={{ headerShown: false }} />
           <Stack.Screen name="post" options={{ headerShown: false }} />
+          <Stack.Screen name="event" options={{ headerShown: false }} />
           <Stack.Screen name="identify" options={{ headerShown: false }} />
+          <Stack.Screen name="listing" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />
           <Stack.Screen name="search" options={{ ...searchScreenOptions, title: 'Buscar' }} />
+          <Stack.Screen name="messages" options={{ ...searchScreenOptions, title: 'Mensagens' }} />
+          <Stack.Screen name="chat" options={{ ...searchScreenOptions, title: 'Conversa' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
@@ -92,13 +97,15 @@ function RootNavigator() {
 
 export default function Layout() {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <KeyboardProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </KeyboardProvider>
   );
 }
 

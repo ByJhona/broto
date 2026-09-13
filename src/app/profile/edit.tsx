@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Camera from 'lucide-react-native/icons/camera';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Avatar, LoadingScreen } from '@/components';
+import { Avatar, LoadingScreen, ScreenContent } from '@/components';
 import { useAuth } from '@/hooks';
 import { getProfile, updateProfile, uploadAvatar } from '@/services';
 import { normalizeUsername, Toast, validateUsername } from '@/utils';
@@ -13,6 +15,7 @@ import { normalizeUsername, Toast, validateUsername } from '@/utils';
 export default function EditProfileScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -112,8 +115,13 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.form}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={Metrics.spacing.lg}
+    >
+      <ScreenContent style={styles.form}>
         <View style={styles.avatarSection}>
           <Pressable style={styles.avatarContainer} onPress={handlePickImage}>
             <Avatar 
@@ -167,8 +175,8 @@ export default function EditProfileScreen() {
             <Text style={styles.saveButtonText}>Salvar alterações</Text>
           )}
         </Pressable>
-      </View>
-    </View>
+      </ScreenContent>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -179,7 +187,6 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   form: {
-    padding: Metrics.spacing.lg,
     gap: Metrics.spacing.lg,
   },
   avatarSection: {

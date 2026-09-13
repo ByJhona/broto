@@ -1,9 +1,12 @@
 import { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import MessageSquare from 'lucide-react-native/icons/message-square';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { CommunityPostCard, LoadingScreen } from '@/components';
+import { CommunityPostCard, EmptyState, LoadingScreen } from '@/components';
 import { useAuth } from '@/hooks';
 import {
   addComment,
@@ -24,6 +27,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -108,6 +112,14 @@ export default function PostDetailScreen() {
     router.push({ pathname: '/profile/[id]', params: { id: authorId } });
   };
 
+  const handlePressListing = (listingId: string) => {
+    router.push({ pathname: '/listing/[id]', params: { id: listingId } });
+  };
+
+  const handlePressEvent = (eventId: string) => {
+    router.push({ pathname: '/event/[id]', params: { id: eventId } });
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -115,15 +127,17 @@ export default function PostDetailScreen() {
   if (!post) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyText}>Publicação não encontrada.</Text>
+        <EmptyState icon={MessageSquare} message="Publicação não encontrada." />
       </View>
     );
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={Metrics.spacing.lg}
       refreshControl={
         <RefreshControl refreshing={postQuery.isRefetching} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
@@ -136,8 +150,10 @@ export default function PostDetailScreen() {
         onDelete={handleDelete}
         onDeleteComment={handleDeleteComment}
         onPressAuthor={handlePressAuthor}
+        onPressListing={handlePressListing}
+        onPressEvent={handlePressEvent}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -148,16 +164,14 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   centered: {
+    ...Metrics.layout.centeredContent,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background,
-  },
-  emptyText: {
-    color: colors.mutedForeground,
-    fontSize: 15,
   },
   });

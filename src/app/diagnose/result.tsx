@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
@@ -40,6 +41,7 @@ function parseDiagnosis(raw: string | string[] | undefined): PlantDiagnosis | nu
 export default function DiagnosisResultScreen() {
   const params = useLocalSearchParams<{ diagnosis: string }>();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
   const severityColor = useMemo(() => getSeverityColor(colors), [colors]);
@@ -59,7 +61,11 @@ export default function DiagnosisResultScreen() {
   const StatusIcon = meta.icon;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+      showsVerticalScrollIndicator={false}
+    >
       <Image source={{ uri: diagnosis.photoUrl }} style={styles.photo} contentFit="cover" />
 
       <View style={[styles.statusBadge, { backgroundColor: `${meta.color}1A`, borderColor: meta.color }]}>
@@ -104,9 +110,11 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   emptyContainer: {
+    ...Metrics.layout.centeredContent,
     flex: 1,
     justifyContent: 'center',
     padding: Metrics.spacing.xl,

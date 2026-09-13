@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Avatar, EmptyState } from '@/components';
+import { Avatar, EmptyState, ListRow } from '@/components';
 import { useAuth } from '@/hooks';
 import { searchProfiles } from '@/services';
 import type { UserProfile } from '@/types';
@@ -14,6 +15,7 @@ const EMPTY_PROFILES: UserProfile[] = [];
 export default function SearchScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const [query, setQuery] = useState('');
@@ -65,21 +67,18 @@ export default function SearchScreen() {
       {isLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
 
       <FlatList
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
         data={results}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
-          <Pressable
+          <ListRow
             style={styles.resultRow}
+            leading={<Avatar name={item.name || item.username} url={item.avatar_url} size={44} />}
+            title={item.name || item.username}
+            subtitle={`@${item.username}`}
             onPress={() => router.push({ pathname: '/profile/[id]', params: { id: item.id } })}
-          >
-            <Avatar name={item.name || item.username} url={item.avatar_url} size={44} />
-            <View style={styles.resultTextBox}>
-              <Text style={styles.resultName}>{item.name || item.username}</Text>
-              <Text style={styles.resultUsername}>@{item.username}</Text>
-            </View>
-          </Pressable>
+          />
         )}
         ListEmptyComponent={
           trimmedQuery && !isLoading ? (
@@ -103,6 +102,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   searchBar: {
+    ...Metrics.layout.centeredContent,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
@@ -124,28 +124,14 @@ const makeStyles = (colors: ThemeColors) =>
     marginTop: Metrics.spacing.lg,
   },
   list: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   resultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
     paddingVertical: Metrics.spacing.sm,
   },
-  resultTextBox: {
-    flex: 1,
-  },
-  resultName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  resultUsername: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginTop: 1,
-  },
   emptyState: {
+    ...Metrics.layout.centeredContent,
     marginTop: Metrics.spacing.xl,
   },
   });

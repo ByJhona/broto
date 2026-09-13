@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { EmptyState, SectionTitle, SkeletonBlock } from '@/components';
+import { Card, EmptyState, ListRow, SectionTitle, SkeletonBlock } from '@/components';
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
@@ -31,13 +32,13 @@ function DiagnosisHistorySkeleton() {
   return (
     <>
       {[0, 1].map((key) => (
-        <View key={key} style={styles.historyRow}>
+        <Card key={key} style={styles.historyRow}>
           <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} />
           <View style={styles.historyTextBox}>
             <SkeletonBlock width="60%" height={13} />
             <SkeletonBlock width="40%" height={12} style={styles.skeletonGap} />
           </View>
-        </View>
+        </Card>
       ))}
     </>
   );
@@ -46,6 +47,7 @@ function DiagnosisHistorySkeleton() {
 export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
   const { user } = useAuth();
@@ -62,7 +64,11 @@ export default function DiagnosisHistoryScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+      showsVerticalScrollIndicator={false}
+    >
       {showSkeleton && (
         <>
           <SectionTitle>Histórico</SectionTitle>
@@ -82,14 +88,17 @@ export default function DiagnosisHistoryScreen() {
           {history.map((item) => {
             const meta = healthStatusMeta[item.healthStatus];
             return (
-              <Pressable key={item.id} style={styles.historyRow} onPress={() => openResult(item)}>
-                <Image source={{ uri: item.photoUrl }} style={styles.historyThumb} contentFit="cover" />
-                <View style={styles.historyTextBox}>
-                  <Text style={[styles.historyStatus, { color: meta.color }]}>{meta.label}</Text>
-                  <Text style={styles.historyDate}>{formatDiagnosisDate(item.createdAt)}</Text>
-                </View>
-                <ChevronRight size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-              </Pressable>
+              <ListRow
+                key={item.id}
+                style={styles.historyRow}
+                variant="card"
+                leading={<Image source={{ uri: item.photoUrl }} style={styles.historyThumb} contentFit="cover" />}
+                title={meta.label}
+                titleColor={meta.color}
+                subtitle={formatDiagnosisDate(item.createdAt)}
+                trailing={<ChevronRight size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+                onPress={() => openResult(item)}
+              />
             );
           })}
         </>
@@ -105,6 +114,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   empty: {
@@ -114,11 +124,6 @@ const makeStyles = (colors: ThemeColors) =>
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.sm,
     marginBottom: Metrics.spacing.sm,
   },
   historyThumb: {
@@ -129,15 +134,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   historyTextBox: {
     flex: 1,
-  },
-  historyStatus: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  historyDate: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginTop: 2,
   },
   skeletonGap: {
     marginTop: Metrics.spacing.xs,

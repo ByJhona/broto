@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Dna from 'lucide-react-native/icons/dna';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Percent from 'lucide-react-native/icons/percent';
 import Sun from 'lucide-react-native/icons/sun';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
-  FormError,
-  FormField,
+  EmptyState,
   InfoChip,
   PlantHero,
+  PromptModal,
+  ScreenContent,
   SectionTitle,
   SpeciesInfoSection,
   SpeciesInfoSkeleton,
@@ -34,6 +37,7 @@ function parseCandidates(raw: string | string[] | undefined): PlantCandidate[] {
 export default function IdentifyResultScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { session } = useAuth();
   const { addPlant } = usePlants();
@@ -129,16 +133,17 @@ export default function IdentifyResultScreen() {
   if (!selected) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Não conseguimos identificar nenhuma planta nessa foto. Tente outra imagem, de perto da folha ou da flor.
-        </Text>
+        <EmptyState
+          icon={Leaf}
+          message="Não conseguimos identificar nenhuma planta nessa foto. Tente outra imagem, de perto da folha ou da flor."
+        />
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+    <View style={styles.container}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {selected.imageUrl ? (
           <PlantHero
             photoUrl={selected.imageUrl}
@@ -157,7 +162,7 @@ export default function IdentifyResultScreen() {
           </>
         )}
 
-        <View style={styles.content}>
+        <ScreenContent>
           <View style={styles.section}>
             <SectionTitle>Cuidados sugeridos</SectionTitle>
             <View style={styles.chipRow}>
@@ -198,39 +203,27 @@ export default function IdentifyResultScreen() {
           ) : (
             <SpeciesInfoSkeleton />
           )}
-        </View>
-      </ScrollView>
+        </ScreenContent>
+      </KeyboardAwareScrollView>
 
-      <View style={styles.floatingButton}>
+      <View style={[styles.floatingButton, { bottom: insets.bottom + Metrics.spacing.lg }]}>
         <SubmitButton label="Adicionar ao meu jardim" onPress={handleOpenNicknameModal} />
       </View>
 
-      <Modal
+      <PromptModal
         visible={isNicknameModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsNicknameModalOpen(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalBackdrop}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Como você quer chamar essa planta?</Text>
-            <FormField label="Apelido" value={name} onChangeText={setName} placeholder="Samba" autoFocus />
-            <FormError>{error}</FormError>
-            <SubmitButton label="Salvar no meu jardim" onPress={handleSubmit} loading={isSubmitting} />
-            <Pressable
-              style={styles.modalCancel}
-              onPress={() => setIsNicknameModalOpen(false)}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.modalCancelText}>Cancelar</Text>
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </KeyboardAvoidingView>
+        title="Como você quer chamar essa planta?"
+        label="Apelido"
+        value={name}
+        onChangeText={setName}
+        placeholder="Samba"
+        error={error}
+        submitLabel="Salvar no meu jardim"
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmit}
+        onCancel={() => setIsNicknameModalOpen(false)}
+      />
+    </View>
   );
 }
 
@@ -249,11 +242,6 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     padding: Metrics.spacing.xl,
     backgroundColor: colors.background,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: colors.mutedForeground,
-    textAlign: 'center',
   },
   heroPlaceholder: {
     width: '100%',
@@ -277,9 +265,6 @@ const makeStyles = (colors: ThemeColors) =>
     fontStyle: 'italic',
     color: colors.mutedForeground,
     marginTop: 2,
-  },
-  content: {
-    padding: Metrics.spacing.lg,
   },
   section: {
     marginBottom: Metrics.spacing.lg,
@@ -313,40 +298,10 @@ const makeStyles = (colors: ThemeColors) =>
     position: 'absolute',
     left: Metrics.spacing.lg,
     right: Metrics.spacing.lg,
-    bottom: Metrics.spacing.lg,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-  },
-  modalBackdrop: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Overlays.scrim,
-    padding: Metrics.spacing.lg,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: colors.background,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.lg,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.foreground,
-    marginBottom: Metrics.spacing.md,
-  },
-  modalCancel: {
-    alignItems: 'center',
-    marginTop: Metrics.spacing.sm,
-    padding: Metrics.spacing.sm,
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.mutedForeground,
   },
   });
