@@ -4,7 +4,6 @@ export * from './careTasks';
 export * from './exactAlarms';
 export * from './localReminders';
 export * from './credits';
-export * from './dailyMessage';
 export * from './functionErrors';
 export * from './imageResize';
 export * from './notifications';
