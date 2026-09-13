@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import MailCheck from 'lucide-react-native/icons/mail-check';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { AuthFooterLink, AuthLayout, FormError, FormField, SubmitButton } from '@/components';
+import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { isUsernameAvailable } from '@/services';
 import { authErrorMessage, normalizeUsername, validateUsername } from '@/utils';
@@ -12,7 +12,7 @@ export default function SignupScreen() {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -20,7 +20,16 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+
+  const goToApp = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -58,15 +67,26 @@ export default function SignupScreen() {
       const { session } = await signUp(trimmedName, normalizedUsername, trimmedEmail, password);
       if (!session) {
         setAwaitingConfirmation(true);
-      } else if (router.canGoBack()) {
-        router.back();
       } else {
-        router.replace('/(tabs)');
+        goToApp();
       }
     } catch (err) {
       setError(authErrorMessage(err, 'Não foi possível criar a conta. Tente novamente.'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setIsGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result) goToApp();
+    } catch (err) {
+      setError(authErrorMessage(err, 'Não foi possível continuar com o Google. Tente novamente.'));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -127,7 +147,16 @@ export default function SignupScreen() {
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label="Criar conta" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
+      <SubmitButton label="Criar conta" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
+
+      <AuthDivider label="ou" />
+
+      <GoogleSignInButton
+        label="Continuar com Google"
+        onPress={handleGoogleSignIn}
+        loading={isGoogleSubmitting}
+        disabled={isOffline || isSubmitting}
+      />
 
       <AuthFooterLink href="/(auth)/login" label="Já tem conta? Entrar" />
     </AuthLayout>
@@ -137,6 +166,7 @@ export default function SignupScreen() {
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   confirmContainer: {
+    ...Metrics.layout.centeredContent,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

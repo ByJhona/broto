@@ -3,6 +3,9 @@ export function authErrorMessage(error: unknown, fallback: string): string {
 
   const message = error.message;
 
+  if (message.includes('GOOGLE_SIGNIN_NOT_CONFIGURED')) {
+    return 'Login com Google está indisponível no momento.';
+  }
   if (message.includes('Invalid login credentials')) {
     return 'E-mail ou senha incorretos.';
   }

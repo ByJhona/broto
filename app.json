@@ -65,7 +65,8 @@
         {
           "locationWhenInUsePermission": "O broto usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -27,6 +27,7 @@ Copie `.env.example` para `.env` e preencha:
 | `EXPO_PUBLIC_SUPABASE_URL` | Supabase > Project Settings > API |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase > Project Settings > API |
 | `EXPO_PUBLIC_USE_RN_FETCH` | `1` (mantém o valor do exemplo) |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google Cloud Console > APIs & Services > Credentials (OAuth client "Web application" — seção 4.5) |
 | `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` | RevenueCat > Project Settings > API Keys (app iOS) |
 | `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` | RevenueCat > Project Settings > API Keys (app Android) |
 | `ANDROID_UPLOAD_KEYSTORE_PASSWORD` | senha da keystore de upload (seção 6) |
@@ -56,7 +57,7 @@ Isso cria todas as tabelas, policies, triggers e o `cron.schedule` de `send-care
 npx supabase functions deploy
 ```
 
-Funções existentes: `revenuecat-webhook`, `plant-species-info`, `analyze-plant-growth`, `diagnose-plant`, `daily-message`, `plant-chat`, `identify-plant`, `send-care-reminders`, `send-notification-push`.
+Funções existentes: `revenuecat-webhook`, `plant-species-info`, `analyze-plant-growth`, `diagnose-plant`, `plant-chat`, `identify-plant`, `send-care-reminders`, `send-notification-push`.
 
 ### 4.4 Configurar os secrets das functions
 
@@ -77,6 +78,16 @@ npx supabase secrets set CRON_SECRET=<valor retornado>
 ```
 
 Confira o que já está configurado com `npx supabase secrets list` e `npx supabase functions list`.
+
+### 4.5 Login com Google
+
+O app usa `@react-native-google-signin/google-signin` (sign-in nativo, sem WebBrowser) + `supabase.auth.signInWithIdToken`. Passos no [Google Cloud Console](https://console.cloud.google.com/apis/credentials) do projeto ligado ao Firebase `broto-d23f6`:
+
+1. Crie um OAuth client **Web application** (não precisa de redirect URI) — o Client ID dele vai em `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` e é o mesmo usado no passo 2.
+2. Crie um OAuth client **Android**, com `com.byjhona.broto` como package name e o SHA-1 do certificado de assinatura (debug e/ou upload, conforme o build) — sem isso o Google recusa o sign-in nesse app.
+3. Em Supabase > Authentication > Providers > Google, habilite o provider e cole o Client ID **Web** no campo "Client IDs". Marque "Skip nonce checks" — a lib não envia nonce, e sem isso o `signInWithIdToken` falha.
+
+Perfis criados via Google não têm `username` escolhido pelo usuário: a trigger `handle_new_user` (migration `20260101006400_google_signin_username_fallback.sql`) gera um a partir do e-mail e o usuário pode trocar depois em Editar perfil.
 
 ## 5. RevenueCat
 
@@ -164,6 +175,7 @@ npx eas-cli build --platform android --profile production
 - [ ] `.env` preenchido
 - [ ] Projeto Supabase linkado, migrations aplicadas, functions deployadas
 - [ ] Secrets das functions configurados (`OPENAI_API_KEY`, `REVENUECAT_WEBHOOK_SECRET`, `DB_WEBHOOK_SECRET`, `CRON_SECRET`)
+- [ ] OAuth clients Web e Android do Google criados e provider Google habilitado no Supabase
 - [ ] Entitlements/produtos do RevenueCat mapeados em `plans` e `credit_packs`
 - [ ] Webhook do RevenueCat apontando para a function certa
 - [ ] `google-services.json` na raiz do repo

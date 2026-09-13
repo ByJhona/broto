@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { AuthFooterLink, AuthLayout, FormError, FormField, SubmitButton } from '@/components';
+import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { authErrorMessage } from '@/utils';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  const goToApp = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
 
   const handleSubmit = async () => {
     setError(null);
@@ -25,15 +34,24 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     try {
       await signIn(trimmedEmail, password);
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/(tabs)');
-      }
+      goToApp();
     } catch (err) {
       setError(authErrorMessage(err, 'Não foi possível entrar. Tente novamente.'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setIsGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result) goToApp();
+    } catch (err) {
+      setError(authErrorMessage(err, 'Não foi possível continuar com o Google. Tente novamente.'));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -66,7 +84,16 @@ export default function LoginScreen() {
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label="Entrar" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
+      <SubmitButton label="Entrar" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
+
+      <AuthDivider label="ou" />
+
+      <GoogleSignInButton
+        label="Continuar com Google"
+        onPress={handleGoogleSignIn}
+        loading={isGoogleSubmitting}
+        disabled={isOffline || isSubmitting}
+      />
 
       <AuthFooterLink href="/(auth)/signup" label="Não tem conta? Cadastre-se" />
     </AuthLayout>
