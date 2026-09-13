@@ -5,16 +5,17 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 type CardProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
+  onLongPress?: () => void;
   disabled?: boolean;
 }>;
 
-export function Card({ children, style, onPress, disabled }: Readonly<CardProps>) {
+export function Card({ children, style, onPress, onLongPress, disabled }: Readonly<CardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  if (onPress) {
+  if (onPress || onLongPress) {
     return (
-      <Pressable style={[styles.card, style]} onPress={onPress} disabled={disabled}>
+      <Pressable style={[styles.card, style]} onPress={onPress} onLongPress={onLongPress} disabled={disabled}>
         {children}
       </Pressable>
     );

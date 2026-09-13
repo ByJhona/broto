@@ -18,5 +18,13 @@ export const Metrics = {
     md: 8,
     lg: 16,
     full: 9999,
-  }
-};
+  },
+  layout: {
+    contentMaxWidth: 640,
+    centeredContent: {
+      width: '100%',
+      maxWidth: 640,
+      alignSelf: 'center',
+    },
+  },
+} as const;

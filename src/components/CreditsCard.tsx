@@ -33,7 +33,7 @@ export function CreditsCard() {
         style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       >
         <View style={styles.icon}>
-          <Coins size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <Coins size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>Entre pra ver seus créditos</Text>
@@ -52,7 +52,7 @@ export function CreditsCard() {
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={styles.icon}>
-        <Coins size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Coins size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
@@ -67,20 +67,20 @@ const makeStyles = (colors: ThemeColors) =>
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: colors.card,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.md,
     paddingHorizontal: Metrics.spacing.md,
     gap: Metrics.spacing.md,
   },
   cardPressed: {
-    opacity: 0.9,
+    opacity: 0.85,
   },
   icon: {
     width: 56,
     height: 56,
     borderRadius: Metrics.radius.full,
-    backgroundColor: `${colors.primaryForeground}26`,
+    backgroundColor: `${colors.leaf}1A`,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -90,12 +90,11 @@ const makeStyles = (colors: ThemeColors) =>
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.primaryForeground,
+    color: colors.foreground,
   },
   subtitle: {
     fontSize: 13,
-    color: colors.primaryForeground,
-    opacity: 0.85,
+    color: colors.mutedForeground,
     marginTop: 2,
   },
   });

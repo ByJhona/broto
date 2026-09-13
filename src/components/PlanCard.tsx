@@ -4,6 +4,7 @@ import Crown from 'lucide-react-native/icons/crown';
 import Gift from 'lucide-react-native/icons/gift';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { Plan } from '@/types';
+import { Card } from './Card';
 import { SkeletonBlock } from './Skeleton';
 
 type PlanCardProps = {
@@ -20,7 +21,7 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: Readonly<Pla
   const Icon = isPremium ? Crown : Gift;
 
   return (
-    <View style={[styles.card, isCurrent && styles.cardCurrent]}>
+    <Card style={isCurrent ? styles.cardCurrent : undefined}>
       <View style={styles.row}>
         <View style={styles.icon}>
           <Icon size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
@@ -44,7 +45,7 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: Readonly<Pla
           <Text style={styles.ctaText}>{ctaLabel}</Text>
         </Pressable>
       ) : null}
-    </View>
+    </Card>
   );
 }
 
@@ -52,7 +53,7 @@ export function PlanCardSkeleton() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={styles.card}>
+    <Card>
       <View style={styles.row}>
         <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} style={styles.skeletonIconGap} />
         <View style={styles.info}>
@@ -60,19 +61,12 @@ export function PlanCardSkeleton() {
           <SkeletonBlock width="80%" height={13} style={styles.skeletonGap} />
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
   cardCurrent: {
     borderColor: colors.primary,
     borderWidth: 2,

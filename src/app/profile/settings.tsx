@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import CreditCard from 'lucide-react-native/icons/credit-card';
@@ -9,7 +10,7 @@ import Moon from 'lucide-react-native/icons/moon';
 import Sun from 'lucide-react-native/icons/sun';
 import User from 'lucide-react-native/icons/user';
 import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference } from '@/theme';
-import { Avatar, PlanCard, SettingsListItem } from '@/components';
+import { Avatar, Card, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';
 import { manageSubscriptions, getProfile, type CreditsState } from '@/services';
 import { Toast } from '@/utils';
@@ -27,9 +28,10 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }
   { value: 'system', label: 'Sistema', icon: Monitor },
 ];
 
-export default function ProfileScreen() {
+export default function ProfileSettingsScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { preference, setPreference } = useAppTheme();
   const { session, user, signOut } = useAuth();
@@ -67,7 +69,11 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Metrics.spacing.xl }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.profileHeader}>
         <Avatar name={name} url={profile?.avatar_url} size={88} style={styles.avatar} />
         <Text style={styles.name}>{name}</Text>
@@ -84,9 +90,9 @@ export default function ProfileScreen() {
           onPressCta={() => router.push('/profile/plans')}
         />
         {currentPlan.id !== 'free' ? (
-          <View style={[styles.list, styles.manageSubscriptionList]}>
+          <Card style={[styles.list, styles.manageSubscriptionList]}>
             <SettingsListItem icon={CreditCard} label="Gerenciar assinatura" onPress={handleManageSubscription} isLast />
-          </View>
+          </Card>
         ) : null}
       </View>
 
@@ -118,11 +124,11 @@ export default function ProfileScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configurações</Text>
-        <View style={styles.list}>
+        <Card style={styles.list}>
           {settingsItems.map((item, index) => (
             <SettingsListItem key={item.label} {...item} isLast={index === settingsItems.length - 1} />
           ))}
-        </View>
+        </Card>
       </View>
 
       <Pressable style={styles.logoutButton} onPress={handleSignOut}>
@@ -138,6 +144,9 @@ const makeStyles = (colors: ThemeColors) =>
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollContent: {
+    ...Metrics.layout.centeredContent,
   },
   profileHeader: {
     alignItems: 'center',
@@ -169,10 +178,7 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.sm,
   },
   list: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    padding: 0,
     overflow: 'hidden',
   },
   manageSubscriptionList: {

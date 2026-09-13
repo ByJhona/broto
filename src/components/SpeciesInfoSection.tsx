@@ -8,6 +8,7 @@ import Droplet from 'lucide-react-native/icons/droplet';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { PlantCommonProblem, SpeciesInfoDisplay } from '@/types';
+import { Card } from './Card';
 import { SkeletonBlock } from './Skeleton';
 import { ExpandableCard } from './ExpandableCard';
 
@@ -25,7 +26,7 @@ function AboutCard({ info, isExpanded, onToggle }: Readonly<AboutCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={[styles.section, styles.aboutCard]}>
+    <Card style={styles.section}>
       <Pressable style={styles.sectionHeader} onPress={onToggle}>
         <Text style={styles.sectionTitle}>Sobre a espécie</Text>
         {isExpanded ? (
@@ -45,7 +46,7 @@ function AboutCard({ info, isExpanded, onToggle }: Readonly<AboutCardProps>) {
           ) : null}
         </>
       )}
-    </View>
+    </Card>
   );
 }
 
@@ -144,7 +145,7 @@ export function SpeciesInfoSkeleton() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View>
-      <View style={[styles.section, styles.aboutCard]}>
+      <Card style={styles.section}>
         <SkeletonBlock width={110} height={12} style={styles.skeletonGap} />
         <SkeletonBlock height={15} style={styles.skeletonGap} />
         <SkeletonBlock height={15} style={styles.skeletonGap} />
@@ -153,7 +154,7 @@ export function SpeciesInfoSkeleton() {
           <SkeletonBlock width={120} height={26} radius={Metrics.radius.full} />
           <SkeletonBlock width={140} height={26} radius={Metrics.radius.full} />
         </View>
-      </View>
+      </Card>
 
       <View style={styles.section}>
         <View style={styles.factsCard}>
@@ -188,13 +189,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   section: {
     marginBottom: Metrics.spacing.lg,
-  },
-  aboutCard: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',

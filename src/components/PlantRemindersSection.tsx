@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { CareTask } from '@/types';
+import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
 import { SectionTitle } from './SectionTitle';
 
@@ -23,7 +24,7 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
     .sort((a, b) => Number(a.done) - Number(b.done));
 
   return (
-    <View style={styles.section}>
+    <Card style={styles.section}>
       <View style={styles.remindersHeader}>
         <SectionTitle style={styles.remindersSectionTitle}>Lembretes</SectionTitle>
         <Pressable
@@ -44,18 +45,13 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
           </View>
         ))
       )}
-    </View>
+    </Card>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   section: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
   remindersHeader: {

@@ -12,6 +12,7 @@ import { useCreditsGate } from '@/hooks';
 import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
 import { Alert, formatShortDate, Toast } from '@/utils';
+import { Card } from './Card';
 import { LockedFeatureCard } from './LockedFeatureCard';
 import { SectionTitle } from './SectionTitle';
 import { SkeletonBlock } from './Skeleton';
@@ -96,7 +97,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
   };
 
   return (
-    <View style={styles.section}>
+    <Card style={styles.section}>
       <SectionTitle>{`Evolução da ${plant.name}`}</SectionTitle>
       {!isPremium ? (
         <LockedFeatureCard message="Acompanhe a evolução dessa planta com fotos analisadas pela IA ao longo do tempo — um recurso do plano Premium." />
@@ -158,18 +159,13 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
             })}
         </>
       )}
-    </View>
+    </Card>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   section: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
   analyzeButton: {

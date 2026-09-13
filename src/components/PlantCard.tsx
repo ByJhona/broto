@@ -8,6 +8,7 @@ import Sun from 'lucide-react-native/icons/sun';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { PlantSummary } from '@/types';
 import { sunLevelLabel } from '@/utils';
+import { InfoChip } from './InfoChip';
 import { SkeletonBlock } from './Skeleton';
 
 type PlantCardProps = {
@@ -50,20 +51,8 @@ export const PlantCard = memo(function PlantCard({ plant, readOnly = false, styl
 
         {hasTags ? (
           <View style={styles.tagRow}>
-            {plant.wateringDays ? (
-              <View style={styles.tag}>
-                <Droplet size={13} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                <Text style={styles.tagText}>{plant.wateringDays}d</Text>
-              </View>
-            ) : null}
-            {plant.sunLevel ? (
-              <View style={styles.tag}>
-                <Sun size={13} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                <Text style={styles.tagText} numberOfLines={1}>
-                  {sunLevelLabel(plant.sunLevel)}
-                </Text>
-              </View>
-            ) : null}
+            {plant.wateringDays ? <InfoChip size="sm" icon={Droplet} value={`${plant.wateringDays}d`} /> : null}
+            {plant.sunLevel ? <InfoChip size="sm" icon={Sun} value={sunLevelLabel(plant.sunLevel)} /> : null}
           </View>
         ) : null}
       </View>
@@ -145,22 +134,6 @@ const makeStyles = (colors: ThemeColors) =>
     flexWrap: 'wrap',
     gap: 6,
     marginTop: Metrics.spacing.sm,
-  },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 1,
-    gap: 4,
-    backgroundColor: `${colors.leaf}14`,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  tagText: {
-    flexShrink: 1,
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.leaf,
   },
   skeletonGap: {
     marginTop: Metrics.spacing.sm,

@@ -6,6 +6,7 @@ import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { CommunityPostType } from '@/types';
 import { COMMUNITY_POST_TYPES } from '@/utils';
+import { Card } from './Card';
 
 type CommunityComposerProps = {
   onPost: (text: string, imageUri: string | null, postType: CommunityPostType | null) => Promise<void>;
@@ -45,7 +46,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
   };
 
   return (
-    <View style={styles.card}>
+    <Card style={styles.card}>
       <View style={styles.typeRow}>
         {COMMUNITY_POST_TYPES.map((type) => {
           const selected = postType === type.value;
@@ -107,7 +108,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
           )}
         </Pressable>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -115,11 +116,8 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   card: {
     width: '100%',
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
     borderWidth: 1.5,
     borderColor: colors.primary,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.lg,
   },
   typeRow: {

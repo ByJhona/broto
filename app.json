@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "broto",
+    "name": "Broto",
     "slug": "broto",
-    "version": "1.0.17",
-    "orientation": "portrait",
+    "version": "1.0.19",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,12 @@
         "android.permission.SCHEDULE_EXACT_ALARM"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 25,
+      "versionCode": 27,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
+        }
+      },
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -54,7 +59,13 @@
       ],
       "expo-image",
       "./plugins/withReleaseSigning.js",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O broto usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,12 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Search from 'lucide-react-native/icons/search';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { CommunityComposer, CommunityPostCard, SectionTitle } from '@/components';
-import type { CommunityPost, CommunityPostType } from '@/types';
-import { useAuth } from '@/hooks';
+import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
+import type { CommunityFeedFilter, CommunityPost, CommunityPostType } from '@/types';
+import { useAuth, useEvents, useListings, useUserLocation } from '@/hooks';
 import {
   getCommunityPosts,
   getPostById,
@@ -22,12 +23,13 @@ import {
   type CommunityPostsQueryData,
 } from '@/services';
 import { useRouter } from 'expo-router';
-import { Toast } from '@/utils';
+import { formatDistanceTo, Toast } from '@/utils';
 
 type FeedScope = 'todos' | 'seguindo';
 
-const FEED_FILTERS: { value: CommunityPostType | null; label: string }[] = [
+const FEED_FILTERS: { value: CommunityFeedFilter | null; label: string }[] = [
   { value: null, label: 'Tudo' },
+  { value: 'oferta', label: 'Ofertas' },
   { value: 'conquista', label: 'Conquistas' },
   { value: 'duvida', label: 'Dúvidas' },
   { value: 'dica', label: 'Dicas' },
@@ -35,6 +37,8 @@ const FEED_FILTERS: { value: CommunityPostType | null; label: string }[] = [
 
 const POSTS_STALE_TIME = 30_000;
 const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
+const EVENTS_COLLAPSED_KEY = 'broto:community-events-collapsed';
+const OFFERS_COLLAPSED_KEY = 'broto:community-offers-collapsed';
 
 type PostsQueryData = CommunityPostsQueryData;
 
@@ -44,10 +48,40 @@ export default function CommunityScreen() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
+  const { events: upcomingEvents } = useEvents();
+  const { listings } = useListings();
+  const userLocation = useUserLocation();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<CommunityPostType | null>(null);
+  const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
   const [scope, setScope] = useState<FeedScope>('todos');
+  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
+  const [isOffersCollapsed, setIsOffersCollapsed] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(EVENTS_COLLAPSED_KEY).then((stored) => {
+      if (stored === '1') setIsEventsCollapsed(true);
+    });
+    AsyncStorage.getItem(OFFERS_COLLAPSED_KEY).then((stored) => {
+      if (stored === '1') setIsOffersCollapsed(true);
+    });
+  }, []);
+
+  const handleToggleEventsCollapsed = () => {
+    setIsEventsCollapsed((current) => {
+      const next = !current;
+      AsyncStorage.setItem(EVENTS_COLLAPSED_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
+
+  const handleToggleOffersCollapsed = () => {
+    setIsOffersCollapsed((current) => {
+      const next = !current;
+      AsyncStorage.setItem(OFFERS_COLLAPSED_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
 
   const followingIdsQuery = useQuery({
     queryKey: ['following-ids', user?.id],
@@ -131,7 +165,8 @@ export default function CommunityScreen() {
     try {
       const newPostId = await createPost(user.id, text, imageUri, postType);
       const newPost = await getPostById(newPostId, user.id);
-      if (newPost && scope === 'todos' && (!filter || newPost.postType === filter)) {
+      const matchesFilter = filter === 'oferta' ? !!newPost?.listingId : newPost?.postType === filter;
+      if (newPost && scope === 'todos' && (!filter || matchesFilter)) {
         queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
           if (!old) return old;
           const [firstPage, ...restPages] = old.pages;
@@ -148,6 +183,20 @@ export default function CommunityScreen() {
   const handlePressAuthor = useCallback(
     (authorId: string) => {
       router.push({ pathname: '/profile/[id]', params: { id: authorId } });
+    },
+    [router]
+  );
+
+  const handlePressListing = useCallback(
+    (listingId: string) => {
+      router.push({ pathname: '/listing/[id]', params: { id: listingId } });
+    },
+    [router]
+  );
+
+  const handlePressEvent = useCallback(
+    (eventId: string) => {
+      router.push({ pathname: '/event/[id]', params: { id: eventId } });
     },
     [router]
   );
@@ -200,9 +249,20 @@ export default function CommunityScreen() {
         onDelete={handleDeletePost}
         onDeleteComment={handleDeleteComment}
         onPressAuthor={handlePressAuthor}
+        onPressListing={handlePressListing}
+        onPressEvent={handlePressEvent}
       />
     ),
-    [user?.id, handleToggleLike, handleAddComment, handleDeletePost, handleDeleteComment, handlePressAuthor]
+    [
+      user?.id,
+      handleToggleLike,
+      handleAddComment,
+      handleDeletePost,
+      handleDeleteComment,
+      handlePressAuthor,
+      handlePressListing,
+      handlePressEvent,
+    ]
   );
 
   return (
@@ -225,10 +285,50 @@ export default function CommunityScreen() {
               <Text style={styles.title}>Comunidade</Text>
               <Text style={styles.subtitle}>A comunidade de quem tá aprendendo a cuidar de plantas</Text>
             </View>
-            <Pressable style={styles.searchButton} onPress={() => router.push('/search')} hitSlop={8}>
+            <IconButton style={styles.searchButton} onPress={() => router.push('/search')}>
               <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
+            </IconButton>
           </View>
+
+          {listings.length > 0 ? (
+            <CollapsibleSection
+              title="Ofertas recentes"
+              onSeeMore={() => router.push('/listing/list')}
+              isCollapsed={isOffersCollapsed}
+              onToggleCollapsed={handleToggleOffersCollapsed}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+                {listings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
+                    onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
+                  />
+                ))}
+              </ScrollView>
+            </CollapsibleSection>
+          ) : null}
+
+          {upcomingEvents.length > 0 ? (
+            <CollapsibleSection
+              title="Próximos eventos"
+              onSeeMore={() => router.push('/event/list')}
+              isCollapsed={isEventsCollapsed}
+              onToggleCollapsed={handleToggleEventsCollapsed}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+                {upcomingEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
+                    onPress={() => router.push({ pathname: '/event/[id]', params: { id: event.id } })}
+                  />
+                ))}
+              </ScrollView>
+            </CollapsibleSection>
+          ) : null}
 
           <CommunityComposer onPost={handleCreatePost} />
 
@@ -284,6 +384,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   header: {
@@ -301,17 +402,15 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.foreground,
   },
   searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   postsSectionTitle: {
     marginBottom: Metrics.spacing.md,
+  },
+  carouselRow: {
+    flexDirection: 'row',
+    gap: Metrics.spacing.sm,
   },
   filtersRow: {
     flexDirection: 'row',

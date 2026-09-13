@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Heart from 'lucide-react-native/icons/heart';
 import HelpCircle from 'lucide-react-native/icons/circle-question-mark';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
@@ -10,9 +11,20 @@ import Send from 'lucide-react-native/icons/send';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import type { CommunityComment, CommunityPost, CommunityPostType } from '@/types';
-import { confirm } from '@/utils';
+import type { CommunityComment, CommunityPost, CommunityPostEventSummary, CommunityPostListingSummary, CommunityPostType } from '@/types';
+import {
+  confirm,
+  EVENT_COLOR,
+  EVENT_ICON,
+  formatEventDateTime,
+  LISTING_TYPE_COLORS,
+  LISTING_TYPE_ICONS,
+  LISTING_TYPE_LABELS,
+} from '@/utils';
 import { Avatar } from './Avatar';
+import { Card } from './Card';
+import { IconBadge } from './IconBadge';
+import { ListRow } from './ListRow';
 
 const TYPE_ICONS: Partial<Record<CommunityPostType, typeof Trophy>> = {
   conquista: Trophy,
@@ -85,12 +97,181 @@ function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete 
   );
 }
 
+type PostListingPreviewProps = {
+  listing: CommunityPostListingSummary;
+  onPress?: () => void;
+};
+
+function PostListingPreview({ listing, onPress }: Readonly<PostListingPreviewProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const Icon = LISTING_TYPE_ICONS[listing.listingType];
+  const color = LISTING_TYPE_COLORS[listing.listingType];
+  const label = LISTING_TYPE_LABELS[listing.listingType];
+
+  return (
+    <Pressable style={styles.listingPreview} onPress={onPress}>
+      {listing.photoUrl ? (
+        <Image source={{ uri: listing.photoUrl }} style={styles.listingPreviewPhoto} contentFit="cover" />
+      ) : (
+        <View style={[styles.listingPreviewPhoto, styles.listingPreviewPhotoPlaceholder]}>
+          <Icon size={20} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+        </View>
+      )}
+
+      <View style={styles.listingPreviewInfo}>
+        <Text style={styles.listingPreviewTitle} numberOfLines={1}>
+          {listing.title}
+        </Text>
+        <View style={[styles.listingPreviewBadge, { backgroundColor: color }]}>
+          <Icon size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <Text style={styles.listingPreviewBadgeText}>{label}</Text>
+        </View>
+      </View>
+
+      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+    </Pressable>
+  );
+}
+
+type PostEventPreviewProps = {
+  event: CommunityPostEventSummary;
+  onPress?: () => void;
+};
+
+function PostEventPreview({ event, onPress }: Readonly<PostEventPreviewProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const Icon = EVENT_ICON;
+
+  return (
+    <Pressable style={styles.listingPreview} onPress={onPress}>
+      {event.photoUrl ? (
+        <Image source={{ uri: event.photoUrl }} style={styles.listingPreviewPhoto} contentFit="cover" />
+      ) : (
+        <View style={[styles.listingPreviewPhoto, styles.listingPreviewPhotoPlaceholder]}>
+          <Icon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+        </View>
+      )}
+
+      <View style={styles.listingPreviewInfo}>
+        <Text style={styles.listingPreviewTitle} numberOfLines={1}>
+          {event.title}
+        </Text>
+        <View style={[styles.listingPreviewBadge, { backgroundColor: EVENT_COLOR }]}>
+          <Icon size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <Text style={styles.listingPreviewBadgeText}>{formatEventDateTime(event.eventDate)}</Text>
+        </View>
+      </View>
+
+      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+    </Pressable>
+  );
+}
+
+type PostFooterProps = {
+  liked: boolean;
+  likeCount: number;
+  commentCount: number;
+  onToggleLike: () => void;
+  onToggleComments: () => void;
+};
+
+function PostFooter({ liked, likeCount, commentCount, onToggleLike, onToggleComments }: Readonly<PostFooterProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return (
+    <View style={styles.footer}>
+      <Pressable style={styles.footerButton} onPress={onToggleLike}>
+        <Heart
+          size={Metrics.icon.normal}
+          color={liked ? colors.primary : colors.mutedForeground}
+          fill={liked ? colors.primary : 'none'}
+          strokeWidth={Metrics.icon.strokeWidth}
+        />
+        <Text style={[styles.footerText, liked && styles.footerTextActive]}>{likeCount}</Text>
+      </Pressable>
+
+      <Pressable style={styles.footerButton} onPress={onToggleComments}>
+        <MessageCircle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Text style={styles.footerText}>{commentCount} recados</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+type PostCommentsProps = {
+  comments: CommunityComment[];
+  currentUserId?: string | null;
+  openMenuId: string | null;
+  onToggleMenu: (commentId: string) => void;
+  onDeleteComment: (commentId: string) => void;
+  draft: string;
+  onChangeDraft: (text: string) => void;
+  onSend: () => void;
+  isSending: boolean;
+};
+
+function PostComments({
+  comments,
+  currentUserId,
+  openMenuId,
+  onToggleMenu,
+  onDeleteComment,
+  draft,
+  onChangeDraft,
+  onSend,
+  isSending,
+}: Readonly<PostCommentsProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return (
+    <View style={styles.comments}>
+      {comments.map((comment) => (
+        <CommentRow
+          key={comment.id}
+          comment={comment}
+          isOwnComment={!!currentUserId && currentUserId === comment.authorId}
+          isMenuOpen={openMenuId === comment.id}
+          onToggleMenu={() => onToggleMenu(comment.id)}
+          onDelete={() => onDeleteComment(comment.id)}
+        />
+      ))}
+
+      <View style={styles.commentInputRow}>
+        <TextInput
+          style={[styles.commentInput, isSending && styles.commentInputDisabled]}
+          value={draft}
+          onChangeText={onChangeDraft}
+          placeholder="Deixe um recadinho..."
+          placeholderTextColor={colors.mutedForeground}
+          onSubmitEditing={onSend}
+          editable={!isSending}
+        />
+        <Pressable
+          style={[styles.commentSend, (isSending || !draft.trim()) && styles.commentSendDisabled]}
+          onPress={onSend}
+          disabled={isSending || !draft.trim()}
+        >
+          {isSending ? (
+            <ActivityIndicator size="small" color={colors.primaryForeground} />
+          ) : (
+            <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          )}
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 type CommunityPostCardProps = {
   post: CommunityPost;
   currentUserId?: string | null;
   onToggleLike: (postId: string) => void;
   onAddComment: (postId: string, text: string) => Promise<void>;
   onPressAuthor?: (authorId: string) => void;
+  onPressListing?: (listingId: string) => void;
+  onPressEvent?: (eventId: string) => void;
   onDelete?: (postId: string) => void;
   onDeleteComment?: (commentId: string) => void;
 };
@@ -101,6 +282,8 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   onToggleLike,
   onAddComment,
   onPressAuthor,
+  onPressListing,
+  onPressEvent,
   onDelete,
   onDeleteComment,
 }: Readonly<CommunityPostCardProps>) {
@@ -146,28 +329,24 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   };
 
   const TypeIcon = post.postType ? TYPE_ICONS[post.postType] : null;
+  const meta = post.authorUsername ? `@${post.authorUsername} · ${post.createdAt}` : post.createdAt;
+  const listingSummary = post.listingSummary;
+  const eventSummary = post.eventSummary;
 
   return (
-    <View style={styles.card}>
+    <Card style={styles.card}>
       <View style={styles.header}>
-        <Pressable
+        <ListRow
           style={styles.headerAuthor}
-          onPress={() => onPressAuthor?.(post.authorId)}
-          disabled={!onPressAuthor}
-        >
-          <Avatar name={post.authorName} url={post.authorAvatarUrl} size={44} />
-          <View style={styles.headerText}>
-            <Text style={styles.authorName}>{post.authorName}</Text>
-            <Text style={styles.meta}>
-              {post.authorUsername ? `@${post.authorUsername} · ` : ''}
-              {post.createdAt}
-            </Text>
-          </View>
-        </Pressable>
+          leading={<Avatar name={post.authorName} url={post.authorAvatarUrl} size={44} />}
+          title={post.authorName}
+          subtitle={meta}
+          onPress={onPressAuthor ? () => onPressAuthor(post.authorId) : undefined}
+        />
         {TypeIcon ? (
-          <View style={styles.typeBadge}>
+          <IconBadge size={28}>
             <TypeIcon size={14} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-          </View>
+          </IconBadge>
         ) : null}
         {isOwnPost && (
           <PostMenu isOpen={isMenuOpen} onToggle={() => setIsMenuOpen((open) => !open)} onDelete={handleDelete} />
@@ -186,61 +365,31 @@ export const CommunityPostCard = memo(function CommunityPostCard({
 
       <Text style={[styles.caption, !post.imageUrl && styles.captionNoPhoto]}>{post.caption}</Text>
 
-      <View style={styles.footer}>
-        <Pressable style={styles.footerButton} onPress={() => onToggleLike(post.id)}>
-          <Heart
-            size={Metrics.icon.normal}
-            color={post.liked ? colors.primary : colors.mutedForeground}
-            fill={post.liked ? colors.primary : 'none'}
-            strokeWidth={Metrics.icon.strokeWidth}
-          />
-          <Text style={[styles.footerText, post.liked && styles.footerTextActive]}>{post.likeCount}</Text>
-        </Pressable>
+      {listingSummary ? <PostListingPreview listing={listingSummary} onPress={() => onPressListing?.(listingSummary.id)} /> : null}
+      {eventSummary ? <PostEventPreview event={eventSummary} onPress={() => onPressEvent?.(eventSummary.id)} /> : null}
 
-        <Pressable style={styles.footerButton} onPress={() => setIsCommentsOpen((open) => !open)}>
-          <MessageCircle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.footerText}>{post.comments.length} recados</Text>
-        </Pressable>
-      </View>
+      <PostFooter
+        liked={post.liked}
+        likeCount={post.likeCount}
+        commentCount={post.comments.length}
+        onToggleLike={() => onToggleLike(post.id)}
+        onToggleComments={() => setIsCommentsOpen((open) => !open)}
+      />
 
       {isCommentsOpen ? (
-        <View style={styles.comments}>
-          {post.comments.map((comment) => (
-            <CommentRow
-              key={comment.id}
-              comment={comment}
-              isOwnComment={!!currentUserId && currentUserId === comment.authorId}
-              isMenuOpen={openCommentMenuId === comment.id}
-              onToggleMenu={() => setOpenCommentMenuId((current) => (current === comment.id ? null : comment.id))}
-              onDelete={() => handleDeleteComment(comment.id)}
-            />
-          ))}
-
-          <View style={styles.commentInputRow}>
-            <TextInput
-              style={[styles.commentInput, isSendingComment && styles.commentInputDisabled]}
-              value={draft}
-              onChangeText={setDraft}
-              placeholder="Deixe um recadinho..."
-              placeholderTextColor={colors.mutedForeground}
-              onSubmitEditing={handleSendComment}
-              editable={!isSendingComment}
-            />
-            <Pressable
-              style={[styles.commentSend, (isSendingComment || !draft.trim()) && styles.commentSendDisabled]}
-              onPress={handleSendComment}
-              disabled={isSendingComment || !draft.trim()}
-            >
-              {isSendingComment ? (
-                <ActivityIndicator size="small" color={colors.primaryForeground} />
-              ) : (
-                <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
-              )}
-            </Pressable>
-          </View>
-        </View>
+        <PostComments
+          comments={post.comments}
+          currentUserId={currentUserId}
+          openMenuId={openCommentMenuId}
+          onToggleMenu={(commentId) => setOpenCommentMenuId((current) => (current === commentId ? null : commentId))}
+          onDeleteComment={handleDeleteComment}
+          draft={draft}
+          onChangeDraft={setDraft}
+          onSend={handleSendComment}
+          isSending={isSendingComment}
+        />
       ) : null}
-    </View>
+    </Card>
   );
 });
 
@@ -248,11 +397,6 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   card: {
     width: '100%',
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.md,
   },
   header: {
@@ -263,30 +407,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   headerAuthor: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-  },
-  headerText: {
-    flex: 1,
-  },
-  authorName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  meta: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginTop: 1,
-  },
-  typeBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   menuButton: {
     padding: 4,
@@ -335,6 +455,50 @@ const makeStyles = (colors: ThemeColors) =>
   },
   captionNoPhoto: {
     marginTop: 0,
+  },
+  listingPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.sm,
+    marginTop: Metrics.spacing.sm,
+    backgroundColor: colors.background,
+    borderRadius: Metrics.radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: Metrics.spacing.sm,
+  },
+  listingPreviewPhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: Metrics.radius.md,
+    backgroundColor: colors.muted,
+  },
+  listingPreviewPhotoPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listingPreviewInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  listingPreviewTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.foreground,
+  },
+  listingPreviewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    borderRadius: Metrics.radius.full,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  listingPreviewBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.white,
   },
   footer: {
     flexDirection: 'row',

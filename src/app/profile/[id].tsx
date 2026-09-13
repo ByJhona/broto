@@ -1,17 +1,22 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
+import Settings from 'lucide-react-native/icons/settings';
 import Sprout from 'lucide-react-native/icons/sprout';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import type { CommunityPost, PlantSummary, UserProfile } from '@/types';
-import { Avatar, CommunityPostCard, EmptyState, LoadingScreen, PlantCard, SectionTitle } from '@/components';
-import { useAuth, useFollow } from '@/hooks';
+import type { CommunityPost, PlantEvent, PlantListing, UserProfile } from '@/types';
+import { Avatar, CollapsibleSection, CommunityPostCard, EmptyState, EventCard, ListingCard, LoadingScreen } from '@/components';
+import { useAuth, useFollow, useUserLocation } from '@/hooks';
 import {
   getProfile,
   getCommunityPosts,
   getPostById,
-  getPlantsByUserId,
+  getListingsByUserId,
+  getEventsByUserId,
   toggleLike,
   addComment,
   deletePost,
@@ -21,10 +26,12 @@ import {
   removeCommentFromAllFeeds,
   type CommunityPostsQueryData,
 } from '@/services';
-import { Toast } from '@/utils';
+import { formatDistanceTo, Toast } from '@/utils';
 
 const PROFILE_STALE_TIME = 60_000;
 const POSTS_STALE_TIME = 30_000;
+const OFFERS_COLLAPSED_KEY = 'broto:profile-offers-collapsed';
+const EVENTS_COLLAPSED_KEY = 'broto:profile-events-collapsed';
 
 type ProfileHeaderProps = {
   name: string;
@@ -32,11 +39,94 @@ type ProfileHeaderProps = {
   isOwnProfile: boolean;
   following: boolean;
   onToggleFollow: () => void;
+  onPressMessage: () => void;
   counts: { followers: number; following: number };
-  plants: PlantSummary[];
+  listings: PlantListing[];
+  events: PlantEvent[];
   posts: CommunityPost[];
   isLoading: boolean;
+  onPressListing: (listingId: string) => void;
+  onPressEvent: (eventId: string) => void;
+  isOffersCollapsed: boolean;
+  onToggleOffersCollapsed: () => void;
+  isEventsCollapsed: boolean;
+  onToggleEventsCollapsed: () => void;
+  userLocation: { latitude: number; longitude: number } | null;
 };
+
+type ProfileListingsRowProps = {
+  title: string;
+  listings: PlantListing[];
+  onPressListing: (listingId: string) => void;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  userLocation: { latitude: number; longitude: number } | null;
+};
+
+function ProfileListingsRow({
+  title,
+  listings,
+  onPressListing,
+  isCollapsed,
+  onToggleCollapsed,
+  userLocation,
+}: Readonly<ProfileListingsRowProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  if (listings.length === 0) return null;
+
+  return (
+    <CollapsibleSection title={title} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+        {listings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
+            onPress={() => onPressListing(listing.id)}
+          />
+        ))}
+      </ScrollView>
+    </CollapsibleSection>
+  );
+}
+
+type ProfileEventsRowProps = {
+  title: string;
+  events: PlantEvent[];
+  onPressEvent: (eventId: string) => void;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  userLocation: { latitude: number; longitude: number } | null;
+};
+
+function ProfileEventsRow({
+  title,
+  events,
+  onPressEvent,
+  isCollapsed,
+  onToggleCollapsed,
+  userLocation,
+}: Readonly<ProfileEventsRowProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  if (events.length === 0) return null;
+
+  return (
+    <CollapsibleSection title={title} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+        {events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
+            onPress={() => onPressEvent(event.id)}
+          />
+        ))}
+      </ScrollView>
+    </CollapsibleSection>
+  );
+}
 
 function ProfileHeader({
   name,
@@ -44,10 +134,19 @@ function ProfileHeader({
   isOwnProfile,
   following,
   onToggleFollow,
+  onPressMessage,
   counts,
-  plants,
+  listings,
+  events,
   posts,
   isLoading,
+  onPressListing,
+  onPressEvent,
+  isOffersCollapsed,
+  onToggleOffersCollapsed,
+  isEventsCollapsed,
+  onToggleEventsCollapsed,
+  userLocation,
 }: Readonly<ProfileHeaderProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -70,26 +169,36 @@ function ProfileHeader({
         </View>
 
         {!isOwnProfile ? (
-          <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
-            <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
-              {following ? 'Seguindo' : 'Seguir'}
-            </Text>
-          </Pressable>
+          <View style={styles.actionsRow}>
+            <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
+              <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
+                {following ? 'Seguindo' : 'Seguir'}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.messageButton} onPress={onPressMessage} hitSlop={8}>
+              <MessageCircle size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+            </Pressable>
+          </View>
         ) : null}
       </View>
 
-      <View style={styles.plantsSection}>
-        <SectionTitle style={styles.plantsSectionTitle}>{isOwnProfile ? 'Minhas plantas' : 'Plantas'}</SectionTitle>
-        {plants.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plantsRow}>
-            {plants.map((plant) => (
-              <PlantCard key={plant.id} plant={plant} readOnly style={styles.plantCard} />
-            ))}
-          </ScrollView>
-        ) : (
-          <Text style={styles.plantsEmptyText}>Nenhuma planta cadastrada.</Text>
-        )}
-      </View>
+      <ProfileListingsRow
+        title={isOwnProfile ? 'Minhas ofertas' : 'Ofertas'}
+        listings={listings}
+        onPressListing={onPressListing}
+        isCollapsed={isOffersCollapsed}
+        onToggleCollapsed={onToggleOffersCollapsed}
+        userLocation={userLocation}
+      />
+
+      <ProfileEventsRow
+        title={isOwnProfile ? 'Meus eventos' : 'Eventos'}
+        events={events}
+        onPressEvent={onPressEvent}
+        isCollapsed={isEventsCollapsed}
+        onToggleCollapsed={onToggleEventsCollapsed}
+        userLocation={userLocation}
+      />
 
       {posts.length === 0 && !isLoading ? (
         <EmptyState
@@ -105,13 +214,43 @@ function ProfileHeader({
 
 export default function PublicProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { following, counts, toggle } = useFollow(id ?? null);
+  const userLocation = useUserLocation();
 
   const isOwnProfile = id === user?.id;
+  const [isOffersCollapsed, setIsOffersCollapsed] = useState(false);
+  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(OFFERS_COLLAPSED_KEY).then((stored) => {
+      if (stored === '1') setIsOffersCollapsed(true);
+    });
+    AsyncStorage.getItem(EVENTS_COLLAPSED_KEY).then((stored) => {
+      if (stored === '1') setIsEventsCollapsed(true);
+    });
+  }, []);
+
+  const handleToggleOffersCollapsed = () => {
+    setIsOffersCollapsed((current) => {
+      const next = !current;
+      AsyncStorage.setItem(OFFERS_COLLAPSED_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
+
+  const handleToggleEventsCollapsed = () => {
+    setIsEventsCollapsed((current) => {
+      const next = !current;
+      AsyncStorage.setItem(EVENTS_COLLAPSED_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
 
   const profileQuery = useQuery({
     queryKey: ['profile', id],
@@ -120,9 +259,16 @@ export default function PublicProfileScreen() {
     staleTime: PROFILE_STALE_TIME,
   });
 
-  const plantsQuery = useQuery({
-    queryKey: ['plants-by-user', id],
-    queryFn: () => getPlantsByUserId(id!),
+  const listingsQuery = useQuery({
+    queryKey: ['listings-by-user', id],
+    queryFn: () => getListingsByUserId(id!),
+    enabled: !!id,
+    staleTime: PROFILE_STALE_TIME,
+  });
+
+  const eventsQuery = useQuery({
+    queryKey: ['events-by-user', id, user?.id],
+    queryFn: () => getEventsByUserId(id!, user?.id),
     enabled: !!id,
     staleTime: PROFILE_STALE_TIME,
   });
@@ -139,12 +285,13 @@ export default function PublicProfileScreen() {
   });
 
   const profile = profileQuery.data ?? null;
-  const plants = plantsQuery.data ?? [];
+  const listings = listingsQuery.data ?? [];
+  const events = eventsQuery.data ?? [];
   const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
-  const isLoading = profileQuery.isLoading || plantsQuery.isLoading || (posts.length === 0 && postsQuery.isFetching);
+  const isLoading = profileQuery.isLoading || (posts.length === 0 && postsQuery.isFetching);
 
   const handleRefresh = async () => {
-    await Promise.all([profileQuery.refetch(), plantsQuery.refetch(), postsQuery.refetch()]);
+    await Promise.all([profileQuery.refetch(), listingsQuery.refetch(), eventsQuery.refetch(), postsQuery.refetch()]);
   };
 
   const handleLoadMore = () => {
@@ -222,6 +369,24 @@ export default function PublicProfileScreen() {
     [queryClient, postsQueryKey]
   );
 
+  const handlePressListing = useCallback(
+    (listingId: string) => {
+      router.push({ pathname: '/listing/[id]', params: { id: listingId } });
+    },
+    [router]
+  );
+
+  const handlePressMessage = useCallback(() => {
+    router.push({ pathname: '/chat', params: { otherUserId: id! } });
+  }, [router, id]);
+
+  const handlePressEvent = useCallback(
+    (eventId: string) => {
+      router.push({ pathname: '/event/[id]', params: { id: eventId } });
+    },
+    [router]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <CommunityPostCard
@@ -231,9 +396,11 @@ export default function PublicProfileScreen() {
         onAddComment={handleAddComment}
         onDelete={handleDeletePost}
         onDeleteComment={handleDeleteComment}
+        onPressListing={handlePressListing}
+        onPressEvent={handlePressEvent}
       />
     ),
-    [user?.id, handleToggleLike, handleAddComment, handleDeletePost, handleDeleteComment]
+    [user?.id, handleToggleLike, handleAddComment, handleDeletePost, handleDeleteComment, handlePressListing, handlePressEvent]
   );
 
   if (isLoading && !profile) {
@@ -245,7 +412,7 @@ export default function PublicProfileScreen() {
   return (
     <FlatList
       style={styles.container}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
       showsVerticalScrollIndicator={false}
       data={posts}
       keyExtractor={(post) => post.id}
@@ -254,24 +421,48 @@ export default function PublicProfileScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={
         <RefreshControl
-          refreshing={profileQuery.isRefetching || plantsQuery.isRefetching || postsQuery.isRefetching}
+          refreshing={profileQuery.isRefetching || listingsQuery.isRefetching || eventsQuery.isRefetching || postsQuery.isRefetching}
           onRefresh={handleRefresh}
           tintColor={colors.leaf}
           colors={[colors.leaf]}
         />
       }
       ListHeaderComponent={
-        <ProfileHeader
-          name={name}
-          profile={profile}
-          isOwnProfile={isOwnProfile}
-          following={following}
-          onToggleFollow={toggle}
-          counts={counts}
-          plants={plants}
-          posts={posts}
-          isLoading={isLoading}
-        />
+        <>
+          <Stack.Screen
+            options={
+              isOwnProfile
+                ? {
+                    headerRight: () => (
+                      <Pressable onPress={() => router.push('/profile/settings')} hitSlop={8}>
+                        <Settings size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+                      </Pressable>
+                    ),
+                  }
+                : undefined
+            }
+          />
+          <ProfileHeader
+            name={name}
+            profile={profile}
+            isOwnProfile={isOwnProfile}
+            following={following}
+            onToggleFollow={toggle}
+            onPressMessage={handlePressMessage}
+            counts={counts}
+            listings={listings}
+            events={events}
+            posts={posts}
+            isLoading={isLoading}
+            onPressListing={handlePressListing}
+            onPressEvent={handlePressEvent}
+            isOffersCollapsed={isOffersCollapsed}
+            onToggleOffersCollapsed={handleToggleOffersCollapsed}
+            isEventsCollapsed={isEventsCollapsed}
+            onToggleEventsCollapsed={handleToggleEventsCollapsed}
+            userLocation={userLocation}
+          />
+        </>
       }
       ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     />
@@ -285,6 +476,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   header: {
@@ -321,8 +513,15 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.mutedForeground,
     marginTop: 2,
   },
-  followButton: {
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.sm,
     marginTop: Metrics.spacing.md,
+  },
+  followButton: {
+    flex: 1,
+    alignItems: 'center',
     backgroundColor: colors.primary,
     borderRadius: Metrics.radius.full,
     paddingVertical: Metrics.spacing.sm,
@@ -341,22 +540,18 @@ const makeStyles = (colors: ThemeColors) =>
   followButtonTextActive: {
     color: colors.foreground,
   },
-  plantsSection: {
-    marginBottom: Metrics.spacing.lg,
+  messageButton: {
+    width: 44,
+    height: 44,
+    borderRadius: Metrics.radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  plantsSectionTitle: {
-    marginLeft: Metrics.spacing.xs,
-  },
-  plantsEmptyText: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginLeft: Metrics.spacing.xs,
-  },
-  plantsRow: {
+  carouselRow: {
     gap: Metrics.spacing.md,
-  },
-  plantCard: {
-    width: 140,
   },
   emptyState: {
     marginTop: Metrics.spacing.xl,

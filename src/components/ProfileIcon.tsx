@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'rea
 import { useRouter } from 'expo-router';
 import UserRound from 'lucide-react-native/icons/user-round';
 import { useColors, type ThemeColors } from '@/theme';
+import { useAuth } from '@/hooks';
 import { Avatar } from './Avatar';
 
 type ProfileIconProps = {
@@ -17,10 +18,16 @@ export function ProfileIcon({ name, url, loggedIn = true, size = 52, style }: Re
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { user } = useAuth();
+
+  const handlePress = () => {
+    if (!user?.id) return;
+    router.push({ pathname: '/profile/[id]', params: { id: user.id } });
+  };
 
   return (
     <Pressable
-      onPress={() => router.push('/profile')}
+      onPress={handlePress}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Abrir perfil"

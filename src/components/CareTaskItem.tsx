@@ -6,6 +6,7 @@ import Circle from 'lucide-react-native/icons/circle';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { addDays, CATEGORY_ICONS, daysBetween, formatShortDate, today } from '@/utils';
 import type { CareTask } from '@/types';
+import { IconBadge } from './IconBadge';
 
 type CareTaskItemProps = {
   task: CareTask;
@@ -53,7 +54,10 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
       onLongPress={onLongPress ? () => onLongPress(task.id) : undefined}
       style={({ pressed }) => [styles.card, task.done && styles.cardDone, pressed && styles.cardPressed]}
     >
-      <View style={[styles.icon, task.done && styles.iconDone]}>
+      <IconBadge
+        backgroundColor={task.done ? colors.card : colors.muted}
+        style={styles.iconOverflow}
+      >
         {task.plantPhotoUrl ? (
           <Image
             source={{ uri: task.plantPhotoUrl }}
@@ -69,7 +73,7 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
             strokeWidth={Metrics.icon.strokeWidth}
           />
         )}
-      </View>
+      </IconBadge>
 
       <View style={styles.textContainer}>
         <Text style={[styles.title, task.done && styles.textDone]}>{task.title}</Text>
@@ -104,17 +108,8 @@ const makeStyles = (colors: ThemeColors) =>
   cardPressed: {
     opacity: 0.8,
   },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
+  iconOverflow: {
     overflow: 'hidden',
-  },
-  iconDone: {
-    backgroundColor: colors.card,
   },
   iconPhoto: {
     width: '100%',

@@ -163,7 +163,7 @@ export default function HelpScreen() {
         <Text style={styles.sectionHeaderText}>Primeiros passos</Text>
       </View>
 
-      <View style={styles.needsCard}>
+      <Card style={styles.needsCard}>
         <Text style={styles.needsTitle}>O que toda planta precisa</Text>
         <View style={styles.needsRow}>
           {PLANT_NEEDS.map((need) => {
@@ -179,7 +179,7 @@ export default function HelpScreen() {
         <Text style={styles.needsCaption}>
           E um vaso com furo de drenagem — sem isso, a água acumulada apodrece a raiz.
         </Text>
-      </View>
+      </Card>
 
       <View style={styles.mistakesCard}>
         <View style={styles.mistakesHeader}>
@@ -217,13 +217,13 @@ export default function HelpScreen() {
         {PLANT_BENEFITS.map((benefit) => {
           const Icon = benefit.icon;
           return (
-            <View key={benefit.title} style={styles.benefitTile}>
+            <Card key={benefit.title} style={styles.benefitTile}>
               <IconBadge size={36} backgroundColor={`${colors.accent}22`}>
                 <Icon size={18} color={colors.accent} strokeWidth={Metrics.icon.strokeWidth} />
               </IconBadge>
               <Text style={styles.benefitTitle}>{benefit.title}</Text>
               <Text style={styles.benefitText}>{benefit.description}</Text>
-            </View>
+            </Card>
           );
         })}
       </View>
@@ -266,6 +266,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   content: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
   },
   header: {
@@ -327,11 +328,6 @@ const makeStyles = (colors: ThemeColors) =>
     textTransform: 'uppercase',
   },
   needsCard: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
     marginBottom: Metrics.spacing.md,
   },
   needsTitle: {
@@ -430,11 +426,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   benefitTile: {
     width: '48%',
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: Metrics.spacing.md,
   },
   benefitTitle: {
     fontSize: 14,

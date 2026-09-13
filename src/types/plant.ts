@@ -4,7 +4,7 @@ export type Plant = {
   name: string;
   species: string | null;
   commonName: string | null;
-  photoUrl: string | null;
+  photoUrls: string[];
   wateringDays: number | null;
   sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
   origin: string | null;

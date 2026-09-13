@@ -50,7 +50,11 @@ Deno.serve(async (req) => {
       ? { title: 'Nova curtida', message: `${actorName} acabou de curtir a sua foto!` }
       : notification.type === 'comment'
         ? { title: 'Novo recado', message: `${actorName} deixou um recado na sua foto!` }
-        : { title: notification.title, message: notification.message };
+        : notification.type === 'listing_interest'
+          ? { title: 'Interesse na sua oferta', message: `${actorName} se interessou pela planta que você ofereceu!` }
+          : notification.type === 'listing_message'
+            ? { title: 'Nova mensagem', message: `${actorName} te enviou uma mensagem sobre uma oferta.` }
+            : { title: notification.title, message: notification.message };
 
   if (!title || !message) {
     return new Response(JSON.stringify({ sent: 0 }), { headers: { 'Content-Type': 'application/json' } });

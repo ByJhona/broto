@@ -75,10 +75,12 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.background,
   },
   header: {
+    ...Metrics.layout.centeredContent,
     padding: Metrics.spacing.lg,
     paddingBottom: 0,
   },
   banner: {
+    ...Metrics.layout.centeredContent,
     marginTop: Metrics.spacing.md,
   },
   title: {
@@ -87,11 +89,13 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.foreground,
   },
   empty: {
+    ...Metrics.layout.centeredContent,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: Metrics.spacing.xl,
   },
   list: {
+    ...Metrics.layout.centeredContent,
     flexGrow: 1,
     padding: Metrics.spacing.lg,
     gap: Metrics.spacing.md,

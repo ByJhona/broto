@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Card } from './Card';
 import { SkeletonBlock } from './Skeleton';
 
 type CreditPackCardProps = {
@@ -16,7 +17,7 @@ export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={styles.card}>
+    <Card>
       <View style={styles.row}>
         <View style={styles.icon}>
           <Icon size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
@@ -28,7 +29,7 @@ export function CreditPackCard({ icon: Icon, name, price, ctaLabel, onPressCta }
       <Pressable style={styles.cta} onPress={onPressCta}>
         <Text style={styles.ctaText}>{ctaLabel}</Text>
       </Pressable>
-    </View>
+    </Card>
   );
 }
 
@@ -36,24 +37,17 @@ export function CreditPackCardSkeleton() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={styles.card}>
+    <Card>
       <View style={styles.row}>
         <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} style={styles.skeletonIconGap} />
         <SkeletonBlock width="40%" height={16} />
       </View>
-    </View>
+    </Card>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

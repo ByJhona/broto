@@ -26,3 +26,10 @@ export function formatShortDate(iso: string): string {
   const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   return `${dayMonth} ${date.getFullYear()}`;
 }
+
+export function formatEventDateTime(iso: string): string {
+  const date = new Date(iso);
+  const datePart = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const timePart = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `${datePart} às ${timePart}`;
+}

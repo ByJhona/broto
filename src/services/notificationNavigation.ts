@@ -30,6 +30,10 @@ async function handleNotificationTap(data: NotificationTapData): Promise<void> {
     const notification = await getNotificationById(data.notificationId);
     if (notification?.postId) {
       router.push({ pathname: '/post/[id]', params: { id: notification.postId } });
+    } else if (notification?.type === 'listing_message' && notification.actorId) {
+      router.push({ pathname: '/chat', params: { otherUserId: notification.actorId } });
+    } else if (notification?.listingId) {
+      router.push({ pathname: '/listing/[id]', params: { id: notification.listingId } });
     } else {
       router.push('/(tabs)/community');
     }

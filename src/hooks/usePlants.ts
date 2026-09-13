@@ -21,7 +21,17 @@ export function usePlants() {
   const { mutateAsync: addPlant } = useMutation({
     mutationFn: (input: CreatePlantInput) => createPlant(input),
     onSuccess: (plant) => {
-      queryClient.setQueryData<PlantSummary[]>(queryKey, (current = []) => [...current, plant]);
+      const summary: PlantSummary = {
+        id: plant.id,
+        createdAt: plant.createdAt,
+        name: plant.name,
+        species: plant.species,
+        commonName: plant.commonName,
+        photoUrl: plant.photoUrls[0] ?? null,
+        wateringDays: plant.wateringDays,
+        sunLevel: plant.sunLevel,
+      };
+      queryClient.setQueryData<PlantSummary[]>(queryKey, (current = []) => [...current, summary]);
     },
   });
 

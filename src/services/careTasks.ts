@@ -78,7 +78,11 @@ export async function getCareTasks(): Promise<CareTask[]> {
   if (!userId) return [];
 
   const todayDate = today();
-  const { data, error } = await supabase.from('care_tasks').select(CARE_TASK_SELECT).eq('user_id', userId);
+  const { data, error } = await supabase
+    .from('care_tasks')
+    .select(CARE_TASK_SELECT)
+    .eq('user_id', userId)
+    .is('deleted_at', null);
 
   if (error) throw error;
 
@@ -97,12 +101,17 @@ export async function toggleCareTask(task: CareTask, done: boolean): Promise<voi
 }
 
 export async function getCareTaskPlantId(id: string): Promise<string | null> {
-  const { data } = await supabase.from('care_tasks').select('plant_id').eq('id', id).maybeSingle();
+  const { data } = await supabase.from('care_tasks').select('plant_id').eq('id', id).is('deleted_at', null).maybeSingle();
   return data?.plant_id ?? null;
 }
 
 export async function markCareTaskDoneById(id: string): Promise<void> {
-  const { data: row, error } = await supabase.from('care_tasks').select(CARE_TASK_SELECT).eq('id', id).maybeSingle();
+  const { data: row, error } = await supabase
+    .from('care_tasks')
+    .select(CARE_TASK_SELECT)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
   if (error || !row) return;
 
   const taskRow = row as CareTaskRow;
@@ -177,10 +186,10 @@ export async function createCareTask(input: CreateCareTaskInput): Promise<CareTa
 }
 
 export async function deleteCareTask(id: string): Promise<void> {
-  const { error } = await supabase.from('care_tasks').delete().eq('id', id);
+  const { error } = await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
 }
 
 export async function deleteCareTasksByPlantId(plantId: string): Promise<void> {
-  await supabase.from('care_tasks').delete().eq('plant_id', plantId);
+  await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }).eq('plant_id', plantId);
 }

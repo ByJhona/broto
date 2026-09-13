@@ -264,6 +264,7 @@ const makeStyles = (colors: ThemeColors) =>
     flex: 1,
   },
   centered: {
+    ...Metrics.layout.centeredContent,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -7,6 +7,8 @@ type NotificationRow = {
   message: string | null;
   type: Notification['type'];
   post_id: string | null;
+  listing_id: string | null;
+  actor_id: string | null;
   created_at: string;
   actor: { name: string | null; username: string | null } | null;
 };
@@ -15,8 +17,10 @@ function mapNotificationRow(row: NotificationRow): Notification {
   return {
     id: row.id,
     type: row.type ?? 'system',
+    actorId: row.actor_id,
     actorName: row.actor?.name || row.actor?.username || null,
     postId: row.post_id ?? null,
+    listingId: row.listing_id ?? null,
     title: row.title,
     message: row.message,
     createdAt: row.created_at,
@@ -35,6 +39,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
     .from('notifications')
     .select(NOTIFICATION_SELECT)
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -47,7 +52,12 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
 }
 
 export async function getNotificationById(id: string): Promise<Notification | null> {
-  const { data, error } = await supabase.from('notifications').select(NOTIFICATION_SELECT).eq('id', id).single();
+  const { data, error } = await supabase
+    .from('notifications')
+    .select(NOTIFICATION_SELECT)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single();
 
   if (error || !data) return null;
 
@@ -55,11 +65,14 @@ export async function getNotificationById(id: string): Promise<Notification | nu
 }
 
 export async function deleteNotification(id: string): Promise<void> {
-  const { error } = await supabase.from('notifications').delete().eq('id', id);
+  const { error } = await supabase.from('notifications').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
 }
 
 export async function deleteAllNotifications(userId: string): Promise<void> {
-  const { error } = await supabase.from('notifications').delete().eq('user_id', userId);
+  const { error } = await supabase
+    .from('notifications')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('user_id', userId);
   if (error) throw error;
 }

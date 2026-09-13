@@ -1,13 +1,15 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
-import type { CommunityPost, CommunityPostType } from '@/types';
+import type { CommunityFeedFilter, CommunityPost, CommunityPostType, ListingStatus, ListingType } from '@/types';
 
 const PAGE_SIZE = 10;
 
 const POST_SELECT = `
   *,
   profiles!posts_user_id_fkey (name, username, avatar_url),
+  listing:plant_listings!listing_id (id, title, photo_urls, listing_type, status),
+  event:events!event_id (id, title, photo_url, event_date),
   post_likes!post_likes_post_id_fkey (count),
   likedByUser:post_likes!post_likes_post_id_fkey (count),
   post_comments!post_comments_post_id_fkey (
@@ -47,12 +49,27 @@ type PostRow = {
   image_url: string | null;
   caption: string;
   post_type: CommunityPostType | null;
+  listing_id: string | null;
+  event_id: string | null;
   created_at: string;
   profiles: {
     name: string | null;
     username: string | null;
     avatar_url: string | null;
   };
+  listing: {
+    id: string;
+    title: string;
+    photo_urls: string[];
+    listing_type: ListingType;
+    status: ListingStatus;
+  } | null;
+  event: {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    event_date: string;
+  } | null;
   post_likes: { count: number }[];
   likedByUser: { count: number }[];
   post_comments: {
@@ -81,6 +98,25 @@ function formatPost(row: PostRow): CommunityPost {
     createdAt: formatRelativeTime(row.created_at),
     imageUrl: row.image_url,
     caption: row.caption,
+    listingId: row.listing_id,
+    listingSummary: row.listing
+      ? {
+          id: row.listing.id,
+          title: row.listing.title,
+          photoUrl: row.listing.photo_urls?.[0] ?? null,
+          listingType: row.listing.listing_type,
+          status: row.listing.status,
+        }
+      : null,
+    eventId: row.event_id,
+    eventSummary: row.event
+      ? {
+          id: row.event.id,
+          title: row.event.title,
+          photoUrl: row.event.photo_url,
+          eventDate: row.event.event_date,
+        }
+      : null,
     likeCount: row.post_likes?.[0]?.count || 0,
     liked: (row.likedByUser?.[0]?.count || 0) > 0,
     comments: (row.post_comments || [])
@@ -100,7 +136,7 @@ function formatPost(row: PostRow): CommunityPost {
 export async function getCommunityPosts(
   userId: string,
   cursor: string | null = null,
-  postType: CommunityPostType | null = null,
+  filter: CommunityFeedFilter | null = null,
   authorIds: string[] | null = null
 ): Promise<CommunityFeedPage> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -121,8 +157,10 @@ export async function getCommunityPosts(
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
-  if (postType) {
-    query = query.eq('post_type', postType);
+  if (filter === 'oferta') {
+    query = query.not('listing_id', 'is', null);
+  } else if (filter) {
+    query = query.eq('post_type', filter);
   }
 
   if (authorIds) {
@@ -169,11 +207,14 @@ export async function createPost(
   userId: string,
   caption: string,
   localUri: string | null,
-  postType: CommunityPostType | null
+  postType: CommunityPostType | null,
+  existingImageUrl?: string | null,
+  listingId?: string | null,
+  eventId?: string | null
 ): Promise<string> {
-  let imageUrl: string | null = null;
+  let imageUrl: string | null = existingImageUrl ?? null;
 
-  if (localUri) {
+  if (!imageUrl && localUri) {
     const { File } = await import('expo-file-system');
 
     const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
@@ -193,7 +234,14 @@ export async function createPost(
 
   const { data, error } = await supabase
     .from('posts')
-    .insert({ user_id: userId, caption, image_url: imageUrl, post_type: postType })
+    .insert({
+      user_id: userId,
+      caption,
+      image_url: imageUrl,
+      post_type: postType,
+      listing_id: listingId ?? null,
+      event_id: eventId ?? null,
+    })
     .select('id')
     .single();
 
