@@ -2,6 +2,7 @@ export * from './AlertHost';
 export * from './AuthDivider';
 export * from './AuthLayout';
 export * from './Avatar';
+export * from './BrotoLogo';
 export * from './Card';
 export * from './CareTaskItem';
 export * from './ChatButton';

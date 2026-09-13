@@ -2,9 +2,9 @@ import { useMemo, type PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link, type Href } from 'expo-router';
-import Leaf from 'lucide-react-native/icons/leaf';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { BrotoLogo } from './BrotoLogo';
 import { OfflineBanner } from './OfflineBanner';
 
 type AuthLayoutProps = PropsWithChildren<{
@@ -26,7 +26,7 @@ export function AuthLayout({ title, subtitle, isOffline, offlineMessage, childre
       bottomOffset={Metrics.spacing.lg}
     >
       <View style={styles.logo}>
-        <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <BrotoLogo size={64} />
       </View>
 
       <Text style={styles.title}>{title}</Text>
