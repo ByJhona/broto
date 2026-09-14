@@ -34,6 +34,12 @@ function matchesQuery(listing: PlantListing, query: string): boolean {
   return listing.title.toLowerCase().includes(normalized) || (listing.description ?? '').toLowerCase().includes(normalized);
 }
 
+function matchesEventQuery(event: PlantEvent, query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+  return event.title.toLowerCase().includes(normalized) || (event.description ?? '').toLowerCase().includes(normalized);
+}
+
 function sortEvents(events: PlantEvent[], mode: EventSortMode): PlantEvent[] {
   const sorted = [...events];
   if (mode === 'proximos') {
@@ -47,6 +53,37 @@ function sortEvents(events: PlantEvent[], mode: EventSortMode): PlantEvent[] {
 type SectionListProps = {
   bottomInset: number;
 };
+
+type SearchBarProps = {
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+};
+
+function SearchBar({ value, onChangeText, placeholder }: Readonly<SearchBarProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  return (
+    <View style={styles.searchBar}>
+      <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <TextInput
+        style={styles.searchInput}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.mutedForeground}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      {value.length > 0 ? (
+        <Pressable onPress={() => onChangeText('')} hitSlop={8}>
+          <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
 
 function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
   const router = useRouter();
@@ -71,23 +108,7 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
 
   return (
     <>
-      <View style={styles.searchBar}>
-        <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-        <TextInput
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t('offersSearchPlaceholder')}
-          placeholderTextColor={colors.mutedForeground}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        {query.length > 0 ? (
-          <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchBar value={query} onChangeText={setQuery} placeholder={t('offersSearchPlaceholder')} />
 
       <FlatList
         style={styles.list}
@@ -144,6 +165,7 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
   const { events } = useEvents();
   const userLocation = useUserLocation();
   const [sortMode, setSortMode] = useState<EventSortMode>('proximos');
+  const [query, setQuery] = useState('');
   const EventIcon = EVENT_ICON;
 
   const sortOptions: { value: EventSortMode; label: string }[] = [
@@ -151,41 +173,48 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
     { value: 'recentes', label: t('sortRecent') },
   ];
 
-  const sortedEvents = useMemo(() => sortEvents(events, sortMode), [events, sortMode]);
+  const sortedEvents = useMemo(
+    () => sortEvents(events.filter((event) => matchesEventQuery(event, query)), sortMode),
+    [events, sortMode, query]
+  );
 
   return (
-    <FlatList
-      style={styles.list}
-      contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
-      data={sortedEvents}
-      keyExtractor={(event) => event.id}
-      ListHeaderComponent={<FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
-      ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
-      renderItem={({ item }) => {
-        const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
-        const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
-        const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
-        return (
-          <ListRow
-            variant="card"
-            style={styles.row}
-            leading={
-              item.photoUrl ? (
-                <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
-              ) : (
-                <View style={[styles.thumb, styles.thumbPlaceholder]}>
-                  <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-                </View>
-              )
-            }
-            title={item.title}
-            subtitle={subtitle}
-            trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
-            onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
-          />
-        );
-      }}
-    />
+    <>
+      <SearchBar value={query} onChangeText={setQuery} placeholder={t('eventsSearchPlaceholder')} />
+
+      <FlatList
+        style={styles.list}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
+        data={sortedEvents}
+        keyExtractor={(event) => event.id}
+        ListHeaderComponent={<FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
+        ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
+        renderItem={({ item }) => {
+          const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
+          const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
+          const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
+          return (
+            <ListRow
+              variant="card"
+              style={styles.row}
+              leading={
+                item.photoUrl ? (
+                  <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
+                ) : (
+                  <View style={[styles.thumb, styles.thumbPlaceholder]}>
+                    <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+                  </View>
+                )
+              }
+              title={item.title}
+              subtitle={subtitle}
+              trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+              onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
+            />
+          );
+        }}
+      />
+    </>
   );
 }
 

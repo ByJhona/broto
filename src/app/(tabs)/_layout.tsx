@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Home from 'lucide-react-native/icons/house';
 import Users from 'lucide-react-native/icons/users';
-import Sprout from 'lucide-react-native/icons/sprout';
+import Store from 'lucide-react-native/icons/store';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Scan from 'lucide-react-native/icons/scan';
 import { useMemo } from 'react';
@@ -47,7 +47,7 @@ export default function TabLayout() {
           title: t('offers'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <Sprout size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Store size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
           ),
         }}
