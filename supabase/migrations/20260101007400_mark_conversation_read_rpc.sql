@@ -6,3 +6,5 @@ as $$
   values (auth.uid(), p_other_user_id, now())
   on conflict (user_id, other_user_id) do update set last_read_at = now();
 $$;
+
+grant execute on function public.mark_conversation_read(uuid) to authenticated;
