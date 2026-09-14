@@ -159,9 +159,6 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginTop: Metrics.spacing.sm,
-    paddingTop: Metrics.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.primary,
   },
   postButton: {
     backgroundColor: colors.primary,
