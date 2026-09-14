@@ -5,7 +5,7 @@ import Search from 'lucide-react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { CommunityComposer, CommunityPostCard, IconButton, SectionTitle } from '@/components';
+import { CommunityComposer, CommunityPostCard, IconButton, SectionTitle, SegmentedControl, type SegmentedControlOption } from '@/components';
 import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost } from '@/types';
 import { useCommunityFeed, type FeedScope } from '@/hooks';
 
@@ -19,30 +19,14 @@ function getFeedFilters(t: (key: string) => string): { value: CommunityFeedFilte
   ];
 }
 
-type Styles = ReturnType<typeof makeStyles>;
-
-type CommunityScopeTabsProps = {
-  scope: FeedScope;
-  onChange: (scope: FeedScope) => void;
-  styles: Styles;
-};
-
-function CommunityScopeTabs({ scope, onChange, styles }: Readonly<CommunityScopeTabsProps>) {
-  const { t } = useTranslation('community');
-  return (
-    <View style={styles.scopeRow}>
-      <Pressable style={[styles.scopeTab, scope === 'todos' && styles.scopeTabActive]} onPress={() => onChange('todos')}>
-        <Text style={[styles.scopeTabText, scope === 'todos' && styles.scopeTabTextActive]}>{t('scopeAll')}</Text>
-      </Pressable>
-      <Pressable
-        style={[styles.scopeTab, scope === 'seguindo' && styles.scopeTabActive]}
-        onPress={() => onChange('seguindo')}
-      >
-        <Text style={[styles.scopeTabText, scope === 'seguindo' && styles.scopeTabTextActive]}>{t('scopeFollowing')}</Text>
-      </Pressable>
-    </View>
-  );
+function getScopeOptions(t: (key: string) => string): SegmentedControlOption<FeedScope>[] {
+  return [
+    { value: 'todos', label: t('scopeAll') },
+    { value: 'seguindo', label: t('scopeFollowing') },
+  ];
 }
+
+type Styles = ReturnType<typeof makeStyles>;
 
 type CommunityFilterChipsProps = {
   filter: CommunityFeedFilter | null;
@@ -77,6 +61,7 @@ type CommunityFeedHeaderProps = {
 
 function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<CommunityFeedHeaderProps>) {
   const { t } = useTranslation('community');
+  const scopeOptions = getScopeOptions(t);
   return (
     <View>
       <View style={styles.header}>
@@ -92,7 +77,7 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<Commun
       <CommunityComposer onPost={feed.handleCreatePost} />
 
       <View style={styles.filtersRow}>
-        <CommunityScopeTabs scope={feed.scope} onChange={feed.setScope} styles={styles} />
+        <SegmentedControl compact options={scopeOptions} value={feed.scope} onChange={feed.setScope} />
         <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
       </View>
 
@@ -182,29 +167,6 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     gap: Metrics.spacing.xs,
     marginBottom: Metrics.spacing.lg,
-  },
-  scopeRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.muted,
-    borderRadius: Metrics.radius.full,
-    padding: 2,
-  },
-  scopeTab: {
-    alignItems: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: Metrics.spacing.sm,
-    borderRadius: Metrics.radius.full,
-  },
-  scopeTabActive: {
-    backgroundColor: colors.card,
-  },
-  scopeTabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.mutedForeground,
-  },
-  scopeTabTextActive: {
-    color: colors.leaf,
   },
   filterChipRow: {
     flexDirection: 'row',
