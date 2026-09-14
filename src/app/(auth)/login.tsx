@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
+import { useTranslation } from '@/i18n';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { authErrorMessage } from '@/utils';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { t } = useTranslation('auth');
   const { signIn, signInWithGoogle } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [email, setEmail] = useState('');
@@ -27,7 +29,7 @@ export default function LoginScreen() {
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
-      setError('Preencha seu e-mail e senha.');
+      setError(t('fillEmailAndPassword'));
       return;
     }
 
@@ -36,7 +38,7 @@ export default function LoginScreen() {
       await signIn(trimmedEmail, password);
       goToApp();
     } catch (err) {
-      setError(authErrorMessage(err, 'Não foi possível entrar. Tente novamente.'));
+      setError(authErrorMessage(err, t('signInError')));
     } finally {
       setIsSubmitting(false);
     }
@@ -49,7 +51,7 @@ export default function LoginScreen() {
       const result = await signInWithGoogle();
       if (result) goToApp();
     } catch (err) {
-      setError(authErrorMessage(err, 'Não foi possível continuar com o Google. Tente novamente.'));
+      setError(authErrorMessage(err, t('googleSignInError')));
     } finally {
       setIsGoogleSubmitting(false);
     }
@@ -57,25 +59,25 @@ export default function LoginScreen() {
 
   return (
     <AuthLayout
-      title="Bem-vindo de volta"
-      subtitle="Entre para continuar cuidando das suas plantas"
+      title={t('loginTitle')}
+      subtitle={t('loginSubtitle')}
       isOffline={isOffline}
-      offlineMessage="Sem conexão — entrar exige internet."
+      offlineMessage={t('loginOfflineMessage')}
     >
       <FormField
-        label="E-mail"
+        label={t('emailLabel')}
         value={email}
         onChangeText={setEmail}
-        placeholder="voce@email.com"
+        placeholder={t('emailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
       />
       <FormField
-        label="Senha"
+        label={t('passwordLabel')}
         value={password}
         onChangeText={setPassword}
-        placeholder="Sua senha"
+        placeholder={t('passwordPlaceholder')}
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}
@@ -84,18 +86,18 @@ export default function LoginScreen() {
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label="Entrar" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
+      <SubmitButton label={t('loginCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
 
-      <AuthDivider label="ou" />
+      <AuthDivider label={t('or')} />
 
       <GoogleSignInButton
-        label="Continuar com Google"
+        label={t('continueWithGoogle')}
         onPress={handleGoogleSignIn}
         loading={isGoogleSubmitting}
         disabled={isOffline || isSubmitting}
       />
 
-      <AuthFooterLink href="/(auth)/signup" label="Não tem conta? Cadastre-se" />
+      <AuthFooterLink href="/(auth)/signup" label={t('noAccountSignupLink')} />
     </AuthLayout>
   );
 }

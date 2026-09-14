@@ -4,6 +4,7 @@ import { Link, useRouter } from 'expo-router';
 import MailCheck from 'lucide-react-native/icons/mail-check';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
+import { useTranslation } from '@/i18n';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { isUsernameAvailable } from '@/services';
 import { authErrorMessage, normalizeUsername, validateUsername } from '@/utils';
@@ -12,6 +13,7 @@ export default function SignupScreen() {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('auth');
   const { signUp, signInWithGoogle } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [name, setName] = useState('');
@@ -39,7 +41,7 @@ export default function SignupScreen() {
     const trimmedEmail = email.trim();
 
     if (!trimmedName) {
-      setError('Digite seu nome.');
+      setError(t('nameRequired'));
       return;
     }
     const usernameError = validateUsername(username);
@@ -48,11 +50,11 @@ export default function SignupScreen() {
       return;
     }
     if (!trimmedEmail) {
-      setError('Digite seu e-mail.');
+      setError(t('emailRequired'));
       return;
     }
     if (password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.');
+      setError(t('passwordMinLength'));
       return;
     }
 
@@ -60,7 +62,7 @@ export default function SignupScreen() {
     try {
       const available = await isUsernameAvailable(normalizedUsername);
       if (!available) {
-        setError('Esse nome de usuário já está em uso.');
+        setError(t('usernameTaken'));
         return;
       }
 
@@ -71,7 +73,7 @@ export default function SignupScreen() {
         goToApp();
       }
     } catch (err) {
-      setError(authErrorMessage(err, 'Não foi possível criar a conta. Tente novamente.'));
+      setError(authErrorMessage(err, t('signupError')));
     } finally {
       setIsSubmitting(false);
     }
@@ -84,7 +86,7 @@ export default function SignupScreen() {
       const result = await signInWithGoogle();
       if (result) goToApp();
     } catch (err) {
-      setError(authErrorMessage(err, 'Não foi possível continuar com o Google. Tente novamente.'));
+      setError(authErrorMessage(err, t('googleSignInError')));
     } finally {
       setIsGoogleSubmitting(false);
     }
@@ -94,12 +96,12 @@ export default function SignupScreen() {
     return (
       <View style={styles.confirmContainer}>
         <MailCheck size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.confirmTitle}>Confirme seu e-mail</Text>
+        <Text style={styles.confirmTitle}>{t('confirmEmailTitle')}</Text>
         <Text style={styles.confirmSubtitle}>
-          Enviamos um link de confirmação para {email}. Abra-o para ativar sua conta e depois volte para entrar.
+          {t('confirmEmailMessage', { email })}
         </Text>
         <Link href="/(auth)/login" style={styles.confirmLink}>
-          <Text style={styles.confirmLinkText}>Voltar para o login</Text>
+          <Text style={styles.confirmLinkText}>{t('backToLogin')}</Text>
         </Link>
       </View>
     );
@@ -107,38 +109,38 @@ export default function SignupScreen() {
 
   return (
     <AuthLayout
-      title="Crie sua conta"
-      subtitle="Comece a cuidar do seu jardim hoje"
+      title={t('signupTitle')}
+      subtitle={t('signupSubtitle')}
       isOffline={isOffline}
-      offlineMessage="Sem conexão — criar conta exige internet."
+      offlineMessage={t('signupOfflineMessage')}
     >
-      <FormField label="Nome" value={name} onChangeText={setName} placeholder="Seu nome" autoComplete="name" />
+      <FormField label={t('nameLabel')} value={name} onChangeText={setName} placeholder={t('namePlaceholder')} autoComplete="name" />
       <FormField
-        label="Nome de usuário"
+        label={t('usernameLabel')}
         value={username}
         onChangeText={setUsername}
-        placeholder="seunome"
+        placeholder={t('usernamePlaceholder')}
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="username"
       />
       <Text style={styles.hint}>
-        Só letras minúsculas, números e underline, começando com uma letra. De 3 a 20 caracteres, sem espaços.
+        {t('usernameHint')}
       </Text>
       <FormField
-        label="E-mail"
+        label={t('emailLabel')}
         value={email}
         onChangeText={setEmail}
-        placeholder="voce@email.com"
+        placeholder={t('emailPlaceholder')}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
       />
       <FormField
-        label="Senha"
+        label={t('passwordLabel')}
         value={password}
         onChangeText={setPassword}
-        placeholder="Mínimo 6 caracteres"
+        placeholder={t('passwordMinPlaceholder')}
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}
@@ -147,18 +149,18 @@ export default function SignupScreen() {
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label="Criar conta" onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
+      <SubmitButton label={t('signupCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
 
-      <AuthDivider label="ou" />
+      <AuthDivider label={t('or')} />
 
       <GoogleSignInButton
-        label="Continuar com Google"
+        label={t('continueWithGoogle')}
         onPress={handleGoogleSignIn}
         loading={isGoogleSubmitting}
         disabled={isOffline || isSubmitting}
       />
 
-      <AuthFooterLink href="/(auth)/login" label="Já tem conta? Entrar" />
+      <AuthFooterLink href="/(auth)/login" label={t('haveAccountLoginLink')} />
     </AuthLayout>
   );
 }
