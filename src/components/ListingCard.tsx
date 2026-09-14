@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { LISTING_STATUS_LABELS, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
+import { listingStatusLabel, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
 import { LISTING_STATUS, type PlantListing } from '@/types';
 import { StatusBadge } from './StatusBadge';
 
@@ -22,7 +22,7 @@ export function ListingCard({ listing, distanceLabel, onPress }: Readonly<Listin
   const label = listingBadgeLabel(listing.listingType, listing.priceCents);
   const coverPhotoUrl = listing.photoUrls[0] ?? null;
   const metaLine = [listing.ownerName, distanceLabel].filter(Boolean).join(' · ');
-  const statusLabel = listing.status === LISTING_STATUS.AVAILABLE ? null : LISTING_STATUS_LABELS[listing.status];
+  const statusLabel = listing.status === LISTING_STATUS.AVAILABLE ? null : listingStatusLabel(listing.status);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>

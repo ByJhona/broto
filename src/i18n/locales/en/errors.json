@@ -1,0 +1,10 @@
+{
+  "googleSignInUnavailable": "Google sign-in is unavailable right now.",
+  "invalidCredentials": "Incorrect email or password.",
+  "emailNotConfirmed": "Confirm your email before signing in. Check your inbox.",
+  "userAlreadyRegistered": "An account with this email already exists.",
+  "passwordTooShort": "Password must be at least 6 characters.",
+  "invalidEmail": "Enter a valid email address.",
+  "usernameTaken": "This username is already taken.",
+  "networkError": "No internet connection. Please try again."
+}

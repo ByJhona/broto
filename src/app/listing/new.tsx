@@ -19,7 +19,7 @@ import {
 } from '@/components';
 import { usePlants } from '@/hooks';
 import { MAX_LISTING_PHOTOS } from '@/services';
-import { LISTING_SHARE_VERB, LISTING_TYPES, pickPhoto } from '@/utils';
+import { listingShareVerb, listingTypes, pickPhoto } from '@/utils';
 import { LISTING_TYPE, type ListingType } from '@/types';
 
 export default function NewListingScreen() {
@@ -28,6 +28,7 @@ export default function NewListingScreen() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { plants } = usePlants();
+  const listingTypeOptions = listingTypes();
 
   const [listingType, setListingType] = useState<ListingType>(LISTING_TYPE.DONATION);
   const [plantId, setPlantId] = useState<string | null>(null);
@@ -109,7 +110,7 @@ export default function NewListingScreen() {
 
         <Card style={styles.section}>
           <SectionTitle>Tipo de oferta</SectionTitle>
-          <PillSelector options={LISTING_TYPES} value={listingType} onChange={setListingType} />
+          <PillSelector options={listingTypeOptions} value={listingType} onChange={setListingType} />
 
           {isSale ? (
             <View style={styles.priceField}>
@@ -146,7 +147,7 @@ export default function NewListingScreen() {
             label="Comentário na Comunidade (opcional)"
             value={communityCaption}
             onChangeText={setCommunityCaption}
-            placeholder={`${LISTING_SHARE_VERB[listingType]} "${title || 'sua planta'}"!`}
+            placeholder={`${listingShareVerb(listingType)} "${title || 'sua planta'}"!`}
             multiline
           />
         ) : null}

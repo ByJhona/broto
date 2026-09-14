@@ -1,0 +1,8 @@
+{
+  "usernameRequired": "Digite um nome de usuário.",
+  "usernameNoSpaces": "Nome de usuário não pode ter espaços.",
+  "usernameInvalidChars": "Nome de usuário só pode ter letras, números e underline (_).",
+  "usernameMustStartWithLetter": "Nome de usuário deve começar com uma letra.",
+  "usernameTooShort": "Nome de usuário deve ter no mínimo {{min}} caracteres.",
+  "usernameTooLong": "Nome de usuário deve ter no máximo {{max}} caracteres."
+}

@@ -1,0 +1,10 @@
+{
+  "watering": "Regar",
+  "misting": "Borrifar",
+  "soil_check": "Checar solo",
+  "fertilizing": "Adubar",
+  "pruning": "Podar",
+  "purchase": "Comprar",
+  "growth_check": "Analisar planta",
+  "other": "Outro"
+}

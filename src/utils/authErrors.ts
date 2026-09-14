@@ -1,31 +1,33 @@
+import { i18n } from '@/i18n';
+
 export function authErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback;
 
   const message = error.message;
 
   if (message.includes('GOOGLE_SIGNIN_NOT_CONFIGURED')) {
-    return 'Login com Google está indisponível no momento.';
+    return i18n.t('errors:googleSignInUnavailable');
   }
   if (message.includes('Invalid login credentials')) {
-    return 'E-mail ou senha incorretos.';
+    return i18n.t('errors:invalidCredentials');
   }
   if (message.includes('Email not confirmed')) {
-    return 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.';
+    return i18n.t('errors:emailNotConfirmed');
   }
   if (message.includes('User already registered')) {
-    return 'Já existe uma conta com esse e-mail.';
+    return i18n.t('errors:userAlreadyRegistered');
   }
   if (message.includes('Password should be at least')) {
-    return 'A senha deve ter no mínimo 6 caracteres.';
+    return i18n.t('errors:passwordTooShort');
   }
   if (message.includes('Unable to validate email address') || message.includes('invalid format')) {
-    return 'Digite um e-mail válido.';
+    return i18n.t('errors:invalidEmail');
   }
   if (message.includes('profiles_username_key')) {
-    return 'Esse nome de usuário já está em uso.';
+    return i18n.t('errors:usernameTaken');
   }
   if (message.includes('Network request failed')) {
-    return 'Sem conexão com a internet. Tente novamente.';
+    return i18n.t('errors:networkError');
   }
 
   return message;

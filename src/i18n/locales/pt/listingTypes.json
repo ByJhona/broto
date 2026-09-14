@@ -1,0 +1,16 @@
+{
+  "donation": "Doação",
+  "exchange": "Troca",
+  "discard": "Resgate",
+  "sale": "Venda",
+  "shareVerb_donation": "Estou doando",
+  "shareVerb_exchange": "Quero trocar",
+  "shareVerb_discard": "Preciso me desfazer de",
+  "shareVerb_sale": "Estou vendendo",
+  "status_completed": "Concluída",
+  "status_cancelled": "Cancelada",
+  "status_expired": "Expirada",
+  "notice_completed": "Essa oferta já foi concluída.",
+  "notice_cancelled": "Essa oferta foi cancelada.",
+  "notice_expired": "Essa oferta expirou."
+}

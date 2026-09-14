@@ -1,0 +1,16 @@
+{
+  "donation": "Donation",
+  "exchange": "Exchange",
+  "discard": "Rescue",
+  "sale": "Sale",
+  "shareVerb_donation": "I'm giving away",
+  "shareVerb_exchange": "I want to trade",
+  "shareVerb_discard": "I need to rehome",
+  "shareVerb_sale": "I'm selling",
+  "status_completed": "Completed",
+  "status_cancelled": "Cancelled",
+  "status_expired": "Expired",
+  "notice_completed": "This listing has already been completed.",
+  "notice_cancelled": "This listing was cancelled.",
+  "notice_expired": "This listing has expired."
+}

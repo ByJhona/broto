@@ -1,0 +1,7 @@
+{
+  "shade": "Shade",
+  "partial_shade": "Partial shade",
+  "medium": "Indirect light",
+  "bright_indirect": "Bright indirect light",
+  "full_sun": "Full sun"
+}

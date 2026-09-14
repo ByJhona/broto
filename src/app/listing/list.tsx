@@ -8,15 +8,10 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EmptyState, FilterChipRow, ListRow } from '@/components';
 import { useListings, useUserLocation } from '@/hooks';
-import { formatDistanceTo, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, LISTING_TYPE_LABELS, LISTING_TYPES } from '@/utils';
+import { formatDistanceTo, listingTypeLabel, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingTypes } from '@/utils';
 import type { ListingType } from '@/types';
 
 type TypeFilter = ListingType | null;
-
-const FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
-  { value: null, label: 'Tudo' },
-  ...LISTING_TYPES.map(({ value, label }) => ({ value, label })),
-];
 
 export default function ListingListScreen() {
   const router = useRouter();
@@ -26,6 +21,11 @@ export default function ListingListScreen() {
   const { listings } = useListings();
   const userLocation = useUserLocation();
   const [filter, setFilter] = useState<TypeFilter>(null);
+
+  const filterOptions: { value: TypeFilter; label: string }[] = [
+    { value: null, label: 'Tudo' },
+    ...listingTypes().map(({ value, label }) => ({ value, label })),
+  ];
 
   const filteredListings = useMemo(
     () => (filter ? listings.filter((listing) => listing.listingType === filter) : listings),
@@ -38,12 +38,12 @@ export default function ListingListScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
       data={filteredListings}
       keyExtractor={(listing) => listing.id}
-      ListHeaderComponent={<FilterChipRow options={FILTER_OPTIONS} value={filter} onChange={setFilter} style={styles.filterRow} />}
+      ListHeaderComponent={<FilterChipRow options={filterOptions} value={filter} onChange={setFilter} style={styles.filterRow} />}
       ListEmptyComponent={<EmptyState icon={Leaf} message="Nenhuma oferta encontrada." style={styles.empty} />}
       renderItem={({ item }) => {
         const Icon = LISTING_TYPE_ICONS[item.listingType];
         const color = LISTING_TYPE_COLORS[item.listingType];
-        const label = LISTING_TYPE_LABELS[item.listingType];
+        const label = listingTypeLabel(item.listingType);
         const coverPhotoUrl = item.photoUrls[0] ?? null;
         const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
         const subtitle = [item.ownerName, distanceLabel].filter(Boolean).join(' · ') || undefined;

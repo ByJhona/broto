@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { MAX_POST_PHOTOS } from '@/services';
 import type { CommunityPostType } from '@/types';
-import { COMMUNITY_POST_TYPES, pickPhoto } from '@/utils';
+import { communityPostTypes, pickPhoto } from '@/utils';
 import { Card } from './Card';
 import { PhotoGrid } from './PhotoGrid';
 
@@ -19,6 +19,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
   const [postType, setPostType] = useState<CommunityPostType | null>(null);
   const [isPosting, setIsPosting] = useState(false);
   const canPost = (text.trim().length > 0 || imageUris.length > 0) && !isPosting;
+  const postTypeOptions = communityPostTypes();
 
   const handleAttachPhoto = async () => {
     const uri = await pickPhoto();
@@ -46,7 +47,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
   return (
     <Card style={styles.card}>
       <View style={styles.typeRow}>
-        {COMMUNITY_POST_TYPES.map((type) => {
+        {postTypeOptions.map((type) => {
           const selected = postType === type.value;
           const Icon = type.icon;
           return (

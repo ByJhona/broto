@@ -1,0 +1,19 @@
+{
+  "loadingPlan": "Carregando...",
+  "unlimitedCredits": "Créditos ilimitados",
+  "creditsPerWeek": "{{count}} créditos por semana",
+  "creditsPerMonth": "{{count}} créditos por mês",
+  "freePlanName": "Plano Gratuito",
+  "myPlan": "Meu plano",
+  "seeAvailablePlans": "Ver planos disponíveis",
+  "manageSubscription": "Gerenciar assinatura",
+  "manageSubscriptionFallback": "Tente gerenciar sua assinatura direto na loja do app.",
+  "appearance": "Aparência",
+  "themeLight": "Claro",
+  "themeDark": "Escuro",
+  "themeSystem": "Sistema",
+  "language": "Idioma",
+  "settings": "Configurações",
+  "editProfile": "Editar perfil",
+  "signOut": "Sair da conta"
+}

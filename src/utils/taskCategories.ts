@@ -7,19 +7,23 @@ import ShoppingCart from 'lucide-react-native/icons/shopping-cart';
 import SprayCan from 'lucide-react-native/icons/spray-can';
 import Sprout from 'lucide-react-native/icons/sprout';
 import type { LucideIcon } from 'lucide-react-native';
+import { useTranslation } from '@/i18n';
 import { TASK_CATEGORY, type TaskCategory } from '@/types';
 
-export const TASK_CATEGORIES: { value: TaskCategory; label: string; icon: LucideIcon }[] = [
-  { value: TASK_CATEGORY.WATERING, label: 'Regar', icon: Droplet },
-  { value: TASK_CATEGORY.MISTING, label: 'Borrifar', icon: SprayCan },
-  { value: TASK_CATEGORY.SOIL_CHECK, label: 'Checar solo', icon: Sprout },
-  { value: TASK_CATEGORY.FERTILIZING, label: 'Adubar', icon: Leaf },
-  { value: TASK_CATEGORY.PRUNING, label: 'Podar', icon: Scissors },
-  { value: TASK_CATEGORY.PURCHASE, label: 'Comprar', icon: ShoppingCart },
-  { value: TASK_CATEGORY.GROWTH_CHECK, label: 'Analisar planta', icon: Camera },
-  { value: TASK_CATEGORY.OTHER, label: 'Outro', icon: CircleDot },
-];
+const TASK_CATEGORY_VALUES: TaskCategory[] = Object.values(TASK_CATEGORY);
 
-export const CATEGORY_ICONS: Record<TaskCategory, LucideIcon> = Object.fromEntries(
-  TASK_CATEGORIES.map((item) => [item.value, item.icon])
-) as Record<TaskCategory, LucideIcon>;
+export const CATEGORY_ICONS: Record<TaskCategory, LucideIcon> = {
+  [TASK_CATEGORY.WATERING]: Droplet,
+  [TASK_CATEGORY.MISTING]: SprayCan,
+  [TASK_CATEGORY.SOIL_CHECK]: Sprout,
+  [TASK_CATEGORY.FERTILIZING]: Leaf,
+  [TASK_CATEGORY.PRUNING]: Scissors,
+  [TASK_CATEGORY.PURCHASE]: ShoppingCart,
+  [TASK_CATEGORY.GROWTH_CHECK]: Camera,
+  [TASK_CATEGORY.OTHER]: CircleDot,
+};
+
+export function useTaskCategories(): { value: TaskCategory; label: string; icon: LucideIcon }[] {
+  const { t } = useTranslation('taskCategories');
+  return TASK_CATEGORY_VALUES.map((value) => ({ value, label: t(value), icon: CATEGORY_ICONS[value] }));
+}

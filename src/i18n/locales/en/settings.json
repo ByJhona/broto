@@ -1,0 +1,19 @@
+{
+  "loadingPlan": "Loading...",
+  "unlimitedCredits": "Unlimited credits",
+  "creditsPerWeek": "{{count}} credits per week",
+  "creditsPerMonth": "{{count}} credits per month",
+  "freePlanName": "Free Plan",
+  "myPlan": "My plan",
+  "seeAvailablePlans": "See available plans",
+  "manageSubscription": "Manage subscription",
+  "manageSubscriptionFallback": "Try managing your subscription directly from the app store.",
+  "appearance": "Appearance",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
+  "language": "Language",
+  "settings": "Settings",
+  "editProfile": "Edit profile",
+  "signOut": "Sign out"
+}

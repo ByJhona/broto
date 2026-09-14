@@ -1,5 +1,7 @@
-const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+import { i18n } from '@/i18n';
 
 export function formatPrice(cents: number): string {
-  return currencyFormatter.format(cents / 100);
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR';
+  const formatter = new Intl.NumberFormat(locale, { style: 'currency', currency: 'BRL' });
+  return formatter.format(cents / 100);
 }

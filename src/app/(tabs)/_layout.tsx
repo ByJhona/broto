@@ -1,4 +1,5 @@
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Home from 'lucide-react-native/icons/house';
@@ -11,6 +12,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function TabLayout() {
   const colors = useColors();
+  const { t } = useTranslation('tabs');
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Tabs
@@ -31,7 +33,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Início',
+          title: t('home'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Home size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
@@ -42,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Comunidade',
+          title: t('community'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Users size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
@@ -53,7 +55,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="photo"
         options={{
-          title: 'Foto',
+          title: t('photo'),
           tabBarLabel: '',
           tabBarButton: (props) => (
             <TouchableOpacity
@@ -71,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="garden"
         options={{
-          title: 'Meu jardim',
+          title: t('garden'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Leaf size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
@@ -82,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="help"
         options={{
-          title: 'Ajuda',
+          title: t('help'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <CircleHelp size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />

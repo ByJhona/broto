@@ -1,0 +1,8 @@
+{
+  "likeTitle": "Nova curtida",
+  "likeMessage": "{{actor}} acabou de curtir a sua foto!",
+  "commentTitle": "Novo recado",
+  "commentMessage": "{{actor}} deixou um recado na sua foto!",
+  "listingInterestTitle": "Interesse na sua oferta",
+  "listingInterestMessage": "{{actor}} se interessou pela planta que você ofereceu!"
+}

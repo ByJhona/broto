@@ -10,22 +10,22 @@ import Moon from 'lucide-react-native/icons/moon';
 import Sun from 'lucide-react-native/icons/sun';
 import User from 'lucide-react-native/icons/user';
 import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference } from '@/theme';
+import { useLanguage, useTranslation, type Language } from '@/i18n';
 import { Avatar, Card, PlanCard, SettingsListItem } from '@/components';
 import { useAuth, useCredits } from '@/hooks';
 import { manageSubscriptions, getProfile, type CreditsState } from '@/services';
 import { Toast } from '@/utils';
 
-function getPlanDescription(credits: CreditsState | null): string {
-  if (!credits) return 'Carregando...';
-  if (credits.monthlyCredits == null) return 'Créditos ilimitados';
-  const period = credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês';
-  return `${credits.monthlyCredits} créditos por ${period}`;
+function getPlanDescription(credits: CreditsState | null, t: (key: string, options?: Record<string, unknown>) => string): string {
+  if (!credits) return t('loadingPlan');
+  if (credits.monthlyCredits == null) return t('unlimitedCredits');
+  if (credits.creditRenewalPeriod === 'weekly') return t('creditsPerWeek', { count: credits.monthlyCredits });
+  return t('creditsPerMonth', { count: credits.monthlyCredits });
 }
 
-const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
-  { value: 'light', label: 'Claro', icon: Sun },
-  { value: 'dark', label: 'Escuro', icon: Moon },
-  { value: 'system', label: 'Sistema', icon: Monitor },
+const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
+  { value: 'pt', label: 'Português' },
+  { value: 'en', label: 'English' },
 ];
 
 export default function ProfileSettingsScreen() {
@@ -33,7 +33,9 @@ export default function ProfileSettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('settings');
   const { preference, setPreference } = useAppTheme();
+  const { language, setLanguage } = useLanguage();
   const { session, user, signOut } = useAuth();
   const { credits } = useCredits();
   const { data: profile = null } = useQuery({
@@ -41,6 +43,12 @@ export default function ProfileSettingsScreen() {
     queryFn: () => getProfile(user!.id),
     enabled: !!user?.id,
   });
+
+  const THEME_OPTIONS: { value: ThemePreference; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: t('themeLight'), icon: Sun },
+    { value: 'dark', label: t('themeDark'), icon: Moon },
+    { value: 'system', label: t('themeSystem'), icon: Monitor },
+  ];
 
   const name = profile?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
 
@@ -50,11 +58,11 @@ export default function ProfileSettingsScreen() {
 
   const currentPlan = {
     id: credits?.planId ?? 'free',
-    name: credits?.planName ?? 'Plano Gratuito',
-    description: getPlanDescription(credits),
+    name: credits?.planName ?? t('freePlanName'),
+    description: getPlanDescription(credits, t),
   };
 
-  const settingsItems = [{ icon: User, label: 'Editar perfil', onPress: () => router.push('/profile/edit') }];
+  const settingsItems = [{ icon: User, label: t('editProfile'), onPress: () => router.push('/profile/edit') }];
 
   const handleSignOut = async () => {
     await signOut();
@@ -64,7 +72,7 @@ export default function ProfileSettingsScreen() {
     try {
       await manageSubscriptions();
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Tente gerenciar sua assinatura direto na loja do app.');
+      Toast.error(err instanceof Error ? err.message : t('manageSubscriptionFallback'));
     }
   };
 
@@ -83,21 +91,21 @@ export default function ProfileSettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Meu plano</Text>
+        <Text style={styles.sectionTitle}>{t('myPlan')}</Text>
         <PlanCard
           plan={currentPlan}
-          ctaLabel="Ver planos disponíveis"
+          ctaLabel={t('seeAvailablePlans')}
           onPressCta={() => router.push('/profile/plans')}
         />
         {currentPlan.id !== 'free' ? (
           <Card style={[styles.list, styles.manageSubscriptionList]}>
-            <SettingsListItem icon={CreditCard} label="Gerenciar assinatura" onPress={handleManageSubscription} isLast />
+            <SettingsListItem icon={CreditCard} label={t('manageSubscription')} onPress={handleManageSubscription} isLast />
           </Card>
         ) : null}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Aparência</Text>
+        <Text style={styles.sectionTitle}>{t('appearance')}</Text>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((option) => {
             const Icon = option.icon;
@@ -123,7 +131,27 @@ export default function ProfileSettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Configurações</Text>
+        <Text style={styles.sectionTitle}>{t('language')}</Text>
+        <View style={styles.themeRow}>
+          {LANGUAGE_OPTIONS.map((option) => {
+            const selected = language === option.value;
+            return (
+              <Pressable
+                key={option.value}
+                style={[styles.themeOption, selected && styles.themeOptionSelected]}
+                onPress={() => setLanguage(option.value)}
+              >
+                <Text style={[styles.themeOptionText, selected && styles.themeOptionTextSelected]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('settings')}</Text>
         <Card style={styles.list}>
           {settingsItems.map((item, index) => (
             <SettingsListItem key={item.label} {...item} isLast={index === settingsItems.length - 1} />
@@ -133,7 +161,7 @@ export default function ProfileSettingsScreen() {
 
       <Pressable style={styles.logoutButton} onPress={handleSignOut}>
         <LogOut size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.logoutText}>Sair da conta</Text>
+        <Text style={styles.logoutText}>{t('signOut')}</Text>
       </Pressable>
     </ScrollView>
   );

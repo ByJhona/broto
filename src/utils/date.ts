@@ -1,8 +1,14 @@
+import { i18n } from '@/i18n';
+
 function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function intlLocale(): string {
+  return i18n.language === 'en' ? 'en-US' : 'pt-BR';
 }
 
 export function addDays(date: string, days: number): string {
@@ -23,13 +29,14 @@ export function daysBetween(from: string, to: string): number {
 
 export function formatShortDate(iso: string): string {
   const date = new Date(iso);
-  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const dayMonth = date.toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' });
   return `${dayMonth} ${date.getFullYear()}`;
 }
 
 export function formatEventDateTime(iso: string): string {
   const date = new Date(iso);
-  const datePart = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const timePart = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  return `${datePart} às ${timePart}`;
+  const locale = intlLocale();
+  const datePart = date.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
+  const timePart = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  return `${datePart} ${i18n.t('common:dateTimeJoiner')} ${timePart}`;
 }

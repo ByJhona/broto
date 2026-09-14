@@ -1,3 +1,5 @@
+import { i18n } from '@/i18n';
+
 const USERNAME_MIN_LENGTH = 3;
 const USERNAME_MAX_LENGTH = 20;
 
@@ -9,22 +11,22 @@ export function validateUsername(raw: string): string | null {
   const username = normalizeUsername(raw);
 
   if (!username) {
-    return 'Digite um nome de usuário.';
+    return i18n.t('validation:usernameRequired');
   }
   if (/\s/.test(username)) {
-    return 'Nome de usuário não pode ter espaços.';
+    return i18n.t('validation:usernameNoSpaces');
   }
   if (!/^[a-z0-9_]+$/.test(username)) {
-    return 'Nome de usuário só pode ter letras, números e underline (_).';
+    return i18n.t('validation:usernameInvalidChars');
   }
   if (!/^[a-z]/.test(username)) {
-    return 'Nome de usuário deve começar com uma letra.';
+    return i18n.t('validation:usernameMustStartWithLetter');
   }
   if (username.length < USERNAME_MIN_LENGTH) {
-    return `Nome de usuário deve ter no mínimo ${USERNAME_MIN_LENGTH} caracteres.`;
+    return i18n.t('validation:usernameTooShort', { min: USERNAME_MIN_LENGTH });
   }
   if (username.length > USERNAME_MAX_LENGTH) {
-    return `Nome de usuário deve ter no máximo ${USERNAME_MAX_LENGTH} caracteres.`;
+    return i18n.t('validation:usernameTooLong', { max: USERNAME_MAX_LENGTH });
   }
 
   return null;

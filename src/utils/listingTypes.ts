@@ -3,48 +3,54 @@ import Gift from 'lucide-react-native/icons/gift';
 import LifeBuoy from 'lucide-react-native/icons/life-buoy';
 import Tag from 'lucide-react-native/icons/tag';
 import type { LucideIcon } from 'lucide-react-native';
+import { i18n } from '@/i18n';
 import { LISTING_STATUS, LISTING_TYPE, type ListingStatus, type ListingType } from '@/types';
 import { formatPrice } from './currency';
 
-export const LISTING_TYPES: { value: ListingType; label: string; icon: LucideIcon; color: string }[] = [
-  { value: LISTING_TYPE.DONATION, label: 'Doação', icon: Gift, color: '#3B82F6' },
-  { value: LISTING_TYPE.EXCHANGE, label: 'Troca', icon: ArrowLeftRight, color: '#A855F7' },
-  { value: LISTING_TYPE.DISCARD, label: 'Resgate', icon: LifeBuoy, color: '#F59E0B' },
-  { value: LISTING_TYPE.SALE, label: 'Venda', icon: Tag, color: '#10B981' },
-];
+const LISTING_TYPE_VALUES: ListingType[] = Object.values(LISTING_TYPE);
 
-export const LISTING_TYPE_ICONS: Record<ListingType, LucideIcon> = Object.fromEntries(
-  LISTING_TYPES.map((item) => [item.value, item.icon])
-) as Record<ListingType, LucideIcon>;
-
-export const LISTING_TYPE_COLORS: Record<ListingType, string> = Object.fromEntries(
-  LISTING_TYPES.map((item) => [item.value, item.color])
-) as Record<ListingType, string>;
-
-export const LISTING_TYPE_LABELS: Record<ListingType, string> = Object.fromEntries(
-  LISTING_TYPES.map((item) => [item.value, item.label])
-) as Record<ListingType, string>;
-
-export const LISTING_SHARE_VERB: Record<ListingType, string> = {
-  [LISTING_TYPE.DONATION]: 'Estou doando',
-  [LISTING_TYPE.EXCHANGE]: 'Quero trocar',
-  [LISTING_TYPE.DISCARD]: 'Preciso me desfazer de',
-  [LISTING_TYPE.SALE]: 'Estou vendendo',
+export const LISTING_TYPE_ICONS: Record<ListingType, LucideIcon> = {
+  [LISTING_TYPE.DONATION]: Gift,
+  [LISTING_TYPE.EXCHANGE]: ArrowLeftRight,
+  [LISTING_TYPE.DISCARD]: LifeBuoy,
+  [LISTING_TYPE.SALE]: Tag,
 };
+
+export const LISTING_TYPE_COLORS: Record<ListingType, string> = {
+  [LISTING_TYPE.DONATION]: '#3B82F6',
+  [LISTING_TYPE.EXCHANGE]: '#A855F7',
+  [LISTING_TYPE.DISCARD]: '#F59E0B',
+  [LISTING_TYPE.SALE]: '#10B981',
+};
+
+export function listingTypeLabel(listingType: ListingType): string {
+  return i18n.t(`listingTypes:${listingType}`);
+}
+
+export function listingTypes(): { value: ListingType; label: string; icon: LucideIcon; color: string }[] {
+  return LISTING_TYPE_VALUES.map((value) => ({
+    value,
+    label: listingTypeLabel(value),
+    icon: LISTING_TYPE_ICONS[value],
+    color: LISTING_TYPE_COLORS[value],
+  }));
+}
+
+export function listingShareVerb(listingType: ListingType): string {
+  return i18n.t(`listingTypes:shareVerb_${listingType}`);
+}
 
 export function listingBadgeLabel(listingType: ListingType, priceCents: number | null): string {
   if (listingType === LISTING_TYPE.SALE && priceCents != null) return formatPrice(priceCents);
-  return LISTING_TYPE_LABELS[listingType];
+  return listingTypeLabel(listingType);
 }
 
-export const LISTING_STATUS_LABELS: Partial<Record<ListingStatus, string>> = {
-  [LISTING_STATUS.COMPLETED]: 'Concluída',
-  [LISTING_STATUS.CANCELLED]: 'Cancelada',
-  [LISTING_STATUS.EXPIRED]: 'Expirada',
-};
+export function listingStatusLabel(status: ListingStatus): string | undefined {
+  if (status === LISTING_STATUS.AVAILABLE) return undefined;
+  return i18n.t(`listingTypes:status_${status}`);
+}
 
-export const LISTING_STATUS_NOTICES: Partial<Record<ListingStatus, string>> = {
-  [LISTING_STATUS.COMPLETED]: 'Essa oferta já foi concluída.',
-  [LISTING_STATUS.CANCELLED]: 'Essa oferta foi cancelada.',
-  [LISTING_STATUS.EXPIRED]: 'Essa oferta expirou.',
-};
+export function listingStatusNotice(status: ListingStatus): string | undefined {
+  if (status === LISTING_STATUS.AVAILABLE) return undefined;
+  return i18n.t(`listingTypes:notice_${status}`);
+}

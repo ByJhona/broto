@@ -40,11 +40,11 @@ import {
   Alert,
   confirm,
   formatPrice,
-  LISTING_SHARE_VERB,
-  LISTING_STATUS_NOTICES,
+  listingShareVerb,
+  listingStatusNotice,
   LISTING_TYPE_COLORS,
   LISTING_TYPE_ICONS,
-  LISTING_TYPE_LABELS,
+  listingTypeLabel,
   Toast,
   type AlertButton,
 } from '@/utils';
@@ -84,7 +84,7 @@ type ListingStatusNoticeProps = {
 
 function ListingStatusNotice({ status, style }: Readonly<ListingStatusNoticeProps>) {
   if (status === LISTING_STATUS.AVAILABLE) return null;
-  return <Text style={style}>{LISTING_STATUS_NOTICES[status]}</Text>;
+  return <Text style={style}>{listingStatusNotice(status)}</Text>;
 }
 
 type ListingProposalsBlockProps = {
@@ -334,7 +334,7 @@ export default function ListingDetailScreen() {
   };
 
   const handleOpenShareModal = () => {
-    setShareCaption(`${LISTING_SHARE_VERB[listing.listingType]} "${listing.title}"!`);
+    setShareCaption(`${listingShareVerb(listing.listingType)} "${listing.title}"!`);
     setIsShareModalOpen(true);
   };
 
@@ -398,7 +398,7 @@ export default function ListingDetailScreen() {
         title={listing.title}
         typeIcon={LISTING_TYPE_ICONS[listing.listingType]}
         typeColor={LISTING_TYPE_COLORS[listing.listingType]}
-        typeLabel={LISTING_TYPE_LABELS[listing.listingType]}
+        typeLabel={listingTypeLabel(listing.listingType)}
         priceLabel={listing.priceCents != null ? formatPrice(listing.priceCents) : null}
       />
 

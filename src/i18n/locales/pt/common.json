@@ -1,0 +1,20 @@
+{
+  "cancel": "Cancelar",
+  "confirm": "Confirmar",
+  "save": "Salvar",
+  "delete": "Excluir",
+  "close": "Fechar",
+  "loading": "Carregando...",
+  "tryAgain": "Tentar novamente",
+  "seeMore": "Ver mais",
+  "seeLess": "Ver menos",
+  "search": "Buscar",
+  "noResults": "Nenhum resultado encontrado.",
+  "genericError": "Algo deu errado. Tente novamente.",
+  "networkError": "Sem conexão com a internet. Tente novamente.",
+  "someone": "Alguém",
+  "dateTimeJoiner": "às",
+  "goodMorning": "Bom dia",
+  "goodAfternoon": "Boa tarde",
+  "goodEvening": "Boa noite"
+}

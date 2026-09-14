@@ -1,0 +1,10 @@
+{
+  "watering": "Water",
+  "misting": "Mist",
+  "soil_check": "Check soil",
+  "fertilizing": "Fertilize",
+  "pruning": "Prune",
+  "purchase": "Buy",
+  "growth_check": "Analyze plant",
+  "other": "Other"
+}

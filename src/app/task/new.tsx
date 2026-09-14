@@ -13,7 +13,7 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { FormError, FormField, PillSelector, PlantPickerRow, SubmitButton } from '@/components';
 import { useCareTasks, usePlants } from '@/hooks';
 import { requestExactAlarmAccessOnce } from '@/services';
-import { TASK_CATEGORIES } from '@/utils';
+import { useTaskCategories } from '@/utils';
 import { TASK_CATEGORY, type TaskCategory } from '@/types';
 
 type RecurrenceMode = 'once' | 'repeat';
@@ -41,6 +41,7 @@ export default function NewTaskScreen() {
   const params = useLocalSearchParams<{ plantId?: string }>();
   const { createTask } = useCareTasks();
   const { plants } = usePlants();
+  const taskCategories = useTaskCategories();
 
   const isPlantLocked = !!params.plantId;
 
@@ -150,7 +151,7 @@ export default function NewTaskScreen() {
       <View style={styles.field}>
         <Text style={styles.label}>Categoria</Text>
         <PillSelector
-          options={TASK_CATEGORIES.map(({ value, label }) => ({ value, label }))}
+          options={taskCategories.map(({ value, label }) => ({ value, label }))}
           value={category}
           onChange={setCategory}
         />

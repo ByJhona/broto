@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n';
 import { Alert } from './alert';
 
 type ConfirmOptions = {
@@ -7,7 +8,11 @@ type ConfirmOptions = {
 };
 
 export function confirm(title: string, message: string, options: ConfirmOptions = {}): Promise<boolean> {
-  const { confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', destructive = false } = options;
+  const {
+    confirmLabel = i18n.t('common:confirm'),
+    cancelLabel = i18n.t('common:cancel'),
+    destructive = false,
+  } = options;
 
   return new Promise((resolve) => {
     Alert.alert(title, message, [

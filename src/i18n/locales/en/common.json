@@ -1,0 +1,20 @@
+{
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "save": "Save",
+  "delete": "Delete",
+  "close": "Close",
+  "loading": "Loading...",
+  "tryAgain": "Try again",
+  "seeMore": "See more",
+  "seeLess": "See less",
+  "search": "Search",
+  "noResults": "No results found.",
+  "genericError": "Something went wrong. Please try again.",
+  "networkError": "No internet connection. Please try again.",
+  "someone": "Someone",
+  "dateTimeJoiner": "at",
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening"
+}

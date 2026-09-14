@@ -1,3 +1,5 @@
+import { i18n } from '@/i18n';
+
 const EARTH_RADIUS_KM = 6371;
 
 function toRadians(degrees: number): number {
@@ -14,7 +16,8 @@ export function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: nu
 
 export function formatDistance(distanceKm: number): string {
   if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m`;
-  return `${distanceKm.toFixed(1).replace('.', ',')} km`;
+  const decimalSeparator = i18n.language === 'en' ? '.' : ',';
+  return `${distanceKm.toFixed(1).replace('.', decimalSeparator)} km`;
 }
 
 export function formatDistanceTo(

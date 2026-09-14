@@ -1,0 +1,8 @@
+{
+  "likeTitle": "New like",
+  "likeMessage": "{{actor}} just liked your photo!",
+  "commentTitle": "New comment",
+  "commentMessage": "{{actor}} left a comment on your photo!",
+  "listingInterestTitle": "Interest in your listing",
+  "listingInterestMessage": "{{actor}} is interested in the plant you listed!"
+}

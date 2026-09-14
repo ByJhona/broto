@@ -1,6 +1,7 @@
 import { AlertHost } from '@/components/AlertHost';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
+import { i18n, LanguageProvider, useTranslation } from '@/i18n';
 import { checkForAppUpdate } from '@/services/appVersion';
 import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
 import {
@@ -26,6 +27,7 @@ function RootNavigator() {
   const { session, isLoading } = useAuth();
   const colors = useColors();
   const { scheme } = useAppTheme();
+  const { t } = useTranslation('nav');
   const searchScreenOptions = useThemedStackScreenOptions();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -38,9 +40,9 @@ function RootNavigator() {
     checkForAppUpdate().then((result) => {
       if (!result?.updateAvailable) return;
 
-      Alert.alert('Atualização disponível', 'Uma nova versão do broto está disponível na loja.', [
-        { text: 'Agora não', style: 'cancel' },
-        { text: 'Atualizar', onPress: () => Linking.openURL(result.storeUrl) },
+      Alert.alert(i18n.t('nav:updateAvailableTitle'), i18n.t('nav:updateAvailableMessage'), [
+        { text: i18n.t('nav:updateLater'), style: 'cancel' },
+        { text: i18n.t('nav:updateNow'), onPress: () => Linking.openURL(result.storeUrl) },
       ]);
     });
   }, []);
@@ -81,9 +83,9 @@ function RootNavigator() {
           <Stack.Screen name="listing" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />
-          <Stack.Screen name="search" options={{ ...searchScreenOptions, title: 'Buscar' }} />
-          <Stack.Screen name="messages" options={{ ...searchScreenOptions, title: 'Mensagens' }} />
-          <Stack.Screen name="chat" options={{ ...searchScreenOptions, title: 'Conversa' }} />
+          <Stack.Screen name="search" options={{ ...searchScreenOptions, title: t('search') }} />
+          <Stack.Screen name="messages" options={{ ...searchScreenOptions, title: t('messages') }} />
+          <Stack.Screen name="chat" options={{ ...searchScreenOptions, title: t('chat') }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
@@ -99,13 +101,15 @@ function RootNavigator() {
 export default function Layout() {
   return (
     <KeyboardProvider>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </LanguageProvider>
     </KeyboardProvider>
   );
 }

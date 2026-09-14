@@ -1,0 +1,8 @@
+{
+  "usernameRequired": "Enter a username.",
+  "usernameNoSpaces": "Username can't contain spaces.",
+  "usernameInvalidChars": "Username can only contain letters, numbers, and underscores (_).",
+  "usernameMustStartWithLetter": "Username must start with a letter.",
+  "usernameTooShort": "Username must be at least {{min}} characters.",
+  "usernameTooLong": "Username must be at most {{max}} characters."
+}

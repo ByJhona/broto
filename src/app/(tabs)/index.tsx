@@ -24,7 +24,7 @@ import {
   EVENT_COLOR,
   EVENT_ICON,
   formatDistanceTo,
-  LISTING_SHARE_VERB,
+  listingShareVerb,
   LISTING_TYPE_COLORS,
   LISTING_TYPE_ICONS,
   Toast,
@@ -273,7 +273,7 @@ export default function HomeScreen() {
       });
 
       if (params.shareToCommunity === '1' && user) {
-        const caption = params.communityCaption || `${LISTING_SHARE_VERB[params.listingType]} "${params.title}"!`;
+        const caption = params.communityCaption || `${listingShareVerb(params.listingType)} "${params.title}"!`;
         try {
           await createPost(user.id, caption, [], null, newListing.photoUrls, newListing.id);
         } catch {

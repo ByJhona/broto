@@ -1,0 +1,7 @@
+{
+  "shade": "Sombra",
+  "partial_shade": "Meia-sombra",
+  "medium": "Luz indireta",
+  "bright_indirect": "Luz indireta forte",
+  "full_sun": "Sol pleno"
+}

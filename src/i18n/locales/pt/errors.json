@@ -1,0 +1,10 @@
+{
+  "googleSignInUnavailable": "Login com Google está indisponível no momento.",
+  "invalidCredentials": "E-mail ou senha incorretos.",
+  "emailNotConfirmed": "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.",
+  "userAlreadyRegistered": "Já existe uma conta com esse e-mail.",
+  "passwordTooShort": "A senha deve ter no mínimo 6 caracteres.",
+  "invalidEmail": "Digite um e-mail válido.",
+  "usernameTaken": "Esse nome de usuário já está em uso.",
+  "networkError": "Sem conexão com a internet. Tente novamente."
+}
