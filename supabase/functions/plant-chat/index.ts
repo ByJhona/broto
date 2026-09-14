@@ -19,7 +19,7 @@ type ChatMessageRow = {
   created_at: string;
 };
 
-function buildSystemPrompt(plant: {
+function buildPlantSystemPrompt(plant: {
   name: string;
   species: string | null;
   common_name: string | null;
@@ -42,6 +42,14 @@ function buildSystemPrompt(plant: {
     'Use os dados abaixo como contexto sobre essa planta:',
     facts.join('\n'),
     'Responda de forma curta, direta e prática — 2 a 4 frases, sem enrolação. Se a pergunta não tiver relação com a planta ou jardinagem, explique gentilmente que só pode ajudar com isso.',
+  ].join('\n\n');
+}
+
+function buildGeneralSystemPrompt(): string {
+  return [
+    'Você é um especialista em jardinagem e cuidado de plantas, respondendo em português do Brasil.',
+    'O usuário pode perguntar sobre qualquer planta, mesmo que não tenha cadastrado ela no aplicativo.',
+    'Responda de forma curta, direta e prática — 2 a 4 frases, sem enrolação. Se a pergunta não tiver relação com plantas ou jardinagem, explique gentilmente que só pode ajudar com isso.',
   ].join('\n\n');
 }
 
@@ -73,50 +81,61 @@ Deno.serve(async (req) => {
     return new Response('Invalid JSON', { status: 400 });
   }
 
-  const plantId = body.plantId?.trim();
+  const plantId = body.plantId?.trim() || null;
   const question = body.question?.trim();
-  if (!plantId || !question) {
-    return new Response('Missing plantId or question', { status: 400 });
+  if (!question) {
+    return new Response('Missing question', { status: 400 });
   }
 
   const sessionId = body.sessionId?.trim() || crypto.randomUUID();
 
-  const { data: plant, error: plantError } = await supabaseAdmin
-    .from('plants')
-    .select('name, species, common_name, watering_days, sun_level')
-    .eq('id', plantId)
-    .eq('user_id', user.id)
-    .maybeSingle();
+  let systemPrompt: string;
 
-  if (plantError || !plant) {
-    return new Response('Plant not found', { status: 404 });
+  if (plantId) {
+    const { data: plant, error: plantError } = await supabaseAdmin
+      .from('plants')
+      .select('name, species, common_name, watering_days, sun_level')
+      .eq('id', plantId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (plantError || !plant) {
+      return new Response('Plant not found', { status: 404 });
+    }
+
+    const { data: speciesInfo } = plant.species
+      ? await supabaseAdmin
+          .from('plant_species_info')
+          .select('description, watering_description, care_level')
+          .eq('scientific_name', plant.species)
+          .maybeSingle()
+      : { data: null };
+
+    systemPrompt = buildPlantSystemPrompt(plant, speciesInfo);
+  } else {
+    systemPrompt = buildGeneralSystemPrompt();
   }
 
   if (!(await hasEnoughCredits(supabaseAdmin, user.id, CHAT_QUESTION_CREDIT_COST))) {
     return insufficientCreditsResponse();
   }
 
-  const { data: speciesInfo } = plant.species
-    ? await supabaseAdmin
-        .from('plant_species_info')
-        .select('description, watering_description, care_level')
-        .eq('scientific_name', plant.species)
-        .maybeSingle()
-    : { data: null };
-
-  const { data: history } = await supabaseAdmin
+  let historyQuery = supabaseAdmin
     .from('plant_chat_messages')
     .select('id, role, content, created_at')
-    .eq('plant_id', plantId)
     .eq('session_id', sessionId)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(MAX_HISTORY_MESSAGES);
 
+  historyQuery = plantId ? historyQuery.eq('plant_id', plantId) : historyQuery.is('plant_id', null);
+
+  const { data: history } = await historyQuery;
   const orderedHistory = ((history ?? []) as ChatMessageRow[]).reverse();
 
   let answer: string;
   try {
-    answer = await askOpenAI(buildSystemPrompt(plant, speciesInfo), orderedHistory, question);
+    answer = await askOpenAI(systemPrompt, orderedHistory, question);
   } catch (error) {
     console.error('Erro consultando a OpenAI:', error);
     return new Response('Não foi possível responder agora', { status: 502 });

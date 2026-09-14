@@ -28,13 +28,13 @@ export type AskPlantQuestionResult = {
 };
 
 export async function askPlantQuestion(
-  plantId: string,
+  plantId: string | null,
   question: string,
   sessionId: string | null
 ): Promise<AskPlantQuestionResult> {
   const { data, error } = await supabase.functions.invoke<
     PlantChatMessageRow & { sessionId: string; newCreditBalance: number | null }
-  >('plant-chat', { body: { plantId, question, sessionId: sessionId ?? undefined } });
+  >('plant-chat', { body: { plantId: plantId ?? undefined, question, sessionId: sessionId ?? undefined } });
 
   if (error) {
     if (error instanceof FunctionsHttpError && error.context?.status === 402) {

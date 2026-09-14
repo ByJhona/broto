@@ -20,7 +20,7 @@ import TrendingUp from 'lucide-react-native/icons/trending-up';
 import X from 'lucide-react-native/icons/x';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Card, IconBadge } from '@/components';
+import { Card, IconBadge, PlantChat } from '@/components';
 import { CREDIT_COSTS } from '@/services';
 
 type NeedItem = {
@@ -158,6 +158,17 @@ export default function HelpScreen() {
       <Pressable style={styles.historyLink} onPress={() => router.push('/diagnose')}>
         <Text style={styles.historyLinkText}>Ver diagnósticos anteriores</Text>
       </Pressable>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionHeaderText}>Fale com uma especialista</Text>
+      </View>
+
+      <Card style={styles.specialistCard}>
+        <Text style={styles.specialistIntro}>
+          Tire dúvidas sobre qualquer planta ou cuidado — não precisa ser uma das suas.
+        </Text>
+        <PlantChat />
+      </Card>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionHeaderText}>Primeiros passos</Text>
@@ -326,6 +337,15 @@ const makeStyles = (colors: ThemeColors) =>
     fontWeight: '700',
     color: colors.mutedForeground,
     textTransform: 'uppercase',
+  },
+  specialistCard: {
+    marginBottom: Metrics.spacing.xl,
+  },
+  specialistIntro: {
+    fontSize: 13,
+    color: colors.mutedForeground,
+    lineHeight: 18,
+    marginBottom: Metrics.spacing.md,
   },
   needsCard: {
     marginBottom: Metrics.spacing.md,

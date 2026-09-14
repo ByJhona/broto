@@ -13,11 +13,32 @@ import { Alert, Toast } from '@/utils';
 const MAX_VISIBLE_MESSAGES = 50;
 const CHAT_BOX_MAX_HEIGHT = 320;
 
-type PlantChatProps = {
-  plantId: string;
+type PlantChatCopy = {
+  unlockText: string;
+  emptyText: string;
+  placeholder: string;
 };
 
-export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
+function plantChatCopy(plantId: string | null): PlantChatCopy {
+  if (plantId) {
+    return {
+      unlockText: 'Tire dúvidas sobre o cuidado dessa planta com a IA.',
+      emptyText: 'Nenhuma pergunta ainda. Pergunte algo sobre o cuidado dessa planta.',
+      placeholder: 'Pergunte algo sobre essa planta...',
+    };
+  }
+  return {
+    unlockText: 'Tire dúvidas sobre plantas com nossa especialista de IA.',
+    emptyText: 'Nenhuma pergunta ainda. Pergunte sobre qualquer planta, cuidado ou problema comum.',
+    placeholder: 'Pergunte algo sobre plantas...',
+  };
+}
+
+type PlantChatProps = {
+  plantId?: string | null;
+};
+
+export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -28,6 +49,7 @@ export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
   const [messages, setMessages] = useState<PlantChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const copy = plantChatCopy(plantId);
 
   const handleUnlock = () => {
     setSessionId(null);
@@ -100,7 +122,7 @@ export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
         <IconBadge size={44} backgroundColor={colors.leafForeground}>
           <MessageCircle size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
-        <Text style={styles.unlockText}>Tire dúvidas sobre o cuidado dessa planta com a IA.</Text>
+        <Text style={styles.unlockText}>{copy.unlockText}</Text>
         <Text style={styles.unlockButtonText}>Toque para conversar</Text>
       </Pressable>
     );
@@ -110,7 +132,7 @@ export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
     <View>
       <View style={styles.chatBox}>
         {messages.length === 0 ? (
-          <Text style={styles.emptyText}>Nenhuma pergunta ainda. Pergunte algo sobre o cuidado dessa planta.</Text>
+          <Text style={styles.emptyText}>{copy.emptyText}</Text>
         ) : (
           <ScrollView
             ref={scrollRef}
@@ -147,7 +169,7 @@ export function PlantChat({ plantId }: Readonly<PlantChatProps>) {
           style={styles.input}
           value={draft}
           onChangeText={setDraft}
-          placeholder="Pergunte algo sobre essa planta..."
+          placeholder={copy.placeholder}
           placeholderTextColor={colors.mutedForeground}
           multiline
           editable={!isSending}
