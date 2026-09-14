@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { getNotificationsModule } from './notificationsModule';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 
 let isRegistering = false;
 
@@ -26,11 +26,8 @@ export async function registerPushToken(): Promise<void> {
 
     const { data: token } = await notifications.getExpoPushTokenAsync({ projectId });
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
-    if (!user) return;
+    const userId = await getCurrentUserId();
+    if (!userId) return;
 
     const { error } = await supabase.rpc('register_push_token', { p_token: token });
     if (error) {

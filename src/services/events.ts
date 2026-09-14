@@ -1,6 +1,6 @@
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
 import { EVENT_STATUS, type EventStatus, type PlantEvent } from '@/types';
@@ -115,11 +115,8 @@ export type CreateEventInput = {
 };
 
 export async function createEvent(input: CreateEventInput): Promise<PlantEvent> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
   const { data: event, error } = await supabase
     .from('events')
@@ -139,7 +136,7 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
 
   if (input.photoUri) {
     try {
-      const photoUrl = await uploadEventPhoto(user.id, row.id, input.photoUri);
+      const photoUrl = await uploadEventPhoto(userId, row.id, input.photoUri);
       const { error: photoError } = await supabase.from('events').update({ photo_url: photoUrl }).eq('id', row.id);
       if (photoError) throw photoError;
       row.photo_url = photoUrl;

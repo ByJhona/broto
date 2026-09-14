@@ -1,7 +1,7 @@
 import { i18n } from '@/i18n';
 import { addDays, daysBetween, today } from '@/utils';
 import { getNotificationsModule } from './notificationsModule';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 import type { CareTask, TaskCategory } from '@/types';
 
 const DEFAULT_REMINDER_HOUR = 9;
@@ -36,14 +36,6 @@ export type CreateCareTaskInput = {
   reminderHour?: number;
   reminderMinute?: number;
 };
-
-async function getCurrentUserId(): Promise<string | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-  return user?.id ?? null;
-}
 
 function currentOccurrenceDate(row: Pick<CareTaskRow, 'start_date' | 'recurrence_days'>, todayDate: string): string {
   if (!row.recurrence_days) return row.start_date;
@@ -189,8 +181,4 @@ export async function createCareTask(input: CreateCareTaskInput): Promise<CareTa
 export async function deleteCareTask(id: string): Promise<void> {
   const { error } = await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
-}
-
-export async function deleteCareTasksByPlantId(plantId: string): Promise<void> {
-  await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }).eq('plant_id', plantId);
 }

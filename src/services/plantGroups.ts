@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 import type { PlantGroup } from '@/types';
 
 const GROUP_PREVIEW_LIMIT = 4;
@@ -13,13 +13,6 @@ type GroupedPlantRow = {
   group_id: string;
   photo_urls: string[];
 };
-
-async function getCurrentUserId(): Promise<string | null> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.user?.id ?? null;
-}
 
 export async function getPlantGroups(): Promise<PlantGroup[]> {
   const userId = await getCurrentUserId();

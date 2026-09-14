@@ -12,5 +12,6 @@
   "declineButton": "Decline",
   "acceptButton": "Accept",
   "emptyMessage": "No messages yet. Start the conversation!",
-  "messagePlaceholder": "Write a message..."
+  "messagePlaceholder": "Write a message...",
+  "offerPreview": "Proposed a trade"
 }

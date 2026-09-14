@@ -1,6 +1,6 @@
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
 import { LISTING_STATUS, OFFER_STATUS, type ListingStatus, type ListingType, type OfferStatus, type PlantListing } from '@/types';
@@ -116,11 +116,8 @@ export type CreateListingInput = {
 };
 
 export async function createListing(input: CreateListingInput): Promise<PlantListing> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
   const { data: listing, error } = await supabase
     .from('plant_listings')
@@ -144,7 +141,7 @@ export async function createListing(input: CreateListingInput): Promise<PlantLis
 
   if (photoUris.length > 0) {
     try {
-      const uploadedPhotoUrls = await Promise.all(photoUris.map((uri) => uploadListingPhoto(user.id, row.id, uri)));
+      const uploadedPhotoUrls = await Promise.all(photoUris.map((uri) => uploadListingPhoto(userId, row.id, uri)));
       const photoUrls = [...row.photo_urls, ...uploadedPhotoUrls];
       const { error: photoError } = await supabase.from('plant_listings').update({ photo_urls: photoUrls }).eq('id', row.id);
       if (photoError) throw photoError;

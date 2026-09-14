@@ -1,7 +1,6 @@
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
-import { supabase } from './supabase';
-import { deleteCareTasksByPlantId } from './careTasks';
+import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { storagePathFromPublicUrl, uniquePhotoFilename } from './storagePath';
 import type { Plant, PlantCommonProblem, PlantSummary } from '@/types';
@@ -87,17 +86,13 @@ function mapPlantRow(row: PlantRow): Plant {
 }
 
 export async function getPlants(): Promise<PlantSummary[]> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-
-  if (!user) return [];
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
 
   const { data, error } = await supabase
     .from('plants')
     .select(PLANT_SUMMARY_SELECT)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .is('deleted_at', null)
     .order('created_at', { ascending: true });
 
@@ -152,17 +147,13 @@ export async function getPlant(id: string): Promise<Plant | null> {
 }
 
 async function uploadPlantPhoto(plantId: string, localUri: string): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-
-  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
   const bytes = await file.bytes();
-  const path = `${user.id}/${plantId}/${uniquePhotoFilename()}`;
+  const path = `${userId}/${plantId}/${uniquePhotoFilename()}`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')
@@ -180,8 +171,6 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
 export async function deletePlant(plantId: string): Promise<void> {
   const { error } = await supabase.from('plants').update({ deleted_at: new Date().toISOString() }).eq('id', plantId);
   if (error) throw error;
-
-  await deleteCareTasksByPlantId(plantId);
 }
 
 export async function addPlantPhoto(plantId: string, localUri: string): Promise<Plant> {

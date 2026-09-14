@@ -12,5 +12,6 @@
   "declineButton": "Recusar",
   "acceptButton": "Aceitar",
   "emptyMessage": "Nenhuma mensagem ainda. Comece a conversa!",
-  "messagePlaceholder": "Escreva uma mensagem..."
+  "messagePlaceholder": "Escreva uma mensagem...",
+  "offerPreview": "Propôs uma troca"
 }

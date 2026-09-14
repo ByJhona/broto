@@ -24,7 +24,7 @@ import {
 import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
 import { Toast } from '@/utils';
 
-type FeedScope = 'todos' | 'seguindo';
+export type FeedScope = 'todos' | 'seguindo';
 
 const POSTS_STALE_TIME = 30_000;
 const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;

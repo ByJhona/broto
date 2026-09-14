@@ -7,13 +7,11 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
 import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type PlantEvent } from '@/types';
-import { useCommunityFeed, useListings, useUserLocation } from '@/hooks';
+import { useCommunityFeed, useListings, useUserLocation, type FeedScope } from '@/hooks';
 import { formatDistanceTo } from '@/utils';
 
 type UserLocation = ReturnType<typeof useUserLocation>;
 type Listing = ReturnType<typeof useListings>['listings'][number];
-
-type FeedScope = 'todos' | 'seguindo';
 
 function getFeedFilters(t: (key: string) => string): { value: CommunityFeedFilter | null; label: string }[] {
   return [

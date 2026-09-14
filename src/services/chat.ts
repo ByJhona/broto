@@ -219,7 +219,7 @@ type ChatConversationRow = {
 };
 
 function conversationPreview(row: ChatConversationRow): string {
-  if (row.message_type === 'offer') return 'Propôs uma troca';
+  if (row.message_type === 'offer') return i18n.t('chat:offerPreview');
   return row.body ?? '';
 }
 
@@ -270,11 +270,8 @@ export async function getConversations(userId: string): Promise<ChatConversation
   return conversations;
 }
 
-export async function markConversationRead(userId: string, otherUserId: string): Promise<void> {
-  const { error } = await supabase
-    .from('chat_reads')
-    .upsert({ user_id: userId, other_user_id: otherUserId, last_read_at: new Date().toISOString() });
-
+export async function markConversationRead(otherUserId: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_conversation_read', { p_other_user_id: otherUserId });
   if (error) throw error;
 }
 

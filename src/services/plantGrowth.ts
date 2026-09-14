@@ -1,7 +1,7 @@
 import { File } from 'expo-file-system';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { i18n } from '@/i18n';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
 import { toFunctionError } from './functionErrors';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
@@ -26,17 +26,13 @@ function mapRow(row: CheckinRow): PlantGrowthCheckin {
 }
 
 async function uploadCheckinPhoto(plantId: string, localUri: string): Promise<string> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
-
-  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
   const bytes = await file.bytes();
-  const path = `${user.id}/${plantId}/checkins/${Date.now()}.jpg`;
+  const path = `${userId}/${plantId}/checkins/${Date.now()}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('plant-photos')

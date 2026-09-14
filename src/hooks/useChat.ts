@@ -34,18 +34,20 @@ export function useChat(otherUserId: string) {
   }, [otherUserId, queryClient, queryKey]);
 
   const { mutate: markRead } = useMutation({
-    mutationFn: () => markConversationRead(user!.id, otherUserId),
+    mutationFn: () => markConversationRead(otherUserId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', user!.id] });
     },
   });
 
-  const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : null;
+  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+  const lastMessageId = lastMessage?.id ?? null;
+  const lastMessageIsMine = lastMessage?.senderId === user?.id;
 
   useEffect(() => {
-    if (!user?.id || !otherUserId || !lastMessageId) return;
+    if (!user?.id || !otherUserId || !lastMessageId || lastMessageIsMine) return;
     markRead();
-  }, [user?.id, otherUserId, lastMessageId, markRead]);
+  }, [user?.id, otherUserId, lastMessageId, lastMessageIsMine, markRead]);
 
   const { mutateAsync: sendMessage, isPending: isSending } = useMutation({
     mutationFn: (body: string) => sendChatMessage({ recipientId: otherUserId, body }),
