@@ -10,7 +10,7 @@ import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
+import { DistancePill, EmptyState, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
 import { useEvents, useListings, useUserLocation } from '@/hooks';
 import {
   EVENT_COLOR,
@@ -38,6 +38,21 @@ function matchesEventQuery(event: PlantEvent, query: string): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
   return event.title.toLowerCase().includes(normalized) || (event.description ?? '').toLowerCase().includes(normalized);
+}
+
+type RowTrailingProps = {
+  distanceLabel: string | null;
+  colors: ThemeColors;
+};
+
+function RowTrailing({ distanceLabel, colors }: Readonly<RowTrailingProps>) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return (
+    <View style={styles.trailingColumn}>
+      {distanceLabel ? <DistancePill label={distanceLabel} /> : null}
+      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+    </View>
+  );
 }
 
 function sortEvents(events: PlantEvent[], mode: EventSortMode): PlantEvent[] {
@@ -124,7 +139,6 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
           const label = listingTypeLabel(item.listingType);
           const coverPhotoUrl = item.photoUrls[0] ?? null;
           const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
-          const subtitle = [item.ownerName, distanceLabel].filter(Boolean).join(' · ') || undefined;
 
           return (
             <ListRow
@@ -146,8 +160,8 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
                   <Text style={styles.typeBadgeText}>{label}</Text>
                 </View>
               }
-              subtitle={subtitle}
-              trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+              subtitle={item.ownerName ?? undefined}
+              trailing={<RowTrailing distanceLabel={distanceLabel} colors={colors} />}
               onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
             />
           );
@@ -192,7 +206,7 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
         renderItem={({ item }) => {
           const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
           const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
-          const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
+          const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel].filter(Boolean).join(' · ');
           return (
             <ListRow
               variant="card"
@@ -208,7 +222,7 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
               }
               title={item.title}
               subtitle={subtitle}
-              trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+              trailing={<RowTrailing distanceLabel={distanceLabel} colors={colors} />}
               onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
             />
           );
@@ -343,5 +357,9 @@ const makeStyles = (colors: ThemeColors) =>
     createButton: {
       position: 'absolute',
       right: Metrics.spacing.lg,
+    },
+    trailingColumn: {
+      alignItems: 'flex-end',
+      gap: 4,
     },
   });
