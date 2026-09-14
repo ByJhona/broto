@@ -5,13 +5,9 @@ import Search from 'lucide-react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
-import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type PlantEvent } from '@/types';
-import { useCommunityFeed, useListings, useUserLocation, type FeedScope } from '@/hooks';
-import { formatDistanceTo } from '@/utils';
-
-type UserLocation = ReturnType<typeof useUserLocation>;
-type Listing = ReturnType<typeof useListings>['listings'][number];
+import { CommunityComposer, CommunityPostCard, IconButton, SectionTitle } from '@/components';
+import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost } from '@/types';
+import { useCommunityFeed, type FeedScope } from '@/hooks';
 
 function getFeedFilters(t: (key: string) => string): { value: CommunityFeedFilter | null; label: string }[] {
   return [
@@ -72,90 +68,14 @@ function CommunityFilterChips({ filter, onChange, styles }: Readonly<CommunityFi
   );
 }
 
-type CommunityOffersCarouselProps = {
-  listings: Listing[];
-  userLocation: UserLocation | null;
-  isCollapsed: boolean;
-  onToggleCollapsed: () => void;
-  onSeeMore: () => void;
-  onPressListing: (listingId: string) => void;
-  styles: Styles;
-};
-
-function CommunityOffersCarousel({
-  listings,
-  userLocation,
-  isCollapsed,
-  onToggleCollapsed,
-  onSeeMore,
-  onPressListing,
-  styles,
-}: Readonly<CommunityOffersCarouselProps>) {
-  const { t } = useTranslation('community');
-  if (listings.length === 0) return null;
-  return (
-    <CollapsibleSection title={t('recentOffersTitle')} onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-        {listings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
-            onPress={() => onPressListing(listing.id)}
-          />
-        ))}
-      </ScrollView>
-    </CollapsibleSection>
-  );
-}
-
-type CommunityEventsCarouselProps = {
-  events: PlantEvent[];
-  userLocation: UserLocation | null;
-  isCollapsed: boolean;
-  onToggleCollapsed: () => void;
-  onSeeMore: () => void;
-  onPressEvent: (eventId: string) => void;
-  styles: Styles;
-};
-
-function CommunityEventsCarousel({
-  events,
-  userLocation,
-  isCollapsed,
-  onToggleCollapsed,
-  onSeeMore,
-  onPressEvent,
-  styles,
-}: Readonly<CommunityEventsCarouselProps>) {
-  const { t } = useTranslation('community');
-  if (events.length === 0) return null;
-  return (
-    <CollapsibleSection title={t('upcomingEventsTitle')} onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-        {events.map((event) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
-            onPress={() => onPressEvent(event.id)}
-          />
-        ))}
-      </ScrollView>
-    </CollapsibleSection>
-  );
-}
-
 type CommunityFeedHeaderProps = {
   feed: ReturnType<typeof useCommunityFeed>;
   colors: ThemeColors;
   styles: Styles;
   onSearch: () => void;
-  onSeeMoreListings: () => void;
-  onSeeMoreEvents: () => void;
 };
 
-function CommunityFeedHeader({ feed, colors, styles, onSearch, onSeeMoreListings, onSeeMoreEvents }: Readonly<CommunityFeedHeaderProps>) {
+function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<CommunityFeedHeaderProps>) {
   const { t } = useTranslation('community');
   return (
     <View>
@@ -168,26 +88,6 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch, onSeeMoreListings
           <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconButton>
       </View>
-
-      <CommunityOffersCarousel
-        listings={feed.listings}
-        userLocation={feed.userLocation}
-        isCollapsed={feed.isOffersCollapsed}
-        onToggleCollapsed={feed.handleToggleOffersCollapsed}
-        onSeeMore={onSeeMoreListings}
-        onPressListing={feed.handlePressListing}
-        styles={styles}
-      />
-
-      <CommunityEventsCarousel
-        events={feed.upcomingEvents}
-        userLocation={feed.userLocation}
-        isCollapsed={feed.isEventsCollapsed}
-        onToggleCollapsed={feed.handleToggleEventsCollapsed}
-        onSeeMore={onSeeMoreEvents}
-        onPressEvent={feed.handlePressEvent}
-        styles={styles}
-      />
 
       <CommunityComposer onPost={feed.handleCreatePost} />
 
@@ -240,16 +140,7 @@ export default function CommunityScreen() {
       refreshControl={
         <RefreshControl refreshing={feed.refreshing} onRefresh={feed.handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
-      ListHeaderComponent={
-        <CommunityFeedHeader
-          feed={feed}
-          colors={colors}
-          styles={styles}
-          onSearch={() => router.push('/search')}
-          onSeeMoreListings={() => router.push('/listing/list')}
-          onSeeMoreEvents={() => router.push('/event/list')}
-        />
-      }
+      ListHeaderComponent={<CommunityFeedHeader feed={feed} colors={colors} styles={styles} onSearch={() => router.push('/search')} />}
       ListFooterComponent={feed.postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     />
   );
@@ -285,10 +176,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   postsSectionTitle: {
     marginBottom: Metrics.spacing.md,
-  },
-  carouselRow: {
-    flexDirection: 'row',
-    gap: Metrics.spacing.sm,
   },
   filtersRow: {
     flexDirection: 'row',

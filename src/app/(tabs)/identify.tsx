@@ -12,6 +12,7 @@ import Cloud from 'lucide-react-native/icons/cloud';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Heart from 'lucide-react-native/icons/heart';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import Scan from 'lucide-react-native/icons/scan';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import Sun from 'lucide-react-native/icons/sun';
@@ -120,7 +121,31 @@ function getFaqItems(t: TFunc): FaqItem[] {
   ];
 }
 
-export default function HelpScreen() {
+type ActionCardProps = {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  colors: ThemeColors;
+};
+
+function ActionCard({ icon: Icon, title, subtitle, onPress, styles, colors }: Readonly<ActionCardProps>) {
+  return (
+    <Pressable style={styles.actionCard} onPress={onPress}>
+      <IconBadge size={52} backgroundColor={colors.leafForeground}>
+        <Icon size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      </IconBadge>
+      <View style={styles.actionTextBox}>
+        <Text style={styles.actionTitle}>{title}</Text>
+        <Text style={styles.actionSubtitle}>{subtitle}</Text>
+      </View>
+      <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+    </Pressable>
+  );
+}
+
+export default function IdentifyScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
@@ -145,19 +170,24 @@ export default function HelpScreen() {
         <Text style={styles.subtitle}>{t('subtitle')}</Text>
       </View>
 
-      <Pressable
-        style={styles.diagnosisCard}
-        onPress={() => router.push({ pathname: '/(tabs)/photo', params: { mode: 'diagnose' } })}
-      >
-        <IconBadge size={52} backgroundColor={colors.leafForeground}>
-          <Stethoscope size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-        </IconBadge>
-        <View style={styles.diagnosisTextBox}>
-          <Text style={styles.diagnosisTitle}>{t('diagnosisCardTitle')}</Text>
-          <Text style={styles.diagnosisSubtitle}>{t('diagnosisCardSubtitle')}</Text>
-        </View>
-        <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-      </Pressable>
+      <View style={styles.actionsRow}>
+        <ActionCard
+          icon={Scan}
+          title={t('identifyCardTitle')}
+          subtitle={t('identifyCardSubtitle')}
+          onPress={() => router.push({ pathname: '/identify/capture', params: { mode: 'identify' } })}
+          styles={styles}
+          colors={colors}
+        />
+        <ActionCard
+          icon={Stethoscope}
+          title={t('diagnosisCardTitle')}
+          subtitle={t('diagnosisCardSubtitle')}
+          onPress={() => router.push({ pathname: '/identify/capture', params: { mode: 'diagnose' } })}
+          styles={styles}
+          colors={colors}
+        />
+      </View>
 
       <Pressable style={styles.historyLink} onPress={() => router.push('/diagnose')}>
         <Text style={styles.historyLinkText}>{t('viewPastDiagnoses')}</Text>
@@ -297,24 +327,27 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
   },
-  diagnosisCard: {
+  actionsRow: {
+    gap: Metrics.spacing.sm,
+    marginBottom: Metrics.spacing.md,
+  },
+  actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.md,
     backgroundColor: colors.leaf,
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
-    marginBottom: Metrics.spacing.xl,
   },
-  diagnosisTextBox: {
+  actionTextBox: {
     flex: 1,
   },
-  diagnosisTitle: {
+  actionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: colors.leafForeground,
   },
-  diagnosisSubtitle: {
+  actionSubtitle: {
     fontSize: 13,
     color: colors.leafForeground,
     opacity: 0.85,
@@ -322,7 +355,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   historyLink: {
     alignItems: 'center',
-    marginTop: -Metrics.spacing.md,
     marginBottom: Metrics.spacing.xl,
   },
   historyLinkText: {

@@ -1,7 +1,9 @@
 {
   "newListingScreenTitle": "Nova oferta",
-  "listingsScreenTitle": "Ofertas",
   "listingDetailScreenTitle": "Oferta",
+  "offersTabTitle": "Ofertas",
+  "offersTabSubtitle": "Doe, troque ou venda plantas perto de você",
+  "offersSearchPlaceholder": "Buscar por planta...",
 
   "titleRequired": "Dá um título pra oferta.",
   "priceRequired": "Informa o preço da planta.",

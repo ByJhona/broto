@@ -1,6 +1,8 @@
 {
-  "title": "Ajuda",
-  "subtitle": "Diagnóstico, dicas pra começar e perguntas frequentes",
+  "title": "Identificar",
+  "subtitle": "Identifique, diagnostique e tire dúvidas sobre suas plantas com IA",
+  "identifyCardTitle": "Identificar uma planta",
+  "identifyCardSubtitle": "Tire uma foto e descubra qual planta é essa",
   "diagnosisCardTitle": "Diagnosticar minha planta",
   "diagnosisCardSubtitle": "Tire uma foto e receba um diagnóstico com IA na hora",
   "viewPastDiagnoses": "Ver diagnósticos anteriores",

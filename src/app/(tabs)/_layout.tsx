@@ -4,9 +4,9 @@ import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Home from 'lucide-react-native/icons/house';
 import Users from 'lucide-react-native/icons/users';
-import Camera from 'lucide-react-native/icons/camera';
+import Sprout from 'lucide-react-native/icons/sprout';
 import Leaf from 'lucide-react-native/icons/leaf';
-import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
+import Scan from 'lucide-react-native/icons/scan';
 import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -42,6 +42,35 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="offers"
+        options={{
+          title: t('offers'),
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <Sprout size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="identify"
+        options={{
+          title: t('identify'),
+          tabBarLabel: '',
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...(props as any)}
+              activeOpacity={0.8}
+              style={[props.style, styles.customButtonContainer]}
+            >
+              <View style={styles.highlightButton}>
+                <Scan size={34} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              </View>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="community"
         options={{
           title: t('community'),
@@ -53,41 +82,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="photo"
-        options={{
-          title: t('photo'),
-          tabBarLabel: '',
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...(props as any)}
-              activeOpacity={0.8}
-              style={[props.style, styles.customButtonContainer]}
-            >
-              <View style={styles.highlightButton}>
-                <Camera size={34} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-              </View>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="garden"
         options={{
           title: t('garden'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Leaf size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="help"
-        options={{
-          title: t('help'),
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
-              <CircleHelp size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
           ),
         }}

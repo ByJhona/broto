@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useQueryClient } from '@tanstack/react-query';
+import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ImageIcon from 'lucide-react-native/icons/image';
 import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
@@ -65,9 +67,10 @@ function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
   );
 }
 
-export default function PhotoScreen() {
+export default function CaptureScreen() {
   const router = useRouter();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const params = useLocalSearchParams<{ mode?: string }>();
   const cameraRef = useRef<CameraView>(null);
@@ -117,10 +120,8 @@ export default function PhotoScreen() {
     ]);
   };
 
-  // Switching tabs doesn't unmount this screen, so a stale response must not yank
-  // the user into a result screen (or pop an alert) after they've navigated elsewhere.
   const navigateIfFocused = (href: Href) => {
-    if (isFocusedRef.current) router.push(href);
+    if (isFocusedRef.current) router.replace(href);
   };
 
   const processIdentify = async (photoUri: string) => {
@@ -192,6 +193,12 @@ export default function PhotoScreen() {
     }
   };
 
+  const backButton = (
+    <Pressable style={[styles.backButton, { top: insets.top + Metrics.spacing.sm }]} onPress={() => router.back()} hitSlop={8}>
+      <ArrowLeft size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+    </Pressable>
+  );
+
   if (isProcessing) {
     return (
       <View style={styles.centered}>
@@ -229,6 +236,8 @@ export default function PhotoScreen() {
       ) : (
         <View style={styles.camera} />
       )}
+
+      {backButton}
 
       <View style={styles.overlayTop}>
         <ModeToggle mode={mode} onChange={setMode} />
@@ -309,6 +318,17 @@ const makeStyles = (colors: ThemeColors) =>
     fontWeight: '600',
     fontSize: 14,
     marginTop: Metrics.spacing.lg,
+  },
+  backButton: {
+    position: 'absolute',
+    left: Metrics.spacing.lg,
+    zIndex: 1,
+    width: 40,
+    height: 40,
+    borderRadius: Metrics.radius.full,
+    backgroundColor: Overlays.scrimLight,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   overlayTop: {
     position: 'absolute',

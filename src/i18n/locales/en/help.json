@@ -1,6 +1,8 @@
 {
-  "title": "Help",
-  "subtitle": "Diagnosis, tips to get started, and frequently asked questions",
+  "title": "Identify",
+  "subtitle": "Identify, diagnose, and ask questions about your plants with AI",
+  "identifyCardTitle": "Identify a plant",
+  "identifyCardSubtitle": "Take a photo and find out what plant it is",
   "diagnosisCardTitle": "Diagnose my plant",
   "diagnosisCardSubtitle": "Take a photo and get an AI diagnosis right away",
   "viewPastDiagnoses": "View past diagnoses",

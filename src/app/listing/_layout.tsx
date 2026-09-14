@@ -8,7 +8,6 @@ export default function ListingLayout() {
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="new" options={{ title: t('newListingScreenTitle') }} />
-      <Stack.Screen name="list" options={{ title: t('listingsScreenTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('listingDetailScreenTitle') }} />
     </Stack>
   );

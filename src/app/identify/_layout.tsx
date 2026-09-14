@@ -7,6 +7,7 @@ export default function IdentifyLayout() {
   const { t } = useTranslation('identify');
   return (
     <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="capture" options={{ headerShown: false }} />
       <Stack.Screen name="result" options={{ title: t('resultTitle') }} />
     </Stack>
   );

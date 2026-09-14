@@ -3,10 +3,6 @@ import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { i18n } from '@/i18n';
 import { useAuth } from './useAuth';
-import { useEvents } from './useEvents';
-import { useListings } from './useListings';
-import { usePersistedCollapse } from './usePersistedCollapse';
-import { useUserLocation } from './useUserLocation';
 import {
   getCommunityPosts,
   getPostById,
@@ -28,8 +24,6 @@ export type FeedScope = 'todos' | 'seguindo';
 
 const POSTS_STALE_TIME = 30_000;
 const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
-const EVENTS_COLLAPSED_KEY = 'broto:community-events-collapsed';
-const OFFERS_COLLAPSED_KEY = 'broto:community-offers-collapsed';
 
 type PostsQueryData = CommunityPostsQueryData;
 
@@ -42,17 +36,10 @@ function replaceFirstPagePost(old: PostsQueryData | undefined, post: CommunityPo
 export function useCommunityFeed() {
   const router = useRouter();
   const { user } = useAuth();
-  const { events: upcomingEvents } = useEvents();
-  const { listings } = useListings();
-  const userLocation = useUserLocation();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
   const [scope, setScope] = useState<FeedScope>('todos');
-  const { isCollapsed: isEventsCollapsed, toggleCollapsed: handleToggleEventsCollapsed } =
-    usePersistedCollapse(EVENTS_COLLAPSED_KEY);
-  const { isCollapsed: isOffersCollapsed, toggleCollapsed: handleToggleOffersCollapsed } =
-    usePersistedCollapse(OFFERS_COLLAPSED_KEY);
 
   const followingIdsQuery = useQuery({
     queryKey: ['following-ids', user?.id],
@@ -201,9 +188,6 @@ export function useCommunityFeed() {
 
   return {
     user,
-    upcomingEvents,
-    listings,
-    userLocation,
     posts,
     isInitialLoading,
     refreshing,
@@ -212,10 +196,6 @@ export function useCommunityFeed() {
     setFilter,
     scope,
     setScope,
-    isEventsCollapsed,
-    handleToggleEventsCollapsed,
-    isOffersCollapsed,
-    handleToggleOffersCollapsed,
     handleRefresh,
     handleLoadMore,
     handleToggleLike,

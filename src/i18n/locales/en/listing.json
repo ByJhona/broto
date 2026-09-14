@@ -1,7 +1,9 @@
 {
   "newListingScreenTitle": "New listing",
-  "listingsScreenTitle": "Listings",
   "listingDetailScreenTitle": "Listing",
+  "offersTabTitle": "Offers",
+  "offersTabSubtitle": "Donate, trade, or sell plants near you",
+  "offersSearchPlaceholder": "Search for a plant...",
 
   "titleRequired": "Give the listing a title.",
   "priceRequired": "Enter the plant's price.",

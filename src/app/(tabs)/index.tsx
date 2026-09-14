@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Calendar from 'lucide-react-native/icons/calendar';
 import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Plus from 'lucide-react-native/icons/plus';
 import X from 'lucide-react-native/icons/x';
@@ -386,6 +387,15 @@ export default function HomeScreen() {
           {!selectedPin ? (
             <>
               <IconButton
+                size={44}
+                elevated
+                style={[styles.eventsButton, { bottom: insets.bottom + Metrics.spacing.lg + 120 }]}
+                onPress={() => router.push('/event/list')}
+              >
+                <Calendar size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              </IconButton>
+
+              <IconButton
                 size={52}
                 backgroundColor={colors.primary}
                 elevated
@@ -429,6 +439,10 @@ const makeStyles = (colors: ThemeColors) =>
       right: Metrics.spacing.lg,
     },
     createButton: {
+      position: 'absolute',
+      right: Metrics.spacing.lg,
+    },
+    eventsButton: {
       position: 'absolute',
       right: Metrics.spacing.lg,
     },
