@@ -5,6 +5,7 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
 import type { PlantListing } from '@/types';
+import { DistancePill } from './DistancePill';
 import { ListRow } from './ListRow';
 
 type ListingCalloutProps = {
@@ -20,8 +21,7 @@ export function ListingCallout({ listing, distanceLabel, onPress }: Readonly<Lis
   const color = LISTING_TYPE_COLORS[listing.listingType];
   const label = listingBadgeLabel(listing.listingType, listing.priceCents);
   const coverPhotoUrl = listing.photoUrls[0] ?? null;
-  const subtitleParts = [listing.ownerName, label, distanceLabel].filter(Boolean);
-  const subtitle = subtitleParts.join(' · ');
+  const subtitle = [listing.ownerName, label].filter(Boolean).join(' · ');
 
   return (
     <ListRow
@@ -37,6 +37,7 @@ export function ListingCallout({ listing, distanceLabel, onPress }: Readonly<Lis
         )
       }
       title={listing.title}
+      titleTrailing={distanceLabel ? <DistancePill label={distanceLabel} /> : undefined}
       subtitle={subtitle}
       trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
     />

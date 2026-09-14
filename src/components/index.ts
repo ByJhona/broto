@@ -12,6 +12,7 @@ export * from './CommunityPostCard';
 export * from './CreateGroupModal';
 export * from './CreditPackCard';
 export * from './CreditsCard';
+export * from './DistancePill';
 export * from './EmptyState';
 export * from './EventAttendeesSection';
 export * from './EventCallout';
