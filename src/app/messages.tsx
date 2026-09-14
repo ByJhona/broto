@@ -43,7 +43,7 @@ export default function MessagesScreen() {
           title={item.otherUserName}
           titleTrailing={<Text style={styles.date}>{formatShortDate(item.lastMessageAt)}</Text>}
           subtitle={item.lastMessagePreview}
-          trailing={item.lastMessageMine ? null : <View style={styles.unreadDot} />}
+          trailing={item.hasUnread ? <View style={styles.unreadDot} /> : null}
           onPress={() => router.push({ pathname: '/chat', params: { otherUserId: item.otherUserId } })}
         />
       )}

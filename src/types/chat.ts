@@ -27,5 +27,5 @@ export type ChatConversation = {
   otherUserAvatarUrl: string | null;
   lastMessagePreview: string;
   lastMessageAt: string;
-  lastMessageMine: boolean;
+  hasUnread: boolean;
 };

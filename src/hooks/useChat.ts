@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getChatMessages, respondToOffer, sendChatMessage, subscribeToChatMessages } from '@/services';
+import { getChatMessages, markConversationRead, respondToOffer, sendChatMessage, subscribeToChatMessages } from '@/services';
 import { OFFER_STATUS, type ChatMessage } from '@/types';
 import { useAuth } from './useAuth';
 
@@ -32,6 +32,20 @@ export function useChat(otherUserId: string) {
 
     return unsubscribe;
   }, [otherUserId, queryClient, queryKey]);
+
+  const { mutate: markRead } = useMutation({
+    mutationFn: () => markConversationRead(user!.id, otherUserId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', user!.id] });
+    },
+  });
+
+  const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : null;
+
+  useEffect(() => {
+    if (!user?.id || !otherUserId || !lastMessageId) return;
+    markRead();
+  }, [user?.id, otherUserId, lastMessageId, markRead]);
 
   const { mutateAsync: sendMessage, isPending: isSending } = useMutation({
     mutationFn: (body: string) => sendChatMessage({ recipientId: otherUserId, body }),

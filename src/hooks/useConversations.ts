@@ -24,7 +24,7 @@ export function useConversations() {
     return unsubscribe;
   }, [user?.id, queryClient, queryKey]);
 
-  const hasUnread = conversations.some((conversation) => !conversation.lastMessageMine);
+  const hasUnread = conversations.some((conversation) => conversation.hasUnread);
 
   return { conversations, isLoading, hasUnread, refresh: refetch };
 }

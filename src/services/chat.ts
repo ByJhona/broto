@@ -222,16 +222,29 @@ function conversationPreview(row: ChatConversationRow): string {
   return row.body ?? '';
 }
 
+function conversationHasUnread(row: ChatConversationRow, isSender: boolean, lastReadAt: string | undefined): boolean {
+  if (isSender) return false;
+  return !lastReadAt || row.created_at > lastReadAt;
+}
+
 export async function getConversations(userId: string): Promise<ChatConversation[]> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .select(
-      'sender_id, recipient_id, body, message_type, created_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
-    )
-    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-    .order('created_at', { ascending: false });
+  const [{ data, error }, { data: readsData, error: readsError }] = await Promise.all([
+    supabase
+      .from('chat_messages')
+      .select(
+        'sender_id, recipient_id, body, message_type, created_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
+      )
+      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+      .order('created_at', { ascending: false }),
+    supabase.from('chat_reads').select('other_user_id, last_read_at').eq('user_id', userId),
+  ]);
 
   if (error) throw error;
+  if (readsError) throw readsError;
+
+  const lastReadByOtherUser = new Map(
+    (readsData as { other_user_id: string; last_read_at: string }[]).map((row) => [row.other_user_id, row.last_read_at])
+  );
 
   const conversations: ChatConversation[] = [];
   const seen = new Set<string>();
@@ -249,11 +262,19 @@ export async function getConversations(userId: string): Promise<ChatConversation
       otherUserAvatarUrl: otherProfile?.avatar_url ?? null,
       lastMessagePreview: conversationPreview(row),
       lastMessageAt: row.created_at,
-      lastMessageMine: isSender,
+      hasUnread: conversationHasUnread(row, isSender, lastReadByOtherUser.get(otherUserId)),
     });
   }
 
   return conversations;
+}
+
+export async function markConversationRead(userId: string, otherUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('chat_reads')
+    .upsert({ user_id: userId, other_user_id: otherUserId, last_read_at: new Date().toISOString() });
+
+  if (error) throw error;
 }
 
 export function subscribeToOwnMessages(userId: string, onInsert: () => void): () => void {
