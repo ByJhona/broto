@@ -69,7 +69,7 @@ export default function ChatScreen() {
     }
   };
 
-  const renderOfferCard = (message: ChatMessage, isMine: boolean) => (
+  const renderProposalCard = (message: ChatMessage, isMine: boolean) => (
     <Card style={styles.offerCard}>
       <View style={styles.offerHeader}>
         {message.offeredPlantPhotoUrl ? (
@@ -80,9 +80,11 @@ export default function ChatScreen() {
           </View>
         )}
         <View style={styles.offerHeaderText}>
-          <Text style={styles.offerTitle}>{t('offerCardTitle')}</Text>
+          <Text style={styles.offerTitle}>{message.messageType === 'interest' ? t('interestCardTitle') : t('offerCardTitle')}</Text>
           <Text style={styles.offerSubtitle}>
-            {t('offerCardSubtitle', { plantName: message.offeredPlantName, listingTitle: message.listingTitle })}
+            {message.messageType === 'interest'
+              ? t('interestCardSubtitle', { listingTitle: message.listingTitle })
+              : t('offerCardSubtitle', { plantName: message.offeredPlantName, listingTitle: message.listingTitle })}
           </Text>
         </View>
       </View>
@@ -138,8 +140,8 @@ export default function ChatScreen() {
             const isMine = message.senderId === currentUserId;
             return (
               <View key={message.id} style={[styles.messageRow, isMine && styles.messageRowMine]}>
-                {message.messageType === 'offer' ? (
-                  renderOfferCard(message, isMine)
+                {message.messageType === 'offer' || message.messageType === 'interest' ? (
+                  renderProposalCard(message, isMine)
                 ) : (
                   <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
                     <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.body}</Text>

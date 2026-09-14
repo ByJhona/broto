@@ -9,9 +9,14 @@
   "offerStatusDeclined": "Troca recusada",
   "offerCardTitle": "Proposta de troca",
   "offerCardSubtitle": "{{plantName}} pela oferta \"{{listingTitle}}\"",
+  "interestCardTitle": "Interesse na oferta",
+  "interestCardSubtitle": "Interesse em \"{{listingTitle}}\"",
+  "interestAcceptedMessage": "Interesse aceito",
+  "interestDeclinedMessage": "Interesse recusado",
   "declineButton": "Recusar",
   "acceptButton": "Aceitar",
   "emptyMessage": "Nenhuma mensagem ainda. Comece a conversa!",
   "messagePlaceholder": "Escreva uma mensagem...",
-  "offerPreview": "Propôs uma troca"
+  "offerPreview": "Propôs uma troca",
+  "interestPreview": "Demonstrou interesse"
 }

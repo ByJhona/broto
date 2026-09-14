@@ -9,9 +9,14 @@
   "offerStatusDeclined": "Trade declined",
   "offerCardTitle": "Trade offer",
   "offerCardSubtitle": "{{plantName}} for the offer \"{{listingTitle}}\"",
+  "interestCardTitle": "Interest in the listing",
+  "interestCardSubtitle": "Interested in \"{{listingTitle}}\"",
+  "interestAcceptedMessage": "Interest accepted",
+  "interestDeclinedMessage": "Interest declined",
   "declineButton": "Decline",
   "acceptButton": "Accept",
   "emptyMessage": "No messages yet. Start the conversation!",
   "messagePlaceholder": "Write a message...",
-  "offerPreview": "Proposed a trade"
+  "offerPreview": "Proposed a trade",
+  "interestPreview": "Expressed interest"
 }

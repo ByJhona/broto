@@ -3,7 +3,7 @@ import { i18n } from '@/i18n';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
-import { LISTING_STATUS, OFFER_STATUS, type ListingStatus, type ListingType, type OfferStatus, type PlantListing } from '@/types';
+import { LISTING_STATUS, type ListingStatus, type ListingType, type PlantListing } from '@/types';
 
 export const MAX_LISTING_PHOTOS = 5;
 
@@ -168,76 +168,3 @@ export async function deleteListing(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function expressInterest(listingId: string, message?: string | null): Promise<void> {
-  const { error } = await supabase.from('plant_listing_interests').insert({ listing_id: listingId, message: message ?? null });
-  if (error) throw error;
-}
-
-export async function hasExpressedInterest(listingId: string, userId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('plant_listing_interests')
-    .select('id')
-    .eq('listing_id', listingId)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return !!data;
-}
-
-export type ListingInterest = {
-  id: string;
-  userId: string;
-  name: string | null;
-  avatarUrl: string | null;
-  message: string | null;
-  status: OfferStatus;
-  createdAt: string;
-};
-
-type ListingInterestRow = {
-  id: string;
-  user_id: string;
-  message: string | null;
-  status: OfferStatus;
-  created_at: string;
-  interested: { name: string | null; username: string | null; avatar_url: string | null } | null;
-};
-
-export async function getListingInterests(listingId: string): Promise<ListingInterest[]> {
-  const { data, error } = await supabase
-    .from('plant_listing_interests')
-    .select('id, user_id, message, status, created_at, interested:profiles!user_id(name, username, avatar_url)')
-    .eq('listing_id', listingId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-
-  return (data as unknown as ListingInterestRow[]).map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    name: row.interested?.name || row.interested?.username || null,
-    avatarUrl: row.interested?.avatar_url ?? null,
-    message: row.message,
-    status: row.status,
-    createdAt: row.created_at,
-  }));
-}
-
-export async function respondToInterest(interestId: string, listingId: string, accept: boolean): Promise<void> {
-  const { error } = await supabase
-    .from('plant_listing_interests')
-    .update({ status: accept ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.DECLINED })
-    .eq('id', interestId);
-
-  if (error) throw error;
-
-  if (accept) {
-    await updateListingStatus(listingId, LISTING_STATUS.COMPLETED);
-    await supabase
-      .from('plant_listing_interests')
-      .update({ status: OFFER_STATUS.DECLINED })
-      .eq('listing_id', listingId)
-      .eq('status', OFFER_STATUS.PENDING);
-  }
-}

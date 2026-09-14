@@ -49,8 +49,6 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
     return [];
   }
 
-  console.log('MARKER_9f31 raw types from query:', (data as unknown as NotificationRow[]).map((r) => r.type));
-
   return (data as unknown as NotificationRow[]).map(mapNotificationRow);
 }
 

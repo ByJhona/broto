@@ -1,12 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  createListing,
-  deleteListing,
-  expressInterest,
-  getAvailableListings,
-  updateListingStatus,
-  type CreateListingInput,
-} from '@/services';
+import { createListing, deleteListing, getAvailableListings, updateListingStatus, type CreateListingInput } from '@/services';
 import type { ListingStatus } from '@/types';
 import { useAuth } from './useAuth';
 
@@ -47,11 +40,6 @@ export function useListings() {
     },
   });
 
-  const { mutateAsync: sendInterest } = useMutation({
-    mutationFn: ({ listingId, message }: { listingId: string; message?: string | null }) =>
-      expressInterest(listingId, message),
-  });
-
   return {
     listings,
     isLoading,
@@ -59,6 +47,5 @@ export function useListings() {
     addListing,
     setListingStatus,
     removeListing,
-    sendInterest,
   };
 }

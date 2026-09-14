@@ -6,7 +6,7 @@ Como funciona o tipo de oferta "Venda", que permite vender uma planta por um pre
 
 `ListingType` ganhou um quarto valor, `sale` ("Venda"), ao lado de `donation`, `exchange` e `discard`. Uma oferta de venda tem tudo que as outras têm (fotos, título, descrição, localização) mais um preço obrigatório em `price_cents`.
 
-O broto **não processa pagamento nenhum**: a "venda" aqui é só o anúncio. A negociação (combinar forma de pagamento, entrega, etc.) acontece pelo mesmo fluxo de chat que já existe pra doação e resgate — quem se interessa toca em "Quero comprar", isso cria um registro em `plant_listing_interests` exatamente como uma doação, e o dono da oferta responde e conversa pelo chat do app. Nenhuma lógica nova de negociação foi criada; só o rótulo do botão muda.
+O broto **não processa pagamento nenhum**: a "venda" aqui é só o anúncio. A negociação (combinar forma de pagamento, entrega, etc.) acontece pelo mesmo fluxo de chat que já existe pra doação e resgate — quem se interessa toca em "Quero comprar", isso envia uma mensagem de interesse (`sendInterestMessage`, `message_type = 'interest'` em `chat_messages`) exatamente como uma doação, e o dono da oferta vê o card da proposta na própria conversa e aceita ou recusa por ali. Nenhuma lógica nova de negociação foi criada; só o rótulo do botão muda.
 
 ## Modelo de dados
 
@@ -59,7 +59,7 @@ Na tela de detalhe ([`src/app/listing/[id].tsx`](<../src/app/listing/[id].tsx>))
 
 ## Texto do botão de ação
 
-Em [`ListingActionFooter.tsx`](../src/components/ListingActionFooter.tsx), o botão principal muda de rótulo conforme o tipo, mas chama sempre a mesma função (`onInterest`, que é `expressInterest`):
+Em [`ListingActionFooter.tsx`](../src/components/ListingActionFooter.tsx), o botão principal muda de rótulo conforme o tipo, mas chama sempre a mesma função (`onInterest`, que é `sendInterestMessage`):
 
 | Tipo | Rótulo antes de agir | Depois de agir |
 | --- | --- | --- |

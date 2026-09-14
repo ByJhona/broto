@@ -27,15 +27,12 @@ import { useAuth, useListings, usePlants } from '@/hooks';
 import {
   createPost,
   getListingById,
-  getListingInterests,
-  getListingOfferProposals,
-  hasExpressedInterest,
-  hasProposedOffer,
-  respondToInterest,
+  getListingProposalMessages,
+  hasSentProposalMessage,
   respondToOffer,
+  sendInterestMessage,
   sendOfferMessage,
-  type ListingInterest,
-  type ListingOfferProposal,
+  type ListingProposalMessage,
 } from '@/services';
 import {
   Alert,
@@ -52,10 +49,6 @@ import {
 import { LISTING_STATUS, LISTING_TYPE, OFFER_STATUS, type ListingStatus, type PlantSummary } from '@/types';
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
-
-function fetchMyListingAction(isExchange: boolean, listingId: string, userId: string): Promise<boolean> {
-  return isExchange ? hasProposedOffer(listingId, userId) : hasExpressedInterest(listingId, userId);
-}
 
 type ListingActionHandlers = {
   onMarkCompleted: () => void;
@@ -113,34 +106,19 @@ function ListingProposalsBlock({ isOwner, isExchange, proposals, onOpenChat }: R
 
 function buildProposals(
   isExchange: boolean,
-  interests: ListingInterest[] | undefined,
-  offers: ListingOfferProposal[] | undefined,
-  onRespondInterest: (interestId: string, accept: boolean) => void,
-  onRespondOffer: (messageId: string, accept: boolean) => void,
+  proposals: ListingProposalMessage[] | undefined,
+  onRespond: (messageId: string, accept: boolean) => void,
   t: TranslateFn
 ): ListingProposal[] {
-  if (isExchange) {
-    return (offers ?? []).map((offer) => ({
-      id: offer.id,
-      userId: offer.senderId,
-      name: offer.senderName,
-      avatarUrl: offer.senderAvatarUrl,
-      detail: offer.offeredPlantName ? t('offeredPlantDetail', { plantName: offer.offeredPlantName }) : null,
-      status: offer.status,
-      onAccept: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, true) : undefined,
-      onDecline: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, false) : undefined,
-    }));
-  }
-
-  return (interests ?? []).map((interest) => ({
-    id: interest.id,
-    userId: interest.userId,
-    name: interest.name,
-    avatarUrl: interest.avatarUrl,
-    detail: interest.message,
-    status: interest.status,
-    onAccept: interest.status === OFFER_STATUS.PENDING ? () => onRespondInterest(interest.id, true) : undefined,
-    onDecline: interest.status === OFFER_STATUS.PENDING ? () => onRespondInterest(interest.id, false) : undefined,
+  return (proposals ?? []).map((proposal) => ({
+    id: proposal.id,
+    userId: proposal.senderId,
+    name: proposal.senderName,
+    avatarUrl: proposal.senderAvatarUrl,
+    detail: isExchange && proposal.offeredPlantName ? t('offeredPlantDetail', { plantName: proposal.offeredPlantName }) : null,
+    status: proposal.status,
+    onAccept: proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, true) : undefined,
+    onDecline: proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, false) : undefined,
   }));
 }
 
@@ -153,7 +131,7 @@ export default function ListingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { setListingStatus, removeListing, sendInterest } = useListings();
+  const { setListingStatus, removeListing } = useListings();
   const { plants } = usePlants();
   const [hasActedThisSession, setHasActedThisSession] = useState(false);
   const [isActing, setIsActing] = useState(false);
@@ -172,21 +150,15 @@ export default function ListingDetailScreen() {
   const isOwner = !!user && listing?.userId === user.id;
   const isExchange = listing?.listingType === LISTING_TYPE.EXCHANGE;
 
-  const interestsQuery = useQuery({
-    queryKey: ['plant-listing-interests', id],
-    queryFn: () => getListingInterests(id),
-    enabled: !!id && isOwner && !isExchange,
-  });
-
-  const offersQuery = useQuery({
-    queryKey: ['plant-listing-offers', id],
-    queryFn: () => getListingOfferProposals(id),
-    enabled: !!id && isOwner && isExchange,
+  const proposalsQuery = useQuery({
+    queryKey: ['plant-listing-proposals', id, isExchange],
+    queryFn: () => getListingProposalMessages(id, isExchange ? 'offer' : 'interest'),
+    enabled: !!id && isOwner,
   });
 
   const myActionQuery = useQuery({
     queryKey: ['plant-listing-my-action', id, user?.id, isExchange],
-    queryFn: () => fetchMyListingAction(isExchange, id, user!.id),
+    queryFn: () => hasSentProposalMessage(id, user!.id, isExchange ? 'offer' : 'interest'),
     enabled: !!id && !!user && !isOwner,
   });
 
@@ -214,7 +186,7 @@ export default function ListingDetailScreen() {
   const handleInterest = async () => {
     setIsActing(true);
     try {
-      await sendInterest({ listingId: listing.id });
+      await sendInterestMessage({ recipientId: listing.userId, listingId: listing.id });
       setHasActedThisSession(true);
       Toast.success(t('interestSentSuccess'));
       handleOpenChat(listing.userId);
@@ -230,21 +202,11 @@ export default function ListingDetailScreen() {
   };
 
   const invalidateProposals = () => {
-    queryClient.invalidateQueries({ queryKey: ['plant-listing-interests', id] });
-    queryClient.invalidateQueries({ queryKey: ['plant-listing-offers', id] });
+    queryClient.invalidateQueries({ queryKey: ['plant-listing-proposals', id] });
     queryClient.invalidateQueries({ queryKey: ['plant-listing', id] });
   };
 
-  const handleRespondInterest = async (interestId: string, accept: boolean) => {
-    try {
-      await respondToInterest(interestId, listing.id, accept);
-      invalidateProposals();
-    } catch {
-      Toast.error(t('interestUpdateError'));
-    }
-  };
-
-  const handleRespondOffer = async (messageId: string, accept: boolean) => {
+  const handleRespondProposal = async (messageId: string, accept: boolean) => {
     try {
       await respondToOffer(messageId, accept);
       invalidateProposals();
@@ -372,14 +334,7 @@ export default function ListingDetailScreen() {
     );
   };
 
-  const proposals = buildProposals(
-    isExchange,
-    interestsQuery.data,
-    offersQuery.data,
-    handleRespondInterest,
-    handleRespondOffer,
-    t
-  );
+  const proposals = buildProposals(isExchange, proposalsQuery.data, handleRespondProposal, t);
 
   return (
     <ScrollView

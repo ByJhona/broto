@@ -12,7 +12,7 @@ type ChatMessageRow = {
   sender_id: string;
   recipient_id: string;
   body: string | null;
-  message_type: 'text' | 'offer';
+  message_type: 'text' | 'offer' | 'interest';
   listing_id: string | null;
   offered_plant_id: string | null;
   offer_status: OfferStatus | null;
@@ -84,10 +84,34 @@ export async function sendOfferMessage(input: {
   return mapChatMessageRow(data as unknown as ChatMessageRow);
 }
 
+export async function sendInterestMessage(input: { recipientId: string; listingId: string }): Promise<ChatMessage> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .insert({
+      recipient_id: input.recipientId,
+      listing_id: input.listingId,
+      message_type: 'interest',
+      offer_status: OFFER_STATUS.PENDING,
+    })
+    .select(CHAT_MESSAGE_SELECT)
+    .single();
+
+  if (error) throw error;
+
+  return mapChatMessageRow(data as unknown as ChatMessageRow);
+}
+
 export type RespondToOfferResult = {
   offerMessage: ChatMessage;
   confirmationMessage: ChatMessage;
 };
+
+function proposalConfirmationBody(messageType: ChatMessage['messageType'], accept: boolean): string {
+  if (messageType === 'interest') {
+    return accept ? i18n.t('chat:interestAcceptedMessage') : i18n.t('chat:interestDeclinedMessage');
+  }
+  return accept ? i18n.t('chat:offerStatusAccepted') : i18n.t('chat:offerStatusDeclined');
+}
 
 export async function respondToOffer(messageId: string, accept: boolean): Promise<RespondToOfferResult> {
   const { data, error } = await supabase
@@ -105,7 +129,7 @@ export async function respondToOffer(messageId: string, accept: boolean): Promis
     .from('chat_messages')
     .insert({
       recipient_id: offerMessage.senderId,
-      body: accept ? 'Troca aceita' : 'Troca recusada',
+      body: proposalConfirmationBody(offerMessage.messageType, accept),
       message_type: 'text',
     })
     .select(CHAT_MESSAGE_SELECT)
@@ -121,14 +145,14 @@ export async function respondToOffer(messageId: string, accept: boolean): Promis
       .from('chat_messages')
       .update({ offer_status: OFFER_STATUS.DECLINED })
       .eq('listing_id', offerMessage.listingId)
-      .eq('message_type', 'offer')
+      .eq('message_type', offerMessage.messageType)
       .eq('offer_status', OFFER_STATUS.PENDING);
   }
 
   return { offerMessage, confirmationMessage };
 }
 
-export type ListingOfferProposal = {
+export type ListingProposalMessage = {
   id: string;
   senderId: string;
   senderName: string | null;
@@ -139,7 +163,7 @@ export type ListingOfferProposal = {
   createdAt: string;
 };
 
-type ListingOfferRow = {
+type ListingProposalRow = {
   id: string;
   sender_id: string;
   offer_status: OfferStatus;
@@ -148,32 +172,39 @@ type ListingOfferRow = {
   offered_plant: { name: string; photo_urls: string[] } | null;
 };
 
-export async function hasProposedOffer(listingId: string, userId: string): Promise<boolean> {
+export async function hasSentProposalMessage(
+  listingId: string,
+  userId: string,
+  messageType: 'offer' | 'interest'
+): Promise<boolean> {
   const { data, error } = await supabase
     .from('chat_messages')
     .select('id')
     .eq('listing_id', listingId)
     .eq('sender_id', userId)
-    .eq('message_type', 'offer')
+    .eq('message_type', messageType)
     .limit(1);
 
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
 
-export async function getListingOfferProposals(listingId: string): Promise<ListingOfferProposal[]> {
+export async function getListingProposalMessages(
+  listingId: string,
+  messageType: 'offer' | 'interest'
+): Promise<ListingProposalMessage[]> {
   const { data, error } = await supabase
     .from('chat_messages')
     .select(
       'id, sender_id, offer_status, created_at, sender:profiles!sender_id(name, username, avatar_url), offered_plant:plants(name, photo_urls)'
     )
     .eq('listing_id', listingId)
-    .eq('message_type', 'offer')
+    .eq('message_type', messageType)
     .order('created_at', { ascending: true });
 
   if (error) throw error;
 
-  return (data as unknown as ListingOfferRow[]).map((row) => ({
+  return (data as unknown as ListingProposalRow[]).map((row) => ({
     id: row.id,
     senderId: row.sender_id,
     senderName: row.sender?.name || row.sender?.username || null,
@@ -212,7 +243,7 @@ type ChatConversationRow = {
   sender_id: string;
   recipient_id: string;
   body: string | null;
-  message_type: 'text' | 'offer';
+  message_type: 'text' | 'offer' | 'interest';
   created_at: string;
   sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
   recipient: { name: string | null; username: string | null; avatar_url: string | null } | null;
@@ -220,6 +251,7 @@ type ChatConversationRow = {
 
 function conversationPreview(row: ChatConversationRow): string {
   if (row.message_type === 'offer') return i18n.t('chat:offerPreview');
+  if (row.message_type === 'interest') return i18n.t('chat:interestPreview');
   return row.body ?? '';
 }
 
