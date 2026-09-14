@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getConversations, subscribeToOwnMessages } from '@/services';
+import { getConversations, subscribeToOwnMessages, subscribeToOwnProposals } from '@/services';
 import { useAuth } from './useAuth';
 
 export function useConversations() {
@@ -17,11 +17,17 @@ export function useConversations() {
   useEffect(() => {
     if (!user?.id) return;
 
-    const unsubscribe = subscribeToOwnMessages(user.id, () => {
+    const unsubscribeMessages = subscribeToOwnMessages(user.id, () => {
+      queryClient.invalidateQueries({ queryKey });
+    });
+    const unsubscribeProposals = subscribeToOwnProposals(user.id, () => {
       queryClient.invalidateQueries({ queryKey });
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeMessages();
+      unsubscribeProposals();
+    };
   }, [user?.id, queryClient, queryKey]);
 
   const hasUnread = conversations.some((conversation) => conversation.hasUnread);

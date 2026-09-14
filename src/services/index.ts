@@ -8,6 +8,7 @@ export * from './credits';
 export * from './events';
 export * from './functionErrors';
 export * from './imageResize';
+export * from './listingProposals';
 export * from './notifications';
 export * from './notificationNavigation';
 export * from './notificationsModule';

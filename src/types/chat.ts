@@ -10,14 +10,7 @@ export type ChatMessage = {
   id: string;
   senderId: string;
   recipientId: string;
-  body: string | null;
-  messageType: 'text' | 'offer' | 'interest' | 'confirmation';
-  listingId: string | null;
-  listingTitle: string | null;
-  offeredPlantId: string | null;
-  offeredPlantName: string | null;
-  offeredPlantPhotoUrl: string | null;
-  offerStatus: OfferStatus | null;
+  body: string;
   createdAt: string;
 };
 

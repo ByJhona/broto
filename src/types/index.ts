@@ -7,3 +7,4 @@ export * from './plant';
 export * from './plant-group';
 export * from './plant-listing';
 export * from './profile';
+export * from './proposal';

@@ -1,24 +1,17 @@
 import { randomUUID } from 'expo-crypto';
 import { i18n } from '@/i18n';
-import { updateListingStatus } from './plantListings';
+import { getProposalActivityForUser, type ProposalActivityRow } from './listingProposals';
 import { supabase } from './supabase';
-import { LISTING_STATUS, OFFER_STATUS, type ChatConversation, type ChatMessage, type OfferStatus } from '@/types';
+import type { ChatConversation, ChatMessage } from '@/types';
 
-const CHAT_MESSAGE_SELECT =
-  'id, sender_id, recipient_id, body, message_type, listing_id, offered_plant_id, offer_status, created_at, listing:plant_listings(title), offered_plant:plants(name, photo_urls)';
+const CHAT_MESSAGE_SELECT = 'id, sender_id, recipient_id, body, created_at';
 
 type ChatMessageRow = {
   id: string;
   sender_id: string;
   recipient_id: string;
-  body: string | null;
-  message_type: 'text' | 'offer' | 'interest' | 'confirmation';
-  listing_id: string | null;
-  offered_plant_id: string | null;
-  offer_status: OfferStatus | null;
+  body: string;
   created_at: string;
-  listing: { title: string } | null;
-  offered_plant: { name: string; photo_urls: string[] } | null;
 };
 
 function mapChatMessageRow(row: ChatMessageRow): ChatMessage {
@@ -27,13 +20,6 @@ function mapChatMessageRow(row: ChatMessageRow): ChatMessage {
     senderId: row.sender_id,
     recipientId: row.recipient_id,
     body: row.body,
-    messageType: row.message_type,
-    listingId: row.listing_id,
-    listingTitle: row.listing?.title ?? null,
-    offeredPlantId: row.offered_plant_id,
-    offeredPlantName: row.offered_plant?.name ?? null,
-    offeredPlantPhotoUrl: row.offered_plant?.photo_urls[0] ?? null,
-    offerStatus: row.offer_status,
     createdAt: row.created_at,
   };
 }
@@ -53,7 +39,7 @@ export async function getChatMessages(otherUserId: string): Promise<ChatMessage[
 export async function sendChatMessage(input: { recipientId: string; body: string }): Promise<ChatMessage> {
   const { data, error } = await supabase
     .from('chat_messages')
-    .insert({ recipient_id: input.recipientId, body: input.body, message_type: 'text' })
+    .insert({ recipient_id: input.recipientId, body: input.body })
     .select(CHAT_MESSAGE_SELECT)
     .single();
 
@@ -62,161 +48,7 @@ export async function sendChatMessage(input: { recipientId: string; body: string
   return mapChatMessageRow(data as unknown as ChatMessageRow);
 }
 
-export async function sendOfferMessage(input: {
-  recipientId: string;
-  listingId: string;
-  offeredPlantId: string;
-}): Promise<ChatMessage> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .insert({
-      recipient_id: input.recipientId,
-      listing_id: input.listingId,
-      offered_plant_id: input.offeredPlantId,
-      message_type: 'offer',
-      offer_status: OFFER_STATUS.PENDING,
-    })
-    .select(CHAT_MESSAGE_SELECT)
-    .single();
-
-  if (error) throw error;
-
-  return mapChatMessageRow(data as unknown as ChatMessageRow);
-}
-
-export async function sendInterestMessage(input: { recipientId: string; listingId: string }): Promise<ChatMessage> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .insert({
-      recipient_id: input.recipientId,
-      listing_id: input.listingId,
-      message_type: 'interest',
-      offer_status: OFFER_STATUS.PENDING,
-    })
-    .select(CHAT_MESSAGE_SELECT)
-    .single();
-
-  if (error) throw error;
-
-  return mapChatMessageRow(data as unknown as ChatMessageRow);
-}
-
-export type RespondToOfferResult = {
-  offerMessage: ChatMessage;
-  confirmationMessage: ChatMessage;
-};
-
-function proposalConfirmationBody(accept: boolean): string {
-  return accept ? i18n.t('chat:offerStatusAccepted') : i18n.t('chat:offerStatusDeclined');
-}
-
-export async function respondToOffer(messageId: string, accept: boolean): Promise<RespondToOfferResult> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .update({ offer_status: accept ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.DECLINED })
-    .eq('id', messageId)
-    .select(CHAT_MESSAGE_SELECT)
-    .single();
-
-  if (error) throw error;
-
-  const offerMessage = mapChatMessageRow(data as unknown as ChatMessageRow);
-
-  const { data: confirmationData, error: confirmationError } = await supabase
-    .from('chat_messages')
-    .insert({
-      recipient_id: offerMessage.senderId,
-      body: proposalConfirmationBody(accept),
-      message_type: 'confirmation',
-    })
-    .select(CHAT_MESSAGE_SELECT)
-    .single();
-
-  if (confirmationError) throw confirmationError;
-
-  const confirmationMessage = mapChatMessageRow(confirmationData as unknown as ChatMessageRow);
-
-  if (accept && offerMessage.listingId) {
-    await updateListingStatus(offerMessage.listingId, LISTING_STATUS.COMPLETED);
-    await supabase
-      .from('chat_messages')
-      .update({ offer_status: OFFER_STATUS.DECLINED })
-      .eq('listing_id', offerMessage.listingId)
-      .eq('message_type', offerMessage.messageType)
-      .eq('offer_status', OFFER_STATUS.PENDING);
-  }
-
-  return { offerMessage, confirmationMessage };
-}
-
-export type ListingProposalMessage = {
-  id: string;
-  senderId: string;
-  senderName: string | null;
-  senderAvatarUrl: string | null;
-  offeredPlantName: string | null;
-  offeredPlantPhotoUrl: string | null;
-  status: OfferStatus;
-  createdAt: string;
-};
-
-type ListingProposalRow = {
-  id: string;
-  sender_id: string;
-  offer_status: OfferStatus;
-  created_at: string;
-  sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
-  offered_plant: { name: string; photo_urls: string[] } | null;
-};
-
-export async function hasSentProposalMessage(
-  listingId: string,
-  userId: string,
-  messageType: 'offer' | 'interest'
-): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .select('id')
-    .eq('listing_id', listingId)
-    .eq('sender_id', userId)
-    .eq('message_type', messageType)
-    .limit(1);
-
-  if (error) throw error;
-  return (data?.length ?? 0) > 0;
-}
-
-export async function getListingProposalMessages(
-  listingId: string,
-  messageType: 'offer' | 'interest'
-): Promise<ListingProposalMessage[]> {
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .select(
-      'id, sender_id, offer_status, created_at, sender:profiles!sender_id(name, username, avatar_url), offered_plant:plants(name, photo_urls)'
-    )
-    .eq('listing_id', listingId)
-    .eq('message_type', messageType)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-
-  return (data as unknown as ListingProposalRow[]).map((row) => ({
-    id: row.id,
-    senderId: row.sender_id,
-    senderName: row.sender?.name || row.sender?.username || null,
-    senderAvatarUrl: row.sender?.avatar_url ?? null,
-    offeredPlantName: row.offered_plant?.name ?? null,
-    offeredPlantPhotoUrl: row.offered_plant?.photo_urls[0] ?? null,
-    status: row.offer_status,
-    createdAt: row.created_at,
-  }));
-}
-
-export function subscribeToChatMessages(
-  otherUserId: string,
-  onChange: (message: ChatMessage) => void
-): () => void {
+export function subscribeToChatMessages(otherUserId: string, onChange: (message: ChatMessage) => void): () => void {
   const channel = supabase
     .channel(`chat-messages:${otherUserId}:${randomUUID()}`)
     .on(
@@ -236,63 +68,111 @@ export function subscribeToChatMessages(
   };
 }
 
-type ChatConversationRow = {
+export function subscribeToOwnMessages(userId: string, onInsert: () => void): () => void {
+  const channel = supabase
+    .channel(`chat-messages:user:${userId}:${randomUUID()}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `sender_id=eq.${userId}` }, onInsert)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `recipient_id=eq.${userId}` }, onInsert)
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+type ConversationActivity = {
+  otherUserId: string;
+  otherProfile: { name: string | null; username: string | null; avatar_url: string | null } | null;
+  createdAt: string;
+  preview: string;
+  isSender: boolean;
+};
+
+type ChatMessageActivityRow = {
   sender_id: string;
   recipient_id: string;
-  body: string | null;
-  message_type: 'text' | 'offer' | 'interest' | 'confirmation';
+  body: string;
   created_at: string;
   sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
   recipient: { name: string | null; username: string | null; avatar_url: string | null } | null;
 };
 
-function conversationPreview(row: ChatConversationRow): string {
-  if (row.message_type === 'offer') return i18n.t('chat:offerPreview');
-  if (row.message_type === 'interest') return i18n.t('chat:interestPreview');
-  return row.body ?? '';
+async function getMessageActivity(userId: string): Promise<ConversationActivity[]> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select(
+      'sender_id, recipient_id, body, created_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
+    )
+    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data as unknown as ChatMessageActivityRow[]).map((row) => {
+    const isSender = row.sender_id === userId;
+    return {
+      otherUserId: isSender ? row.recipient_id : row.sender_id,
+      otherProfile: isSender ? row.recipient : row.sender,
+      createdAt: row.created_at,
+      preview: row.body,
+      isSender,
+    };
+  });
 }
 
-function conversationHasUnread(row: ChatConversationRow, isSender: boolean, lastReadAt: string | undefined): boolean {
-  if (isSender) return false;
-  return !lastReadAt || row.created_at > lastReadAt;
+function proposalPreview(proposalType: ProposalActivityRow['proposal_type']): string {
+  return proposalType === 'offer' ? i18n.t('chat:offerPreview') : i18n.t('chat:interestPreview');
+}
+
+async function getProposalActivity(userId: string): Promise<ConversationActivity[]> {
+  const rows = await getProposalActivityForUser(userId);
+
+  return rows.map((row) => {
+    const isSender = row.sender_id === userId;
+    return {
+      otherUserId: isSender ? row.recipient_id : row.sender_id,
+      otherProfile: isSender ? row.recipient : row.sender,
+      createdAt: row.created_at,
+      preview: proposalPreview(row.proposal_type),
+      isSender,
+    };
+  });
+}
+
+function conversationHasUnread(activity: ConversationActivity, lastReadAt: string | undefined): boolean {
+  if (activity.isSender) return false;
+  return !lastReadAt || activity.createdAt > lastReadAt;
 }
 
 export async function getConversations(userId: string): Promise<ChatConversation[]> {
-  const [{ data, error }, { data: readsData, error: readsError }] = await Promise.all([
-    supabase
-      .from('chat_messages')
-      .select(
-        'sender_id, recipient_id, body, message_type, created_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
-      )
-      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-      .order('created_at', { ascending: false }),
+  const [messageActivity, proposalActivity, { data: readsData, error: readsError }] = await Promise.all([
+    getMessageActivity(userId),
+    getProposalActivity(userId),
     supabase.from('chat_reads').select('other_user_id, last_read_at').eq('user_id', userId),
   ]);
 
-  if (error) throw error;
   if (readsError) throw readsError;
 
   const lastReadByOtherUser = new Map(
     (readsData as { other_user_id: string; last_read_at: string }[]).map((row) => [row.other_user_id, row.last_read_at])
   );
 
+  const combined = [...messageActivity, ...proposalActivity].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+
   const conversations: ChatConversation[] = [];
   const seen = new Set<string>();
 
-  for (const row of data as unknown as ChatConversationRow[]) {
-    const isSender = row.sender_id === userId;
-    const otherUserId = isSender ? row.recipient_id : row.sender_id;
-    if (seen.has(otherUserId)) continue;
-    seen.add(otherUserId);
+  for (const activity of combined) {
+    if (seen.has(activity.otherUserId)) continue;
+    seen.add(activity.otherUserId);
 
-    const otherProfile = isSender ? row.recipient : row.sender;
     conversations.push({
-      otherUserId,
-      otherUserName: otherProfile?.name || otherProfile?.username || i18n.t('common:someone'),
-      otherUserAvatarUrl: otherProfile?.avatar_url ?? null,
-      lastMessagePreview: conversationPreview(row),
-      lastMessageAt: row.created_at,
-      hasUnread: conversationHasUnread(row, isSender, lastReadByOtherUser.get(otherUserId)),
+      otherUserId: activity.otherUserId,
+      otherUserName: activity.otherProfile?.name || activity.otherProfile?.username || i18n.t('common:someone'),
+      otherUserAvatarUrl: activity.otherProfile?.avatar_url ?? null,
+      lastMessagePreview: activity.preview,
+      lastMessageAt: activity.createdAt,
+      hasUnread: conversationHasUnread(activity, lastReadByOtherUser.get(activity.otherUserId)),
     });
   }
 
@@ -302,24 +182,4 @@ export async function getConversations(userId: string): Promise<ChatConversation
 export async function markConversationRead(otherUserId: string): Promise<void> {
   const { error } = await supabase.rpc('mark_conversation_read', { p_other_user_id: otherUserId });
   if (error) throw error;
-}
-
-export function subscribeToOwnMessages(userId: string, onInsert: () => void): () => void {
-  const channel = supabase
-    .channel(`chat-messages:user:${userId}:${randomUUID()}`)
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `sender_id=eq.${userId}` },
-      onInsert
-    )
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `recipient_id=eq.${userId}` },
-      onInsert
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
 }

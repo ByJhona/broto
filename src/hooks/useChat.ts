@@ -1,25 +1,62 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getChatMessages, markConversationRead, respondToOffer, sendChatMessage, subscribeToChatMessages } from '@/services';
-import { OFFER_STATUS, type ChatMessage } from '@/types';
+import {
+  getChatMessages,
+  getProposalsWithUser,
+  markConversationRead,
+  respondToProposal,
+  sendChatMessage,
+  subscribeToChatMessages,
+  subscribeToProposalsWithUser,
+} from '@/services';
+import { OFFER_STATUS, type ChatMessage, type Proposal } from '@/types';
 import { useAuth } from './useAuth';
 
-function upsertMessage(current: ChatMessage[], message: ChatMessage): ChatMessage[] {
-  const index = current.findIndex((item) => item.id === message.id);
-  if (index === -1) return [...current, message];
+export type ChatTimelineItem = { kind: 'message'; message: ChatMessage } | { kind: 'proposal'; proposal: Proposal };
+
+function itemId(item: ChatTimelineItem): string {
+  return item.kind === 'message' ? item.message.id : item.proposal.id;
+}
+
+function itemCreatedAt(item: ChatTimelineItem): string {
+  return item.kind === 'message' ? item.message.createdAt : item.proposal.createdAt;
+}
+
+function itemSenderId(item: ChatTimelineItem): string {
+  return item.kind === 'message' ? item.message.senderId : item.proposal.senderId;
+}
+
+function buildTimeline(messages: ChatMessage[], proposals: Proposal[]): ChatTimelineItem[] {
+  const items: ChatTimelineItem[] = [
+    ...messages.map((message): ChatTimelineItem => ({ kind: 'message', message })),
+    ...proposals.map((proposal): ChatTimelineItem => ({ kind: 'proposal', proposal })),
+  ];
+  return items.sort((a, b) => (itemCreatedAt(a) < itemCreatedAt(b) ? -1 : 1));
+}
+
+function upsertById<T extends { id: string }>(current: T[], item: T): T[] {
+  const index = current.findIndex((existing) => existing.id === item.id);
+  if (index === -1) return [...current, item];
   const next = [...current];
-  next[index] = message;
+  next[index] = item;
   return next;
 }
 
 export function useChat(otherUserId: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const queryKey = useMemo(() => ['chat-messages', otherUserId] as const, [otherUserId]);
+  const messagesKey = useMemo(() => ['chat-messages', otherUserId] as const, [otherUserId]);
+  const proposalsKey = useMemo(() => ['chat-proposals', otherUserId] as const, [otherUserId]);
 
-  const { data: messages = [], isLoading } = useQuery({
-    queryKey,
+  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
+    queryKey: messagesKey,
     queryFn: () => getChatMessages(otherUserId),
+    enabled: !!otherUserId,
+  });
+
+  const { data: proposals = [], isLoading: isLoadingProposals } = useQuery({
+    queryKey: proposalsKey,
+    queryFn: () => getProposalsWithUser(otherUserId),
     enabled: !!otherUserId,
   });
 
@@ -27,11 +64,23 @@ export function useChat(otherUserId: string) {
     if (!otherUserId) return;
 
     const unsubscribe = subscribeToChatMessages(otherUserId, (message) => {
-      queryClient.setQueryData<ChatMessage[]>(queryKey, (current = []) => upsertMessage(current, message));
+      queryClient.setQueryData<ChatMessage[]>(messagesKey, (current = []) => upsertById(current, message));
     });
 
     return unsubscribe;
-  }, [otherUserId, queryClient, queryKey]);
+  }, [otherUserId, queryClient, messagesKey]);
+
+  useEffect(() => {
+    if (!otherUserId) return;
+
+    const unsubscribe = subscribeToProposalsWithUser(otherUserId, (proposal) => {
+      queryClient.setQueryData<Proposal[]>(proposalsKey, (current = []) => upsertById(current, proposal));
+    });
+
+    return unsubscribe;
+  }, [otherUserId, queryClient, proposalsKey]);
+
+  const timeline = useMemo(() => buildTimeline(messages, proposals), [messages, proposals]);
 
   const { mutate: markRead } = useMutation({
     mutationFn: () => markConversationRead(otherUserId),
@@ -40,43 +89,39 @@ export function useChat(otherUserId: string) {
     },
   });
 
-  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-  const lastMessageId = lastMessage?.id ?? null;
-  const lastMessageIsMine = lastMessage?.senderId === user?.id;
+  const lastItem = timeline.length > 0 ? timeline[timeline.length - 1] : null;
+  const lastItemId = lastItem ? itemId(lastItem) : null;
+  const lastItemIsMine = !!lastItem && itemSenderId(lastItem) === user?.id;
 
   useEffect(() => {
-    if (!user?.id || !otherUserId || !lastMessageId || lastMessageIsMine) return;
+    if (!user?.id || !otherUserId || !lastItemId || lastItemIsMine) return;
     markRead();
-  }, [user?.id, otherUserId, lastMessageId, lastMessageIsMine, markRead]);
+  }, [user?.id, otherUserId, lastItemId, lastItemIsMine, markRead]);
 
   const { mutateAsync: sendMessage, isPending: isSending } = useMutation({
     mutationFn: (body: string) => sendChatMessage({ recipientId: otherUserId, body }),
     onSuccess: (message) => {
-      queryClient.setQueryData<ChatMessage[]>(queryKey, (current = []) =>
-        current.some((item) => item.id === message.id) ? current : [...current, message]
-      );
+      queryClient.setQueryData<ChatMessage[]>(messagesKey, (current = []) => upsertById(current, message));
     },
   });
 
-  const { mutateAsync: respondToOfferMessage } = useMutation({
-    mutationFn: ({ messageId, accept }: { messageId: string; accept: boolean }) => respondToOffer(messageId, accept),
-    onSuccess: ({ offerMessage, confirmationMessage }) => {
-      queryClient.setQueryData<ChatMessage[]>(queryKey, (current = []) =>
-        upsertMessage(current.map((item) => (item.id === offerMessage.id ? offerMessage : item)), confirmationMessage)
-      );
-      if (offerMessage.offerStatus === OFFER_STATUS.ACCEPTED && offerMessage.listingId) {
+  const { mutateAsync: respondToProposalItem } = useMutation({
+    mutationFn: ({ proposalId, accept }: { proposalId: string; accept: boolean }) => respondToProposal(proposalId, accept),
+    onSuccess: (proposal) => {
+      queryClient.setQueryData<Proposal[]>(proposalsKey, (current = []) => upsertById(current, proposal));
+      if (proposal.status === OFFER_STATUS.ACCEPTED) {
         queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
-        queryClient.invalidateQueries({ queryKey: ['plant-listing', offerMessage.listingId] });
+        queryClient.invalidateQueries({ queryKey: ['plant-listing', proposal.listingId] });
       }
     },
   });
 
   return {
-    messages,
-    isLoading,
+    timeline,
+    isLoading: isLoadingMessages || isLoadingProposals,
     sendMessage,
     isSending,
-    respondToOfferMessage,
+    respondToProposal: respondToProposalItem,
     currentUserId: user?.id ?? null,
   };
 }

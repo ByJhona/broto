@@ -10,10 +10,10 @@ import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar, Card, EmptyState, IconButton, LoadingScreen } from '@/components';
-import { useChat } from '@/hooks';
+import { useChat, type ChatTimelineItem } from '@/hooks';
 import { getProfile } from '@/services';
 import { Toast } from '@/utils';
-import { OFFER_STATUS, type ChatMessage, type OfferStatus } from '@/types';
+import { OFFER_STATUS, type OfferStatus, type Proposal } from '@/types';
 
 function getOfferStatusLabel(t: (key: string) => string): Record<OfferStatus, string> {
   return {
@@ -34,7 +34,7 @@ export default function ChatScreen() {
   const { t } = useTranslation('chat');
   const offerStatusLabel = getOfferStatusLabel(t);
 
-  const { messages, isLoading, sendMessage, isSending, respondToOfferMessage, currentUserId } = useChat(otherUserId);
+  const { timeline, isLoading, sendMessage, isSending, respondToProposal, currentUserId } = useChat(otherUserId);
 
   const otherUserQuery = useQuery({
     queryKey: ['profile', otherUserId],
@@ -61,63 +61,56 @@ export default function ChatScreen() {
     }
   };
 
-  const handleRespond = async (messageId: string, accept: boolean) => {
+  const handleRespond = async (proposalId: string, accept: boolean) => {
     try {
-      await respondToOfferMessage({ messageId, accept });
+      await respondToProposal({ proposalId, accept });
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : t('respondOfferError'));
     }
   };
 
-  const renderProposalCard = (message: ChatMessage, isMine: boolean) => (
+  const renderProposalCard = (proposal: Proposal, isMine: boolean) => (
     <Card style={styles.offerCard}>
       <View style={styles.offerHeader}>
-        {message.offeredPlantPhotoUrl ? (
-          <Image source={{ uri: message.offeredPlantPhotoUrl }} style={styles.offerPlantImage} />
+        {proposal.offeredPlantPhotoUrl ? (
+          <Image source={{ uri: proposal.offeredPlantPhotoUrl }} style={styles.offerPlantImage} />
         ) : (
           <View style={[styles.offerPlantImage, styles.offerPlantImagePlaceholder]}>
             <Leaf size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
           </View>
         )}
         <View style={styles.offerHeaderText}>
-          <Text style={styles.offerTitle}>{message.messageType === 'interest' ? t('interestCardTitle') : t('offerCardTitle')}</Text>
+          <Text style={styles.offerTitle}>{proposal.proposalType === 'interest' ? t('interestCardTitle') : t('offerCardTitle')}</Text>
           <Text style={styles.offerSubtitle}>
-            {message.messageType === 'interest'
-              ? message.listingTitle
-              : t('offerCardSubtitle', { plantName: message.offeredPlantName, listingTitle: message.listingTitle })}
+            {proposal.proposalType === 'interest'
+              ? proposal.listingTitle
+              : t('offerCardSubtitle', { plantName: proposal.offeredPlantName, listingTitle: proposal.listingTitle })}
           </Text>
         </View>
       </View>
 
-      {!isMine && message.offerStatus === OFFER_STATUS.PENDING ? (
+      {!isMine && proposal.status === OFFER_STATUS.PENDING ? (
         <View style={styles.offerActions}>
-          <Pressable style={styles.offerDecline} onPress={() => handleRespond(message.id, false)}>
+          <Pressable style={styles.offerDecline} onPress={() => handleRespond(proposal.id, false)}>
             <Text style={styles.offerDeclineText}>{t('declineButton')}</Text>
           </Pressable>
-          <Pressable style={styles.offerAccept} onPress={() => handleRespond(message.id, true)}>
+          <Pressable style={styles.offerAccept} onPress={() => handleRespond(proposal.id, true)}>
             <Text style={styles.offerAcceptText}>{t('acceptButton')}</Text>
           </Pressable>
         </View>
       ) : (
-        <Text style={styles.offerStatus}>{offerStatusLabel[message.offerStatus ?? OFFER_STATUS.PENDING]}</Text>
+        <Text style={styles.offerStatus}>{offerStatusLabel[proposal.status]}</Text>
       )}
     </Card>
   );
 
-  const renderMessageContent = (message: ChatMessage, isMine: boolean) => {
-    if (message.messageType === 'offer' || message.messageType === 'interest') {
-      return renderProposalCard(message, isMine);
-    }
-    if (message.messageType === 'confirmation') {
-      return (
-        <Card style={styles.offerCard}>
-          <Text style={styles.offerStatus}>{message.body}</Text>
-        </Card>
-      );
+  const renderTimelineItem = (item: ChatTimelineItem, isMine: boolean) => {
+    if (item.kind === 'proposal') {
+      return renderProposalCard(item.proposal, isMine);
     }
     return (
       <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-        <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.body}</Text>
+        <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{item.message.body}</Text>
       </View>
     );
   };
@@ -141,7 +134,7 @@ export default function ChatScreen() {
         }}
       />
 
-      {messages.length === 0 ? (
+      {timeline.length === 0 ? (
         <EmptyState
           icon={MessageCircle}
           message={t('emptyMessage')}
@@ -154,11 +147,13 @@ export default function ChatScreen() {
           contentContainerStyle={styles.messages}
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
-          {messages.map((message) => {
-            const isMine = message.senderId === currentUserId;
+          {timeline.map((item) => {
+            const senderId = item.kind === 'message' ? item.message.senderId : item.proposal.senderId;
+            const key = item.kind === 'message' ? item.message.id : item.proposal.id;
+            const isMine = senderId === currentUserId;
             return (
-              <View key={message.id} style={[styles.messageRow, isMine && styles.messageRowMine]}>
-                {renderMessageContent(message, isMine)}
+              <View key={key} style={[styles.messageRow, isMine && styles.messageRowMine]}>
+                {renderTimelineItem(item, isMine)}
               </View>
             );
           })}

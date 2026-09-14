@@ -27,12 +27,12 @@ import { useAuth, useListings, usePlants } from '@/hooks';
 import {
   createPost,
   getListingById,
-  getListingProposalMessages,
-  hasSentProposalMessage,
-  respondToOffer,
-  sendInterestMessage,
-  sendOfferMessage,
-  type ListingProposalMessage,
+  getListingProposals,
+  hasSentProposal,
+  respondToProposal,
+  sendInterestProposal,
+  sendOfferProposal,
+  type ListingProposalSummary,
 } from '@/services';
 import {
   Alert,
@@ -106,8 +106,8 @@ function ListingProposalsBlock({ isOwner, isExchange, proposals, onOpenChat }: R
 
 function buildProposals(
   isExchange: boolean,
-  proposals: ListingProposalMessage[] | undefined,
-  onRespond: (messageId: string, accept: boolean) => void,
+  proposals: ListingProposalSummary[] | undefined,
+  onRespond: (proposalId: string, accept: boolean) => void,
   t: TranslateFn
 ): ListingProposal[] {
   return (proposals ?? []).map((proposal) => ({
@@ -152,13 +152,13 @@ export default function ListingDetailScreen() {
 
   const proposalsQuery = useQuery({
     queryKey: ['plant-listing-proposals', id, isExchange],
-    queryFn: () => getListingProposalMessages(id, isExchange ? 'offer' : 'interest'),
+    queryFn: () => getListingProposals(id, isExchange ? 'offer' : 'interest'),
     enabled: !!id && isOwner,
   });
 
   const myActionQuery = useQuery({
     queryKey: ['plant-listing-my-action', id, user?.id, isExchange],
-    queryFn: () => hasSentProposalMessage(id, user!.id, isExchange ? 'offer' : 'interest'),
+    queryFn: () => hasSentProposal(id, user!.id, isExchange ? 'offer' : 'interest'),
     enabled: !!id && !!user && !isOwner,
   });
 
@@ -194,7 +194,7 @@ export default function ListingDetailScreen() {
 
     setIsActing(true);
     try {
-      await sendInterestMessage({ recipientId: listing.userId, listingId: listing.id });
+      await sendInterestProposal({ recipientId: listing.userId, listingId: listing.id });
       setHasActedThisSession(true);
       invalidateListingActivity();
       Toast.success(t('interestSentSuccess'));
@@ -210,9 +210,9 @@ export default function ListingDetailScreen() {
     router.push({ pathname: '/chat', params: { otherUserId } });
   };
 
-  const handleRespondProposal = async (messageId: string, accept: boolean) => {
+  const handleRespondProposal = async (proposalId: string, accept: boolean) => {
     try {
-      await respondToOffer(messageId, accept);
+      await respondToProposal(proposalId, accept);
       invalidateListingActivity();
     } catch {
       Toast.error(t('offerUpdateError'));
@@ -225,7 +225,7 @@ export default function ListingDetailScreen() {
     setIsPlantPickerOpen(false);
     setIsActing(true);
     try {
-      await sendOfferMessage({ recipientId: listing.userId, listingId: listing.id, offeredPlantId: plant.id });
+      await sendOfferProposal({ recipientId: listing.userId, listingId: listing.id, offeredPlantId: plant.id });
       setHasActedThisSession(true);
       invalidateListingActivity();
       handleOpenChat(listing.userId);
