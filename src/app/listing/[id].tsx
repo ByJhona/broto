@@ -183,11 +183,20 @@ export default function ListingDetailScreen() {
     return <EmptyState icon={Leaf} title={t('notFoundTitle')} message={t('notFoundMessage')} />;
   }
 
+  const invalidateListingActivity = () => {
+    queryClient.invalidateQueries({ queryKey: ['plant-listing-proposals', id] });
+    queryClient.invalidateQueries({ queryKey: ['plant-listing-my-action', id] });
+    queryClient.invalidateQueries({ queryKey: ['plant-listing', id] });
+  };
+
   const handleInterest = async () => {
+    if (hasSentInterest) return;
+
     setIsActing(true);
     try {
       await sendInterestMessage({ recipientId: listing.userId, listingId: listing.id });
       setHasActedThisSession(true);
+      invalidateListingActivity();
       Toast.success(t('interestSentSuccess'));
       handleOpenChat(listing.userId);
     } catch (err) {
@@ -201,26 +210,24 @@ export default function ListingDetailScreen() {
     router.push({ pathname: '/chat', params: { otherUserId } });
   };
 
-  const invalidateProposals = () => {
-    queryClient.invalidateQueries({ queryKey: ['plant-listing-proposals', id] });
-    queryClient.invalidateQueries({ queryKey: ['plant-listing', id] });
-  };
-
   const handleRespondProposal = async (messageId: string, accept: boolean) => {
     try {
       await respondToOffer(messageId, accept);
-      invalidateProposals();
+      invalidateListingActivity();
     } catch {
       Toast.error(t('offerUpdateError'));
     }
   };
 
   const handleProposeExchange = async (plant: PlantSummary) => {
+    if (hasSentInterest) return;
+
     setIsPlantPickerOpen(false);
     setIsActing(true);
     try {
       await sendOfferMessage({ recipientId: listing.userId, listingId: listing.id, offeredPlantId: plant.id });
       setHasActedThisSession(true);
+      invalidateListingActivity();
       handleOpenChat(listing.userId);
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : t('exchangeProposeError'));
