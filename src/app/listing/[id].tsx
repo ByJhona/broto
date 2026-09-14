@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -48,10 +48,63 @@ import {
   Toast,
   type AlertButton,
 } from '@/utils';
-import { LISTING_STATUS, LISTING_TYPE, OFFER_STATUS, type PlantSummary } from '@/types';
+import { LISTING_STATUS, LISTING_TYPE, OFFER_STATUS, type ListingStatus, type PlantSummary } from '@/types';
 
 function fetchMyListingAction(isExchange: boolean, listingId: string, userId: string): Promise<boolean> {
   return isExchange ? hasProposedOffer(listingId, userId) : hasExpressedInterest(listingId, userId);
+}
+
+type ListingActionHandlers = {
+  onMarkCompleted: () => void;
+  onMarkExpired: () => void;
+  onReactivate: () => void;
+  onShare: () => void;
+  onDelete: () => void;
+};
+
+function buildListingActionButtons(status: ListingStatus, handlers: ListingActionHandlers): AlertButton[] {
+  const buttons: AlertButton[] = [];
+  if (status === LISTING_STATUS.AVAILABLE) {
+    buttons.push({ text: 'Marcar como concluída', onPress: handlers.onMarkCompleted });
+    buttons.push({ text: 'Marcar como expirada', onPress: handlers.onMarkExpired });
+  }
+  if (status === LISTING_STATUS.EXPIRED) {
+    buttons.push({ text: 'Reativar oferta', onPress: handlers.onReactivate });
+  }
+  buttons.push({ text: 'Compartilhar na Comunidade', onPress: handlers.onShare });
+  buttons.push({ text: 'Excluir oferta', style: 'destructive', onPress: handlers.onDelete });
+  buttons.push({ text: 'Fechar', style: 'cancel' });
+  return buttons;
+}
+
+type ListingStatusNoticeProps = {
+  status: ListingStatus;
+  style: StyleProp<TextStyle>;
+};
+
+function ListingStatusNotice({ status, style }: Readonly<ListingStatusNoticeProps>) {
+  if (status === LISTING_STATUS.AVAILABLE) return null;
+  return <Text style={style}>{LISTING_STATUS_NOTICES[status]}</Text>;
+}
+
+type ListingProposalsBlockProps = {
+  isOwner: boolean;
+  isExchange: boolean;
+  proposals: ListingProposal[];
+  onOpenChat: (userId: string) => void;
+};
+
+function ListingProposalsBlock({ isOwner, isExchange, proposals, onOpenChat }: Readonly<ListingProposalsBlockProps>) {
+  if (!isOwner) return null;
+
+  return (
+    <ListingProposalsSection
+      title={isExchange ? 'Propostas de troca' : 'Pessoas interessadas'}
+      emptyMessage={isExchange ? 'Ninguém propôs uma troca ainda.' : 'Ninguém demonstrou interesse ainda.'}
+      proposals={proposals}
+      onOpenChat={onOpenChat}
+    />
+  );
 }
 
 function buildProposals(
@@ -300,18 +353,17 @@ export default function ListingDetailScreen() {
   };
 
   const handleOpenActions = () => {
-    const buttons: AlertButton[] = [];
-    if (listing.status === LISTING_STATUS.AVAILABLE) {
-      buttons.push({ text: 'Marcar como concluída', onPress: handleMarkCompleted });
-      buttons.push({ text: 'Marcar como expirada', onPress: handleMarkExpired });
-    }
-    if (listing.status === LISTING_STATUS.EXPIRED) {
-      buttons.push({ text: 'Reativar oferta', onPress: handleReactivate });
-    }
-    buttons.push({ text: 'Compartilhar na Comunidade', onPress: handleOpenShareModal });
-    buttons.push({ text: 'Excluir oferta', style: 'destructive', onPress: handleDelete });
-    buttons.push({ text: 'Fechar', style: 'cancel' });
-    Alert.alert('Editar oferta', undefined, buttons);
+    Alert.alert(
+      'Editar oferta',
+      undefined,
+      buildListingActionButtons(listing.status, {
+        onMarkCompleted: handleMarkCompleted,
+        onMarkExpired: handleMarkExpired,
+        onReactivate: handleReactivate,
+        onShare: handleOpenShareModal,
+        onDelete: handleDelete,
+      })
+    );
   };
 
   const proposals = buildProposals(
@@ -367,9 +419,7 @@ export default function ListingDetailScreen() {
           </View>
         </Card>
 
-        {listing.status !== LISTING_STATUS.AVAILABLE ? (
-          <Text style={styles.statusNotice}>{LISTING_STATUS_NOTICES[listing.status]}</Text>
-        ) : null}
+        <ListingStatusNotice status={listing.status} style={styles.statusNotice} />
 
         {listing.description ? (
           <Card style={styles.section}>
@@ -378,14 +428,7 @@ export default function ListingDetailScreen() {
           </Card>
         ) : null}
 
-        {isOwner ? (
-          <ListingProposalsSection
-            title={isExchange ? 'Propostas de troca' : 'Pessoas interessadas'}
-            emptyMessage={isExchange ? 'Ninguém propôs uma troca ainda.' : 'Ninguém demonstrou interesse ainda.'}
-            proposals={proposals}
-            onOpenChat={handleOpenChat}
-          />
-        ) : null}
+        <ListingProposalsBlock isOwner={isOwner} isExchange={isExchange} proposals={proposals} onOpenChat={handleOpenChat} />
 
         <ListingActionFooter
           isOwner={isOwner}
