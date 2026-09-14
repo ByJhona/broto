@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { AVATAR_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import type { UserProfile } from '@/types';
@@ -52,7 +53,7 @@ export async function updateProfile(
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error('Este nome de usuário já está em uso.');
+      throw new Error(i18n.t('errors:usernameAlreadyInUse'));
     }
     console.error('Error updating profile:', error);
     throw error;

@@ -13,23 +13,28 @@ import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
 import type { PlantDiagnosis } from '@/types';
 import { Alert, requireLogin } from '@/utils';
+import { useTranslation } from '@/i18n';
 
 type CaptureMode = 'identify' | 'diagnose';
 
-const MODE_COPY: Record<CaptureMode, { title: string; subtitle: string; loading: string; loginMessage: string }> = {
-  identify: {
-    title: 'Que planta é essa?',
-    subtitle: 'Aponte a câmera pra folha ou flor da planta',
-    loading: 'Identificando sua planta...',
-    loginMessage: 'Você precisa de uma conta pra identificar plantas.',
-  },
-  diagnose: {
-    title: 'Como está a sua planta?',
-    subtitle: 'Aponte a câmera pra planta que você quer diagnosticar',
-    loading: 'Analisando sua planta...',
-    loginMessage: 'Você precisa de uma conta pra diagnosticar suas plantas.',
-  },
-};
+function getModeCopy(
+  t: (key: string, options?: Record<string, unknown>) => string
+): Record<CaptureMode, { title: string; subtitle: string; loading: string; loginMessage: string }> {
+  return {
+    identify: {
+      title: t('identifyTitle'),
+      subtitle: t('identifySubtitle'),
+      loading: t('identifyLoading'),
+      loginMessage: t('identifyLoginMessage'),
+    },
+    diagnose: {
+      title: t('diagnoseTitle'),
+      subtitle: t('diagnoseSubtitle'),
+      loading: t('diagnoseLoading'),
+      loginMessage: t('diagnoseLoginMessage'),
+    },
+  };
+}
 
 type ModeToggleProps = {
   mode: CaptureMode;
@@ -39,6 +44,7 @@ type ModeToggleProps = {
 function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('photo');
   return (
     <View style={styles.toggle}>
       <Pressable
@@ -46,14 +52,14 @@ function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
         onPress={() => onChange('identify')}
       >
         <Scan size={15} color={mode === 'identify' ? colors.leaf : colors.white} strokeWidth={2} />
-        <Text style={[styles.toggleText, mode === 'identify' && styles.toggleTextActive]}>Identificar</Text>
+        <Text style={[styles.toggleText, mode === 'identify' && styles.toggleTextActive]}>{t('toggleIdentify')}</Text>
       </Pressable>
       <Pressable
         style={[styles.toggleOption, mode === 'diagnose' && styles.toggleOptionActive]}
         onPress={() => onChange('diagnose')}
       >
         <Stethoscope size={15} color={mode === 'diagnose' ? colors.leaf : colors.white} strokeWidth={2} />
-        <Text style={[styles.toggleText, mode === 'diagnose' && styles.toggleTextActive]}>Diagnosticar</Text>
+        <Text style={[styles.toggleText, mode === 'diagnose' && styles.toggleTextActive]}>{t('toggleDiagnose')}</Text>
       </Pressable>
     </View>
   );
@@ -72,6 +78,7 @@ export default function PhotoScreen() {
   const { isOffline } = useNetworkStatus();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('photo');
   const [mode, setMode] = useState<CaptureMode>(params.mode === 'diagnose' ? 'diagnose' : 'identify');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,18 +107,14 @@ export default function PhotoScreen() {
     };
   }, [isFocused]);
 
-  const copy = MODE_COPY[mode];
+  const copy = getModeCopy(t)[mode];
   const creditCost = mode === 'identify' ? CREDIT_COSTS.identification : CREDIT_COSTS.diagnosis;
 
   const showInsufficientCreditsAlert = () => {
-    Alert.alert(
-      'Créditos insuficientes',
-      `Essa ação custa ${creditCost} créditos. Veja os planos pra continuar.`,
-      [
-        { text: 'Agora não', style: 'cancel' },
-        { text: 'Ver planos', onPress: () => router.push('/profile/plans') },
-      ]
-    );
+    Alert.alert(t('insufficientCreditsTitle'), t('insufficientCreditsMessage', { cost: creditCost }), [
+      { text: t('notNowOption'), style: 'cancel' },
+      { text: t('seePlansOption'), onPress: () => router.push('/profile/plans') },
+    ]);
   };
 
   // Switching tabs doesn't unmount this screen, so a stale response must not yank
@@ -146,7 +149,7 @@ export default function PhotoScreen() {
       if (err instanceof InsufficientCreditsError) {
         if (isFocusedRef.current) showInsufficientCreditsAlert();
       } else {
-        setError(err instanceof Error ? err.message : 'Não foi possível processar a foto. Tente novamente.');
+        setError(err instanceof Error ? err.message : t('processPhotoError'));
       }
     } finally {
       setIsProcessing(false);
@@ -179,7 +182,7 @@ export default function PhotoScreen() {
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      setError('Precisamos de acesso às suas fotos pra isso.');
+      setError(t('galleryPermissionError'));
       return;
     }
 
@@ -207,12 +210,12 @@ export default function PhotoScreen() {
       <View style={styles.centered}>
         <ModeToggle mode={mode} onChange={setMode} />
         <Text style={styles.title}>{copy.title}</Text>
-        <Text style={styles.subtitle}>Precisamos de acesso à câmera pra tirar a foto da sua planta.</Text>
+        <Text style={styles.subtitle}>{t('cameraPermissionMessage')}</Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Permitir câmera</Text>
+          <Text style={styles.permissionButtonText}>{t('allowCameraCta')}</Text>
         </Pressable>
         <Pressable onPress={handlePickFromGallery}>
-          <Text style={styles.galleryLink}>Ou escolher da galeria</Text>
+          <Text style={styles.galleryLink}>{t('chooseFromGalleryCta')}</Text>
         </Pressable>
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
@@ -233,7 +236,7 @@ export default function PhotoScreen() {
         <Text style={styles.overlaySubtitle}>{copy.subtitle}</Text>
         {isOffline ? (
           <View style={styles.offlineBanner}>
-            <OfflineBanner message="Sem conexão — essa ação exige internet." />
+            <OfflineBanner message={t('offlineMessage')} />
           </View>
         ) : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}

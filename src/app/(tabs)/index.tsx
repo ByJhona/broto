@@ -9,6 +9,7 @@ import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Plus from 'lucide-react-native/icons/plus';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   CreateChoiceSheet,
   EventCallout,
@@ -148,6 +149,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('home');
   const params = useLocalSearchParams<PlacingParams>();
   const { user } = useAuth();
   const { listings, addListing } = useListings();
@@ -206,7 +208,7 @@ export default function HomeScreen() {
 
   const handleLocateMe = async () => {
     const result = await locationQuery.refetch();
-    if (!result.data) Toast.error('Permita o acesso à localização pra ver plantas perto de você.');
+    if (!result.data) Toast.error(t('locationPermissionDenied'));
   };
 
   const handleCreateListing = () => {
@@ -238,18 +240,18 @@ export default function HomeScreen() {
       });
 
       if (params.shareToCommunity === '1' && user) {
-        const caption = params.communityCaption || `Marquei um evento: "${params.title}"!`;
+        const caption = params.communityCaption || t('eventCommunityCaptionFallback', { title: params.title });
         try {
           await createPost(user.id, caption, [], null, newEvent.photoUrl ? [newEvent.photoUrl] : [], null, newEvent.id);
         } catch {
-          Toast.error('Evento publicado, mas não deu pra compartilhar na Comunidade.');
+          Toast.error(t('eventPublishedShareError'));
         }
       }
 
-      Toast.success('Evento publicado no mapa!');
+      Toast.success(t('eventPublishSuccess'));
       router.replace('/(tabs)');
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível publicar o evento.');
+      Toast.error(err instanceof Error ? err.message : t('eventPublishError'));
     } finally {
       setIsPublishing(false);
     }
@@ -277,14 +279,14 @@ export default function HomeScreen() {
         try {
           await createPost(user.id, caption, [], null, newListing.photoUrls, newListing.id);
         } catch {
-          Toast.error('Oferta publicada, mas não deu pra compartilhar na Comunidade.');
+          Toast.error(t('listingPublishedShareError'));
         }
       }
 
-      Toast.success('Oferta publicada no mapa!');
+      Toast.success(t('listingPublishSuccess'));
       router.replace('/(tabs)');
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível publicar a oferta.');
+      Toast.error(err instanceof Error ? err.message : t('listingPublishError'));
     } finally {
       setIsPublishing(false);
     }
@@ -359,12 +361,10 @@ export default function HomeScreen() {
 
           <View style={[styles.placingPanel, { bottom: insets.bottom + Metrics.spacing.lg }]}>
             <Text style={styles.placingText}>
-              {placingKind === 'event'
-                ? 'Posicione o mapa até o pino ficar no local do evento'
-                : 'Posicione o mapa até o pino ficar no local de retirada'}
+              {placingKind === 'event' ? t('placingEventInstructions') : t('placingListingInstructions')}
             </Text>
             <SubmitButton
-              label={placingKind === 'event' ? 'Publicar evento aqui' : 'Publicar oferta aqui'}
+              label={placingKind === 'event' ? t('publishEventHere') : t('publishListingHere')}
               onPress={handleConfirmPlacing}
               loading={isPublishing}
             />

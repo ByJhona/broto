@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from '@/i18n';
 import { usePlantGroups } from '@/hooks';
 import type { PlantGroup } from '@/types';
 import { PromptModal } from './PromptModal';
@@ -10,6 +11,7 @@ type CreateGroupModalProps = {
 };
 
 export function CreateGroupModal({ visible, onClose, onCreated }: Readonly<CreateGroupModalProps>) {
+  const { t } = useTranslation('group');
   const { addGroup } = usePlantGroups();
   const [nameDraft, setNameDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function CreateGroupModal({ visible, onClose, onCreated }: Readonly<Creat
   const handleSubmit = async () => {
     const trimmed = nameDraft.trim();
     if (!trimmed) {
-      setError('Dá um nome pro grupo.');
+      setError(t('nameRequired'));
       return;
     }
 
@@ -35,7 +37,7 @@ export function CreateGroupModal({ visible, onClose, onCreated }: Readonly<Creat
       setError(null);
       onCreated(group);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível criar o grupo.');
+      setError(err instanceof Error ? err.message : t('createGroupError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -44,13 +46,13 @@ export function CreateGroupModal({ visible, onClose, onCreated }: Readonly<Creat
   return (
     <PromptModal
       visible={visible}
-      title="Como você quer chamar esse grupo?"
-      label="Nome"
+      title={t('renameModalTitle')}
+      label={t('nameLabel')}
       value={nameDraft}
       onChangeText={setNameDraft}
-      placeholder="Suculentas"
+      placeholder={t('namePlaceholder')}
       error={error}
-      submitLabel="Criar"
+      submitLabel={t('create')}
       isSubmitting={isSubmitting}
       onSubmit={handleSubmit}
       onCancel={handleClose}

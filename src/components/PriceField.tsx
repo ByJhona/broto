@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import { formatPrice } from '@/utils';
 import { FormField } from './FormField';
 
@@ -8,6 +9,8 @@ type PriceFieldProps = {
 };
 
 export function PriceField({ label, cents, onChangeCents }: Readonly<PriceFieldProps>) {
+  const { t } = useTranslation('listing');
+
   const handleChangeText = (text: string) => {
     const digits = text.replace(/\D/g, '');
     onChangeCents(digits ? Number(digits) : 0);
@@ -19,7 +22,7 @@ export function PriceField({ label, cents, onChangeCents }: Readonly<PriceFieldP
       value={cents > 0 ? formatPrice(cents) : ''}
       onChangeText={handleChangeText}
       keyboardType="number-pad"
-      placeholder="R$ 0,00"
+      placeholder={t('priceFieldPlaceholder')}
     />
   );
 }

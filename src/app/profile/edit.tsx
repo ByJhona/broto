@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Camera from 'lucide-react-native/icons/camera';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Avatar, LoadingScreen, ScreenContent } from '@/components';
 import { useAuth } from '@/hooks';
 import { getProfile, updateProfile, uploadAvatar } from '@/services';
@@ -17,6 +18,7 @@ export default function EditProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -53,7 +55,7 @@ export default function EditProfileScreen() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Toast.error('Precisamos de acesso à sua galeria para escolher uma foto.');
+      Toast.error(t('galleryPermissionError'));
       return;
     }
 
@@ -72,7 +74,7 @@ export default function EditProfileScreen() {
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Toast.error('Digite seu nome.');
+      Toast.error(t('nameRequiredError'));
       return;
     }
 
@@ -98,10 +100,10 @@ export default function EditProfileScreen() {
         avatar_url: finalAvatarUrl,
       });
       queryClient.setQueryData(['profile', user.id], updated);
-      Toast.success('Perfil atualizado com sucesso!');
+      Toast.success(t('profileUpdatedSuccess'));
       router.back();
     } catch (err: any) {
-      Toast.error(err.message || 'Não foi possível atualizar o perfil.');
+      Toast.error(err.message || t('profileUpdateError'));
     } finally {
       setSaving(false);
       setUploadingAvatar(false);
@@ -131,46 +133,43 @@ export default function EditProfileScreen() {
               <Camera size={20} color={colors.white} />
             </View>
           </Pressable>
-          <Text style={styles.avatarHint}>Toque para alterar a foto</Text>
+          <Text style={styles.avatarHint}>{t('changePhotoHint')}</Text>
         </View>
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nome de exibição</Text>
+          <Text style={styles.label}>{t('displayNameLabel')}</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Seu nome"
+            placeholder={t('displayNamePlaceholder')}
             placeholderTextColor={colors.mutedForeground}
             autoCorrect={false}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nome de usuário (Username)</Text>
+          <Text style={styles.label}>{t('usernameLabel')}</Text>
           <TextInput
             style={styles.input}
             value={username}
             onChangeText={setUsername}
-            placeholder="seunome"
+            placeholder={t('usernamePlaceholder')}
             placeholderTextColor={colors.mutedForeground}
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <Text style={styles.hint}>
-            Único no sistema. Só letras minúsculas, números e underline, começando com uma letra. De 3 a 20
-            caracteres, sem espaços.
-          </Text>
+          <Text style={styles.hint}>{t('usernameHint')}</Text>
         </View>
 
-        <Pressable 
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]} 
+        <Pressable
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleSave}
           disabled={saving}
         >
           {saving || uploadingAvatar ? (
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
-            <Text style={styles.saveButtonText}>Salvar alterações</Text>
+            <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
           )}
         </Pressable>
       </ScreenContent>

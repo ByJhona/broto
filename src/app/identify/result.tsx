@@ -24,6 +24,7 @@ import { useAuth, usePlants } from '@/hooks';
 import { getPlantSpeciesInfo } from '@/services';
 import type { PlantCandidate, PlantSpeciesInfo } from '@/types';
 import { requireLogin, sunLevelLabel, type SunLevel } from '@/utils';
+import { useTranslation } from '@/i18n';
 
 function parseCandidates(raw: string | string[] | undefined): PlantCandidate[] {
   if (!raw || Array.isArray(raw)) return [];
@@ -41,6 +42,7 @@ export default function IdentifyResultScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { session } = useAuth();
   const { addPlant } = usePlants();
+  const { t } = useTranslation('identify');
   const params = useLocalSearchParams<{ candidates: string }>();
   const candidates = useMemo(() => parseCandidates(params.candidates), [params.candidates]);
 
@@ -88,7 +90,7 @@ export default function IdentifyResultScreen() {
   };
 
   const handleOpenNicknameModal = () => {
-    if (!requireLogin(router, !!session, 'Você precisa de uma conta pra salvar plantas no seu jardim.')) {
+    if (!requireLogin(router, !!session, t('loginRequiredMessage'))) {
       return;
     }
     setError(null);
@@ -97,7 +99,7 @@ export default function IdentifyResultScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError('Dá um apelido pra sua planta.');
+      setError(t('missingNicknameError'));
       return;
     }
 
@@ -124,7 +126,7 @@ export default function IdentifyResultScreen() {
       });
       router.replace(`/plant/${plant.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível salvar a planta. Tente novamente.');
+      setError(err instanceof Error ? err.message : t('saveError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -133,10 +135,7 @@ export default function IdentifyResultScreen() {
   if (!selected) {
     return (
       <View style={styles.emptyContainer}>
-        <EmptyState
-          icon={Leaf}
-          message="Não conseguimos identificar nenhuma planta nessa foto. Tente outra imagem, de perto da folha ou da flor."
-        />
+        <EmptyState icon={Leaf} message={t('notFoundMessage')} />
       </View>
     );
   }
@@ -164,17 +163,17 @@ export default function IdentifyResultScreen() {
 
         <ScreenContent>
           <View style={styles.section}>
-            <SectionTitle>Cuidados sugeridos</SectionTitle>
+            <SectionTitle>{t('suggestedCareTitle')}</SectionTitle>
             <View style={styles.chipRow}>
-              <InfoChip icon={Droplet} value={`Regar a cada ${wateringDays || '—'} dias`} />
+              <InfoChip icon={Droplet} value={t('wateringEvery', { days: wateringDays || '—' })} />
               {lightLevel ? <InfoChip icon={Sun} value={sunLevelLabel(lightLevel)} /> : null}
             </View>
           </View>
 
           <View style={styles.section}>
-            <SectionTitle>Identificação</SectionTitle>
+            <SectionTitle>{t('identificationSectionTitle')}</SectionTitle>
             <View style={styles.chipRow}>
-              <InfoChip icon={Percent} value={`${Math.round(selected.score * 100)}% de confiança`} />
+              <InfoChip icon={Percent} value={t('confidencePercent', { percent: Math.round(selected.score * 100) })} />
               {selected.family ? <InfoChip icon={Leaf} value={selected.family} /> : null}
               {selected.genus ? <InfoChip icon={Dna} value={selected.genus} /> : null}
             </View>
@@ -182,7 +181,7 @@ export default function IdentifyResultScreen() {
 
           {candidates.length > 1 ? (
             <View style={styles.section}>
-              <SectionTitle>Não é essa? Outras possibilidades</SectionTitle>
+              <SectionTitle>{t('otherPossibilitiesTitle')}</SectionTitle>
               {candidates.map((candidate, index) =>
                 index === selectedIndex ? null : (
                   <Pressable
@@ -207,18 +206,18 @@ export default function IdentifyResultScreen() {
       </KeyboardAwareScrollView>
 
       <View style={[styles.floatingButton, { bottom: insets.bottom + Metrics.spacing.lg }]}>
-        <SubmitButton label="Adicionar ao meu jardim" onPress={handleOpenNicknameModal} />
+        <SubmitButton label={t('addToGardenCta')} onPress={handleOpenNicknameModal} />
       </View>
 
       <PromptModal
         visible={isNicknameModalOpen}
-        title="Como você quer chamar essa planta?"
-        label="Apelido"
+        title={t('nicknameModalTitle')}
+        label={t('nicknameLabel')}
         value={name}
         onChangeText={setName}
-        placeholder="Samba"
+        placeholder={t('nicknamePlaceholder')}
         error={error}
-        submitLabel="Salvar no meu jardim"
+        submitLabel={t('saveToGardenCta')}
         isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
         onCancel={() => setIsNicknameModalOpen(false)}

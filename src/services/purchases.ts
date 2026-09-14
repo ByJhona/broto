@@ -1,5 +1,6 @@
 import Purchases from 'react-native-purchases';
 import { Linking, Platform } from 'react-native';
+import { i18n } from '@/i18n';
 
 const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
@@ -64,7 +65,7 @@ export async function restorePurchases() {
 export async function manageSubscriptions() {
   const customerInfo = await Purchases.getCustomerInfo();
   if (!customerInfo.managementURL) {
-    throw new Error('Não encontramos uma assinatura ativa pra gerenciar.');
+    throw new Error(i18n.t('credits:noActiveSubscription'));
   }
 
   await Linking.openURL(customerInfo.managementURL);

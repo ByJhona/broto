@@ -1,1 +1,25 @@
-{}
+{
+  "currentPlan": "Current plan",
+  "loadingCredits": "Loading credits...",
+  "unlimitedCredits": "Unlimited credits",
+  "creditsAvailable": "{{count}} credits available",
+  "planUsedForIdentification": "{{planName}} · used to identify plants",
+  "week": "week",
+  "month": "month",
+  "planRenewsCredits": "{{planName}} · renews {{count}} per {{period}}",
+  "signInToSeeCredits": "Sign in to see your credits",
+  "signInToSeeCreditsSubtitle": "Create an account to identify plants and earn credits.",
+  "processing": "Processing...",
+  "subscribe": "Subscribe",
+  "storeBeingPrepared": "The store is being set up. Check back soon.",
+  "notYetAvailableInStores": "This isn't published in the stores yet.",
+  "purchaseError": "Couldn't complete the purchase.",
+  "free": "Free",
+  "priceMonthly": "{{price}}/mo",
+  "subscriptionConfirmed": "Your subscription has been confirmed.",
+  "creditPacks": "Credit packs",
+  "buy": "Buy",
+  "creditsAddedToAccount": "Credits added to your account.",
+  "noActiveSubscription": "We couldn't find an active subscription to manage.",
+  "insufficientCreditsMessage": "You've used all your credits for the month."
+}

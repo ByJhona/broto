@@ -8,6 +8,7 @@ import Clock from 'lucide-react-native/icons/clock';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, FormError, FormField, PhotoGrid, ScreenContent, SectionTitle, ShareToCommunityToggle, SubmitButton } from '@/components';
 import { EVENT_COLOR, EVENT_ICON, pickPhoto } from '@/utils';
+import { useTranslation } from '@/i18n';
 
 const MAX_EVENT_PHOTOS = 1;
 
@@ -26,6 +27,7 @@ export default function NewEventScreen() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const EventIcon = EVENT_ICON;
+  const { t } = useTranslation('event');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -75,12 +77,12 @@ export default function NewEventScreen() {
 
   const handleContinue = () => {
     if (!title.trim()) {
-      setError('Dá um título pro evento.');
+      setError(t('missingTitleError'));
       return;
     }
 
     if (eventDate.getTime() <= Date.now()) {
-      setError('Escolha uma data e horário no futuro.');
+      setError(t('pastDateError'));
       return;
     }
 
@@ -109,22 +111,22 @@ export default function NewEventScreen() {
     >
       <ScreenContent>
         <Card style={styles.section}>
-          <SectionTitle>Foto (opcional)</SectionTitle>
+          <SectionTitle>{t('optionalPhotoLabel')}</SectionTitle>
           <PhotoGrid photoUrls={imageUris} onAdd={handleAddPhoto} onRemove={handleRemovePhoto} max={MAX_EVENT_PHOTOS} />
         </Card>
 
-        <FormField label="Título" value={title} onChangeText={setTitle} placeholder="Feira de trocas no parque" />
+        <FormField label={t('titleLabel')} value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} />
 
         <FormField
-          label="Descrição (opcional)"
+          label={t('descriptionLabel')}
           value={description}
           onChangeText={setDescription}
-          placeholder="Conte mais sobre o evento e o que os participantes podem esperar"
+          placeholder={t('descriptionPlaceholder')}
           multiline
         />
 
         <View style={styles.field}>
-          <Text style={styles.label}>Quando?</Text>
+          <Text style={styles.label}>{t('whenLabel')}</Text>
           <View style={styles.dateTimeRow}>
             <Pressable style={styles.dateTimeButton} onPress={() => openPicker('date')}>
               <EventIcon size={18} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
@@ -158,22 +160,22 @@ export default function NewEventScreen() {
         <ShareToCommunityToggle
           value={shareToCommunity}
           onValueChange={setShareToCommunity}
-          description="Compartilha esse evento também no feed da Comunidade."
+          description={t('shareToCommunityDescription')}
         />
 
         {shareToCommunity ? (
           <FormField
-            label="Comentário na Comunidade (opcional)"
+            label={t('communityCommentLabel')}
             value={communityCaption}
             onChangeText={setCommunityCaption}
-            placeholder={`Marquei um evento: "${title || 'seu evento'}"!`}
+            placeholder={t('communityCommentPlaceholder', { title: title || t('untitledEventFallback') })}
             multiline
           />
         ) : null}
 
         <FormError>{error}</FormError>
 
-        <SubmitButton label="Escolher local no mapa" onPress={handleContinue} />
+        <SubmitButton label={t('chooseLocationCta')} onPress={handleContinue} />
       </ScreenContent>
     </KeyboardAwareScrollView>
   );

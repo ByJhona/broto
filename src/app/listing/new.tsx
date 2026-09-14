@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   Card,
   FormError,
@@ -27,6 +28,7 @@ export default function NewListingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('listing');
   const { plants } = usePlants();
   const listingTypeOptions = listingTypes();
 
@@ -61,12 +63,12 @@ export default function NewListingScreen() {
 
   const handleContinue = () => {
     if (!title.trim()) {
-      setError('Dá um título pra oferta.');
+      setError(t('titleRequired'));
       return;
     }
 
     if (isSale && priceCents <= 0) {
-      setError('Informa o preço da planta.');
+      setError(t('priceRequired'));
       return;
     }
 
@@ -99,7 +101,7 @@ export default function NewListingScreen() {
     >
       <ScreenContent>
         <Card style={styles.section}>
-          <SectionTitle>Fotos</SectionTitle>
+          <SectionTitle>{t('photosSectionTitle')}</SectionTitle>
           <PhotoGrid
             photoUrls={imageUris}
             onAdd={handleAddPhoto}
@@ -109,52 +111,52 @@ export default function NewListingScreen() {
         </Card>
 
         <Card style={styles.section}>
-          <SectionTitle>Tipo de oferta</SectionTitle>
+          <SectionTitle>{t('listingTypeSectionTitle')}</SectionTitle>
           <PillSelector options={listingTypeOptions} value={listingType} onChange={setListingType} />
 
           {isSale ? (
             <View style={styles.priceField}>
-              <PriceField label="Preço" cents={priceCents} onChangeCents={setPriceCents} />
+              <PriceField label={t('priceLabel')} cents={priceCents} onChangeCents={setPriceCents} />
             </View>
           ) : null}
         </Card>
 
         {plants.length > 0 && (
           <Card style={styles.section}>
-            <SectionTitle>Alguma das suas plantas? (opcional)</SectionTitle>
+            <SectionTitle>{t('yourPlantsSectionTitle')}</SectionTitle>
             <PlantPickerRow plants={plants} selectedId={plantId} onSelect={handleSelectPlant} />
           </Card>
         )}
 
-        <FormField label="Título" value={title} onChangeText={setTitle} placeholder="Muda de Costela-de-adão" />
+        <FormField label={t('titleLabel')} value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} />
 
         <FormField
-          label="Descrição (opcional)"
+          label={t('descriptionLabel')}
           value={description}
           onChangeText={setDescription}
-          placeholder="Conte mais sobre a planta e o combinado de retirada"
+          placeholder={t('descriptionPlaceholder')}
           multiline
         />
 
         <ShareToCommunityToggle
           value={shareToCommunity}
           onValueChange={setShareToCommunity}
-          description="Compartilha essa oferta também no feed da Comunidade."
+          description={t('shareToCommunityDescription')}
         />
 
         {shareToCommunity ? (
           <FormField
-            label="Comentário na Comunidade (opcional)"
+            label={t('communityCommentLabel')}
             value={communityCaption}
             onChangeText={setCommunityCaption}
-            placeholder={`${listingShareVerb(listingType)} "${title || 'sua planta'}"!`}
+            placeholder={`${listingShareVerb(listingType)} "${title || t('yourPlantFallback')}"!`}
             multiline
           />
         ) : null}
 
         <FormError>{error}</FormError>
 
-        <SubmitButton label="Escolher local no mapa" onPress={handleContinue} />
+        <SubmitButton label={t('chooseLocationCta')} onPress={handleContinue} />
       </ScreenContent>
     </KeyboardAwareScrollView>
   );

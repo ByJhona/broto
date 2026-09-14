@@ -1,4 +1,5 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
 import { toFunctionError } from './functionErrors';
@@ -43,7 +44,7 @@ export async function askPlantQuestion(
     throw await toFunctionError(error);
   }
 
-  if (!data) throw new Error('Não foi possível obter uma resposta.');
+  if (!data) throw new Error(i18n.t('plant:chatNoResponseError'));
 
   const { newCreditBalance, sessionId: returnedSessionId, ...row } = data;
   return { message: mapRow(row), sessionId: returnedSessionId, newCreditBalance };

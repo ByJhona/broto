@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } fro
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { SectionTitle } from './SectionTitle';
 
 type CollapsibleSectionProps = PropsWithChildren<{
@@ -25,6 +26,7 @@ export function CollapsibleSection({
 }: Readonly<CollapsibleSectionProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
 
   return (
     <View style={[styles.section, style]}>
@@ -34,7 +36,7 @@ export function CollapsibleSection({
           {headerAction}
           {onSeeMore ? (
             <Pressable onPress={onSeeMore}>
-              <Text style={styles.seeMore}>Ver mais</Text>
+              <Text style={styles.seeMore}>{t('seeMore')}</Text>
             </Pressable>
           ) : null}
           <Pressable onPress={onToggleCollapsed} hitSlop={8}>

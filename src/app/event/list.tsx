@@ -9,13 +9,9 @@ import { EmptyState, FilterChipRow, ListRow } from '@/components';
 import { useEvents, useUserLocation } from '@/hooks';
 import { EVENT_COLOR, EVENT_ICON, formatDistanceTo, formatEventDateTime } from '@/utils';
 import type { PlantEvent } from '@/types';
+import { useTranslation } from '@/i18n';
 
 type SortMode = 'proximos' | 'recentes';
-
-const SORT_OPTIONS: { value: SortMode; label: string }[] = [
-  { value: 'proximos', label: 'Mais próximos' },
-  { value: 'recentes', label: 'Mais recentes' },
-];
 
 function sortEvents(events: PlantEvent[], mode: SortMode): PlantEvent[] {
   const sorted = [...events];
@@ -36,6 +32,12 @@ export default function EventListScreen() {
   const userLocation = useUserLocation();
   const [sortMode, setSortMode] = useState<SortMode>('proximos');
   const EventIcon = EVENT_ICON;
+  const { t } = useTranslation('event');
+
+  const sortOptions: { value: SortMode; label: string }[] = [
+    { value: 'proximos', label: t('sortNearest') },
+    { value: 'recentes', label: t('sortRecent') },
+  ];
 
   const sortedEvents = useMemo(() => sortEvents(events, sortMode), [events, sortMode]);
 
@@ -45,10 +47,10 @@ export default function EventListScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
       data={sortedEvents}
       keyExtractor={(event) => event.id}
-      ListHeaderComponent={<FilterChipRow options={SORT_OPTIONS} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
-      ListEmptyComponent={<EmptyState icon={EVENT_ICON} message="Nenhum evento por perto ainda." style={styles.empty} />}
+      ListHeaderComponent={<FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
+      ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
       renderItem={({ item }) => {
-        const attendeesLabel = item.attendeeCount === 1 ? '1 confirmado' : `${item.attendeeCount} confirmados`;
+        const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
         const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
         const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
         return (

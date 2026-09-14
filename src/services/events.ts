@@ -1,4 +1,5 @@
 import { File } from 'expo-file-system';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
@@ -118,7 +119,7 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
     data: { session },
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
-  if (!user) throw new Error('Usuário não autenticado.');
+  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
 
   const { data: event, error } = await supabase
     .from('events')

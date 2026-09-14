@@ -1,1 +1,19 @@
-{}
+{
+  "locationPermissionDenied": "Permita o acesso à localização pra ver plantas perto de você.",
+  "eventCommunityCaptionFallback": "Marquei um evento: \"{{title}}\"!",
+  "eventPublishedShareError": "Evento publicado, mas não deu pra compartilhar na Comunidade.",
+  "eventPublishSuccess": "Evento publicado no mapa!",
+  "eventPublishError": "Não foi possível publicar o evento.",
+  "listingPublishedShareError": "Oferta publicada, mas não deu pra compartilhar na Comunidade.",
+  "listingPublishSuccess": "Oferta publicada no mapa!",
+  "listingPublishError": "Não foi possível publicar a oferta.",
+  "placingEventInstructions": "Posicione o mapa até o pino ficar no local do evento",
+  "placingListingInstructions": "Posicione o mapa até o pino ficar no local de retirada",
+  "publishEventHere": "Publicar evento aqui",
+  "publishListingHere": "Publicar oferta aqui",
+  "createChoiceTitle": "O que você quer criar?",
+  "newListingTitle": "Nova oferta",
+  "newListingSubtitle": "Doe, troque ou resgate uma planta",
+  "newEventTitle": "Novo evento",
+  "newEventSubtitle": "Marque uma feira, troca ou encontro de plantas"
+}

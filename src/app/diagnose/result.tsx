@@ -10,14 +10,16 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, EmptyState, SectionTitle } from '@/components';
 import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis } from '@/types';
+import { useTranslation } from '@/i18n';
 
 function getHealthStatusMeta(
-  colors: ThemeColors
+  colors: ThemeColors,
+  t: (key: string, options?: Record<string, unknown>) => string
 ): Record<DiagnosisHealthStatus, { label: string; color: string; icon: LucideIcon }> {
   return {
-    healthy: { label: 'Sua planta está saudável', color: colors.leaf, icon: CheckCircle2 },
-    attention: { label: 'Precisa de um pouco de atenção', color: colors.secondary, icon: AlertTriangle },
-    urgent: { label: 'Precisa de cuidado urgente', color: colors.destructive, icon: AlertTriangle },
+    healthy: { label: t('healthyStatusLabel'), color: colors.leaf, icon: CheckCircle2 },
+    attention: { label: t('attentionStatusLabel'), color: colors.secondary, icon: AlertTriangle },
+    urgent: { label: t('urgentStatusLabel'), color: colors.destructive, icon: AlertTriangle },
   };
 }
 
@@ -43,18 +45,13 @@ export default function DiagnosisResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
+  const { t } = useTranslation('diagnose');
+  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors, t), [colors, t]);
   const severityColor = useMemo(() => getSeverityColor(colors), [colors]);
   const diagnosis = parseDiagnosis(params.diagnosis);
 
   if (!diagnosis) {
-    return (
-      <EmptyState
-        icon={Sparkles}
-        message="Não conseguimos identificar nenhuma planta nessa foto. Tente tirar de perto, com boa iluminação."
-        style={styles.emptyContainer}
-      />
-    );
+    return <EmptyState icon={Sparkles} message={t('notFoundMessage')} style={styles.emptyContainer} />;
   }
 
   const meta = healthStatusMeta[diagnosis.healthStatus];
@@ -77,7 +74,7 @@ export default function DiagnosisResultScreen() {
 
       {diagnosis.issues.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle>O que percebemos</SectionTitle>
+          <SectionTitle>{t('issuesSectionTitle')}</SectionTitle>
           {diagnosis.issues.map((issue) => (
             <Card key={issue.title} style={styles.issueCard}>
               <View style={styles.issueHeader}>
@@ -91,7 +88,7 @@ export default function DiagnosisResultScreen() {
       ) : null}
 
       <View style={styles.section}>
-        <SectionTitle>Próximos passos</SectionTitle>
+        <SectionTitle>{t('nextStepsSectionTitle')}</SectionTitle>
         {diagnosis.recommendedActions.map((action) => (
           <View key={action} style={styles.actionRow}>
             <CheckCircle2 size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />

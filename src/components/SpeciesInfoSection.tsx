@@ -7,6 +7,7 @@ import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantCommonProblem, SpeciesInfoDisplay } from '@/types';
 import { Card } from './Card';
 import { SkeletonBlock } from './Skeleton';
@@ -25,10 +26,11 @@ type AboutCardProps = {
 function AboutCard({ info, isExpanded, onToggle }: Readonly<AboutCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   return (
     <Card style={styles.section}>
       <Pressable style={styles.sectionHeader} onPress={onToggle}>
-        <Text style={styles.sectionTitle}>Sobre a espécie</Text>
+        <Text style={styles.sectionTitle}>{t('aboutSpeciesTitle')}</Text>
         {isExpanded ? (
           <ChevronUp size={16} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         ) : (
@@ -53,10 +55,11 @@ function AboutCard({ info, isExpanded, onToggle }: Readonly<AboutCardProps>) {
 function ToxicityCard({ info }: Readonly<{ info: SpeciesInfoDisplay }>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   return (
     <View style={styles.section}>
       <ExpandableCard
-        title="Atenção: Tóxica"
+        title={t('toxicWarningTitle')}
         icon={<AlertTriangle size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />}
         color={colors.destructive}
         defaultExpanded={true}
@@ -66,7 +69,7 @@ function ToxicityCard({ info }: Readonly<{ info: SpeciesInfoDisplay }>) {
             <View style={styles.listRow}>
               <View style={[styles.bullet, { backgroundColor: colors.destructive }]} />
               <Text style={styles.listText}>
-                Para pets{info.toxicToPetsNotes ? `: ${info.toxicToPetsNotes}` : ''}
+                {t('toxicForPets')}{info.toxicToPetsNotes ? `: ${info.toxicToPetsNotes}` : ''}
               </Text>
             </View>
           ) : null}
@@ -74,7 +77,7 @@ function ToxicityCard({ info }: Readonly<{ info: SpeciesInfoDisplay }>) {
             <View style={styles.listRow}>
               <View style={[styles.bullet, { backgroundColor: colors.destructive }]} />
               <Text style={styles.listText}>
-                Para humanos{info.toxicToHumansNotes ? `: ${info.toxicToHumansNotes}` : ''}
+                {t('toxicForHumans')}{info.toxicToHumansNotes ? `: ${info.toxicToHumansNotes}` : ''}
               </Text>
             </View>
           ) : null}
@@ -87,10 +90,11 @@ function ToxicityCard({ info }: Readonly<{ info: SpeciesInfoDisplay }>) {
 function FunFactsCard({ funFacts }: Readonly<{ funFacts: string[] }>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   return (
     <View style={styles.section}>
       <ExpandableCard
-        title="Você sabia?"
+        title={t('funFactsTitle')}
         icon={<Lightbulb size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />}
         color={colors.leaf}
         defaultExpanded={true}
@@ -109,10 +113,11 @@ function FunFactsCard({ funFacts }: Readonly<{ funFacts: string[] }>) {
 function CommonProblemsCard({ commonProblems }: Readonly<{ commonProblems: PlantCommonProblem[] }>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   return (
     <View style={styles.section}>
       <ExpandableCard
-        title="Problemas comuns"
+        title={t('commonProblemsTitle')}
         icon={<Bug size={Metrics.icon.normal} color={colors.secondaryForeground} strokeWidth={Metrics.icon.strokeWidth} />}
         color={colors.secondaryForeground}
       >

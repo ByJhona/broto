@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { FormError } from './FormError';
 import { FormField } from './FormField';
 import { SubmitButton } from './SubmitButton';
@@ -35,6 +36,7 @@ export function PromptModal({
 }: Readonly<PromptModalProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -49,7 +51,7 @@ export function PromptModal({
           <FormError>{error ?? null}</FormError>
           <SubmitButton label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
           <Pressable style={styles.cancel} onPress={onCancel} disabled={isSubmitting}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t('cancel')}</Text>
           </Pressable>
         </View>
       </KeyboardAwareScrollView>

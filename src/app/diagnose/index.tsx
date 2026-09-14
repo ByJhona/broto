@@ -11,12 +11,16 @@ import { Card, EmptyState, ListRow, SectionTitle, SkeletonBlock } from '@/compon
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
+import { useTranslation } from '@/i18n';
 
-function getHealthStatusMeta(colors: ThemeColors): Record<DiagnosisHealthStatus, { label: string; color: string }> {
+function getHealthStatusMeta(
+  colors: ThemeColors,
+  t: (key: string, options?: Record<string, unknown>) => string
+): Record<DiagnosisHealthStatus, { label: string; color: string }> {
   return {
-    healthy: { label: 'Saudável', color: colors.leaf },
-    attention: { label: 'Precisa de atenção', color: colors.secondary },
-    urgent: { label: 'Cuidado urgente', color: colors.destructive },
+    healthy: { label: t('healthyLabel'), color: colors.leaf },
+    attention: { label: t('attentionLabel'), color: colors.secondary },
+    urgent: { label: t('urgentLabel'), color: colors.destructive },
   };
 }
 
@@ -49,7 +53,8 @@ export default function DiagnosisHistoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors), [colors]);
+  const { t } = useTranslation('diagnose');
+  const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors, t), [colors, t]);
   const { user } = useAuth();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['diagnosis-history', user?.id],
@@ -71,20 +76,16 @@ export default function DiagnosisHistoryScreen() {
     >
       {showSkeleton && (
         <>
-          <SectionTitle>Histórico</SectionTitle>
+          <SectionTitle>{t('historySectionTitle')}</SectionTitle>
           <DiagnosisHistorySkeleton />
         </>
       )}
       {isEmpty && (
-        <EmptyState
-          icon={Sparkles}
-          message='Você ainda não fez nenhum diagnóstico. Vá na aba Foto e escolha "Diagnosticar" pra começar.'
-          style={styles.empty}
-        />
+        <EmptyState icon={Sparkles} message={t('emptyHistoryMessage')} style={styles.empty} />
       )}
       {!showSkeleton && !isEmpty && (
         <>
-          <SectionTitle>Histórico</SectionTitle>
+          <SectionTitle>{t('historySectionTitle')}</SectionTitle>
           {history.map((item) => {
             const meta = healthStatusMeta[item.healthStatus];
             return (

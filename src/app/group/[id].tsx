@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Folder from 'lucide-react-native/icons/folder';
 import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   EmptyState,
   GroupPlantPickerModal,
@@ -27,6 +28,7 @@ export default function GroupDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['group', 'common']);
   const { id } = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { groups, isLoading: isGroupsLoading, renameGroup, removeGroup } = usePlantGroups();
@@ -67,7 +69,7 @@ export default function GroupDetailScreen() {
 
     const trimmed = nameDraft.trim();
     if (!trimmed) {
-      setRenameError('Dá um nome pro grupo.');
+      setRenameError(t('nameRequired'));
       return;
     }
 
@@ -76,7 +78,7 @@ export default function GroupDetailScreen() {
       await renameGroup({ id: group.id, name: trimmed });
       setIsRenameOpen(false);
     } catch (err) {
-      setRenameError(err instanceof Error ? err.message : 'Não foi possível salvar o nome.');
+      setRenameError(err instanceof Error ? err.message : t('renameError'));
     } finally {
       setIsSavingName(false);
     }
@@ -86,9 +88,9 @@ export default function GroupDetailScreen() {
     if (!group) return;
 
     const confirmed = await confirm(
-      'Excluir grupo',
-      `Isso também remove as ${group.plantCount} plantas desse grupo do seu jardim. Essa ação não pode ser desfeita.`,
-      { confirmLabel: 'Excluir', destructive: true }
+      t('deleteGroupTitle'),
+      t('deleteGroupMessage', { count: group.plantCount }),
+      { confirmLabel: t('common:delete'), destructive: true }
     );
     if (!confirmed) return;
 
@@ -98,16 +100,16 @@ export default function GroupDetailScreen() {
       router.replace('/garden');
     } catch (err) {
       setIsDeleting(false);
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível excluir o grupo.');
+      Toast.error(err instanceof Error ? err.message : t('deleteGroupError'));
     }
   };
 
   const handleOpenActions = () => {
-    Alert.alert('Editar grupo', undefined, [
-      { text: 'Renomear', onPress: handleOpenRename },
-      { text: 'Adicionar plantas', onPress: () => setIsPickerOpen(true) },
-      { text: 'Excluir grupo', style: 'destructive', onPress: handleDelete },
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('editGroupTitle'), undefined, [
+      { text: t('rename'), onPress: handleOpenRename },
+      { text: t('addPlants'), onPress: () => setIsPickerOpen(true) },
+      { text: t('deleteGroupTitle'), style: 'destructive', onPress: handleDelete },
+      { text: t('common:cancel'), style: 'cancel' },
     ]);
   };
 
@@ -121,7 +123,7 @@ export default function GroupDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['plant-groups'] });
       queryClient.invalidateQueries({ queryKey: ['plants'] });
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar o grupo da planta.');
+      Toast.error(err instanceof Error ? err.message : t('updatePlantGroupError'));
     }
   };
 
@@ -135,7 +137,7 @@ export default function GroupDetailScreen() {
     return (
       <View style={styles.centered}>
         <Stack.Screen options={{ title: '' }} />
-        <EmptyState icon={Folder} message="Grupo não encontrado." />
+        <EmptyState icon={Folder} message={t('groupNotFound')} />
       </View>
     );
   }
@@ -168,8 +170,8 @@ export default function GroupDetailScreen() {
           renderItem={renderPlantCard}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <EmptyState icon={Folder} title="Nenhuma planta aqui" message="Adicione plantas pra organizar esse grupo." />
-              <SubmitButton label="Adicionar plantas" onPress={() => setIsPickerOpen(true)} />
+              <EmptyState icon={Folder} title={t('emptyGroupTitle')} message={t('emptyGroupMessage')} />
+              <SubmitButton label={t('addPlants')} onPress={() => setIsPickerOpen(true)} />
             </View>
           }
         />
@@ -177,13 +179,13 @@ export default function GroupDetailScreen() {
 
       <PromptModal
         visible={isRenameOpen}
-        title="Como você quer chamar esse grupo?"
-        label="Nome"
+        title={t('renameModalTitle')}
+        label={t('nameLabel')}
         value={nameDraft}
         onChangeText={setNameDraft}
-        placeholder="Suculentas"
+        placeholder={t('namePlaceholder')}
         error={renameError}
-        submitLabel="Salvar"
+        submitLabel={t('common:save')}
         isSubmitting={isSavingName}
         onSubmit={handleSaveName}
         onCancel={() => setIsRenameOpen(false)}

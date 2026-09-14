@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Check from 'lucide-react-native/icons/check';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 
 type GroupPlantPickerModalProps = {
@@ -24,14 +25,15 @@ export function GroupPlantPickerModal({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('group');
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}>
-          <Text style={styles.title}>Quais plantas fazem parte desse grupo?</Text>
+          <Text style={styles.title}>{t('pickerTitle')}</Text>
           {plants.length === 0 ? (
-            <Text style={styles.description}>Você ainda não tem plantas cadastradas.</Text>
+            <Text style={styles.description}>{t('noPlantsRegistered')}</Text>
           ) : (
             <ScrollView>
               {plants.map((plant) => {
@@ -55,7 +57,7 @@ export function GroupPlantPickerModal({
             </ScrollView>
           )}
           <Pressable style={styles.done} onPress={onClose}>
-            <Text style={styles.doneText}>Concluído</Text>
+            <Text style={styles.doneText}>{t('done')}</Text>
           </Pressable>
         </View>
       </View>

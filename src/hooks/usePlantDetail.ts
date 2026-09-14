@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from '@/i18n';
 import { useAuth } from './useAuth';
 import { useCareTasks } from './useCareTasks';
 import { useCredits } from './useCredits';
@@ -31,6 +32,7 @@ function plantPlaceholderData(summary: PlantSummary | undefined): Plant | undefi
 export function usePlantDetail(id: string | undefined) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useTranslation(['plant', 'common']);
   const { user } = useAuth();
   const { credits } = useCredits();
   const {
@@ -69,15 +71,15 @@ export function usePlantDetail(id: string | undefined) {
     if (hasReminder) return;
 
     createTask({
-      title: `Analisar ${plant.name}`,
+      title: t('growthCheckTaskTitle', { name: plant.name }),
       plantId: plant.id,
       plantName: plant.name,
       plantPhotoUrl: plant.photoUrls[0] ?? null,
       category: TASK_CATEGORY.GROWTH_CHECK,
-      notes: 'Tire uma foto pra IA acompanhar a evolução dessa planta.',
+      notes: t('growthCheckTaskNotes'),
       recurrenceDays: 14,
     });
-  }, [plant, isPremium, isCareTasksLoading, careTasksList, createTask]);
+  }, [plant, isPremium, isCareTasksLoading, careTasksList, createTask, t]);
 
   const handleOpenRename = () => {
     if (!plant) return;
@@ -91,7 +93,7 @@ export function usePlantDetail(id: string | undefined) {
 
     const trimmed = nameDraft.trim();
     if (!trimmed) {
-      setRenameError('Dá um nome pra sua planta.');
+      setRenameError(t('nameRequired'));
       return;
     }
 
@@ -106,7 +108,7 @@ export function usePlantDetail(id: string | undefined) {
       );
       setIsRenameModalOpen(false);
     } catch (err) {
-      setRenameError(err instanceof Error ? err.message : 'Não foi possível salvar o nome.');
+      setRenameError(err instanceof Error ? err.message : t('saveNameError'));
     } finally {
       setIsSavingName(false);
     }
@@ -115,11 +117,10 @@ export function usePlantDetail(id: string | undefined) {
   const handleDelete = async () => {
     if (!plant) return;
 
-    const confirmed = await confirm(
-      'Excluir planta',
-      `Tem certeza que quer excluir "${plant.name}"? Essa ação não pode ser desfeita.`,
-      { confirmLabel: 'Excluir', destructive: true }
-    );
+    const confirmed = await confirm(t('deleteConfirmTitle'), t('deleteConfirmMessage', { name: plant.name }), {
+      confirmLabel: t('common:delete'),
+      destructive: true,
+    });
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -130,15 +131,15 @@ export function usePlantDetail(id: string | undefined) {
       router.replace('/garden');
     } catch (err) {
       setIsDeleting(false);
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível excluir a planta.');
+      Toast.error(err instanceof Error ? err.message : t('deleteError'));
     }
   };
 
   const handleOpenActions = () => {
-    Alert.alert('Editar planta', undefined, [
-      { text: 'Renomear', onPress: handleOpenRename },
-      { text: 'Excluir planta', style: 'destructive', onPress: handleDelete },
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('editPlantActionTitle'), undefined, [
+      { text: t('renameAction'), onPress: handleOpenRename },
+      { text: t('deletePlantAction'), style: 'destructive', onPress: handleDelete },
+      { text: t('common:cancel'), style: 'cancel' },
     ]);
   };
 
@@ -154,7 +155,7 @@ export function usePlantDetail(id: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['plants-by-group'] });
       queryClient.invalidateQueries({ queryKey: ['plants'] });
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar o grupo.');
+      Toast.error(err instanceof Error ? err.message : t('groupUpdateError'));
     }
   };
 
@@ -168,10 +169,10 @@ export function usePlantDetail(id: string | undefined) {
       text: group.name,
       onPress: () => handleAssignGroup(group.id, group.name),
     }));
-    buttons.push({ text: 'Nenhum grupo', onPress: () => handleAssignGroup(null, null) });
-    buttons.push({ text: 'Criar novo grupo', onPress: () => setIsCreateGroupModalOpen(true) });
-    buttons.push({ text: 'Cancelar', style: 'cancel' });
-    Alert.alert('Grupo', undefined, buttons);
+    buttons.push({ text: t('noGroupOption'), onPress: () => handleAssignGroup(null, null) });
+    buttons.push({ text: t('createNewGroupOption'), onPress: () => setIsCreateGroupModalOpen(true) });
+    buttons.push({ text: t('common:cancel'), style: 'cancel' });
+    Alert.alert(t('groupPickerTitle'), undefined, buttons);
   };
 
   const setPhotoUrls = (photoUrls: string[]) => {

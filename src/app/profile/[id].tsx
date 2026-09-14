@@ -7,6 +7,7 @@ import Settings from 'lucide-react-native/icons/settings';
 import Sprout from 'lucide-react-native/icons/sprout';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { CommunityPost, PlantEvent, PlantListing, UserProfile } from '@/types';
 import { Avatar, CollapsibleSection, CommunityPostCard, EmptyState, EventCard, ListingCard, LoadingScreen } from '@/components';
 import { useAuth, useFollow, usePersistedCollapse, useUserLocation } from '@/hooks';
@@ -129,16 +130,20 @@ function ProfileEventsRow({
 
 type Styles = ReturnType<typeof makeStyles>;
 
-function profileListingsTitle(isOwnProfile: boolean): string {
-  return isOwnProfile ? 'Minhas ofertas' : 'Ofertas';
+function profileListingsTitle(isOwnProfile: boolean, t: (key: string) => string): string {
+  return isOwnProfile ? t('myListings') : t('listings');
 }
 
-function profileEventsTitle(isOwnProfile: boolean): string {
-  return isOwnProfile ? 'Meus eventos' : 'Eventos';
+function profileEventsTitle(isOwnProfile: boolean, t: (key: string) => string): string {
+  return isOwnProfile ? t('myEvents') : t('events');
 }
 
-function profileEmptyPostsMessage(isOwnProfile: boolean, name: string): string {
-  return isOwnProfile ? 'Você ainda não publicou nada na comunidade.' : `${name} ainda não publicou nada.`;
+function profileEmptyPostsMessage(
+  isOwnProfile: boolean,
+  name: string,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
+  return isOwnProfile ? t('emptyPostsOwn') : t('emptyPostsOther', { name });
 }
 
 type ProfileActionsProps = {
@@ -158,12 +163,13 @@ function ProfileActions({
   colors,
   styles,
 }: Readonly<ProfileActionsProps>) {
+  const { t } = useTranslation('profile');
   if (isOwnProfile) return null;
   return (
     <View style={styles.actionsRow}>
       <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
         <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
-          {following ? 'Seguindo' : 'Seguir'}
+          {following ? t('following') : t('follow')}
         </Text>
       </Pressable>
       <Pressable style={styles.messageButton} onPress={onPressMessage} hitSlop={8}>
@@ -182,12 +188,13 @@ type ProfileEmptyPostsProps = {
 };
 
 function ProfileEmptyPosts({ hasPosts, isLoading, isOwnProfile, name, styles }: Readonly<ProfileEmptyPostsProps>) {
+  const { t } = useTranslation('profile');
   if (hasPosts || isLoading) return null;
   return (
     <EmptyState
       icon={Sprout}
-      title="Nenhum recado ainda"
-      message={profileEmptyPostsMessage(isOwnProfile, name)}
+      title={t('noPostsYet')}
+      message={profileEmptyPostsMessage(isOwnProfile, name, t)}
       style={styles.emptyState}
     />
   );
@@ -215,6 +222,7 @@ function ProfileHeader({
 }: Readonly<ProfileHeaderProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
   return (
     <View>
       <View style={styles.header}>
@@ -225,11 +233,11 @@ function ProfileHeader({
         <View style={styles.countsRow}>
           <View style={styles.countItem}>
             <Text style={styles.countValue}>{counts.followers}</Text>
-            <Text style={styles.countLabel}>Seguidores</Text>
+            <Text style={styles.countLabel}>{t('followers')}</Text>
           </View>
           <View style={styles.countItem}>
             <Text style={styles.countValue}>{counts.following}</Text>
-            <Text style={styles.countLabel}>Seguindo</Text>
+            <Text style={styles.countLabel}>{t('following')}</Text>
           </View>
         </View>
 
@@ -244,7 +252,7 @@ function ProfileHeader({
       </View>
 
       <ProfileListingsRow
-        title={profileListingsTitle(isOwnProfile)}
+        title={profileListingsTitle(isOwnProfile, t)}
         listings={listings}
         onPressListing={onPressListing}
         isCollapsed={isOffersCollapsed}
@@ -253,7 +261,7 @@ function ProfileHeader({
       />
 
       <ProfileEventsRow
-        title={profileEventsTitle(isOwnProfile)}
+        title={profileEventsTitle(isOwnProfile, t)}
         events={events}
         onPressEvent={onPressEvent}
         isCollapsed={isEventsCollapsed}
@@ -272,6 +280,7 @@ export default function PublicProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { following, counts, toggle } = useFollow(id ?? null);
@@ -377,10 +386,10 @@ export default function PublicProfileScreen() {
         await deletePost(postId);
       } catch {
         if (previousPost) updatePostInAllFeeds(queryClient, postId, () => previousPost);
-        Toast.error('Não foi possível excluir a publicação.');
+        Toast.error(t('deletePostError'));
       }
     },
-    [queryClient, postsQueryKey]
+    [queryClient, postsQueryKey, t]
   );
 
   const handleDeleteComment = useCallback(
@@ -394,10 +403,10 @@ export default function PublicProfileScreen() {
         await deleteComment(commentId);
       } catch {
         if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
-        Toast.error('Não foi possível excluir o recado.');
+        Toast.error(t('deleteCommentError'));
       }
     },
-    [queryClient, postsQueryKey]
+    [queryClient, postsQueryKey, t]
   );
 
   const handlePressListing = useCallback(
@@ -438,7 +447,7 @@ export default function PublicProfileScreen() {
     return <LoadingScreen />;
   }
 
-  const name = profile?.name || profile?.username || 'Jardineiro';
+  const name = profile?.name || profile?.username || t('defaultGardenerName');
 
   return (
     <FlatList

@@ -15,6 +15,7 @@ import SignalMedium from 'lucide-react-native/icons/signal-medium';
 import Sun from 'lucide-react-native/icons/sun';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   Card,
   CreateGroupModal,
@@ -36,10 +37,12 @@ import { usePlantDetail } from '@/hooks';
 import { type Plant } from '@/types';
 import { daysBetween, sunLevelLabel, today } from '@/utils';
 
-const CARE_LEVEL_LABEL: Record<NonNullable<Plant['careLevel']>, string> = {
-  easy: 'Fácil de cuidar',
-  moderate: 'Cuidado moderado',
-  hard: 'Exige experiência',
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+const CARE_LEVEL_LABEL_KEY: Record<NonNullable<Plant['careLevel']>, string> = {
+  easy: 'careLevelEasy',
+  moderate: 'careLevelModerate',
+  hard: 'careLevelHard',
 };
 
 const CARE_LEVEL_ICON: Record<NonNullable<Plant['careLevel']>, LucideIcon> = {
@@ -48,11 +51,11 @@ const CARE_LEVEL_ICON: Record<NonNullable<Plant['careLevel']>, LucideIcon> = {
   hard: SignalHigh,
 };
 
-function daysWithYouLabel(createdAt: string): string {
+function daysWithYouLabel(createdAt: string, t: TranslateFn): string {
   const days = daysBetween(createdAt.slice(0, 10), today());
-  if (days <= 0) return 'Adicionada hoje';
-  if (days === 1) return 'Com você há 1 dia';
-  return `Com você há ${days} dias`;
+  if (days <= 0) return t('addedToday');
+  if (days === 1) return t('withYouOneDay');
+  return t('withYouDays', { days });
 }
 
 type StatTile = {
@@ -61,23 +64,27 @@ type StatTile = {
   icon: LucideIcon;
 };
 
-function buildCareStats(plant: Plant): StatTile[] {
+function buildCareStats(plant: Plant, t: TranslateFn): StatTile[] {
   const careStats: StatTile[] = [];
   if (plant.wateringDays != null) {
-    careStats.push({ key: 'watering', icon: Droplet, value: `Regar a cada ${plant.wateringDays} dias` });
+    careStats.push({ key: 'watering', icon: Droplet, value: t('wateringEveryDays', { days: plant.wateringDays }) });
   }
   if (plant.sunLevel != null) {
     careStats.push({ key: 'light', icon: Sun, value: sunLevelLabel(plant.sunLevel) });
   }
   if (plant.origin) careStats.push({ key: 'origin', icon: MapPin, value: plant.origin });
   if (plant.careLevel) {
-    careStats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[plant.careLevel], value: CARE_LEVEL_LABEL[plant.careLevel] });
+    careStats.push({
+      key: 'careLevel',
+      icon: CARE_LEVEL_ICON[plant.careLevel],
+      value: t(CARE_LEVEL_LABEL_KEY[plant.careLevel]),
+    });
   }
   if (plant.toxicToPets != null) {
     careStats.push({
       key: 'petSafety',
       icon: PawPrint,
-      value: plant.toxicToPets ? 'Não é segura para pets' : 'Segura para pets',
+      value: plant.toxicToPets ? t('notSafeForPets') : t('safeForPets'),
     });
   }
   return careStats;
@@ -126,10 +133,11 @@ type PlantCareStatsCardProps = {
 };
 
 function PlantCareStatsCard({ careStats, styles }: Readonly<PlantCareStatsCardProps>) {
+  const { t } = useTranslation('plant');
   if (careStats.length === 0) return null;
   return (
     <Card style={styles.section}>
-      <SectionTitle>Cuidados ideais</SectionTitle>
+      <SectionTitle>{t('idealCareTitle')}</SectionTitle>
       <View style={styles.chipRow}>
         {careStats.map((stat) => (
           <InfoChip key={stat.key} value={stat.value} icon={stat.icon} />
@@ -169,6 +177,7 @@ export default function PlantDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['plant', 'common']);
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = usePlantDetail(id);
 
@@ -185,13 +194,13 @@ export default function PlantDetailScreen() {
     return (
       <View style={styles.centered}>
         <Stack.Screen options={{ title: '' }} />
-        <EmptyState icon={Leaf} message="Planta não encontrada." />
+        <EmptyState icon={Leaf} message={t('plantNotFound')} />
       </View>
     );
   }
 
   const { plant } = detail;
-  const careStats = buildCareStats(plant);
+  const careStats = buildCareStats(plant, t);
 
   return (
     <KeyboardAwareScrollView
@@ -215,13 +224,13 @@ export default function PlantDetailScreen() {
 
       <PromptModal
         visible={detail.isRenameModalOpen}
-        title="Como você quer chamar essa planta?"
-        label="Nome"
+        title={t('renameModalTitle')}
+        label={t('nameLabel')}
         value={detail.nameDraft}
         onChangeText={detail.setNameDraft}
-        placeholder="Samba"
+        placeholder={t('namePlaceholder')}
         error={detail.renameError}
-        submitLabel="Salvar"
+        submitLabel={t('common:save')}
         isSubmitting={detail.isSavingName}
         onSubmit={detail.handleSaveName}
         onCancel={detail.closeRenameModal}
@@ -234,12 +243,12 @@ export default function PlantDetailScreen() {
       />
 
       <ScreenContent>
-        <Text style={styles.sinceLabel}>{daysWithYouLabel(plant.createdAt)}</Text>
+        <Text style={styles.sinceLabel}>{daysWithYouLabel(plant.createdAt, t)}</Text>
 
         <Card style={styles.section}>
           <ListRow
-            eyebrow="Grupo"
-            title={plant.groupName ?? 'Nenhum grupo'}
+            eyebrow={t('groupEyebrow')}
+            title={plant.groupName ?? t('noGroup')}
             trailing={<ChevronRight size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
             onPress={detail.handleOpenGroupPicker}
           />
@@ -250,7 +259,7 @@ export default function PlantDetailScreen() {
         <PlantRemindersSection plantId={plant.id} tasks={detail.careTasksList} onToggle={detail.toggleTask} />
 
         <Card style={styles.section}>
-          <SectionTitle>Pergunte sobre sua planta</SectionTitle>
+          <SectionTitle>{t('askAboutPlantTitle')}</SectionTitle>
           <PlantChat plantId={plant.id} />
         </Card>
 

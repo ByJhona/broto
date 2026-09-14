@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { EmptyState, FilterChipRow, ListRow } from '@/components';
 import { useListings, useUserLocation } from '@/hooks';
 import { formatDistanceTo, listingTypeLabel, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingTypes } from '@/utils';
@@ -18,12 +19,13 @@ export default function ListingListScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('listing');
   const { listings } = useListings();
   const userLocation = useUserLocation();
   const [filter, setFilter] = useState<TypeFilter>(null);
 
   const filterOptions: { value: TypeFilter; label: string }[] = [
-    { value: null, label: 'Tudo' },
+    { value: null, label: t('filterAll') },
     ...listingTypes().map(({ value, label }) => ({ value, label })),
   ];
 
@@ -39,7 +41,7 @@ export default function ListingListScreen() {
       data={filteredListings}
       keyExtractor={(listing) => listing.id}
       ListHeaderComponent={<FilterChipRow options={filterOptions} value={filter} onChange={setFilter} style={styles.filterRow} />}
-      ListEmptyComponent={<EmptyState icon={Leaf} message="Nenhuma oferta encontrada." style={styles.empty} />}
+      ListEmptyComponent={<EmptyState icon={Leaf} message={t('noListingsFound')} style={styles.empty} />}
       renderItem={({ item }) => {
         const Icon = LISTING_TYPE_ICONS[item.listingType];
         const color = LISTING_TYPE_COLORS[item.listingType];

@@ -5,6 +5,7 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EVENT_COLOR, EVENT_ICON, formatEventDateTime } from '@/utils';
 import type { PlantEvent } from '@/types';
+import { useTranslation } from '@/i18n';
 import { ListRow } from './ListRow';
 
 type EventCalloutProps = {
@@ -16,8 +17,9 @@ type EventCalloutProps = {
 export function EventCallout({ event, distanceLabel, onPress }: Readonly<EventCalloutProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('event');
   const Icon = EVENT_ICON;
-  const attendeesLabel = event.attendeeCount === 1 ? '1 confirmado' : `${event.attendeeCount} confirmados`;
+  const attendeesLabel = t('attendeesShort', { count: event.attendeeCount });
   const subtitleParts = [formatEventDateTime(event.eventDate), attendeesLabel, distanceLabel].filter(Boolean);
   const subtitle = subtitleParts.join(' · ');
 

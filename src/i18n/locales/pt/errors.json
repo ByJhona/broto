@@ -6,5 +6,7 @@
   "passwordTooShort": "A senha deve ter no mínimo 6 caracteres.",
   "invalidEmail": "Digite um e-mail válido.",
   "usernameTaken": "Esse nome de usuário já está em uso.",
-  "networkError": "Sem conexão com a internet. Tente novamente."
+  "networkError": "Sem conexão com a internet. Tente novamente.",
+  "installGooglePlayServices": "Instale ou atualize o Google Play Services para continuar.",
+  "usernameAlreadyInUse": "Este nome de usuário já está em uso."
 }

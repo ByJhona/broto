@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type ChatButtonProps = {
   hasUnread?: boolean;
@@ -14,13 +15,14 @@ export function ChatButton({ hasUnread = false, size = Metrics.icon.normal, styl
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('chat');
 
   return (
     <Pressable
       onPress={() => router.push('/messages')}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={hasUnread ? 'Mensagens, você tem conversas para responder' : 'Mensagens'}
+      accessibilityLabel={hasUnread ? t('accessibilityLabelUnread') : t('accessibilityLabel')}
       style={({ pressed }) => [styles.container, { opacity: pressed ? 0.7 : 1 }, style]}
     >
       <MessageSquare size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />

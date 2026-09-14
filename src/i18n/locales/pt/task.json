@@ -1,1 +1,20 @@
-{}
+{
+  "newReminderTitle": "Novo lembrete",
+  "onceOption": "Só uma vez",
+  "repeatOption": "Repetir",
+  "titleLabel": "Título",
+  "titlePlaceholder": "Regar o Samba",
+  "plantLabel": "Planta",
+  "plantOptionalLabel": "Planta (opcional)",
+  "categoryLabel": "Categoria",
+  "repeatLabel": "Repetir?",
+  "daysCount_one": "1 dia",
+  "daysCount_other": "{{count}} dias",
+  "recommendedHint": "Recomendado pra essa planta: a cada {{days}} dias",
+  "reminderTimeLabel": "Que horas o lembrete deve aparecer?",
+  "notesLabel": "Notas (opcional)",
+  "notesPlaceholder": "Regar bem a terra, sem encharcar",
+  "missingTitleError": "Dá um título pro lembrete.",
+  "createError": "Não foi possível criar o lembrete. Tente novamente.",
+  "createCta": "Criar lembrete"
+}

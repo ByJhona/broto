@@ -1,1 +1,16 @@
-{}
+{
+  "accessibilityLabel": "Mensagens",
+  "accessibilityLabelUnread": "Mensagens, você tem conversas para responder",
+  "defaultConversationName": "Conversa",
+  "sendMessageError": "Não foi possível enviar a mensagem.",
+  "respondOfferError": "Não foi possível responder a proposta.",
+  "offerStatusPending": "Aguardando resposta",
+  "offerStatusAccepted": "Troca aceita",
+  "offerStatusDeclined": "Troca recusada",
+  "offerCardTitle": "Proposta de troca",
+  "offerCardSubtitle": "{{plantName}} pela oferta \"{{listingTitle}}\"",
+  "declineButton": "Recusar",
+  "acceptButton": "Aceitar",
+  "emptyMessage": "Nenhuma mensagem ainda. Comece a conversa!",
+  "messagePlaceholder": "Escreva uma mensagem..."
+}

@@ -1,4 +1,5 @@
 import { randomUUID } from 'expo-crypto';
+import { i18n } from '@/i18n';
 import { updateListingStatus } from './plantListings';
 import { supabase } from './supabase';
 import { LISTING_STATUS, OFFER_STATUS, type ChatConversation, type ChatMessage, type OfferStatus } from '@/types';
@@ -258,7 +259,7 @@ export async function getConversations(userId: string): Promise<ChatConversation
     const otherProfile = isSender ? row.recipient : row.sender;
     conversations.push({
       otherUserId,
-      otherUserName: otherProfile?.name || otherProfile?.username || 'Alguém',
+      otherUserName: otherProfile?.name || otherProfile?.username || i18n.t('common:someone'),
       otherUserAvatarUrl: otherProfile?.avatar_url ?? null,
       lastMessagePreview: conversationPreview(row),
       lastMessageAt: row.created_at,

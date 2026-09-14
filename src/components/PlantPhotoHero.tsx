@@ -4,6 +4,7 @@ import Pencil from 'lucide-react-native/icons/pencil';
 import Plus from 'lucide-react-native/icons/plus';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { addPlantPhoto, MAX_PLANT_PHOTOS, removePlantPhoto } from '@/services';
 import type { Plant } from '@/types';
 import { pickPhoto, Toast } from '@/utils';
@@ -21,6 +22,7 @@ type PlantPhotoHeroProps = {
 export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonly<PlantPhotoHeroProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   const windowWidth = useWindowDimensions().width;
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -35,7 +37,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
       const updated = await addPlantPhoto(plant.id, uri);
       onPhotoUrlsChange(updated.photoUrls);
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível salvar a foto.');
+      Toast.error(err instanceof Error ? err.message : t('addPhotoError'));
     } finally {
       setIsUpdatingPhoto(false);
     }
@@ -46,7 +48,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
       const updated = await removePlantPhoto(plant.id, photoUrl);
       onPhotoUrlsChange(updated.photoUrls);
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível remover a foto.');
+      Toast.error(err instanceof Error ? err.message : t('removePhotoError'));
     }
   };
 
@@ -83,7 +85,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
               ) : (
                 <>
                   <Plus size={Metrics.icon.xl} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-                  <Text style={styles.addPageText}>Adicionar foto</Text>
+                  <Text style={styles.addPageText}>{t('addPhoto')}</Text>
                 </>
               )}
             </Pressable>

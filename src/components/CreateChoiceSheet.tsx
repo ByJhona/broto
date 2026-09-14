@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Gift from 'lucide-react-native/icons/gift';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { EVENT_COLOR, EVENT_ICON } from '@/utils';
 
 type CreateChoiceSheetProps = {
@@ -16,21 +17,22 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['home', 'common']);
   const EventIcon = EVENT_ICON;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}>
-          <Text style={styles.title}>O que você quer criar?</Text>
+          <Text style={styles.title}>{t('createChoiceTitle')}</Text>
 
           <Pressable style={styles.row} onPress={onCreateListing}>
             <View style={[styles.iconBadge, { backgroundColor: colors.primary }]}>
               <Gift size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
             <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>Nova oferta</Text>
-              <Text style={styles.rowSubtitle}>Doe, troque ou resgate uma planta</Text>
+              <Text style={styles.rowTitle}>{t('newListingTitle')}</Text>
+              <Text style={styles.rowSubtitle}>{t('newListingSubtitle')}</Text>
             </View>
           </Pressable>
 
@@ -39,13 +41,13 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
               <EventIcon size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
             <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>Novo evento</Text>
-              <Text style={styles.rowSubtitle}>Marque uma feira, troca ou encontro de plantas</Text>
+              <Text style={styles.rowTitle}>{t('newEventTitle')}</Text>
+              <Text style={styles.rowSubtitle}>{t('newEventSubtitle')}</Text>
             </View>
           </Pressable>
 
           <Pressable style={styles.cancel} onPress={onClose}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
           </Pressable>
         </View>
       </View>

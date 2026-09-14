@@ -1,1 +1,22 @@
-{}
+{
+  "title": "Meu jardim",
+  "allOrganizedTitle": "Tudo organizado!",
+  "allOrganizedMessage": "Todas as suas plantas estão dentro de algum grupo. Abra um grupo pra ver.",
+  "noPlantsYetTitle": "Nenhuma planta ainda",
+  "noPlantsYetMessage": "Toque na câmera aqui embaixo pra identificar e cadastrar a primeira.",
+  "remindersTitle": "Lembretes",
+  "remindersTitleWithCount": "Lembretes ({{count}})",
+  "noRemindersYet": "Nenhum lembrete ainda. Toque no + pra criar o primeiro.",
+  "groupsTitle": "Grupos",
+  "groupsTitleWithCount": "Grupos ({{count}})",
+  "noGroupsYet": "Nenhum grupo ainda. Toque no + pra organizar suas plantas.",
+  "taskOverdueOneDay": "Atrasado há 1 dia",
+  "taskOverdueDays": "Atrasado há {{days}} dias",
+  "taskDueToday": "Vence hoje às {{time}}",
+  "taskDueTomorrow": "Vence amanhã às {{time}}",
+  "taskDueInDays": "Vence em {{days}} dias",
+  "taskRecurrenceEvery": "a cada {{days}} dias",
+  "taskDone": "Concluído",
+  "taskDoneNextOn": "Concluído — próxima em {{date}}",
+  "taskAutomatic": "Automático"
+}

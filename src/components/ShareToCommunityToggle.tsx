@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Card } from './Card';
 
 type ShareToCommunityToggleProps = {
@@ -12,11 +13,12 @@ type ShareToCommunityToggleProps = {
 export function ShareToCommunityToggle({ value, onValueChange, description }: Readonly<ShareToCommunityToggleProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('listing');
 
   return (
     <Card style={styles.row} onPress={() => onValueChange(!value)}>
       <View style={styles.textBox}>
-        <Text style={styles.title}>Publicar na Comunidade</Text>
+        <Text style={styles.title}>{t('shareToCommunityTitle')}</Text>
         <Text style={styles.subtitle}>{description}</Text>
       </View>
       <Switch

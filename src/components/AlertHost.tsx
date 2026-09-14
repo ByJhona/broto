@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { registerAlertHandler, type AlertButton } from '@/utils';
 
 type AlertState = {
@@ -12,14 +13,15 @@ type AlertState = {
 export function AlertHost() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
   const [state, setState] = useState<AlertState | null>(null);
 
   useEffect(() => {
     registerAlertHandler((title, message, buttons) => {
-      setState({ title, message, buttons: buttons && buttons.length > 0 ? buttons : [{ text: 'OK' }] });
+      setState({ title, message, buttons: buttons && buttons.length > 0 ? buttons : [{ text: t('ok') }] });
     });
     return () => registerAlertHandler(null);
-  }, []);
+  }, [t]);
 
   const handlePress = (button: AlertButton) => {
     setState(null);

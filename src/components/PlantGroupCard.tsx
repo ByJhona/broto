@@ -4,14 +4,15 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Folder from 'lucide-react-native/icons/folder';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantGroup } from '@/types';
 
 const GROUP_CARD_WIDTH = 140;
 
-function plantCountLabel(count: number): string {
-  if (count === 0) return 'Vazio';
-  if (count === 1) return '1 planta';
-  return `${count} plantas`;
+function plantCountLabel(count: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+  if (count === 0) return t('empty');
+  if (count === 1) return t('onePlant');
+  return t('plantsCount', { count });
 }
 
 type GroupPhotoCollageProps = {
@@ -76,6 +77,7 @@ export const PlantGroupCard = memo(function PlantGroupCard({ group }: Readonly<P
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('group');
 
   return (
     <Pressable
@@ -86,7 +88,7 @@ export const PlantGroupCard = memo(function PlantGroupCard({ group }: Readonly<P
       <Text style={styles.name} numberOfLines={1}>
         {group.name}
       </Text>
-      <Text style={styles.count}>{plantCountLabel(group.plantCount)}</Text>
+      <Text style={styles.count}>{plantCountLabel(group.plantCount, t)}</Text>
     </Pressable>
   );
 });

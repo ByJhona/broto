@@ -4,16 +4,19 @@ import { useRouter } from 'expo-router';
 import Lock from 'lucide-react-native/icons/lock';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type LockedFeatureCardProps = {
   message: string;
   ctaLabel?: string;
 };
 
-export function LockedFeatureCard({ message, ctaLabel = 'Desbloquear com Premium' }: Readonly<LockedFeatureCardProps>) {
+export function LockedFeatureCard({ message, ctaLabel }: Readonly<LockedFeatureCardProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
+  const resolvedCtaLabel = ctaLabel ?? t('unlockWithPremium');
 
   return (
     <View style={styles.card}>
@@ -23,7 +26,7 @@ export function LockedFeatureCard({ message, ctaLabel = 'Desbloquear com Premium
       <Text style={styles.text}>{message}</Text>
       <Pressable style={styles.button} onPress={() => router.push('/profile/plans')}>
         <Sparkles size={14} color={colors.primaryForeground} strokeWidth={2} />
-        <Text style={styles.buttonText}>{ctaLabel}</Text>
+        <Text style={styles.buttonText}>{resolvedCtaLabel}</Text>
       </Pressable>
     </View>
   );

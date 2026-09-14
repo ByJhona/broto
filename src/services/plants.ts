@@ -1,4 +1,5 @@
 import { File } from 'expo-file-system';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { deleteCareTasksByPlantId } from './careTasks';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
@@ -156,7 +157,7 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
-  if (!user) throw new Error('Usuário não autenticado.');
+  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
@@ -193,7 +194,7 @@ export async function addPlantPhoto(plantId: string, localUri: string): Promise<
 
   const existingPhotoUrls = (current as { photo_urls: string[] }).photo_urls;
   if (existingPhotoUrls.length >= MAX_PLANT_PHOTOS) {
-    throw new Error(`Você pode adicionar no máximo ${MAX_PLANT_PHOTOS} fotos.`);
+    throw new Error(i18n.t('plant:maxPhotosError', { max: MAX_PLANT_PHOTOS }));
   }
 
   const photoUrl = await uploadPlantPhoto(plantId, localUri);

@@ -1,1 +1,16 @@
-{}
+{
+  "historyTitle": "Diagnósticos",
+  "resultTitle": "Diagnóstico",
+  "healthyLabel": "Saudável",
+  "attentionLabel": "Precisa de atenção",
+  "urgentLabel": "Cuidado urgente",
+  "historySectionTitle": "Histórico",
+  "emptyHistoryMessage": "Você ainda não fez nenhum diagnóstico. Vá na aba Foto e escolha \"Diagnosticar\" pra começar.",
+  "healthyStatusLabel": "Sua planta está saudável",
+  "attentionStatusLabel": "Precisa de um pouco de atenção",
+  "urgentStatusLabel": "Precisa de cuidado urgente",
+  "notFoundMessage": "Não conseguimos identificar nenhuma planta nessa foto. Tente tirar de perto, com boa iluminação.",
+  "issuesSectionTitle": "O que percebemos",
+  "nextStepsSectionTitle": "Próximos passos",
+  "analyzePhotoError": "Não foi possível analisar a foto."
+}

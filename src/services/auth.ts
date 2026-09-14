@@ -1,4 +1,5 @@
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
@@ -51,7 +52,7 @@ export async function signInWithGoogle() {
     return data;
   } catch (err) {
     if (isErrorWithCode(err) && err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-      throw new Error('Instale ou atualize o Google Play Services para continuar.');
+      throw new Error(i18n.t('errors:installGooglePlayServices'));
     }
     throw err;
   }

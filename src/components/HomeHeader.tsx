@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Coins from 'lucide-react-native/icons/coins';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { useAuth, useConversations, useCredits, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getProfile } from '@/services';
@@ -31,6 +32,7 @@ export function HomeHeader({ expanded, onExpand, onHeightChange }: Readonly<Home
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
   const { hasUnread } = useNotifications();
   const { hasUnread: hasUnreadMessages } = useConversations();
   const { user } = useAuth();
@@ -67,7 +69,7 @@ export function HomeHeader({ expanded, onExpand, onHeightChange }: Readonly<Home
   const collapsedContentStyle = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
 
   const firstName =
-    profile?.name?.split(' ')[0] ?? user?.user_metadata?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Jardineiro';
+    profile?.name?.split(' ')[0] ?? user?.user_metadata?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? t('defaultGardenerName');
 
   return (
     <Animated.View style={[styles.header, containerStyle]}>

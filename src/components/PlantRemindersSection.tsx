@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { CareTask } from '@/types';
 import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
@@ -18,6 +19,7 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
 
   const reminders = tasks
     .filter((task) => task.plantId === plantId)
@@ -26,7 +28,7 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
   return (
     <Card style={styles.section}>
       <View style={styles.remindersHeader}>
-        <SectionTitle style={styles.remindersSectionTitle}>Lembretes</SectionTitle>
+        <SectionTitle style={styles.remindersSectionTitle}>{t('remindersTitle')}</SectionTitle>
         <Pressable
           style={styles.addReminderButton}
           onPress={() => router.push({ pathname: '/task/new', params: { plantId } })}
@@ -37,7 +39,7 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
       </View>
 
       {reminders.length === 0 ? (
-        <Text style={styles.emptyRemindersText}>Nenhum lembrete pra essa planta ainda.</Text>
+        <Text style={styles.emptyRemindersText}>{t('noPlantRemindersYet')}</Text>
       ) : (
         reminders.map((task) => (
           <View key={task.id} style={styles.reminderItemSpacing}>

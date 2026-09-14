@@ -11,6 +11,7 @@ import Send from 'lucide-react-native/icons/send';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   COMMUNITY_POST_TYPE,
   type CommunityComment,
@@ -65,6 +66,7 @@ function usePostCardState(
   const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [isSendingComment, setIsSendingComment] = useState(false);
+  const { t } = useTranslation(['community', 'common']);
 
   const handleSendComment = async () => {
     const text = draft.trim();
@@ -81,9 +83,9 @@ function usePostCardState(
   const handleDelete = async () => {
     setIsMenuOpen(false);
     const confirmed = await confirm(
-      'Excluir publicação',
-      'Tem certeza que quer excluir essa publicação? Essa ação não pode ser desfeita.',
-      { confirmLabel: 'Excluir', destructive: true }
+      t('community:deletePostTitle'),
+      t('community:deletePostMessage'),
+      { confirmLabel: t('common:delete'), destructive: true }
     );
     if (confirmed) onDelete?.(post.id);
   };
@@ -91,9 +93,9 @@ function usePostCardState(
   const handleDeleteComment = async (commentId: string) => {
     setOpenCommentMenuId(null);
     const confirmed = await confirm(
-      'Excluir recado',
-      'Tem certeza que quer excluir esse recado? Essa ação não pode ser desfeita.',
-      { confirmLabel: 'Excluir', destructive: true }
+      t('community:deleteCommentTitle'),
+      t('community:deleteCommentMessage'),
+      { confirmLabel: t('common:delete'), destructive: true }
     );
     if (confirmed) onDeleteComment?.(commentId);
   };
@@ -124,6 +126,7 @@ type PostMenuProps = {
 function PostMenu({ isOpen, onToggle, onDelete }: Readonly<PostMenuProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
   return (
     <View>
       <Pressable style={styles.menuButton} onPress={onToggle} hitSlop={8}>
@@ -133,7 +136,7 @@ function PostMenu({ isOpen, onToggle, onDelete }: Readonly<PostMenuProps>) {
         <View style={styles.menu}>
           <Pressable style={styles.menuItem} onPress={onDelete}>
             <Trash2 size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.menuItemText}>Excluir</Text>
+            <Text style={styles.menuItemText}>{t('delete')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -152,6 +155,7 @@ type CommentRowProps = {
 function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete }: Readonly<CommentRowProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
   return (
     <View style={styles.comment}>
       <Avatar name={comment.authorName} url={comment.authorAvatarUrl} size={32} />
@@ -170,7 +174,7 @@ function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete 
             <View style={styles.menu}>
               <Pressable style={styles.menuItem} onPress={onDelete}>
                 <Trash2 size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-                <Text style={styles.menuItemText}>Excluir</Text>
+                <Text style={styles.menuItemText}>{t('delete')}</Text>
               </Pressable>
             </View>
           ) : null}
@@ -263,6 +267,7 @@ type PostFooterProps = {
 function PostFooter({ liked, likeCount, commentCount, onToggleLike, onToggleComments }: Readonly<PostFooterProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('community');
   return (
     <View style={styles.footer}>
       <Pressable style={styles.footerButton} onPress={onToggleLike}>
@@ -277,7 +282,7 @@ function PostFooter({ liked, likeCount, commentCount, onToggleLike, onToggleComm
 
       <Pressable style={styles.footerButton} onPress={onToggleComments}>
         <MessageCircle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.footerText}>{commentCount} recados</Text>
+        <Text style={styles.footerText}>{t('footerCommentsLabel', { count: commentCount })}</Text>
       </Pressable>
     </View>
   );
@@ -308,6 +313,7 @@ function PostComments({
 }: Readonly<PostCommentsProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('community');
   return (
     <View style={styles.comments}>
       {comments.map((comment) => (
@@ -326,7 +332,7 @@ function PostComments({
           style={[styles.commentInput, isSending && styles.commentInputDisabled]}
           value={draft}
           onChangeText={onChangeDraft}
-          placeholder="Deixe um recadinho..."
+          placeholder={t('commentPlaceholder')}
           placeholderTextColor={colors.mutedForeground}
           onSubmitEditing={onSend}
           editable={!isSending}

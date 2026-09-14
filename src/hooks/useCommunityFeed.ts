@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { i18n } from '@/i18n';
 import { useAuth } from './useAuth';
 import { useEvents } from './useEvents';
 import { useListings } from './useListings';
@@ -144,7 +145,7 @@ export function useCommunityFeed() {
       }
     } catch (err) {
       console.error(err);
-      Toast.error('Não foi possível publicar. Tente novamente.');
+      Toast.error(i18n.t('community:createPostError'));
       throw err;
     }
   };
@@ -175,7 +176,7 @@ export function useCommunityFeed() {
         if (previousPost) {
           queryClient.setQueryData<PostsQueryData>(queryKey, (old) => replaceFirstPagePost(old, previousPost));
         }
-        Toast.error('Não foi possível excluir a publicação.');
+        Toast.error(i18n.t('community:deletePostError'));
       }
     },
     [queryClient, queryKey]
@@ -192,7 +193,7 @@ export function useCommunityFeed() {
         await deleteComment(commentId);
       } catch {
         if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
-        Toast.error('Não foi possível excluir o recado.');
+        Toast.error(i18n.t('community:deleteCommentError'));
       }
     },
     [queryClient, queryKey]

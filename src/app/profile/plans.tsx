@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Gem from 'lucide-react-native/icons/gem';
 import Zap from 'lucide-react-native/icons/zap';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
 import { useCredits } from '@/hooks';
 import {
@@ -23,15 +24,20 @@ import { formatPrice, Toast } from '@/utils';
 
 const CREDIT_PACK_ICONS = [Zap, Gem];
 
-function getPlanCtaLabel(plan: PlanCatalogItem, purchasingId: string | null): string | undefined {
+function getPlanCtaLabel(
+  plan: PlanCatalogItem,
+  purchasingId: string | null,
+  t: (key: string) => string
+): string | undefined {
   if (plan.priceCents === 0) return undefined;
-  return purchasingId === plan.id ? 'Processando...' : 'Assinar';
+  return purchasingId === plan.id ? t('processing') : t('subscribe');
 }
 
 export default function PlansScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('credits');
   const { credits, refresh: refreshCredits } = useCredits();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
@@ -62,7 +68,7 @@ export default function PlansScreen() {
     if (purchasingId) return;
 
     if (!(await isPurchasesAvailable())) {
-      Toast.info('A loja está sendo preparada. Volte em breve.');
+      Toast.info(t('storeBeingPrepared'));
       return;
     }
 
@@ -74,7 +80,7 @@ export default function PlansScreen() {
       );
 
       if (!pkg) {
-        Toast.error('Isso ainda não está publicado nas lojas.');
+        Toast.error(t('notYetAvailableInStores'));
         return;
       }
 
@@ -84,7 +90,7 @@ export default function PlansScreen() {
       Toast.success(successMessage);
     } catch (err) {
       if (!isUserCancelledPurchase(err)) {
-        Toast.error(err instanceof Error ? err.message : 'Não foi possível concluir a compra.');
+        Toast.error(err instanceof Error ? err.message : t('purchaseError'));
       }
     } finally {
       setPurchasingId(null);
@@ -114,12 +120,12 @@ export default function PlansScreen() {
                 id: plan.id,
                 name: plan.name,
                 description: plan.description,
-                price: plan.priceCents === 0 ? 'Grátis' : `${formatPrice(plan.priceCents)}/mês`,
+                price: plan.priceCents === 0 ? t('free') : t('priceMonthly', { price: formatPrice(plan.priceCents) }),
               }}
               isCurrent={isCurrent}
-              ctaLabel={getPlanCtaLabel(plan, purchasingId)}
+              ctaLabel={getPlanCtaLabel(plan, purchasingId, t)}
               onPressCta={
-                plan.priceCents === 0 ? undefined : () => handlePurchase(plan.id, 'Sua assinatura foi confirmada.')
+                plan.priceCents === 0 ? undefined : () => handlePurchase(plan.id, t('subscriptionConfirmed'))
               }
             />
           );
@@ -128,7 +134,7 @@ export default function PlansScreen() {
 
       {isLoading || creditPacks.length > 0 ? (
         <>
-          <SectionTitle style={styles.sectionTitle}>Créditos avulsos</SectionTitle>
+          <SectionTitle style={styles.sectionTitle}>{t('creditPacks')}</SectionTitle>
           {isLoading ? (
             <>
               <CreditPackCardSkeleton />
@@ -141,8 +147,8 @@ export default function PlansScreen() {
                 icon={CREDIT_PACK_ICONS[index % CREDIT_PACK_ICONS.length]}
                 name={pack.name}
                 price={formatPrice(pack.priceCents)}
-                ctaLabel={purchasingId === pack.id ? 'Processando...' : 'Comprar'}
-                onPressCta={() => handlePurchase(pack.id, 'Créditos adicionados à sua conta.')}
+                ctaLabel={purchasingId === pack.id ? t('processing') : t('buy')}
+                onPressCta={() => handlePurchase(pack.id, t('creditsAddedToAccount'))}
               />
             ))
           )}

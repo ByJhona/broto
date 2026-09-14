@@ -1,1 +1,22 @@
-{}
+{
+  "identifyTitle": "What plant is this?",
+  "identifySubtitle": "Point the camera at the plant's leaf or flower",
+  "identifyLoading": "Identifying your plant...",
+  "identifyLoginMessage": "You need an account to identify plants.",
+  "diagnoseTitle": "How is your plant doing?",
+  "diagnoseSubtitle": "Point the camera at the plant you want to diagnose",
+  "diagnoseLoading": "Analyzing your plant...",
+  "diagnoseLoginMessage": "You need an account to diagnose your plants.",
+  "toggleIdentify": "Identify",
+  "toggleDiagnose": "Diagnose",
+  "insufficientCreditsTitle": "Insufficient credits",
+  "insufficientCreditsMessage": "This action costs {{cost}} credits. Check out the plans to continue.",
+  "notNowOption": "Not now",
+  "seePlansOption": "See plans",
+  "processPhotoError": "Could not process the photo. Try again.",
+  "galleryPermissionError": "We need access to your photos for this.",
+  "cameraPermissionMessage": "We need camera access to take a photo of your plant.",
+  "allowCameraCta": "Allow camera",
+  "chooseFromGalleryCta": "Or choose from gallery",
+  "offlineMessage": "No connection — this action requires internet."
+}

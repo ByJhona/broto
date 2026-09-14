@@ -16,5 +16,15 @@
   "dateTimeJoiner": "às",
   "goodMorning": "Bom dia",
   "goodAfternoon": "Boa tarde",
-  "goodEvening": "Boa noite"
+  "goodEvening": "Boa noite",
+  "ok": "OK",
+  "unlockWithPremium": "Desbloquear com Premium",
+  "offlineDataMessage": "Sem conexão — mostrando dados salvos.",
+  "notAuthenticated": "Usuário não autenticado.",
+  "signInRequiredTitle": "Entre na sua conta",
+  "notNow": "Agora não",
+  "signIn": "Entrar",
+  "addPhoto": "Adicionar foto",
+  "takePhoto": "Tirar foto",
+  "chooseFromGallery": "Escolher da galeria"
 }

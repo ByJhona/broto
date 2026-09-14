@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 
 export type CreditsState = {
@@ -48,7 +49,7 @@ export async function getCredits(): Promise<CreditsState | null> {
 
 export class InsufficientCreditsError extends Error {
   constructor() {
-    super('Você usou todos os seus créditos do mês.');
+    super(i18n.t('credits:insufficientCreditsMessage'));
     this.name = 'InsufficientCreditsError';
   }
 }

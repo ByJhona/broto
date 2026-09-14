@@ -1,1 +1,93 @@
-{}
+{
+  "newListingScreenTitle": "New listing",
+  "listingsScreenTitle": "Listings",
+  "listingDetailScreenTitle": "Listing",
+
+  "titleRequired": "Give the listing a title.",
+  "priceRequired": "Enter the plant's price.",
+  "photosSectionTitle": "Photos",
+  "listingTypeSectionTitle": "Listing type",
+  "priceLabel": "Price",
+  "yourPlantsSectionTitle": "One of your plants? (optional)",
+  "titleLabel": "Title",
+  "titlePlaceholder": "Swiss cheese plant cutting",
+  "descriptionLabel": "Description (optional)",
+  "descriptionPlaceholder": "Tell more about the plant and pickup arrangements",
+  "shareToCommunityDescription": "Also share this listing on the Community feed.",
+  "communityCommentLabel": "Community comment (optional)",
+  "yourPlantFallback": "your plant",
+  "chooseLocationCta": "Choose location on the map",
+
+  "filterAll": "All",
+  "noListingsFound": "No listings found.",
+
+  "markCompletedAction": "Mark as completed",
+  "markExpiredAction": "Mark as expired",
+  "reactivateListingAction": "Reactivate listing",
+  "shareToCommunityAction": "Share to Community",
+  "deleteListingAction": "Delete listing",
+
+  "editListingTitle": "Edit listing",
+
+  "notFoundTitle": "Listing not found",
+  "notFoundMessage": "This listing may have been removed.",
+
+  "interestSentSuccess": "Interest sent! The owner will be notified.",
+  "interestSentError": "Couldn't send your interest.",
+  "interestUpdateError": "Couldn't update the interest.",
+  "offerUpdateError": "Couldn't update the proposal.",
+  "exchangeProposeError": "Couldn't propose the trade.",
+
+  "markCompletedConfirmTitle": "Mark as completed",
+  "markCompletedConfirmMessage": "Use this once the trade or donation has actually happened. The listing leaves the available list and can't be reactivated afterwards — to offer it again you'll need to create a new listing.",
+  "markCompletedConfirmLabel": "Complete",
+  "listingUpdateError": "Couldn't update the listing.",
+
+  "markExpiredConfirmTitle": "Mark as expired",
+  "markExpiredConfirmMessage": "Use this when no one has shown interest for now. The listing leaves the available list, but you can reactivate it later.",
+  "markExpiredConfirmLabel": "Mark as expired",
+  "listingExpiredSuccess": "Listing marked as expired.",
+
+  "listingReactivatedSuccess": "Listing reactivated!",
+
+  "deleteConfirmTitle": "Delete listing",
+  "deleteConfirmMessage": "This removes the listing from the map. This can't be undone.",
+  "deleteConfirmLabel": "Delete",
+  "listingDeleteError": "Couldn't delete the listing.",
+
+  "shareModalTitle": "Share to Community",
+  "shareModalLabel": "Comment",
+  "shareModalSubmit": "Share",
+  "shareSuccess": "Listing shared to the Community!",
+  "shareError": "Couldn't share to the Community.",
+
+  "offeredBy": "Offered by",
+  "fetchingAddress": "Looking up address...",
+  "approximateLocation": "Approximate location on the map",
+  "descriptionSectionTitle": "Description",
+
+  "exchangeProposalsTitle": "Trade proposals",
+  "interestedPeopleTitle": "Interested people",
+  "noExchangeProposals": "No one has proposed a trade yet.",
+  "noInterestedPeople": "No one has shown interest yet.",
+  "offeredPlantDetail": "Wants to trade for: {{plantName}}",
+
+  "interestSentLabel": "Interest sent",
+  "wantToBuyLabel": "I want to buy",
+  "haveInterestLabel": "I'm interested",
+  "openChatLabel": "Open chat",
+  "proposeExchangeLabel": "Propose trade",
+
+  "proposalStatusPending": "Pending",
+  "proposalStatusAccepted": "Accepted",
+  "proposalStatusDeclined": "Declined",
+  "declineAction": "Decline",
+  "acceptAction": "Accept",
+
+  "exchangePlantPickerTitle": "Which plant do you want to offer?",
+  "noPlantsRegistered": "You don't have any registered plants yet.",
+
+  "priceFieldPlaceholder": "$0.00",
+
+  "shareToCommunityTitle": "Post to Community"
+}

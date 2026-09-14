@@ -7,6 +7,7 @@ import Camera from 'lucide-react-native/icons/camera';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { useCreditsGate } from '@/hooks';
 import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
@@ -27,6 +28,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   const queryClient = useQueryClient();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const checkinsQueryKey = ['plant-growth-checkins', plant.id] as const;
@@ -41,11 +43,11 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
 
   const showInsufficientCreditsAlert = () => {
     Alert.alert(
-      'Créditos insuficientes',
-      `Essa análise custa ${GROWTH_ANALYSIS_CREDIT_COST} créditos. Veja os planos pra continuar.`,
+      t('insufficientCreditsTitle'),
+      t('growthAnalysisCreditsMessage', { cost: GROWTH_ANALYSIS_CREDIT_COST }),
       [
-        { text: 'Agora não', style: 'cancel' },
-        { text: 'Ver planos', onPress: () => router.push('/profile/plans') },
+        { text: t('notNow'), style: 'cancel' },
+        { text: t('seePlans'), onPress: () => router.push('/profile/plans') },
       ]
     );
   };
@@ -56,7 +58,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
       return;
     }
 
-    const uri = await pickPhoto('Analisar planta');
+    const uri = await pickPhoto(t('analyzePlantPickerTitle'));
     if (!uri) return;
 
     setIsAnalyzing(true);
@@ -69,7 +71,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
       if (err instanceof InsufficientCreditsError) {
         showInsufficientCreditsAlert();
       } else {
-        Toast.error(err instanceof Error ? err.message : 'Não foi possível analisar a foto.');
+        Toast.error(err instanceof Error ? err.message : t('growthAnalysisError'));
       }
     } finally {
       setIsAnalyzing(false);
@@ -78,9 +80,9 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
 
   return (
     <Card style={styles.section}>
-      <SectionTitle>{`Evolução da ${plant.name}`}</SectionTitle>
+      <SectionTitle>{t('growthEvolutionTitle', { name: plant.name })}</SectionTitle>
       {!isPremium ? (
-        <LockedFeatureCard message="Acompanhe a evolução dessa planta com fotos analisadas pela IA ao longo do tempo — um recurso do plano Premium." />
+        <LockedFeatureCard message={t('growthLockedMessage')} />
       ) : (
         <>
           <Pressable style={styles.analyzeButton} onPress={handleAnalyzeGrowth} disabled={isAnalyzing}>
@@ -90,7 +92,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
               <Camera size={16} color={colors.primaryForeground} strokeWidth={2} />
             )}
             <Text style={styles.analyzeButtonText}>
-              {isAnalyzing ? 'Analisando...' : `Analisar minha planta · ${GROWTH_ANALYSIS_CREDIT_COST} créditos`}
+              {isAnalyzing ? t('analyzing') : t('analyzeButton', { cost: GROWTH_ANALYSIS_CREDIT_COST })}
             </Text>
           </Pressable>
 
@@ -101,7 +103,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
             </>
           )}
           {!isCheckinsLoading && checkins.length === 0 && (
-            <Text style={styles.emptyCheckinsText}>Nenhuma análise ainda. Toque no botão acima pra começar.</Text>
+            <Text style={styles.emptyCheckinsText}>{t('noCheckinsYet')}</Text>
           )}
           {!isCheckinsLoading &&
             checkins.length > 0 &&

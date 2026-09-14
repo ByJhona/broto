@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
 import { toFunctionError } from './functionErrors';
@@ -12,7 +13,7 @@ async function uploadIdentificationPhoto(localUri: string): Promise<string> {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
-  if (!user) throw new Error('Usuário não autenticado.');
+  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);

@@ -5,6 +5,7 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { IconBadge } from './IconBadge';
 import { useCreditsGate } from '@/hooks';
 import { askPlantQuestion, CREDIT_COSTS, InsufficientCreditsError, type PlantChatMessage } from '@/services';
@@ -19,18 +20,18 @@ type PlantChatCopy = {
   placeholder: string;
 };
 
-function plantChatCopy(plantId: string | null): PlantChatCopy {
+function plantChatCopy(plantId: string | null, t: (key: string) => string): PlantChatCopy {
   if (plantId) {
     return {
-      unlockText: 'Tire dúvidas sobre o cuidado dessa planta com a IA.',
-      emptyText: 'Nenhuma pergunta ainda. Pergunte algo sobre o cuidado dessa planta.',
-      placeholder: 'Pergunte algo sobre essa planta...',
+      unlockText: t('chatUnlockTextForPlant'),
+      emptyText: t('chatEmptyTextForPlant'),
+      placeholder: t('chatPlaceholderForPlant'),
     };
   }
   return {
-    unlockText: 'Tire dúvidas sobre plantas com nossa especialista de IA.',
-    emptyText: 'Nenhuma pergunta ainda. Pergunte sobre qualquer planta, cuidado ou problema comum.',
-    placeholder: 'Pergunte algo sobre plantas...',
+    unlockText: t('chatUnlockTextGeneral'),
+    emptyText: t('chatEmptyTextGeneral'),
+    placeholder: t('chatPlaceholderGeneral'),
   };
 }
 
@@ -42,6 +43,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const scrollRef = useRef<ScrollView>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -49,7 +51,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
   const [messages, setMessages] = useState<PlantChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const copy = plantChatCopy(plantId);
+  const copy = plantChatCopy(plantId, t);
 
   const handleUnlock = () => {
     setSessionId(null);
@@ -65,11 +67,11 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
 
   const showInsufficientCreditsAlert = () => {
     Alert.alert(
-      'Créditos insuficientes',
-      `Essa pergunta custa ${creditCost} crédito. Veja os planos pra continuar.`,
+      t('insufficientCreditsTitle'),
+      t('chatInsufficientCreditsMessage', { cost: creditCost }),
       [
-        { text: 'Agora não', style: 'cancel' },
-        { text: 'Ver planos', onPress: () => router.push('/profile/plans') },
+        { text: t('notNow'), style: 'cancel' },
+        { text: t('seePlans'), onPress: () => router.push('/profile/plans') },
       ]
     );
   };
@@ -109,7 +111,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
       if (err instanceof InsufficientCreditsError) {
         showInsufficientCreditsAlert();
       } else {
-        Toast.error(err instanceof Error ? err.message : 'Não foi possível enviar sua pergunta.');
+        Toast.error(err instanceof Error ? err.message : t('chatSendError'));
       }
     } finally {
       setIsSending(false);
@@ -123,7 +125,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
           <MessageCircle size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
         <Text style={styles.unlockText}>{copy.unlockText}</Text>
-        <Text style={styles.unlockButtonText}>Toque para conversar</Text>
+        <Text style={styles.unlockButtonText}>{t('chatUnlockButton')}</Text>
       </Pressable>
     );
   }
@@ -178,7 +180,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
           <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       </View>
-      <Text style={styles.costHint}>Cada pergunta custa {creditCost} crédito.</Text>
+      <Text style={styles.costHint}>{t('chatCostHint', { cost: creditCost })}</Text>
     </View>
   );
 }

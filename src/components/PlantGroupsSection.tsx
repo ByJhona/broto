@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { usePersistedCollapse } from '@/hooks';
 import type { PlantGroup } from '@/types';
 import { Card } from './Card';
@@ -10,8 +11,8 @@ import { PlantGroupCard } from './PlantGroupCard';
 
 const GROUPS_COLLAPSED_KEY = 'broto:garden-groups-collapsed';
 
-function groupsSectionTitle(count: number): string {
-  return count > 0 ? `Grupos (${count})` : 'Grupos';
+function groupsSectionTitle(count: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+  return count > 0 ? t('groupsTitleWithCount', { count }) : t('groupsTitle');
 }
 
 type PlantGroupsSectionProps = {
@@ -22,12 +23,13 @@ type PlantGroupsSectionProps = {
 export function PlantGroupsSection({ groups, onCreateGroup }: Readonly<PlantGroupsSectionProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('garden');
   const { isCollapsed, toggleCollapsed } = usePersistedCollapse(GROUPS_COLLAPSED_KEY);
 
   return (
     <Card style={styles.section}>
       <CollapsibleSection
-        title={groupsSectionTitle(groups.length)}
+        title={groupsSectionTitle(groups.length, t)}
         style={styles.collapsibleSection}
         headerAction={
           <Pressable style={styles.addButton} onPress={onCreateGroup} hitSlop={8}>
@@ -38,7 +40,7 @@ export function PlantGroupsSection({ groups, onCreateGroup }: Readonly<PlantGrou
         onToggleCollapsed={toggleCollapsed}
       >
         {groups.length === 0 ? (
-          <Text style={styles.emptyText}>Nenhum grupo ainda. Toque no + pra organizar suas plantas.</Text>
+          <Text style={styles.emptyText}>{t('noGroupsYet')}</Text>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
             {groups.map((group) => (

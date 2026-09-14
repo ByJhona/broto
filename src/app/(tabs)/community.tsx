@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Search from 'lucide-react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
 import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type PlantEvent } from '@/types';
 import { useCommunityFeed, useListings, useUserLocation } from '@/hooks';
@@ -14,13 +15,15 @@ type Listing = ReturnType<typeof useListings>['listings'][number];
 
 type FeedScope = 'todos' | 'seguindo';
 
-const FEED_FILTERS: { value: CommunityFeedFilter | null; label: string }[] = [
-  { value: null, label: 'Tudo' },
-  { value: OFFER_FEED_FILTER, label: 'Ofertas' },
-  { value: COMMUNITY_POST_TYPE.CONQUISTA, label: 'Conquistas' },
-  { value: COMMUNITY_POST_TYPE.DUVIDA, label: 'Dúvidas' },
-  { value: COMMUNITY_POST_TYPE.DICA, label: 'Dicas' },
-];
+function getFeedFilters(t: (key: string) => string): { value: CommunityFeedFilter | null; label: string }[] {
+  return [
+    { value: null, label: t('feedFilterAll') },
+    { value: OFFER_FEED_FILTER, label: t('feedFilterOffers') },
+    { value: COMMUNITY_POST_TYPE.CONQUISTA, label: t('feedFilterAchievements') },
+    { value: COMMUNITY_POST_TYPE.DUVIDA, label: t('feedFilterQuestions') },
+    { value: COMMUNITY_POST_TYPE.DICA, label: t('feedFilterTips') },
+  ];
+}
 
 type Styles = ReturnType<typeof makeStyles>;
 
@@ -31,16 +34,17 @@ type CommunityScopeTabsProps = {
 };
 
 function CommunityScopeTabs({ scope, onChange, styles }: Readonly<CommunityScopeTabsProps>) {
+  const { t } = useTranslation('community');
   return (
     <View style={styles.scopeRow}>
       <Pressable style={[styles.scopeTab, scope === 'todos' && styles.scopeTabActive]} onPress={() => onChange('todos')}>
-        <Text style={[styles.scopeTabText, scope === 'todos' && styles.scopeTabTextActive]}>Todos</Text>
+        <Text style={[styles.scopeTabText, scope === 'todos' && styles.scopeTabTextActive]}>{t('scopeAll')}</Text>
       </Pressable>
       <Pressable
         style={[styles.scopeTab, scope === 'seguindo' && styles.scopeTabActive]}
         onPress={() => onChange('seguindo')}
       >
-        <Text style={[styles.scopeTabText, scope === 'seguindo' && styles.scopeTabTextActive]}>Seguindo</Text>
+        <Text style={[styles.scopeTabText, scope === 'seguindo' && styles.scopeTabTextActive]}>{t('scopeFollowing')}</Text>
       </Pressable>
     </View>
   );
@@ -53,9 +57,11 @@ type CommunityFilterChipsProps = {
 };
 
 function CommunityFilterChips({ filter, onChange, styles }: Readonly<CommunityFilterChipsProps>) {
+  const { t } = useTranslation('community');
+  const feedFilters = getFeedFilters(t);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipRow}>
-      {FEED_FILTERS.map((item) => (
+      {feedFilters.map((item) => (
         <Pressable
           key={item.label}
           style={[styles.filterChip, filter === item.value && styles.filterChipActive]}
@@ -87,9 +93,10 @@ function CommunityOffersCarousel({
   onPressListing,
   styles,
 }: Readonly<CommunityOffersCarouselProps>) {
+  const { t } = useTranslation('community');
   if (listings.length === 0) return null;
   return (
-    <CollapsibleSection title="Ofertas recentes" onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+    <CollapsibleSection title={t('recentOffersTitle')} onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
         {listings.map((listing) => (
           <ListingCard
@@ -123,9 +130,10 @@ function CommunityEventsCarousel({
   onPressEvent,
   styles,
 }: Readonly<CommunityEventsCarouselProps>) {
+  const { t } = useTranslation('community');
   if (events.length === 0) return null;
   return (
-    <CollapsibleSection title="Próximos eventos" onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+    <CollapsibleSection title={t('upcomingEventsTitle')} onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
         {events.map((event) => (
           <EventCard
@@ -150,12 +158,13 @@ type CommunityFeedHeaderProps = {
 };
 
 function CommunityFeedHeader({ feed, colors, styles, onSearch, onSeeMoreListings, onSeeMoreEvents }: Readonly<CommunityFeedHeaderProps>) {
+  const { t } = useTranslation('community');
   return (
     <View>
       <View style={styles.header}>
         <View style={styles.headerTextBox}>
-          <Text style={styles.title}>Comunidade</Text>
-          <Text style={styles.subtitle}>A comunidade de quem tá aprendendo a cuidar de plantas</Text>
+          <Text style={styles.title}>{t('title')}</Text>
+          <Text style={styles.subtitle}>{t('subtitle')}</Text>
         </View>
         <IconButton style={styles.searchButton} onPress={onSearch}>
           <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
@@ -189,7 +198,7 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch, onSeeMoreListings
         <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
       </View>
 
-      <SectionTitle style={styles.postsSectionTitle}>Publicações</SectionTitle>
+      <SectionTitle style={styles.postsSectionTitle}>{t('postsSectionTitle')}</SectionTitle>
 
       {feed.isInitialLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     </View>

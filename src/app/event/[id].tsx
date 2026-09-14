@@ -21,35 +21,38 @@ import {
 import { useEventDetail } from '@/hooks';
 import { Alert, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
 import type { PlantEvent } from '@/types';
+import { useTranslation } from '@/i18n';
+
+type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 function buildEventActionButtons(
+  t: Translate,
   isCancelled: boolean,
   isPast: boolean,
   handlers: { onShare: () => void; onCancel: () => void; onDelete: () => void }
 ): AlertButton[] {
-  const buttons: AlertButton[] = [{ text: 'Compartilhar na Comunidade', onPress: handlers.onShare }];
+  const buttons: AlertButton[] = [{ text: t('shareToCommunity'), onPress: handlers.onShare }];
   if (!isCancelled && !isPast) {
-    buttons.push({ text: 'Cancelar evento', style: 'destructive', onPress: handlers.onCancel });
+    buttons.push({ text: t('cancelEventAction'), style: 'destructive', onPress: handlers.onCancel });
   }
-  buttons.push({ text: 'Excluir evento', style: 'destructive', onPress: handlers.onDelete });
-  buttons.push({ text: 'Fechar', style: 'cancel' });
+  buttons.push({ text: t('deleteEventAction'), style: 'destructive', onPress: handlers.onDelete });
+  buttons.push({ text: t('common:close'), style: 'cancel' });
   return buttons;
 }
 
-function eventStatusNotice(isCancelled: boolean, isPast: boolean): { text: string; muted: boolean } | null {
-  if (isCancelled) return { text: 'Esse evento foi cancelado pelo organizador.', muted: false };
-  if (isPast) return { text: 'Esse evento já aconteceu.', muted: true };
+function eventStatusNotice(t: Translate, isCancelled: boolean, isPast: boolean): { text: string; muted: boolean } | null {
+  if (isCancelled) return { text: t('eventCancelledNotice'), muted: false };
+  if (isPast) return { text: t('eventPastNotice'), muted: true };
   return null;
 }
 
-function formatAddressText(isLoading: boolean, address: string | null | undefined): string {
-  if (isLoading) return 'Buscando endereço...';
-  return address ?? 'Local aproximado no mapa';
+function formatAddressText(t: Translate, isLoading: boolean, address: string | null | undefined): string {
+  if (isLoading) return t('loadingAddress');
+  return address ?? t('approximateLocation');
 }
 
-function formatAttendeeCountText(count: number): string {
-  if (count === 1) return '1 pessoa confirmada';
-  return `${count} pessoas confirmadas`;
+function formatAttendeeCountText(t: Translate, count: number): string {
+  return t('attendeesConfirmed', { count });
 }
 
 function buildEventHeaderOptions(
@@ -104,10 +107,11 @@ type EventMetaCardProps = {
 };
 
 function EventMetaCard({ event, isAddressLoading, address, onPressOwner, styles }: Readonly<EventMetaCardProps>) {
+  const { t } = useTranslation('event');
   return (
     <Card style={styles.section}>
       <OwnerRow
-        eyebrow="Organizado por"
+        eyebrow={t('organizedByEyebrow')}
         ownerName={event.ownerName}
         ownerAvatarUrl={event.ownerAvatarUrl}
         onPress={onPressOwner}
@@ -115,12 +119,12 @@ function EventMetaCard({ event, isAddressLoading, address, onPressOwner, styles 
 
       <View style={styles.locationRow}>
         <MapPin size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.locationText}>{formatAddressText(isAddressLoading, address)}</Text>
+        <Text style={styles.locationText}>{formatAddressText(t, isAddressLoading, address)}</Text>
       </View>
 
       <View style={styles.locationRow}>
         <Users size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.locationText}>{formatAttendeeCountText(event.attendeeCount)}</Text>
+        <Text style={styles.locationText}>{formatAttendeeCountText(t, event.attendeeCount)}</Text>
       </View>
     </Card>
   );
@@ -142,10 +146,11 @@ type EventDescriptionCardProps = {
 };
 
 function EventDescriptionCard({ description, styles }: Readonly<EventDescriptionCardProps>) {
+  const { t } = useTranslation('event');
   if (!description) return null;
   return (
     <Card style={styles.section}>
-      <SectionTitle>Descrição</SectionTitle>
+      <SectionTitle>{t('descriptionSectionTitle')}</SectionTitle>
       <Text style={styles.description}>{description}</Text>
     </Card>
   );
@@ -157,27 +162,28 @@ export default function EventDetailScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useEventDetail(id);
+  const { t } = useTranslation(['event', 'common']);
 
   if (detail.isLoading) {
     return <LoadingScreen />;
   }
 
   if (!detail.event) {
-    return <EmptyState icon={EVENT_ICON} title="Evento não encontrado" message="Esse evento pode ter sido removido." />;
+    return <EmptyState icon={EVENT_ICON} title={t('eventNotFoundTitle')} message={t('eventNotFoundMessage')} />;
   }
 
   const { event } = detail;
 
   const handleOpenActions = () => {
-    const buttons = buildEventActionButtons(detail.isCancelled, detail.isPast, {
+    const buttons = buildEventActionButtons(t, detail.isCancelled, detail.isPast, {
       onShare: detail.handleOpenShareModal,
       onCancel: detail.handleCancelEvent,
       onDelete: detail.handleDelete,
     });
-    Alert.alert('Editar evento', undefined, buttons);
+    Alert.alert(t('editEventActionsTitle'), undefined, buttons);
   };
 
-  const statusNotice = eventStatusNotice(detail.isCancelled, detail.isPast);
+  const statusNotice = eventStatusNotice(t, detail.isCancelled, detail.isPast);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
@@ -202,7 +208,7 @@ export default function EventDetailScreen() {
 
         {detail.canRsvp ? (
           <SubmitButton
-            label={event.isAttending ? 'Cancelar presença' : 'Confirmar presença'}
+            label={event.isAttending ? t('cancelAttendance') : t('confirmAttendance')}
             onPress={detail.handleToggleAttendance}
             loading={detail.isActing}
           />
@@ -211,11 +217,11 @@ export default function EventDetailScreen() {
 
       <PromptModal
         visible={detail.isShareModalOpen}
-        title="Compartilhar na Comunidade"
-        label="Comentário"
+        title={t('shareToCommunity')}
+        label={t('shareCommentLabel')}
         value={detail.shareCaption}
         onChangeText={detail.setShareCaption}
-        submitLabel="Compartilhar"
+        submitLabel={t('shareSubmitLabel')}
         isSubmitting={detail.isSharing}
         onSubmit={detail.handleSubmitShare}
         onCancel={detail.closeShareModal}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
+import { i18n, useTranslation } from '@/i18n';
 import { useAuth } from './useAuth';
 import { useEvents } from './useEvents';
 import { cancelAttendance, confirmAttendance, createPost, getEventAttendees, getEventById } from '@/services';
@@ -20,8 +21,8 @@ async function performEventDelete(
   setIsActing: (value: boolean) => void,
   onDone: () => void
 ): Promise<void> {
-  const confirmed = await confirm('Excluir evento', 'Isso remove o evento do mapa. Não dá pra desfazer.', {
-    confirmLabel: 'Excluir',
+  const confirmed = await confirm(i18n.t('event:deleteConfirmTitle'), i18n.t('event:deleteConfirmMessage'), {
+    confirmLabel: i18n.t('common:delete'),
     destructive: true,
   });
   if (!confirmed) return;
@@ -31,7 +32,7 @@ async function performEventDelete(
     await removeEvent(eventId);
     onDone();
   } catch {
-    Toast.error('Não foi possível excluir o evento.');
+    Toast.error(i18n.t('event:deleteError'));
   } finally {
     setIsActing(false);
   }
@@ -42,8 +43,8 @@ async function performEventCancel(
   cancelEventById: (id: string) => Promise<unknown>,
   setIsActing: (value: boolean) => void
 ): Promise<void> {
-  const confirmed = await confirm('Cancelar evento', 'As pessoas confirmadas vão ver que o evento foi cancelado.', {
-    confirmLabel: 'Cancelar evento',
+  const confirmed = await confirm(i18n.t('event:cancelConfirmTitle'), i18n.t('event:cancelConfirmMessage'), {
+    confirmLabel: i18n.t('event:cancelEventAction'),
     destructive: true,
   });
   if (!confirmed) return;
@@ -51,9 +52,9 @@ async function performEventCancel(
   setIsActing(true);
   try {
     await cancelEventById(eventId);
-    Toast.success('Evento cancelado.');
+    Toast.success(i18n.t('event:cancelSuccess'));
   } catch {
-    Toast.error('Não foi possível cancelar o evento.');
+    Toast.error(i18n.t('event:cancelError'));
   } finally {
     setIsActing(false);
   }
@@ -75,7 +76,7 @@ async function performToggleAttendance(
     }
     onDone();
   } catch (err) {
-    Toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar sua presença.');
+    Toast.error(err instanceof Error ? err.message : i18n.t('event:rsvpUpdateError'));
   } finally {
     setIsActing(false);
   }
@@ -93,9 +94,9 @@ async function performShareToCommunity(
   try {
     await createPost(userId, caption.trim(), [], null, photoUrl ? [photoUrl] : [], null, eventId);
     onDone();
-    Toast.success('Evento compartilhado na Comunidade!');
+    Toast.success(i18n.t('event:shareSuccess'));
   } catch {
-    Toast.error('Não foi possível compartilhar na Comunidade.');
+    Toast.error(i18n.t('event:shareError'));
   } finally {
     setIsSharing(false);
   }
@@ -103,6 +104,7 @@ async function performShareToCommunity(
 
 export function useEventDetail(id: string) {
   const router = useRouter();
+  const { t } = useTranslation('event');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { removeEvent, cancelEventById } = useEvents();
@@ -169,7 +171,7 @@ export function useEventDetail(id: string) {
 
   const handleOpenShareModal = () => {
     if (!event) return;
-    setShareCaption(`Marquei um evento: "${event.title}"!`);
+    setShareCaption(t('communityCommentPlaceholder', { title: event.title }));
     setIsShareModalOpen(true);
   };
 

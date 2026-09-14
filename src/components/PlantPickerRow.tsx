@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 
 type PlantPickerRowProps = {
@@ -14,12 +15,13 @@ type PlantPickerRowProps = {
 export function PlantPickerRow({ plants, selectedId, onSelect }: Readonly<PlantPickerRowProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('plant');
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       <Pressable style={styles.option} onPress={() => onSelect(null)}>
         <View style={[styles.avatar, selectedId === null && styles.avatarSelected]}>
-          <Text style={styles.avatarEmptyText}>Nenhuma</Text>
+          <Text style={styles.avatarEmptyText}>{t('noneOption')}</Text>
         </View>
       </Pressable>
       {plants.map((plant) => {

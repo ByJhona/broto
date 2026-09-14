@@ -2,18 +2,21 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import WifiOff from 'lucide-react-native/icons/wifi-off';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type OfflineBannerProps = {
   message?: string;
 };
 
-export function OfflineBanner({ message = 'Sem conexão — mostrando dados salvos.' }: Readonly<OfflineBannerProps>) {
+export function OfflineBanner({ message }: Readonly<OfflineBannerProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('common');
+  const resolvedMessage = message ?? t('offlineDataMessage');
   return (
     <View style={styles.container}>
       <WifiOff size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-      <Text style={styles.text}>{message}</Text>
+      <Text style={styles.text}>{resolvedMessage}</Text>
     </View>
   );
 }

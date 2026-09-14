@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Avatar, EmptyState, ListRow } from '@/components';
 import { useAuth } from '@/hooks';
 import { searchProfiles } from '@/services';
@@ -17,6 +18,7 @@ export default function SearchScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('search');
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [rawResults, setRawResults] = useState<UserProfile[]>([]);
@@ -51,7 +53,7 @@ export default function SearchScreen() {
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
-          placeholder="Buscar por @usuário"
+          placeholder={t('searchPlaceholder')}
           placeholderTextColor={colors.mutedForeground}
           autoFocus
           autoCapitalize="none"
@@ -84,8 +86,8 @@ export default function SearchScreen() {
           trimmedQuery && !isLoading ? (
             <EmptyState
               icon={Search}
-              title="Ninguém encontrado"
-              message={`Nenhum usuário com "@${trimmedQuery}".`}
+              title={t('noOneFound')}
+              message={t('noUserFound', { query: trimmedQuery })}
               style={styles.emptyState}
             />
           ) : null

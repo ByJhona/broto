@@ -1,1 +1,19 @@
-{}
+{
+  "locationPermissionDenied": "Allow location access to see plants near you.",
+  "eventCommunityCaptionFallback": "I marked an event: \"{{title}}\"!",
+  "eventPublishedShareError": "Event published, but couldn't share it to the Community.",
+  "eventPublishSuccess": "Event published on the map!",
+  "eventPublishError": "Couldn't publish the event.",
+  "listingPublishedShareError": "Listing published, but couldn't share it to the Community.",
+  "listingPublishSuccess": "Listing published on the map!",
+  "listingPublishError": "Couldn't publish the listing.",
+  "placingEventInstructions": "Move the map until the pin is on the event location",
+  "placingListingInstructions": "Move the map until the pin is on the pickup location",
+  "publishEventHere": "Publish event here",
+  "publishListingHere": "Publish listing here",
+  "createChoiceTitle": "What do you want to create?",
+  "newListingTitle": "New listing",
+  "newListingSubtitle": "Give away, trade, or discard a plant",
+  "newEventTitle": "New event",
+  "newEventSubtitle": "Mark a fair, swap, or plant meetup"
+}

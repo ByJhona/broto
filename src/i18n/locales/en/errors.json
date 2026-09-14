@@ -6,5 +6,7 @@
   "passwordTooShort": "Password must be at least 6 characters.",
   "invalidEmail": "Enter a valid email address.",
   "usernameTaken": "This username is already taken.",
-  "networkError": "No internet connection. Please try again."
+  "networkError": "No internet connection. Please try again.",
+  "installGooglePlayServices": "Install or update Google Play Services to continue.",
+  "usernameAlreadyInUse": "This username is already taken."
 }

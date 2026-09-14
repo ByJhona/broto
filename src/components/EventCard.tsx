@@ -5,13 +5,18 @@ import Users from 'lucide-react-native/icons/users';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { EVENT_COLOR, EVENT_ICON, formatEventDateTime } from '@/utils';
 import { EVENT_STATUS, type PlantEvent } from '@/types';
+import { useTranslation } from '@/i18n';
 import { StatusBadge } from './StatusBadge';
 
 const EVENT_CARD_WIDTH = 220;
 
-function eventStatusLabel(event: PlantEvent, isPast: boolean): string | null {
-  if (event.status === EVENT_STATUS.CANCELLED) return 'Cancelado';
-  if (isPast) return 'Encerrado';
+function eventStatusLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  event: PlantEvent,
+  isPast: boolean
+): string | null {
+  if (event.status === EVENT_STATUS.CANCELLED) return t('statusCancelled');
+  if (isPast) return t('statusEnded');
   return null;
 }
 
@@ -24,12 +29,13 @@ type EventCardProps = {
 export function EventCard({ event, distanceLabel, onPress }: Readonly<EventCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('event');
   const Icon = EVENT_ICON;
-  const attendeesLabel = event.attendeeCount === 1 ? '1 confirmado' : `${event.attendeeCount} confirmados`;
+  const attendeesLabel = t('attendeesShort', { count: event.attendeeCount });
   const metaLine = [attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
   // eslint-disable-next-line react-hooks/purity -- reading the wall clock to check if the event date already passed
   const isPast = new Date(event.eventDate).getTime() < Date.now();
-  const statusLabel = eventStatusLabel(event, isPast);
+  const statusLabel = eventStatusLabel(t, event, isPast);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>

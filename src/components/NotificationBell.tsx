@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import Bell from 'lucide-react-native/icons/bell';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type NotificationBellProps = {
   hasUnread?: boolean;
@@ -14,13 +15,14 @@ export function NotificationBell({ hasUnread = false, size = Metrics.icon.normal
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
 
   return (
     <Pressable
       onPress={() => router.push('/profile/notifications')}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={hasUnread ? 'Notificações, você tem novidades' : 'Notificações'}
+      accessibilityLabel={hasUnread ? t('notificationsUnreadLabel') : t('notificationsLabel')}
       style={({ pressed }) => [styles.container, { opacity: pressed ? 0.7 : 1 }, style]}
     >
       <Bell size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />

@@ -1,1 +1,93 @@
-{}
+{
+  "newListingScreenTitle": "Nova oferta",
+  "listingsScreenTitle": "Ofertas",
+  "listingDetailScreenTitle": "Oferta",
+
+  "titleRequired": "Dá um título pra oferta.",
+  "priceRequired": "Informa o preço da planta.",
+  "photosSectionTitle": "Fotos",
+  "listingTypeSectionTitle": "Tipo de oferta",
+  "priceLabel": "Preço",
+  "yourPlantsSectionTitle": "Alguma das suas plantas? (opcional)",
+  "titleLabel": "Título",
+  "titlePlaceholder": "Muda de Costela-de-adão",
+  "descriptionLabel": "Descrição (opcional)",
+  "descriptionPlaceholder": "Conte mais sobre a planta e o combinado de retirada",
+  "shareToCommunityDescription": "Compartilha essa oferta também no feed da Comunidade.",
+  "communityCommentLabel": "Comentário na Comunidade (opcional)",
+  "yourPlantFallback": "sua planta",
+  "chooseLocationCta": "Escolher local no mapa",
+
+  "filterAll": "Tudo",
+  "noListingsFound": "Nenhuma oferta encontrada.",
+
+  "markCompletedAction": "Marcar como concluída",
+  "markExpiredAction": "Marcar como expirada",
+  "reactivateListingAction": "Reativar oferta",
+  "shareToCommunityAction": "Compartilhar na Comunidade",
+  "deleteListingAction": "Excluir oferta",
+
+  "editListingTitle": "Editar oferta",
+
+  "notFoundTitle": "Oferta não encontrada",
+  "notFoundMessage": "Essa oferta pode ter sido removida.",
+
+  "interestSentSuccess": "Interesse enviado! O dono vai ser avisado.",
+  "interestSentError": "Não foi possível enviar seu interesse.",
+  "interestUpdateError": "Não foi possível atualizar o interesse.",
+  "offerUpdateError": "Não foi possível atualizar a proposta.",
+  "exchangeProposeError": "Não foi possível propor a troca.",
+
+  "markCompletedConfirmTitle": "Marcar como concluída",
+  "markCompletedConfirmMessage": "Use isso quando a troca ou doação já foi concretizada. A oferta sai da lista de disponíveis e não pode ser reativada depois — pra oferecer de novo, você precisa criar uma nova oferta.",
+  "markCompletedConfirmLabel": "Concluir",
+  "listingUpdateError": "Não foi possível atualizar a oferta.",
+
+  "markExpiredConfirmTitle": "Marcar como expirada",
+  "markExpiredConfirmMessage": "Use isso quando ninguém mais demonstrou interesse por enquanto. A oferta sai da lista de disponíveis, mas você pode reativá-la depois.",
+  "markExpiredConfirmLabel": "Marcar como expirada",
+  "listingExpiredSuccess": "Oferta marcada como expirada.",
+
+  "listingReactivatedSuccess": "Oferta reativada!",
+
+  "deleteConfirmTitle": "Excluir oferta",
+  "deleteConfirmMessage": "Isso remove a oferta do mapa. Não dá pra desfazer.",
+  "deleteConfirmLabel": "Excluir",
+  "listingDeleteError": "Não foi possível excluir a oferta.",
+
+  "shareModalTitle": "Compartilhar na Comunidade",
+  "shareModalLabel": "Comentário",
+  "shareModalSubmit": "Compartilhar",
+  "shareSuccess": "Oferta compartilhada na Comunidade!",
+  "shareError": "Não foi possível compartilhar na Comunidade.",
+
+  "offeredBy": "Oferecido por",
+  "fetchingAddress": "Buscando endereço...",
+  "approximateLocation": "Local aproximado no mapa",
+  "descriptionSectionTitle": "Descrição",
+
+  "exchangeProposalsTitle": "Propostas de troca",
+  "interestedPeopleTitle": "Pessoas interessadas",
+  "noExchangeProposals": "Ninguém propôs uma troca ainda.",
+  "noInterestedPeople": "Ninguém demonstrou interesse ainda.",
+  "offeredPlantDetail": "Quer trocar por: {{plantName}}",
+
+  "interestSentLabel": "Interesse enviado",
+  "wantToBuyLabel": "Quero comprar",
+  "haveInterestLabel": "Tenho interesse",
+  "openChatLabel": "Abrir conversa",
+  "proposeExchangeLabel": "Propor troca",
+
+  "proposalStatusPending": "Pendente",
+  "proposalStatusAccepted": "Aceita",
+  "proposalStatusDeclined": "Recusada",
+  "declineAction": "Recusar",
+  "acceptAction": "Aceitar",
+
+  "exchangePlantPickerTitle": "Qual planta você quer oferecer?",
+  "noPlantsRegistered": "Você ainda não tem plantas cadastradas.",
+
+  "priceFieldPlaceholder": "R$ 0,00",
+
+  "shareToCommunityTitle": "Publicar na Comunidade"
+}

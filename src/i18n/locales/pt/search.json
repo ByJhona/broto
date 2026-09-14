@@ -1,1 +1,5 @@
-{}
+{
+  "searchPlaceholder": "Buscar por @usuário",
+  "noOneFound": "Ninguém encontrado",
+  "noUserFound": "Nenhum usuário com \"@{{query}}\"."
+}

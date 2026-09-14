@@ -15,13 +15,9 @@ import { useCareTasks, usePlants } from '@/hooks';
 import { requestExactAlarmAccessOnce } from '@/services';
 import { useTaskCategories } from '@/utils';
 import { TASK_CATEGORY, type TaskCategory } from '@/types';
+import { useTranslation } from '@/i18n';
 
 type RecurrenceMode = 'once' | 'repeat';
-
-const RECURRENCE_OPTIONS = [
-  { value: 'once' as RecurrenceMode, label: 'Só uma vez' },
-  { value: 'repeat' as RecurrenceMode, label: 'Repetir' },
-];
 
 function dateForTime(hour: number, minute: number): Date {
   const date = new Date();
@@ -42,6 +38,12 @@ export default function NewTaskScreen() {
   const { createTask } = useCareTasks();
   const { plants } = usePlants();
   const taskCategories = useTaskCategories();
+  const { t } = useTranslation('task');
+
+  const RECURRENCE_OPTIONS: { value: RecurrenceMode; label: string }[] = [
+    { value: 'once', label: t('onceOption') },
+    { value: 'repeat', label: t('repeatOption') },
+  ];
 
   const isPlantLocked = !!params.plantId;
 
@@ -89,7 +91,7 @@ export default function NewTaskScreen() {
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      setError('Dá um título pro lembrete.');
+      setError(t('missingTitleError'));
       return;
     }
 
@@ -110,7 +112,7 @@ export default function NewTaskScreen() {
       requestExactAlarmAccessOnce();
       router.back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível criar o lembrete. Tente novamente.');
+      setError(err instanceof Error ? err.message : t('createError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -123,11 +125,11 @@ export default function NewTaskScreen() {
       keyboardShouldPersistTaps="handled"
       bottomOffset={Metrics.spacing.lg}
     >
-      <FormField label="Título" value={title} onChangeText={setTitle} placeholder="Regar o Samba" />
+      <FormField label={t('titleLabel')} value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} />
 
       {isPlantLocked && selectedPlant && (
         <View style={styles.field}>
-          <Text style={styles.label}>Planta</Text>
+          <Text style={styles.label}>{t('plantLabel')}</Text>
           <View style={styles.lockedPlant}>
             <View style={styles.plantAvatar}>
               {selectedPlant.photoUrl ? (
@@ -143,13 +145,13 @@ export default function NewTaskScreen() {
 
       {!isPlantLocked && plants.length > 0 && (
         <View style={styles.field}>
-          <Text style={styles.label}>Planta (opcional)</Text>
+          <Text style={styles.label}>{t('plantOptionalLabel')}</Text>
           <PlantPickerRow plants={plants} selectedId={plantId} onSelect={setPlantId} />
         </View>
       )}
 
       <View style={styles.field}>
-        <Text style={styles.label}>Categoria</Text>
+        <Text style={styles.label}>{t('categoryLabel')}</Text>
         <PillSelector
           options={taskCategories.map(({ value, label }) => ({ value, label }))}
           value={category}
@@ -158,7 +160,7 @@ export default function NewTaskScreen() {
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Repetir?</Text>
+        <Text style={styles.label}>{t('repeatLabel')}</Text>
         <PillSelector
           options={RECURRENCE_OPTIONS}
           value={recurrenceDays === null ? 'once' : 'repeat'}
@@ -176,7 +178,7 @@ export default function NewTaskScreen() {
             >
               <Minus size={16} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
-            <Text style={styles.stepperValue}>{recurrenceDays === 1 ? '1 dia' : `${recurrenceDays} dias`}</Text>
+            <Text style={styles.stepperValue}>{t('daysCount', { count: recurrenceDays })}</Text>
             <Pressable
               style={styles.stepperButton}
               onPress={() => setRecurrence(Math.min(MAX_RECURRENCE_DAYS, recurrenceDays + 1))}
@@ -188,12 +190,12 @@ export default function NewTaskScreen() {
         )}
 
         {recurrenceDays !== null && selectedPlant?.wateringDays && recurrenceDays !== selectedPlant.wateringDays && (
-          <Text style={styles.hint}>Recomendado pra essa planta: a cada {selectedPlant.wateringDays} dias</Text>
+          <Text style={styles.hint}>{t('recommendedHint', { days: selectedPlant.wateringDays })}</Text>
         )}
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Que horas o lembrete deve aparecer?</Text>
+        <Text style={styles.label}>{t('reminderTimeLabel')}</Text>
         <Pressable style={styles.timeButton} onPress={openTimePicker}>
           <Clock size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
           <Text style={styles.timeButtonText}>
@@ -218,16 +220,16 @@ export default function NewTaskScreen() {
       </View>
 
       <FormField
-        label="Notas (opcional)"
+        label={t('notesLabel')}
         value={notes}
         onChangeText={setNotes}
-        placeholder="Regar bem a terra, sem encharcar"
+        placeholder={t('notesPlaceholder')}
         multiline
       />
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label="Criar lembrete" onPress={handleSubmit} loading={isSubmitting} />
+      <SubmitButton label={t('createCta')} onPress={handleSubmit} loading={isSubmitting} />
     </KeyboardAwareScrollView>
   );
 }

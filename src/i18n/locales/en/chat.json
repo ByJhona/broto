@@ -1,1 +1,16 @@
-{}
+{
+  "accessibilityLabel": "Messages",
+  "accessibilityLabelUnread": "Messages, you have conversations to reply to",
+  "defaultConversationName": "Conversation",
+  "sendMessageError": "Could not send the message.",
+  "respondOfferError": "Could not respond to the offer.",
+  "offerStatusPending": "Waiting for response",
+  "offerStatusAccepted": "Trade accepted",
+  "offerStatusDeclined": "Trade declined",
+  "offerCardTitle": "Trade offer",
+  "offerCardSubtitle": "{{plantName}} for the offer \"{{listingTitle}}\"",
+  "declineButton": "Decline",
+  "acceptButton": "Accept",
+  "emptyMessage": "No messages yet. Start the conversation!",
+  "messagePlaceholder": "Write a message..."
+}

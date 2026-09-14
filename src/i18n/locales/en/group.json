@@ -1,1 +1,25 @@
-{}
+{
+  "nameRequired": "Give the group a name.",
+  "renameError": "Couldn't save the name.",
+  "deleteGroupTitle": "Delete group",
+  "deleteGroupMessage": "This will also remove the {{count}} plants in this group from your garden. This action cannot be undone.",
+  "deleteGroupError": "Couldn't delete the group.",
+  "editGroupTitle": "Edit group",
+  "rename": "Rename",
+  "addPlants": "Add plants",
+  "updatePlantGroupError": "Couldn't update the plant's group.",
+  "groupNotFound": "Group not found.",
+  "emptyGroupTitle": "No plants here",
+  "emptyGroupMessage": "Add plants to organize this group.",
+  "renameModalTitle": "What do you want to call this group?",
+  "nameLabel": "Name",
+  "namePlaceholder": "Succulents",
+  "create": "Create",
+  "createGroupError": "Couldn't create the group.",
+  "empty": "Empty",
+  "onePlant": "1 plant",
+  "plantsCount": "{{count}} plants",
+  "pickerTitle": "Which plants are part of this group?",
+  "noPlantsRegistered": "You don't have any plants registered yet.",
+  "done": "Done"
+}

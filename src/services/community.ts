@@ -1,4 +1,5 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
@@ -30,19 +31,19 @@ function formatRelativeTime(dateString: string): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return 'agora';
+  if (diffInSeconds < 60) return i18n.t('community:justNow');
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `há ${diffInMinutes} min`;
+  if (diffInMinutes < 60) return i18n.t('community:minutesAgo', { count: diffInMinutes });
 
   const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `há ${diffInHours} h`;
+  if (diffInHours < 24) return i18n.t('community:hoursAgo', { count: diffInHours });
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays === 1) return 'ontem';
-  if (diffInDays < 7) return `há ${diffInDays} dias`;
+  if (diffInDays === 1) return i18n.t('community:yesterday');
+  if (diffInDays < 7) return i18n.t('community:daysAgo', { count: diffInDays });
 
-  return date.toLocaleDateString('pt-BR');
+  return date.toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'pt-BR');
 }
 
 type PostRow = {

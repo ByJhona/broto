@@ -20,6 +20,7 @@ import {
 } from '@/services';
 import type { CommunityPost } from '@/types';
 import { Toast } from '@/utils';
+import { useTranslation } from '@/i18n';
 
 const POST_STALE_TIME = 30_000;
 
@@ -31,6 +32,7 @@ export default function PostDetailScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('post');
 
   const postQuery = useQuery({
     queryKey: ['post', id],
@@ -89,7 +91,7 @@ export default function PostDetailScreen() {
       removePostFromAllFeeds(queryClient, post.id);
       router.back();
     } catch {
-      Toast.error('Não foi possível excluir a publicação.');
+      Toast.error(t('deletePostError'));
     }
   };
 
@@ -104,7 +106,7 @@ export default function PostDetailScreen() {
     } catch {
       queryClient.setQueryData(['post', id], previous);
       updatePostInAllFeeds(queryClient, post.id, () => previous);
-      Toast.error('Não foi possível excluir o recado.');
+      Toast.error(t('deleteCommentError'));
     }
   };
 
@@ -127,7 +129,7 @@ export default function PostDetailScreen() {
   if (!post) {
     return (
       <View style={styles.centered}>
-        <EmptyState icon={MessageSquare} message="Publicação não encontrada." />
+        <EmptyState icon={MessageSquare} message={t('postNotFoundMessage')} />
       </View>
     );
   }

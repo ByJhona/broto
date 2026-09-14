@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { MAX_POST_PHOTOS } from '@/services';
 import type { CommunityPostType } from '@/types';
 import { communityPostTypes, pickPhoto } from '@/utils';
@@ -14,6 +15,7 @@ type CommunityComposerProps = {
 export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('community');
   const [text, setText] = useState('');
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [postType, setPostType] = useState<CommunityPostType | null>(null);
@@ -72,7 +74,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
           style={styles.input}
           value={text}
           onChangeText={setText}
-          placeholder="No que você está pensando, jardineiro?"
+          placeholder={t('composerPlaceholder')}
           placeholderTextColor={colors.mutedForeground}
           editable={!isPosting}
           multiline
@@ -93,7 +95,7 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
           {isPosting ? (
             <ActivityIndicator size="small" color={colors.primaryForeground} />
           ) : (
-            <Text style={styles.postButtonText}>Publicar</Text>
+            <Text style={styles.postButtonText}>{t('postButtonLabel')}</Text>
           )}
         </Pressable>
       </View>

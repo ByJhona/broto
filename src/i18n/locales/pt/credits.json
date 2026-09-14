@@ -1,1 +1,25 @@
-{}
+{
+  "currentPlan": "Plano atual",
+  "loadingCredits": "Carregando créditos...",
+  "unlimitedCredits": "Créditos ilimitados",
+  "creditsAvailable": "{{count}} créditos disponíveis",
+  "planUsedForIdentification": "{{planName}} · usados pra identificar plantas",
+  "week": "semana",
+  "month": "mês",
+  "planRenewsCredits": "{{planName}} · renova {{count}} por {{period}}",
+  "signInToSeeCredits": "Entre pra ver seus créditos",
+  "signInToSeeCreditsSubtitle": "Crie uma conta pra identificar plantas e ganhar créditos.",
+  "processing": "Processando...",
+  "subscribe": "Assinar",
+  "storeBeingPrepared": "A loja está sendo preparada. Volte em breve.",
+  "notYetAvailableInStores": "Isso ainda não está publicado nas lojas.",
+  "purchaseError": "Não foi possível concluir a compra.",
+  "free": "Grátis",
+  "priceMonthly": "{{price}}/mês",
+  "subscriptionConfirmed": "Sua assinatura foi confirmada.",
+  "creditPacks": "Créditos avulsos",
+  "buy": "Comprar",
+  "creditsAddedToAccount": "Créditos adicionados à sua conta.",
+  "noActiveSubscription": "Não encontramos uma assinatura ativa pra gerenciar.",
+  "insufficientCreditsMessage": "Você usou todos os seus créditos do mês."
+}

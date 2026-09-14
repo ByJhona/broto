@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { EventAttendee } from '@/services';
+import { useTranslation } from '@/i18n';
 import { Avatar } from './Avatar';
 import { Card } from './Card';
 import { ListRow } from './ListRow';
@@ -15,22 +16,24 @@ type EventAttendeesSectionProps = {
 export function EventAttendeesSection({ attendees, onPressAttendee }: Readonly<EventAttendeesSectionProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['event', 'common']);
+  const someone = t('common:someone');
 
   return (
     <Card style={styles.section}>
-      <SectionTitle>Confirmados</SectionTitle>
+      <SectionTitle>{t('confirmedSectionTitle')}</SectionTitle>
       {attendees?.length ? (
         attendees.map((attendee) => (
           <ListRow
             key={attendee.userId}
             style={styles.row}
-            leading={<Avatar name={attendee.name ?? 'Alguém'} url={attendee.avatarUrl} size={32} />}
-            title={attendee.name ?? 'Alguém'}
+            leading={<Avatar name={attendee.name ?? someone} url={attendee.avatarUrl} size={32} />}
+            title={attendee.name ?? someone}
             onPress={() => onPressAttendee(attendee.userId)}
           />
         ))
       ) : (
-        <Text style={styles.description}>Ninguém confirmou presença ainda.</Text>
+        <Text style={styles.description}>{t('noAttendeesYet')}</Text>
       )}
     </Card>
   );

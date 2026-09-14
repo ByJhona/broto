@@ -3,6 +3,7 @@ import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 
 type ExchangePlantPickerModalProps = {
@@ -16,14 +17,15 @@ export function ExchangePlantPickerModal({ visible, plants, onSelect, onClose }:
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['listing', 'common']);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}>
-          <Text style={styles.title}>Qual planta você quer oferecer?</Text>
+          <Text style={styles.title}>{t('exchangePlantPickerTitle')}</Text>
           {plants.length === 0 ? (
-            <Text style={styles.description}>Você ainda não tem plantas cadastradas.</Text>
+            <Text style={styles.description}>{t('noPlantsRegistered')}</Text>
           ) : (
             <ScrollView>
               {plants.map((plant) => (
@@ -41,7 +43,7 @@ export function ExchangePlantPickerModal({ visible, plants, onSelect, onClose }:
             </ScrollView>
           )}
           <Pressable style={styles.cancel} onPress={onClose}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
           </Pressable>
         </View>
       </View>

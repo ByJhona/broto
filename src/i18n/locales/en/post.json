@@ -1,1 +1,6 @@
-{}
+{
+  "postTitle": "Post",
+  "postNotFoundMessage": "Post not found.",
+  "deletePostError": "Could not delete the post.",
+  "deleteCommentError": "Could not delete the comment."
+}

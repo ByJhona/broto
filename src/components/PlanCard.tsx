@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Crown from 'lucide-react-native/icons/crown';
 import Gift from 'lucide-react-native/icons/gift';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { Plan } from '@/types';
 import { Card } from './Card';
 import { SkeletonBlock } from './Skeleton';
@@ -17,6 +18,7 @@ type PlanCardProps = {
 export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: Readonly<PlanCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('credits');
   const isPremium = plan.id === 'premium';
   const Icon = isPremium ? Crown : Gift;
 
@@ -31,7 +33,7 @@ export function PlanCard({ plan, ctaLabel, onPressCta, isCurrent }: Readonly<Pla
             <Text style={styles.name}>{plan.name}</Text>
             {isCurrent ? (
               <View style={styles.currentBadge}>
-                <Text style={styles.currentBadgeText}>Plano atual</Text>
+                <Text style={styles.currentBadgeText}>{t('currentPlan')}</Text>
               </View>
             ) : null}
           </View>

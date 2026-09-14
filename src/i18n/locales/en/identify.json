@@ -1,1 +1,17 @@
-{}
+{
+  "resultTitle": "Identification",
+  "suggestedCareTitle": "Suggested care",
+  "wateringEvery": "Water every {{days}} days",
+  "identificationSectionTitle": "Identification",
+  "confidencePercent": "{{percent}}% confidence",
+  "otherPossibilitiesTitle": "Not this one? Other possibilities",
+  "notFoundMessage": "We couldn't identify any plant in this photo. Try another image, close to the leaf or flower.",
+  "addToGardenCta": "Add to my garden",
+  "nicknameModalTitle": "What do you want to call this plant?",
+  "nicknameLabel": "Nickname",
+  "nicknamePlaceholder": "Samba",
+  "saveToGardenCta": "Save to my garden",
+  "loginRequiredMessage": "You need an account to save plants to your garden.",
+  "missingNicknameError": "Give your plant a nickname.",
+  "saveError": "Could not save the plant. Try again."
+}

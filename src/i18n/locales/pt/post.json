@@ -1,1 +1,6 @@
-{}
+{
+  "postTitle": "Publicação",
+  "postNotFoundMessage": "Publicação não encontrada.",
+  "deletePostError": "Não foi possível excluir a publicação.",
+  "deleteCommentError": "Não foi possível excluir o recado."
+}

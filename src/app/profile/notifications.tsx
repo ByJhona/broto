@@ -10,6 +10,7 @@ import Sprout from 'lucide-react-native/icons/sprout';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Card, EmptyState, IconBadge, LoadingScreen } from '@/components';
 import { useNotifications } from '@/hooks';
 import { confirm, notificationCopy } from '@/utils';
@@ -27,11 +28,12 @@ export default function NotificationsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('profile');
   const { notifications, isLoading, deleteOne, clearAll } = useNotifications();
 
   const handleClearAll = async () => {
-    const confirmed = await confirm('Limpar notificações', 'Isso apaga todas as suas notificações. Não dá pra desfazer.', {
-      confirmLabel: 'Limpar tudo',
+    const confirmed = await confirm(t('clearNotificationsTitle'), t('clearNotificationsMessage'), {
+      confirmLabel: t('clearAll'),
       destructive: true,
     });
     if (confirmed) clearAll();
@@ -45,8 +47,8 @@ export default function NotificationsScreen() {
     return (
       <EmptyState
         icon={BellOff}
-        title="Nenhuma notificação"
-        message="Você será avisado aqui quando suas plantas precisarem de cuidados."
+        title={t('noNotificationsTitle')}
+        message={t('noNotificationsMessage')}
         style={styles.centered}
       />
     );

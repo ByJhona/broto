@@ -1,9 +1,12 @@
+import { useTranslation } from '@/i18n';
 import { LISTING_STATUS, LISTING_TYPE, type ListingStatus, type ListingType } from '@/types';
 import { SubmitButton } from './SubmitButton';
 
-function interestLabel(listingType: ListingType, hasSentInterest: boolean): string {
-  if (hasSentInterest) return 'Interesse enviado';
-  return listingType === LISTING_TYPE.SALE ? 'Quero comprar' : 'Tenho interesse';
+type TranslateFn = (key: string) => string;
+
+function interestLabel(listingType: ListingType, hasSentInterest: boolean, t: TranslateFn): string {
+  if (hasSentInterest) return t('interestSentLabel');
+  return listingType === LISTING_TYPE.SALE ? t('wantToBuyLabel') : t('haveInterestLabel');
 }
 
 type ListingActionFooterProps = {
@@ -27,12 +30,13 @@ export function ListingActionFooter({
   onInterest,
   onOpenChat,
 }: Readonly<ListingActionFooterProps>) {
+  const { t } = useTranslation('listing');
   if (isOwner || status !== LISTING_STATUS.AVAILABLE) return null;
 
   if (listingType === LISTING_TYPE.EXCHANGE) {
     return (
       <SubmitButton
-        label={hasSentInterest ? 'Abrir conversa' : 'Propor troca'}
+        label={hasSentInterest ? t('openChatLabel') : t('proposeExchangeLabel')}
         onPress={hasSentInterest ? onOpenChat : onPropose}
         loading={isActing}
       />
@@ -41,7 +45,7 @@ export function ListingActionFooter({
 
   return (
     <SubmitButton
-      label={interestLabel(listingType, hasSentInterest)}
+      label={interestLabel(listingType, hasSentInterest, t)}
       onPress={onInterest}
       loading={isActing}
       disabled={hasSentInterest}

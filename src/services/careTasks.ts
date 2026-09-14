@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n';
 import { addDays, daysBetween, today } from '@/utils';
 import { getNotificationsModule } from './notificationsModule';
 import { supabase } from './supabase';
@@ -156,7 +157,7 @@ export async function registerCareTaskNotificationHandlers(): Promise<void> {
 
 export async function createCareTask(input: CreateCareTaskInput): Promise<CareTask> {
   const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Usuário não autenticado.');
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
   const startDate = today();
   const recurrenceDays = input.recurrenceDays ?? null;

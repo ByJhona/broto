@@ -8,17 +8,20 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Avatar, Card, EmptyState, IconButton, LoadingScreen } from '@/components';
 import { useChat } from '@/hooks';
 import { getProfile } from '@/services';
 import { Toast } from '@/utils';
 import { OFFER_STATUS, type ChatMessage, type OfferStatus } from '@/types';
 
-const OFFER_STATUS_LABEL: Record<OfferStatus, string> = {
-  [OFFER_STATUS.PENDING]: 'Aguardando resposta',
-  [OFFER_STATUS.ACCEPTED]: 'Troca aceita',
-  [OFFER_STATUS.DECLINED]: 'Troca recusada',
-};
+function getOfferStatusLabel(t: (key: string) => string): Record<OfferStatus, string> {
+  return {
+    [OFFER_STATUS.PENDING]: t('offerStatusPending'),
+    [OFFER_STATUS.ACCEPTED]: t('offerStatusAccepted'),
+    [OFFER_STATUS.DECLINED]: t('offerStatusDeclined'),
+  };
+}
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -28,6 +31,8 @@ export default function ChatScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { otherUserId } = useLocalSearchParams<{ otherUserId: string }>();
   const [draft, setDraft] = useState('');
+  const { t } = useTranslation('chat');
+  const offerStatusLabel = getOfferStatusLabel(t);
 
   const { messages, isLoading, sendMessage, isSending, respondToOfferMessage, currentUserId } = useChat(otherUserId);
 
@@ -37,7 +42,7 @@ export default function ChatScreen() {
     enabled: !!otherUserId,
   });
 
-  const otherUserName = otherUserQuery.data?.name || otherUserQuery.data?.username || 'Conversa';
+  const otherUserName = otherUserQuery.data?.name || otherUserQuery.data?.username || t('defaultConversationName');
 
   const handlePressProfile = () => {
     router.push({ pathname: '/profile/[id]', params: { id: otherUserId } });
@@ -52,7 +57,7 @@ export default function ChatScreen() {
       await sendMessage(body);
     } catch (err) {
       setDraft(body);
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível enviar a mensagem.');
+      Toast.error(err instanceof Error ? err.message : t('sendMessageError'));
     }
   };
 
@@ -60,7 +65,7 @@ export default function ChatScreen() {
     try {
       await respondToOfferMessage({ messageId, accept });
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível responder a proposta.');
+      Toast.error(err instanceof Error ? err.message : t('respondOfferError'));
     }
   };
 
@@ -75,9 +80,9 @@ export default function ChatScreen() {
           </View>
         )}
         <View style={styles.offerHeaderText}>
-          <Text style={styles.offerTitle}>Proposta de troca</Text>
+          <Text style={styles.offerTitle}>{t('offerCardTitle')}</Text>
           <Text style={styles.offerSubtitle}>
-            {message.offeredPlantName} pela oferta &quot;{message.listingTitle}&quot;
+            {t('offerCardSubtitle', { plantName: message.offeredPlantName, listingTitle: message.listingTitle })}
           </Text>
         </View>
       </View>
@@ -85,14 +90,14 @@ export default function ChatScreen() {
       {!isMine && message.offerStatus === OFFER_STATUS.PENDING ? (
         <View style={styles.offerActions}>
           <Pressable style={styles.offerDecline} onPress={() => handleRespond(message.id, false)}>
-            <Text style={styles.offerDeclineText}>Recusar</Text>
+            <Text style={styles.offerDeclineText}>{t('declineButton')}</Text>
           </Pressable>
           <Pressable style={styles.offerAccept} onPress={() => handleRespond(message.id, true)}>
-            <Text style={styles.offerAcceptText}>Aceitar</Text>
+            <Text style={styles.offerAcceptText}>{t('acceptButton')}</Text>
           </Pressable>
         </View>
       ) : (
-        <Text style={styles.offerStatus}>{OFFER_STATUS_LABEL[message.offerStatus ?? OFFER_STATUS.PENDING]}</Text>
+        <Text style={styles.offerStatus}>{offerStatusLabel[message.offerStatus ?? OFFER_STATUS.PENDING]}</Text>
       )}
     </Card>
   );
@@ -119,7 +124,7 @@ export default function ChatScreen() {
       {messages.length === 0 ? (
         <EmptyState
           icon={MessageCircle}
-          message="Nenhuma mensagem ainda. Comece a conversa!"
+          message={t('emptyMessage')}
           style={styles.emptyContainer}
         />
       ) : (
@@ -151,7 +156,7 @@ export default function ChatScreen() {
           style={styles.input}
           value={draft}
           onChangeText={setDraft}
-          placeholder="Escreva uma mensagem..."
+          placeholder={t('messagePlaceholder')}
           placeholderTextColor={colors.mutedForeground}
           multiline
         />

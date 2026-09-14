@@ -3,26 +3,28 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Coins from 'lucide-react-native/icons/coins';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { useAuth, useCredits } from '@/hooks';
 import type { CreditsState } from '@/services';
 
-function getCreditsTitle(credits: CreditsState | null): string {
-  if (!credits) return 'Carregando créditos...';
-  if (credits.monthlyCredits == null) return 'Créditos ilimitados';
-  return `${credits.balance} créditos disponíveis`;
+function getCreditsTitle(credits: CreditsState | null, t: (key: string, options?: Record<string, unknown>) => string): string {
+  if (!credits) return t('loadingCredits');
+  if (credits.monthlyCredits == null) return t('unlimitedCredits');
+  return t('creditsAvailable', { count: credits.balance });
 }
 
-function getCreditsSubtitle(credits: CreditsState | null): string {
+function getCreditsSubtitle(credits: CreditsState | null, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (!credits) return '';
-  if (credits.monthlyCredits == null) return `${credits.planName} · usados pra identificar plantas`;
-  const period = credits.creditRenewalPeriod === 'weekly' ? 'semana' : 'mês';
-  return `${credits.planName} · renova ${credits.monthlyCredits} por ${period}`;
+  if (credits.monthlyCredits == null) return t('planUsedForIdentification', { planName: credits.planName });
+  const period = credits.creditRenewalPeriod === 'weekly' ? t('week') : t('month');
+  return t('planRenewsCredits', { planName: credits.planName, count: credits.monthlyCredits, period });
 }
 
 export function CreditsCard() {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('credits');
   const { session } = useAuth();
   const { credits } = useCredits();
 
@@ -36,15 +38,15 @@ export function CreditsCard() {
           <Coins size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Entre pra ver seus créditos</Text>
-          <Text style={styles.subtitle}>Crie uma conta pra identificar plantas e ganhar créditos.</Text>
+          <Text style={styles.title}>{t('signInToSeeCredits')}</Text>
+          <Text style={styles.subtitle}>{t('signInToSeeCreditsSubtitle')}</Text>
         </View>
       </Pressable>
     );
   }
 
-  const title = getCreditsTitle(credits);
-  const subtitle = getCreditsSubtitle(credits);
+  const title = getCreditsTitle(credits, t);
+  const subtitle = getCreditsSubtitle(credits, t);
 
   return (
     <Pressable

@@ -1,1 +1,22 @@
-{}
+{
+  "identifyTitle": "Que planta é essa?",
+  "identifySubtitle": "Aponte a câmera pra folha ou flor da planta",
+  "identifyLoading": "Identificando sua planta...",
+  "identifyLoginMessage": "Você precisa de uma conta pra identificar plantas.",
+  "diagnoseTitle": "Como está a sua planta?",
+  "diagnoseSubtitle": "Aponte a câmera pra planta que você quer diagnosticar",
+  "diagnoseLoading": "Analisando sua planta...",
+  "diagnoseLoginMessage": "Você precisa de uma conta pra diagnosticar suas plantas.",
+  "toggleIdentify": "Identificar",
+  "toggleDiagnose": "Diagnosticar",
+  "insufficientCreditsTitle": "Créditos insuficientes",
+  "insufficientCreditsMessage": "Essa ação custa {{cost}} créditos. Veja os planos pra continuar.",
+  "notNowOption": "Agora não",
+  "seePlansOption": "Ver planos",
+  "processPhotoError": "Não foi possível processar a foto. Tente novamente.",
+  "galleryPermissionError": "Precisamos de acesso às suas fotos pra isso.",
+  "cameraPermissionMessage": "Precisamos de acesso à câmera pra tirar a foto da sua planta.",
+  "allowCameraCta": "Permitir câmera",
+  "chooseFromGalleryCta": "Ou escolher da galeria",
+  "offlineMessage": "Sem conexão — essa ação exige internet."
+}

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   CreateGroupModal,
   EmptyState,
@@ -22,16 +23,16 @@ type UngroupedEmptyText = {
   message: string;
 };
 
-function ungroupedEmptyText(hasAnyPlants: boolean): UngroupedEmptyText {
+function ungroupedEmptyText(hasAnyPlants: boolean, t: (key: string) => string): UngroupedEmptyText {
   if (hasAnyPlants) {
     return {
-      title: 'Tudo organizado!',
-      message: 'Todas as suas plantas estão dentro de algum grupo. Abra um grupo pra ver.',
+      title: t('allOrganizedTitle'),
+      message: t('allOrganizedMessage'),
     };
   }
   return {
-    title: 'Nenhuma planta ainda',
-    message: 'Toque na câmera aqui embaixo pra identificar e cadastrar a primeira.',
+    title: t('noPlantsYetTitle'),
+    message: t('noPlantsYetMessage'),
   };
 }
 
@@ -39,6 +40,7 @@ export default function GardenScreen() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('garden');
   const { plants, isLoading, refresh } = usePlants();
   const { tasks, toggleTask } = useCareTasks();
   const { groups } = usePlantGroups();
@@ -47,7 +49,7 @@ export default function GardenScreen() {
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   const showSkeleton = isLoading && plants.length === 0;
   const ungroupedPlants = plants.filter((plant) => plant.groupId == null);
-  const emptyText = ungroupedEmptyText(plants.length > 0);
+  const emptyText = ungroupedEmptyText(plants.length > 0, t);
 
   const handlePullRefresh = async () => {
     setIsPullRefreshing(true);
@@ -66,7 +68,7 @@ export default function GardenScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.lg }]}>
-        <Text style={styles.title}>Meu jardim</Text>
+        <Text style={styles.title}>{t('title')}</Text>
       </View>
 
       {isOffline ? (

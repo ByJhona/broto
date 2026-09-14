@@ -8,6 +8,7 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import {
   Card,
   EmptyState,
@@ -50,6 +51,8 @@ import {
 } from '@/utils';
 import { LISTING_STATUS, LISTING_TYPE, OFFER_STATUS, type ListingStatus, type PlantSummary } from '@/types';
 
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
 function fetchMyListingAction(isExchange: boolean, listingId: string, userId: string): Promise<boolean> {
   return isExchange ? hasProposedOffer(listingId, userId) : hasExpressedInterest(listingId, userId);
 }
@@ -62,18 +65,18 @@ type ListingActionHandlers = {
   onDelete: () => void;
 };
 
-function buildListingActionButtons(status: ListingStatus, handlers: ListingActionHandlers): AlertButton[] {
+function buildListingActionButtons(status: ListingStatus, handlers: ListingActionHandlers, t: TranslateFn): AlertButton[] {
   const buttons: AlertButton[] = [];
   if (status === LISTING_STATUS.AVAILABLE) {
-    buttons.push({ text: 'Marcar como concluída', onPress: handlers.onMarkCompleted });
-    buttons.push({ text: 'Marcar como expirada', onPress: handlers.onMarkExpired });
+    buttons.push({ text: t('markCompletedAction'), onPress: handlers.onMarkCompleted });
+    buttons.push({ text: t('markExpiredAction'), onPress: handlers.onMarkExpired });
   }
   if (status === LISTING_STATUS.EXPIRED) {
-    buttons.push({ text: 'Reativar oferta', onPress: handlers.onReactivate });
+    buttons.push({ text: t('reactivateListingAction'), onPress: handlers.onReactivate });
   }
-  buttons.push({ text: 'Compartilhar na Comunidade', onPress: handlers.onShare });
-  buttons.push({ text: 'Excluir oferta', style: 'destructive', onPress: handlers.onDelete });
-  buttons.push({ text: 'Fechar', style: 'cancel' });
+  buttons.push({ text: t('shareToCommunityAction'), onPress: handlers.onShare });
+  buttons.push({ text: t('deleteListingAction'), style: 'destructive', onPress: handlers.onDelete });
+  buttons.push({ text: t('common:close'), style: 'cancel' });
   return buttons;
 }
 
@@ -95,12 +98,13 @@ type ListingProposalsBlockProps = {
 };
 
 function ListingProposalsBlock({ isOwner, isExchange, proposals, onOpenChat }: Readonly<ListingProposalsBlockProps>) {
+  const { t } = useTranslation('listing');
   if (!isOwner) return null;
 
   return (
     <ListingProposalsSection
-      title={isExchange ? 'Propostas de troca' : 'Pessoas interessadas'}
-      emptyMessage={isExchange ? 'Ninguém propôs uma troca ainda.' : 'Ninguém demonstrou interesse ainda.'}
+      title={isExchange ? t('exchangeProposalsTitle') : t('interestedPeopleTitle')}
+      emptyMessage={isExchange ? t('noExchangeProposals') : t('noInterestedPeople')}
       proposals={proposals}
       onOpenChat={onOpenChat}
     />
@@ -112,7 +116,8 @@ function buildProposals(
   interests: ListingInterest[] | undefined,
   offers: ListingOfferProposal[] | undefined,
   onRespondInterest: (interestId: string, accept: boolean) => void,
-  onRespondOffer: (messageId: string, accept: boolean) => void
+  onRespondOffer: (messageId: string, accept: boolean) => void,
+  t: TranslateFn
 ): ListingProposal[] {
   if (isExchange) {
     return (offers ?? []).map((offer) => ({
@@ -120,7 +125,7 @@ function buildProposals(
       userId: offer.senderId,
       name: offer.senderName,
       avatarUrl: offer.senderAvatarUrl,
-      detail: offer.offeredPlantName ? `Quer trocar por: ${offer.offeredPlantName}` : null,
+      detail: offer.offeredPlantName ? t('offeredPlantDetail', { plantName: offer.offeredPlantName }) : null,
       status: offer.status,
       onAccept: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, true) : undefined,
       onDecline: offer.status === OFFER_STATUS.PENDING ? () => onRespondOffer(offer.id, false) : undefined,
@@ -144,6 +149,7 @@ export default function ListingDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['listing', 'common']);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -202,7 +208,7 @@ export default function ListingDetailScreen() {
   }
 
   if (!listing) {
-    return <EmptyState icon={Leaf} title="Oferta não encontrada" message="Essa oferta pode ter sido removida." />;
+    return <EmptyState icon={Leaf} title={t('notFoundTitle')} message={t('notFoundMessage')} />;
   }
 
   const handleInterest = async () => {
@@ -210,10 +216,10 @@ export default function ListingDetailScreen() {
     try {
       await sendInterest({ listingId: listing.id });
       setHasActedThisSession(true);
-      Toast.success('Interesse enviado! O dono vai ser avisado.');
+      Toast.success(t('interestSentSuccess'));
       handleOpenChat(listing.userId);
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível enviar seu interesse.');
+      Toast.error(err instanceof Error ? err.message : t('interestSentError'));
     } finally {
       setIsActing(false);
     }
@@ -234,7 +240,7 @@ export default function ListingDetailScreen() {
       await respondToInterest(interestId, listing.id, accept);
       invalidateProposals();
     } catch {
-      Toast.error('Não foi possível atualizar o interesse.');
+      Toast.error(t('interestUpdateError'));
     }
   };
 
@@ -243,7 +249,7 @@ export default function ListingDetailScreen() {
       await respondToOffer(messageId, accept);
       invalidateProposals();
     } catch {
-      Toast.error('Não foi possível atualizar a proposta.');
+      Toast.error(t('offerUpdateError'));
     }
   };
 
@@ -255,18 +261,16 @@ export default function ListingDetailScreen() {
       setHasActedThisSession(true);
       handleOpenChat(listing.userId);
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível propor a troca.');
+      Toast.error(err instanceof Error ? err.message : t('exchangeProposeError'));
     } finally {
       setIsActing(false);
     }
   };
 
   const handleMarkCompleted = async () => {
-    const confirmed = await confirm(
-      'Marcar como concluída',
-      'Use isso quando a troca ou doação já foi concretizada. A oferta sai da lista de disponíveis e não pode ser reativada depois — pra oferecer de novo, você precisa criar uma nova oferta.',
-      { confirmLabel: 'Concluir' }
-    );
+    const confirmed = await confirm(t('markCompletedConfirmTitle'), t('markCompletedConfirmMessage'), {
+      confirmLabel: t('markCompletedConfirmLabel'),
+    });
     if (!confirmed) return;
 
     setIsActing(true);
@@ -274,26 +278,24 @@ export default function ListingDetailScreen() {
       await setListingStatus({ id: listing.id, status: LISTING_STATUS.COMPLETED });
       router.back();
     } catch {
-      Toast.error('Não foi possível atualizar a oferta.');
+      Toast.error(t('listingUpdateError'));
     } finally {
       setIsActing(false);
     }
   };
 
   const handleMarkExpired = async () => {
-    const confirmed = await confirm(
-      'Marcar como expirada',
-      'Use isso quando ninguém mais demonstrou interesse por enquanto. A oferta sai da lista de disponíveis, mas você pode reativá-la depois.',
-      { confirmLabel: 'Marcar como expirada' }
-    );
+    const confirmed = await confirm(t('markExpiredConfirmTitle'), t('markExpiredConfirmMessage'), {
+      confirmLabel: t('markExpiredConfirmLabel'),
+    });
     if (!confirmed) return;
 
     setIsActing(true);
     try {
       await setListingStatus({ id: listing.id, status: LISTING_STATUS.EXPIRED });
-      Toast.success('Oferta marcada como expirada.');
+      Toast.success(t('listingExpiredSuccess'));
     } catch {
-      Toast.error('Não foi possível atualizar a oferta.');
+      Toast.error(t('listingUpdateError'));
     } finally {
       setIsActing(false);
     }
@@ -303,17 +305,17 @@ export default function ListingDetailScreen() {
     setIsActing(true);
     try {
       await setListingStatus({ id: listing.id, status: LISTING_STATUS.AVAILABLE });
-      Toast.success('Oferta reativada!');
+      Toast.success(t('listingReactivatedSuccess'));
     } catch {
-      Toast.error('Não foi possível atualizar a oferta.');
+      Toast.error(t('listingUpdateError'));
     } finally {
       setIsActing(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmed = await confirm('Excluir oferta', 'Isso remove a oferta do mapa. Não dá pra desfazer.', {
-      confirmLabel: 'Excluir',
+    const confirmed = await confirm(t('deleteConfirmTitle'), t('deleteConfirmMessage'), {
+      confirmLabel: t('deleteConfirmLabel'),
       destructive: true,
     });
     if (!confirmed) return;
@@ -323,7 +325,7 @@ export default function ListingDetailScreen() {
       await removeListing(listing.id);
       router.back();
     } catch {
-      Toast.error('Não foi possível excluir a oferta.');
+      Toast.error(t('listingDeleteError'));
     } finally {
       setIsActing(false);
     }
@@ -344,9 +346,9 @@ export default function ListingDetailScreen() {
     try {
       await createPost(user.id, shareCaption.trim(), [], null, listing.photoUrls, listing.id);
       setIsShareModalOpen(false);
-      Toast.success('Oferta compartilhada na Comunidade!');
+      Toast.success(t('shareSuccess'));
     } catch {
-      Toast.error('Não foi possível compartilhar na Comunidade.');
+      Toast.error(t('shareError'));
     } finally {
       setIsSharing(false);
     }
@@ -354,15 +356,19 @@ export default function ListingDetailScreen() {
 
   const handleOpenActions = () => {
     Alert.alert(
-      'Editar oferta',
+      t('editListingTitle'),
       undefined,
-      buildListingActionButtons(listing.status, {
-        onMarkCompleted: handleMarkCompleted,
-        onMarkExpired: handleMarkExpired,
-        onReactivate: handleReactivate,
-        onShare: handleOpenShareModal,
-        onDelete: handleDelete,
-      })
+      buildListingActionButtons(
+        listing.status,
+        {
+          onMarkCompleted: handleMarkCompleted,
+          onMarkExpired: handleMarkExpired,
+          onReactivate: handleReactivate,
+          onShare: handleOpenShareModal,
+          onDelete: handleDelete,
+        },
+        t
+      )
     );
   };
 
@@ -371,7 +377,8 @@ export default function ListingDetailScreen() {
     interestsQuery.data,
     offersQuery.data,
     handleRespondInterest,
-    handleRespondOffer
+    handleRespondOffer,
+    t
   );
 
   return (
@@ -405,7 +412,7 @@ export default function ListingDetailScreen() {
       <ScreenContent>
         <Card style={styles.section}>
           <OwnerRow
-            eyebrow="Oferecido por"
+            eyebrow={t('offeredBy')}
             ownerName={listing.ownerName}
             ownerAvatarUrl={listing.ownerAvatarUrl}
             onPress={handlePressOwner}
@@ -414,7 +421,7 @@ export default function ListingDetailScreen() {
           <View style={styles.locationRow}>
             <MapPin size={16} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.locationText}>
-              {addressQuery.isLoading ? 'Buscando endereço...' : (addressQuery.data ?? 'Local aproximado no mapa')}
+              {addressQuery.isLoading ? t('fetchingAddress') : (addressQuery.data ?? t('approximateLocation'))}
             </Text>
           </View>
         </Card>
@@ -423,7 +430,7 @@ export default function ListingDetailScreen() {
 
         {listing.description ? (
           <Card style={styles.section}>
-            <SectionTitle>Descrição</SectionTitle>
+            <SectionTitle>{t('descriptionSectionTitle')}</SectionTitle>
             <Text style={styles.description}>{listing.description}</Text>
           </Card>
         ) : null}
@@ -451,11 +458,11 @@ export default function ListingDetailScreen() {
 
       <PromptModal
         visible={isShareModalOpen}
-        title="Compartilhar na Comunidade"
-        label="Comentário"
+        title={t('shareModalTitle')}
+        label={t('shareModalLabel')}
         value={shareCaption}
         onChangeText={setShareCaption}
-        submitLabel="Compartilhar"
+        submitLabel={t('shareModalSubmit')}
         isSubmitting={isSharing}
         onSubmit={handleSubmitShare}
         onCancel={() => setIsShareModalOpen(false)}

@@ -1,1 +1,25 @@
-{}
+{
+  "nameRequired": "Dá um nome pro grupo.",
+  "renameError": "Não foi possível salvar o nome.",
+  "deleteGroupTitle": "Excluir grupo",
+  "deleteGroupMessage": "Isso também remove as {{count}} plantas desse grupo do seu jardim. Essa ação não pode ser desfeita.",
+  "deleteGroupError": "Não foi possível excluir o grupo.",
+  "editGroupTitle": "Editar grupo",
+  "rename": "Renomear",
+  "addPlants": "Adicionar plantas",
+  "updatePlantGroupError": "Não foi possível atualizar o grupo da planta.",
+  "groupNotFound": "Grupo não encontrado.",
+  "emptyGroupTitle": "Nenhuma planta aqui",
+  "emptyGroupMessage": "Adicione plantas pra organizar esse grupo.",
+  "renameModalTitle": "Como você quer chamar esse grupo?",
+  "nameLabel": "Nome",
+  "namePlaceholder": "Suculentas",
+  "create": "Criar",
+  "createGroupError": "Não foi possível criar o grupo.",
+  "empty": "Vazio",
+  "onePlant": "1 planta",
+  "plantsCount": "{{count}} plantas",
+  "pickerTitle": "Quais plantas fazem parte desse grupo?",
+  "noPlantsRegistered": "Você ainda não tem plantas cadastradas.",
+  "done": "Concluído"
+}

@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
 import { toFunctionError } from './functionErrors';
@@ -30,7 +31,7 @@ async function uploadCheckinPhoto(plantId: string, localUri: string): Promise<st
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
-  if (!user) throw new Error('Usuário não autenticado.');
+  if (!user) throw new Error(i18n.t('common:notAuthenticated'));
 
   const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
   const file = new File(resizedUri);
@@ -71,7 +72,7 @@ export async function analyzePlantGrowth(plantId: string, photoUri: string): Pro
   }
 
   if (!data) {
-    throw new Error('Não foi possível analisar a foto.');
+    throw new Error(i18n.t('plant:growthAnalysisError'));
   }
 
   const { newCreditBalance, ...row } = data;

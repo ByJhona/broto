@@ -20,32 +20,32 @@ import TrendingUp from 'lucide-react-native/icons/trending-up';
 import X from 'lucide-react-native/icons/x';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Card, IconBadge, PlantChat } from '@/components';
 import { CREDIT_COSTS } from '@/services';
+
+type TFunc = (key: string, options?: Record<string, unknown>) => string;
 
 type NeedItem = {
   icon: LucideIcon;
   label: string;
 };
 
-const PLANT_NEEDS: NeedItem[] = [
-  { icon: Sun, label: 'Luz indireta forte' },
-  { icon: Droplet, label: 'Água quando a terra secar' },
-  { icon: Clock, label: 'Tempo pra se adaptar' },
-];
+function getPlantNeeds(t: TFunc): NeedItem[] {
+  return [
+    { icon: Sun, label: t('needLight') },
+    { icon: Droplet, label: t('needWater') },
+    { icon: Clock, label: t('needTime') },
+  ];
+}
 
-const COMMON_MISTAKES: string[] = [
-  'Regar todo dia "só pra garantir" — isso afoga a raiz mais rápido do que parece.',
-  'Ignorar sinais de praga no começo: quanto antes perceber, mais fácil resolver.',
-  'Adubar uma planta doente achando que vai "dar força" — geralmente piora a situação.',
-];
+function getCommonMistakes(t: TFunc): string[] {
+  return [t('mistakeOverwatering'), t('mistakePests'), t('mistakeFertilizingSickPlant')];
+}
 
-const CURIOSITIES: string[] = [
-  'Durante o dia, as plantas absorvem gás carbônico e liberam oxigênio — respiram meio ao contrário da gente.',
-  'Fototropismo é o nome do fenômeno que faz o caule e as folhas se virarem em direção à luz.',
-  'Algumas espécies fecham as folhas à noite e abrem de novo de manhã, como se estivessem dormindo.',
-  'Debaixo da terra, raízes de plantas diferentes podem trocar nutrientes através de redes de fungos.',
-];
+function getCuriosities(t: TFunc): string[] {
+  return [t('curiosityPhotosynthesis'), t('curiosityPhototropism'), t('curiosityNightLeaves'), t('curiosityFungiNetworks')];
+}
 
 function getCuriosityColors(colors: ThemeColors): string[] {
   return [colors.leaf, colors.primary, colors.secondary, colors.accent];
@@ -57,12 +57,14 @@ type BenefitItem = {
   description: string;
 };
 
-const PLANT_BENEFITS: BenefitItem[] = [
-  { icon: Heart, title: 'Menos estresse', description: 'Cuidar de plantas ajuda a relaxar e desacelerar.' },
-  { icon: Cloud, title: 'Ar mais úmido', description: 'Elas ajudam a umidificar e filtrar o ambiente.' },
-  { icon: Sparkles, title: 'Uma rotina boa', description: 'Regar, observar, perceber mudanças traz calma.' },
-  { icon: TrendingUp, title: 'Ver ela crescer', description: 'Cada folha nova é resultado do seu cuidado.' },
-];
+function getPlantBenefits(t: TFunc): BenefitItem[] {
+  return [
+    { icon: Heart, title: t('benefitStressTitle'), description: t('benefitStressDescription') },
+    { icon: Cloud, title: t('benefitHumidityTitle'), description: t('benefitHumidityDescription') },
+    { icon: Sparkles, title: t('benefitRoutineTitle'), description: t('benefitRoutineDescription') },
+    { icon: TrendingUp, title: t('benefitGrowthTitle'), description: t('benefitGrowthDescription') },
+  ];
+}
 
 type FaqItem = {
   id: string;
@@ -71,56 +73,52 @@ type FaqItem = {
   answer: string;
 };
 
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    id: 'diagnose',
-    icon: Stethoscope,
-    question: 'Como funciona o diagnóstico por IA?',
-    answer: `Toque em "Diagnosticar minha planta" aqui na Ajuda (ou vá direto na aba Foto e escolha "Diagnosticar"), tire uma foto e a IA analisa o que aparece nela: se a planta está saudável, o que pode estar errado e o que fazer a seguir. Custa ${CREDIT_COSTS.diagnosis} créditos por diagnóstico, e fica salvo no seu histórico.`,
-  },
-  {
-    id: 'identify',
-    icon: Camera,
-    question: 'Como funciona a identificação por foto?',
-    answer:
-      'Na aba Foto, com o modo "Identificar" selecionado, tire uma foto (ou escolha uma da galeria) de perto de uma folha ou flor. A gente manda a imagem pro Pl@ntNet, que reconhece a espécie e já sugere um perfil de cuidados pra você revisar antes de salvar.',
-  },
-  {
-    id: 'care',
-    icon: Droplet,
-    question: 'De onde vêm os valores de luz, temperatura e umidade?',
-    answer:
-      'Depois da identificação, perguntamos pra uma IA sobre a espécie (rega, luz, temperatura, toxicidade e curiosidades) e preenchemos os campos automaticamente. Você pode ajustar qualquer valor antes de salvar — são esses números que vão orientar os cuidados da planta.',
-  },
-  {
-    id: 'sun',
-    icon: Sun,
-    question: 'O que significam os sóis?',
-    answer:
-      'É uma forma mais intuitiva de mostrar a quantidade de luz ideal, em 5 níveis: de 1 sol (sombra) até 5 sóis (sol pleno). Quanto mais sóis, mais luz direta a planta precisa.',
-  },
-  {
-    id: 'watering',
-    icon: Bell,
-    question: 'Como funcionam os lembretes de rega?',
-    answer:
-      'Ao cadastrar a planta você define de quantos em quantos dias ela precisa de água. A gente cria a tarefa de rega automaticamente e ela volta a aparecer em "Para hoje" sempre que o ciclo se repete.',
-  },
-  {
-    id: 'delete',
-    icon: Trash2,
-    question: 'Como eu excluo uma planta?',
-    answer:
-      'Abra a planta e toque no ícone de lixeira no topo da tela. Isso apaga a planta e todas as tarefas de cuidado associadas a ela — essa ação não pode ser desfeita.',
-  },
-  {
-    id: 'sync',
-    icon: Cloud,
-    question: 'Minhas plantas ficam salvas na nuvem?',
-    answer:
-      'Sim! Tudo fica salvo na sua conta, então você pode trocar de aparelho sem perder seu jardim.',
-  },
-];
+function getFaqItems(t: TFunc): FaqItem[] {
+  return [
+    {
+      id: 'diagnose',
+      icon: Stethoscope,
+      question: t('faqDiagnoseQuestion'),
+      answer: t('faqDiagnoseAnswer', { count: CREDIT_COSTS.diagnosis }),
+    },
+    {
+      id: 'identify',
+      icon: Camera,
+      question: t('faqIdentifyQuestion'),
+      answer: t('faqIdentifyAnswer'),
+    },
+    {
+      id: 'care',
+      icon: Droplet,
+      question: t('faqCareQuestion'),
+      answer: t('faqCareAnswer'),
+    },
+    {
+      id: 'sun',
+      icon: Sun,
+      question: t('faqSunQuestion'),
+      answer: t('faqSunAnswer'),
+    },
+    {
+      id: 'watering',
+      icon: Bell,
+      question: t('faqWateringQuestion'),
+      answer: t('faqWateringAnswer'),
+    },
+    {
+      id: 'delete',
+      icon: Trash2,
+      question: t('faqDeleteQuestion'),
+      answer: t('faqDeleteAnswer'),
+    },
+    {
+      id: 'sync',
+      icon: Cloud,
+      question: t('faqSyncQuestion'),
+      answer: t('faqSyncAnswer'),
+    },
+  ];
+}
 
 export default function HelpScreen() {
   const insets = useSafeAreaInsets();
@@ -129,6 +127,12 @@ export default function HelpScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const curiosityColors = useMemo(() => getCuriosityColors(colors), [colors]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const { t } = useTranslation('help');
+  const plantNeeds = getPlantNeeds(t);
+  const commonMistakes = getCommonMistakes(t);
+  const curiosities = getCuriosities(t);
+  const plantBenefits = getPlantBenefits(t);
+  const faqItems = getFaqItems(t);
 
   return (
     <ScrollView
@@ -137,8 +141,8 @@ export default function HelpScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>Ajuda</Text>
-        <Text style={styles.subtitle}>Diagnóstico, dicas pra começar e perguntas frequentes</Text>
+        <Text style={styles.title}>{t('title')}</Text>
+        <Text style={styles.subtitle}>{t('subtitle')}</Text>
       </View>
 
       <Pressable
@@ -149,35 +153,35 @@ export default function HelpScreen() {
           <Stethoscope size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
         <View style={styles.diagnosisTextBox}>
-          <Text style={styles.diagnosisTitle}>Diagnosticar minha planta</Text>
-          <Text style={styles.diagnosisSubtitle}>Tire uma foto e receba um diagnóstico com IA na hora</Text>
+          <Text style={styles.diagnosisTitle}>{t('diagnosisCardTitle')}</Text>
+          <Text style={styles.diagnosisSubtitle}>{t('diagnosisCardSubtitle')}</Text>
         </View>
         <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
       </Pressable>
 
       <Pressable style={styles.historyLink} onPress={() => router.push('/diagnose')}>
-        <Text style={styles.historyLinkText}>Ver diagnósticos anteriores</Text>
+        <Text style={styles.historyLinkText}>{t('viewPastDiagnoses')}</Text>
       </Pressable>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>Fale com uma especialista</Text>
+        <Text style={styles.sectionHeaderText}>{t('specialistSectionTitle')}</Text>
       </View>
 
       <Card style={styles.specialistCard}>
         <Text style={styles.specialistIntro}>
-          Tire dúvidas sobre qualquer planta ou cuidado — não precisa ser uma das suas.
+          {t('specialistIntro')}
         </Text>
         <PlantChat />
       </Card>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>Primeiros passos</Text>
+        <Text style={styles.sectionHeaderText}>{t('firstStepsSectionTitle')}</Text>
       </View>
 
       <Card style={styles.needsCard}>
-        <Text style={styles.needsTitle}>O que toda planta precisa</Text>
+        <Text style={styles.needsTitle}>{t('plantNeedsTitle')}</Text>
         <View style={styles.needsRow}>
-          {PLANT_NEEDS.map((need) => {
+          {plantNeeds.map((need) => {
             const Icon = need.icon;
             return (
               <View key={need.label} style={styles.needChip}>
@@ -188,16 +192,16 @@ export default function HelpScreen() {
           })}
         </View>
         <Text style={styles.needsCaption}>
-          E um vaso com furo de drenagem — sem isso, a água acumulada apodrece a raiz.
+          {t('plantNeedsCaption')}
         </Text>
       </Card>
 
       <View style={styles.mistakesCard}>
         <View style={styles.mistakesHeader}>
           <AlertTriangle size={18} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.mistakesTitle}>Erros comuns de quem tá começando</Text>
+          <Text style={styles.mistakesTitle}>{t('commonMistakesTitle')}</Text>
         </View>
-        {COMMON_MISTAKES.map((mistake) => (
+        {commonMistakes.map((mistake) => (
           <View key={mistake} style={styles.mistakeRow}>
             <X size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.mistakeText}>{mistake}</Text>
@@ -205,14 +209,14 @@ export default function HelpScreen() {
         ))}
       </View>
 
-      <Text style={styles.subsectionTitle}>Curiosidades sobre plantas</Text>
+      <Text style={styles.subsectionTitle}>{t('curiositiesTitle')}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.curiosityRow}
         style={styles.curiosityScroll}
       >
-        {CURIOSITIES.map((fact, index) => {
+        {curiosities.map((fact, index) => {
           const color = curiosityColors[index % curiosityColors.length];
           return (
             <View key={fact} style={[styles.curiosityCard, { backgroundColor: `${color}1A`, borderColor: color }]}>
@@ -223,9 +227,9 @@ export default function HelpScreen() {
         })}
       </ScrollView>
 
-      <Text style={styles.subsectionTitle}>Por que ter plantas em casa</Text>
+      <Text style={styles.subsectionTitle}>{t('benefitsTitle')}</Text>
       <View style={styles.benefitsGrid}>
-        {PLANT_BENEFITS.map((benefit) => {
+        {plantBenefits.map((benefit) => {
           const Icon = benefit.icon;
           return (
             <Card key={benefit.title} style={styles.benefitTile}>
@@ -240,10 +244,10 @@ export default function HelpScreen() {
       </View>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>Perguntas frequentes</Text>
+        <Text style={styles.sectionHeaderText}>{t('faqSectionTitle')}</Text>
       </View>
 
-      {FAQ_ITEMS.map((item) => {
+      {faqItems.map((item) => {
         const isOpen = openId === item.id;
         const Icon = item.icon;
 

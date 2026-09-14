@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import { Avatar, EmptyState, ListRow, LoadingScreen } from '@/components';
 import { useConversations } from '@/hooks';
 import { formatShortDate } from '@/utils';
@@ -13,6 +14,7 @@ export default function MessagesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('messages');
   const { conversations, isLoading } = useConversations();
 
   if (isLoading) {
@@ -23,8 +25,8 @@ export default function MessagesScreen() {
     return (
       <EmptyState
         icon={MessageSquare}
-        title="Nenhuma conversa ainda"
-        message="Suas conversas sobre ofertas de plantas vão aparecer aqui."
+        title={t('emptyTitle')}
+        message={t('emptyMessage')}
         style={styles.centered}
       />
     );

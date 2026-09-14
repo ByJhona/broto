@@ -1,1 +1,22 @@
-{}
+{
+  "title": "My garden",
+  "allOrganizedTitle": "All organized!",
+  "allOrganizedMessage": "All your plants are inside a group. Open a group to see them.",
+  "noPlantsYetTitle": "No plants yet",
+  "noPlantsYetMessage": "Tap the camera below to identify and add your first one.",
+  "remindersTitle": "Reminders",
+  "remindersTitleWithCount": "Reminders ({{count}})",
+  "noRemindersYet": "No reminders yet. Tap + to create the first one.",
+  "groupsTitle": "Groups",
+  "groupsTitleWithCount": "Groups ({{count}})",
+  "noGroupsYet": "No groups yet. Tap + to organize your plants.",
+  "taskOverdueOneDay": "Overdue by 1 day",
+  "taskOverdueDays": "Overdue by {{days}} days",
+  "taskDueToday": "Due today at {{time}}",
+  "taskDueTomorrow": "Due tomorrow at {{time}}",
+  "taskDueInDays": "Due in {{days}} days",
+  "taskRecurrenceEvery": "every {{days}} days",
+  "taskDone": "Done",
+  "taskDoneNextOn": "Done — next on {{date}}",
+  "taskAutomatic": "Automatic"
+}

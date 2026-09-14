@@ -1,1 +1,16 @@
-{}
+{
+  "historyTitle": "Diagnoses",
+  "resultTitle": "Diagnosis",
+  "healthyLabel": "Healthy",
+  "attentionLabel": "Needs attention",
+  "urgentLabel": "Urgent care",
+  "historySectionTitle": "History",
+  "emptyHistoryMessage": "You haven't run a diagnosis yet. Go to the Photo tab and choose \"Diagnose\" to get started.",
+  "healthyStatusLabel": "Your plant is healthy",
+  "attentionStatusLabel": "Needs a bit of attention",
+  "urgentStatusLabel": "Needs urgent care",
+  "notFoundMessage": "We couldn't identify any plant in this photo. Try taking it up close, with good lighting.",
+  "issuesSectionTitle": "What we noticed",
+  "nextStepsSectionTitle": "Next steps",
+  "analyzePhotoError": "Couldn't analyze the photo."
+}

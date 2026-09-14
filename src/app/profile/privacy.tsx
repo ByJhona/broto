@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from '@/i18n';
 
 export default function PrivacyScreen() {
+  const { t } = useTranslation('profile');
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Privacidade e segurança</Text>
+      <Text style={styles.text}>{t('privacyTitle')}</Text>
     </View>
   );
 }

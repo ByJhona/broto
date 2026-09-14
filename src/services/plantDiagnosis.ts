@@ -1,5 +1,6 @@
 import { File } from 'expo-file-system';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { InsufficientCreditsError } from './credits';
 import { toFunctionError } from './functionErrors';
@@ -69,7 +70,7 @@ export async function diagnosePlant(userId: string, photoUri: string): Promise<D
   }
 
   if (!data) {
-    throw new Error('Não foi possível analisar a foto.');
+    throw new Error(i18n.t('diagnose:analyzePhotoError'));
   }
 
   if ('isPlant' in data && data.isPlant === false) {
