@@ -83,7 +83,7 @@ export default function ChatScreen() {
           <Text style={styles.offerTitle}>{message.messageType === 'interest' ? t('interestCardTitle') : t('offerCardTitle')}</Text>
           <Text style={styles.offerSubtitle}>
             {message.messageType === 'interest'
-              ? t('interestCardSubtitle', { listingTitle: message.listingTitle })
+              ? message.listingTitle
               : t('offerCardSubtitle', { plantName: message.offeredPlantName, listingTitle: message.listingTitle })}
           </Text>
         </View>

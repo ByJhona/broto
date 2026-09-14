@@ -106,10 +106,7 @@ export type RespondToOfferResult = {
   confirmationMessage: ChatMessage;
 };
 
-function proposalConfirmationBody(messageType: ChatMessage['messageType'], accept: boolean): string {
-  if (messageType === 'interest') {
-    return accept ? i18n.t('chat:interestAcceptedMessage') : i18n.t('chat:interestDeclinedMessage');
-  }
+function proposalConfirmationBody(accept: boolean): string {
   return accept ? i18n.t('chat:offerStatusAccepted') : i18n.t('chat:offerStatusDeclined');
 }
 
@@ -129,7 +126,7 @@ export async function respondToOffer(messageId: string, accept: boolean): Promis
     .from('chat_messages')
     .insert({
       recipient_id: offerMessage.senderId,
-      body: proposalConfirmationBody(offerMessage.messageType, accept),
+      body: proposalConfirmationBody(accept),
       message_type: 'text',
     })
     .select(CHAT_MESSAGE_SELECT)
