@@ -104,6 +104,24 @@ export default function ChatScreen() {
     </Card>
   );
 
+  const renderMessageContent = (message: ChatMessage, isMine: boolean) => {
+    if (message.messageType === 'offer' || message.messageType === 'interest') {
+      return renderProposalCard(message, isMine);
+    }
+    if (message.messageType === 'confirmation') {
+      return (
+        <Card style={styles.offerCard}>
+          <Text style={styles.offerStatus}>{message.body}</Text>
+        </Card>
+      );
+    }
+    return (
+      <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+        <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.body}</Text>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -140,13 +158,7 @@ export default function ChatScreen() {
             const isMine = message.senderId === currentUserId;
             return (
               <View key={message.id} style={[styles.messageRow, isMine && styles.messageRowMine]}>
-                {message.messageType === 'offer' || message.messageType === 'interest' ? (
-                  renderProposalCard(message, isMine)
-                ) : (
-                  <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                    <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.body}</Text>
-                  </View>
-                )}
+                {renderMessageContent(message, isMine)}
               </View>
             );
           })}

@@ -12,7 +12,7 @@ type ChatMessageRow = {
   sender_id: string;
   recipient_id: string;
   body: string | null;
-  message_type: 'text' | 'offer' | 'interest';
+  message_type: 'text' | 'offer' | 'interest' | 'confirmation';
   listing_id: string | null;
   offered_plant_id: string | null;
   offer_status: OfferStatus | null;
@@ -127,7 +127,7 @@ export async function respondToOffer(messageId: string, accept: boolean): Promis
     .insert({
       recipient_id: offerMessage.senderId,
       body: proposalConfirmationBody(accept),
-      message_type: 'text',
+      message_type: 'confirmation',
     })
     .select(CHAT_MESSAGE_SELECT)
     .single();
@@ -240,7 +240,7 @@ type ChatConversationRow = {
   sender_id: string;
   recipient_id: string;
   body: string | null;
-  message_type: 'text' | 'offer' | 'interest';
+  message_type: 'text' | 'offer' | 'interest' | 'confirmation';
   created_at: string;
   sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
   recipient: { name: string | null; username: string | null; avatar_url: string | null } | null;

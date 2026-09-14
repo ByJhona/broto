@@ -11,7 +11,7 @@ export type ChatMessage = {
   senderId: string;
   recipientId: string;
   body: string | null;
-  messageType: 'text' | 'offer' | 'interest';
+  messageType: 'text' | 'offer' | 'interest' | 'confirmation';
   listingId: string | null;
   listingTitle: string | null;
   offeredPlantId: string | null;
