@@ -8,7 +8,6 @@ export default function EventLayout() {
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="new" options={{ title: t('newEventTitle') }} />
-      <Stack.Screen name="list" options={{ title: t('eventsListTitle') }} />
       <Stack.Screen name="[id]" options={{ title: t('eventDetailTitle') }} />
     </Stack>
   );

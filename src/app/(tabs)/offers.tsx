@@ -10,12 +10,23 @@ import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, FilterChipRow, IconButton, ListRow } from '@/components';
-import { useListings, useUserLocation } from '@/hooks';
-import { formatDistanceTo, listingTypeLabel, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingTypes } from '@/utils';
-import type { ListingType, PlantListing } from '@/types';
+import { EmptyState, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
+import { useEvents, useListings, useUserLocation } from '@/hooks';
+import {
+  EVENT_COLOR,
+  EVENT_ICON,
+  formatDistanceTo,
+  formatEventDateTime,
+  listingTypeLabel,
+  LISTING_TYPE_COLORS,
+  LISTING_TYPE_ICONS,
+  listingTypes,
+} from '@/utils';
+import type { ListingType, PlantEvent, PlantListing } from '@/types';
 
+type OffersSection = 'listings' | 'events';
 type TypeFilter = ListingType | null;
+type EventSortMode = 'proximos' | 'recentes';
 
 function matchesQuery(listing: PlantListing, query: string): boolean {
   const normalized = query.trim().toLowerCase();
@@ -23,10 +34,23 @@ function matchesQuery(listing: PlantListing, query: string): boolean {
   return listing.title.toLowerCase().includes(normalized) || (listing.description ?? '').toLowerCase().includes(normalized);
 }
 
-export default function OffersScreen() {
+function sortEvents(events: PlantEvent[], mode: EventSortMode): PlantEvent[] {
+  const sorted = [...events];
+  if (mode === 'proximos') {
+    sorted.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+  } else {
+    sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+  return sorted;
+}
+
+type SectionListProps = {
+  bottomInset: number;
+};
+
+function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
   const router = useRouter();
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('listing');
   const { listings } = useListings();
@@ -41,19 +65,12 @@ export default function OffersScreen() {
 
   const filteredListings = useMemo(
     () =>
-      listings
-        .filter((listing) => (filter ? listing.listingType === filter : true))
-        .filter((listing) => matchesQuery(listing, query)),
+      listings.filter((listing) => (filter ? listing.listingType === filter : true)).filter((listing) => matchesQuery(listing, query)),
     [listings, filter, query]
   );
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.lg }]}>
-        <Text style={styles.title}>{t('offersTabTitle')}</Text>
-        <Text style={styles.subtitle}>{t('offersTabSubtitle')}</Text>
-      </View>
-
+    <>
       <View style={styles.searchBar}>
         <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         <TextInput
@@ -74,7 +91,7 @@ export default function OffersScreen() {
 
       <FlatList
         style={styles.list}
-        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + Metrics.spacing.xl + 64 }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
         data={filteredListings}
         keyExtractor={(listing) => listing.id}
         keyboardShouldPersistTaps="handled"
@@ -115,13 +132,95 @@ export default function OffersScreen() {
           );
         }}
       />
+    </>
+  );
+}
+
+function EventsList({ bottomInset }: Readonly<SectionListProps>) {
+  const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation('event');
+  const { events } = useEvents();
+  const userLocation = useUserLocation();
+  const [sortMode, setSortMode] = useState<EventSortMode>('proximos');
+  const EventIcon = EVENT_ICON;
+
+  const sortOptions: { value: EventSortMode; label: string }[] = [
+    { value: 'proximos', label: t('sortNearest') },
+    { value: 'recentes', label: t('sortRecent') },
+  ];
+
+  const sortedEvents = useMemo(() => sortEvents(events, sortMode), [events, sortMode]);
+
+  return (
+    <FlatList
+      style={styles.list}
+      contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
+      data={sortedEvents}
+      keyExtractor={(event) => event.id}
+      ListHeaderComponent={<FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
+      ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
+      renderItem={({ item }) => {
+        const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
+        const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
+        const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
+        return (
+          <ListRow
+            variant="card"
+            style={styles.row}
+            leading={
+              item.photoUrl ? (
+                <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
+              ) : (
+                <View style={[styles.thumb, styles.thumbPlaceholder]}>
+                  <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+                </View>
+              )
+            }
+            title={item.title}
+            subtitle={subtitle}
+            trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+            onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
+          />
+        );
+      }}
+    />
+  );
+}
+
+export default function OffersScreen() {
+  const router = useRouter();
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation(['listing', 'event']);
+  const [section, setSection] = useState<OffersSection>('listings');
+
+  const sectionOptions: { value: OffersSection; label: string }[] = [
+    { value: 'listings', label: t('listing:offersTabTitle') },
+    { value: 'events', label: t('event:eventsListTitle') },
+  ];
+
+  const bottomInset = insets.bottom + Metrics.spacing.xl + 64;
+
+  return (
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.lg }]}>
+        <Text style={styles.title}>{section === 'listings' ? t('listing:offersTabTitle') : t('event:eventsListTitle')}</Text>
+        <Text style={styles.subtitle}>{section === 'listings' ? t('listing:offersTabSubtitle') : t('event:eventsTabSubtitle')}</Text>
+      </View>
+
+      <SegmentedControl options={sectionOptions} value={section} onChange={setSection} style={styles.segmented} />
+
+      {section === 'listings' ? <ListingsList bottomInset={bottomInset} /> : <EventsList bottomInset={bottomInset} />}
 
       <IconButton
         size={52}
         backgroundColor={colors.primary}
         elevated
         style={[styles.createButton, { bottom: insets.bottom + Metrics.spacing.lg }]}
-        onPress={() => router.push('/listing/new')}
+        onPress={() => router.push(section === 'listings' ? '/listing/new' : '/event/new')}
       >
         <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
       </IconButton>
@@ -148,6 +247,11 @@ const makeStyles = (colors: ThemeColors) =>
       fontSize: 14,
       color: colors.mutedForeground,
       marginTop: Metrics.spacing.xs,
+    },
+    segmented: {
+      ...Metrics.layout.centeredContent,
+      marginHorizontal: Metrics.spacing.lg,
+      marginTop: Metrics.spacing.md,
     },
     searchBar: {
       ...Metrics.layout.centeredContent,

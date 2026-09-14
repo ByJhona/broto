@@ -61,6 +61,7 @@ export * from './ProfileIcon';
 export * from './PromptModal';
 export * from './ScreenContent';
 export * from './SectionTitle';
+export * from './SegmentedControl';
 export * from './SettingsListItem';
 export * from './ShareToCommunityToggle';
 export * from './Skeleton';
