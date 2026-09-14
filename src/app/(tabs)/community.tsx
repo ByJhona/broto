@@ -76,8 +76,9 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<Commun
 
       <CommunityComposer onPost={feed.handleCreatePost} />
 
+      <SegmentedControl options={scopeOptions} value={feed.scope} onChange={feed.setScope} style={styles.scopeControl} />
+
       <View style={styles.filtersRow}>
-        <SegmentedControl compact options={scopeOptions} value={feed.scope} onChange={feed.setScope} />
         <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
       </View>
 
@@ -160,6 +161,9 @@ const makeStyles = (colors: ThemeColors) =>
     borderColor: colors.border,
   },
   postsSectionTitle: {
+    marginBottom: Metrics.spacing.md,
+  },
+  scopeControl: {
     marginBottom: Metrics.spacing.md,
   },
   filtersRow: {

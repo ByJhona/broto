@@ -12,30 +12,23 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   style?: StyleProp<ViewStyle>;
-  compact?: boolean;
 };
 
-export function SegmentedControl<T extends string>({
-  options,
-  value,
-  onChange,
-  style,
-  compact = false,
-}: Readonly<SegmentedControlProps<T>>) {
+export function SegmentedControl<T extends string>({ options, value, onChange, style }: Readonly<SegmentedControlProps<T>>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
-    <View style={[styles.track, compact && styles.trackCompact, style]}>
+    <View style={[styles.track, style]}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
           <Pressable
             key={option.value}
-            style={[styles.segment, !compact && styles.segmentFill, compact && styles.segmentCompact, selected && styles.segmentActive]}
+            style={[styles.segment, selected && styles.segmentActive]}
             onPress={() => onChange(option.value)}
           >
-            <Text style={[styles.label, compact && styles.labelCompact, selected && styles.labelActive]}>{option.label}</Text>
+            <Text style={[styles.label, selected && styles.labelActive]}>{option.label}</Text>
           </Pressable>
         );
       })}
@@ -52,21 +45,11 @@ const makeStyles = (colors: ThemeColors) =>
       padding: 4,
       gap: 4,
     },
-    trackCompact: {
-      padding: 2,
-      gap: 2,
-    },
     segment: {
+      flex: 1,
       alignItems: 'center',
       paddingVertical: Metrics.spacing.sm,
       borderRadius: Metrics.radius.full,
-    },
-    segmentFill: {
-      flex: 1,
-    },
-    segmentCompact: {
-      paddingVertical: 5,
-      paddingHorizontal: Metrics.spacing.sm,
     },
     segmentActive: {
       backgroundColor: colors.card,
@@ -80,9 +63,6 @@ const makeStyles = (colors: ThemeColors) =>
       fontSize: 14,
       fontWeight: '600',
       color: colors.mutedForeground,
-    },
-    labelCompact: {
-      fontSize: 12,
     },
     labelActive: {
       color: colors.foreground,
