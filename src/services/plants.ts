@@ -7,7 +7,7 @@ import type { Plant, PlantCommonProblem, PlantSummary } from '@/types';
 
 export const MAX_PLANT_PHOTOS = 5;
 
-const PLANT_SUMMARY_SELECT = 'id, created_at, name, species, common_name, photo_urls, watering_days, sun_level';
+const PLANT_SUMMARY_SELECT = 'id, created_at, name, species, common_name, photo_urls, group_id, watering_days, sun_level';
 
 type PlantSummaryRow = {
   id: string;
@@ -16,6 +16,7 @@ type PlantSummaryRow = {
   species: string | null;
   common_name: string | null;
   photo_urls: string[];
+  group_id: string | null;
   watering_days: number | null;
   sun_level: Plant['sunLevel'];
 };
@@ -28,6 +29,7 @@ function mapPlantSummaryRow(row: PlantSummaryRow): PlantSummary {
     species: row.species,
     commonName: row.common_name,
     photoUrl: row.photo_urls[0] ?? null,
+    groupId: row.group_id,
     wateringDays: row.watering_days,
     sunLevel: row.sun_level,
   };
@@ -52,7 +54,11 @@ type PlantRow = {
   toxic_to_humans_notes: string | null;
   fun_facts: string[] | null;
   common_problems: PlantCommonProblem[] | null;
+  group_id: string | null;
+  group: { name: string } | null;
 };
+
+const PLANT_SELECT = '*, group:plant_groups(name)';
 
 function mapPlantRow(row: PlantRow): Plant {
   return {
@@ -74,6 +80,8 @@ function mapPlantRow(row: PlantRow): Plant {
     toxicToHumansNotes: row.toxic_to_humans_notes,
     funFacts: row.fun_facts,
     commonProblems: row.common_problems,
+    groupId: row.group_id,
+    groupName: row.group?.name ?? null,
   };
 }
 
@@ -113,8 +121,26 @@ export async function getPlantsByUserId(userId: string): Promise<PlantSummary[]>
   return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
 }
 
+export async function getPlantsByGroupId(groupId: string): Promise<PlantSummary[]> {
+  const { data, error } = await supabase
+    .from('plants')
+    .select(PLANT_SUMMARY_SELECT)
+    .eq('group_id', groupId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+
+  return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
+}
+
+export async function setPlantGroup(plantId: string, groupId: string | null): Promise<void> {
+  const { error } = await supabase.from('plants').update({ group_id: groupId }).eq('id', plantId);
+  if (error) throw error;
+}
+
 export async function getPlant(id: string): Promise<Plant | null> {
-  const { data, error } = await supabase.from('plants').select('*').eq('id', id).is('deleted_at', null).single();
+  const { data, error } = await supabase.from('plants').select(PLANT_SELECT).eq('id', id).is('deleted_at', null).single();
 
   if (error) {
     console.warn('Não foi possível buscar a planta no Supabase:', error);

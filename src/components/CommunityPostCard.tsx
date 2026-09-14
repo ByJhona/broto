@@ -40,6 +40,81 @@ const TYPE_ICONS: Partial<Record<CommunityPostType, typeof Trophy>> = {
   [COMMUNITY_POST_TYPE.DICA]: Lightbulb,
 };
 
+type Styles = ReturnType<typeof makeStyles>;
+
+function authorPressHandler(onPressAuthor: ((authorId: string) => void) | undefined, authorId: string) {
+  return onPressAuthor ? () => onPressAuthor(authorId) : undefined;
+}
+
+function postMetaText(post: CommunityPost): string {
+  return post.authorUsername ? `@${post.authorUsername} · ${post.createdAt}` : post.createdAt;
+}
+
+function captionStyle(styles: Styles, hasPhotos: boolean) {
+  return [styles.caption, !hasPhotos && styles.captionNoPhoto];
+}
+
+function usePostCardState(
+  post: CommunityPost,
+  onAddComment: (postId: string, text: string) => Promise<void>,
+  onDelete?: (postId: string) => void,
+  onDeleteComment?: (commentId: string) => void
+) {
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [isSendingComment, setIsSendingComment] = useState(false);
+
+  const handleSendComment = async () => {
+    const text = draft.trim();
+    if (!text || isSendingComment) return;
+    setIsSendingComment(true);
+    try {
+      await onAddComment(post.id, text);
+      setDraft('');
+    } finally {
+      setIsSendingComment(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsMenuOpen(false);
+    const confirmed = await confirm(
+      'Excluir publicação',
+      'Tem certeza que quer excluir essa publicação? Essa ação não pode ser desfeita.',
+      { confirmLabel: 'Excluir', destructive: true }
+    );
+    if (confirmed) onDelete?.(post.id);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    setOpenCommentMenuId(null);
+    const confirmed = await confirm(
+      'Excluir recado',
+      'Tem certeza que quer excluir esse recado? Essa ação não pode ser desfeita.',
+      { confirmLabel: 'Excluir', destructive: true }
+    );
+    if (confirmed) onDeleteComment?.(commentId);
+  };
+
+  return {
+    isCommentsOpen,
+    toggleComments: () => setIsCommentsOpen((open) => !open),
+    isMenuOpen,
+    toggleMenu: () => setIsMenuOpen((open) => !open),
+    openCommentMenuId,
+    toggleCommentMenu: (commentId: string) =>
+      setOpenCommentMenuId((current) => (current === commentId ? null : commentId)),
+    draft,
+    setDraft,
+    isSendingComment,
+    handleSendComment,
+    handleDelete,
+    handleDeleteComment,
+  };
+}
+
 type PostMenuProps = {
   isOpen: boolean;
   onToggle: () => void;
@@ -272,6 +347,63 @@ function PostComments({
   );
 }
 
+type PostHeaderProps = {
+  post: CommunityPost;
+  isOwnPost: boolean;
+  isMenuOpen: boolean;
+  onToggleMenu: () => void;
+  onDelete: () => void;
+  onPressAuthor?: (authorId: string) => void;
+  colors: ThemeColors;
+  styles: Styles;
+};
+
+function PostHeader({
+  post,
+  isOwnPost,
+  isMenuOpen,
+  onToggleMenu,
+  onDelete,
+  onPressAuthor,
+  colors,
+  styles,
+}: Readonly<PostHeaderProps>) {
+  const TypeIcon = post.postType ? TYPE_ICONS[post.postType] : null;
+  return (
+    <View style={styles.header}>
+      <ListRow
+        style={styles.headerAuthor}
+        leading={<Avatar name={post.authorName} url={post.authorAvatarUrl} size={44} />}
+        title={post.authorName}
+        subtitle={postMetaText(post)}
+        onPress={authorPressHandler(onPressAuthor, post.authorId)}
+      />
+      {TypeIcon ? (
+        <IconBadge size={28}>
+          <TypeIcon size={14} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+        </IconBadge>
+      ) : null}
+      {isOwnPost ? <PostMenu isOpen={isMenuOpen} onToggle={onToggleMenu} onDelete={onDelete} /> : null}
+    </View>
+  );
+}
+
+type PostLinkedPreviewsProps = {
+  listing: CommunityPostListingSummary | null;
+  event: CommunityPostEventSummary | null;
+  onPressListing?: (listingId: string) => void;
+  onPressEvent?: (eventId: string) => void;
+};
+
+function PostLinkedPreviews({ listing, event, onPressListing, onPressEvent }: Readonly<PostLinkedPreviewsProps>) {
+  return (
+    <>
+      {listing ? <PostListingPreview listing={listing} onPress={() => onPressListing?.(listing.id)} /> : null}
+      {event ? <PostEventPreview event={event} onPress={() => onPressEvent?.(event.id)} /> : null}
+    </>
+  );
+}
+
 type CommunityPostCardProps = {
   post: CommunityPost;
   currentUserId?: string | null;
@@ -297,96 +429,52 @@ export const CommunityPostCard = memo(function CommunityPostCard({
 }: Readonly<CommunityPostCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
-  const [draft, setDraft] = useState('');
-  const [isSendingComment, setIsSendingComment] = useState(false);
   const isOwnPost = !!currentUserId && currentUserId === post.authorId;
-
-  const handleSendComment = async () => {
-    const text = draft.trim();
-    if (!text || isSendingComment) return;
-    setIsSendingComment(true);
-    try {
-      await onAddComment(post.id, text);
-      setDraft('');
-    } finally {
-      setIsSendingComment(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsMenuOpen(false);
-    const confirmed = await confirm(
-      'Excluir publicação',
-      'Tem certeza que quer excluir essa publicação? Essa ação não pode ser desfeita.',
-      { confirmLabel: 'Excluir', destructive: true }
-    );
-    if (confirmed) onDelete?.(post.id);
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    setOpenCommentMenuId(null);
-    const confirmed = await confirm(
-      'Excluir recado',
-      'Tem certeza que quer excluir esse recado? Essa ação não pode ser desfeita.',
-      { confirmLabel: 'Excluir', destructive: true }
-    );
-    if (confirmed) onDeleteComment?.(commentId);
-  };
-
-  const TypeIcon = post.postType ? TYPE_ICONS[post.postType] : null;
-  const meta = post.authorUsername ? `@${post.authorUsername} · ${post.createdAt}` : post.createdAt;
-  const listingSummary = post.listingSummary;
-  const eventSummary = post.eventSummary;
+  const state = usePostCardState(post, onAddComment, onDelete, onDeleteComment);
 
   return (
     <Card style={styles.card}>
-      <View style={styles.header}>
-        <ListRow
-          style={styles.headerAuthor}
-          leading={<Avatar name={post.authorName} url={post.authorAvatarUrl} size={44} />}
-          title={post.authorName}
-          subtitle={meta}
-          onPress={onPressAuthor ? () => onPressAuthor(post.authorId) : undefined}
-        />
-        {TypeIcon ? (
-          <IconBadge size={28}>
-            <TypeIcon size={14} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-          </IconBadge>
-        ) : null}
-        {isOwnPost && (
-          <PostMenu isOpen={isMenuOpen} onToggle={() => setIsMenuOpen((open) => !open)} onDelete={handleDelete} />
-        )}
-      </View>
+      <PostHeader
+        post={post}
+        isOwnPost={isOwnPost}
+        isMenuOpen={state.isMenuOpen}
+        onToggleMenu={state.toggleMenu}
+        onDelete={state.handleDelete}
+        onPressAuthor={onPressAuthor}
+        colors={colors}
+        styles={styles}
+      />
 
       <PostPhotoGallery imageUrls={post.imageUrls} recyclingKey={post.id} />
 
-      <Text style={[styles.caption, post.imageUrls.length === 0 && styles.captionNoPhoto]}>{post.caption}</Text>
+      <Text style={captionStyle(styles, post.imageUrls.length > 0)}>{post.caption}</Text>
 
-      {listingSummary ? <PostListingPreview listing={listingSummary} onPress={() => onPressListing?.(listingSummary.id)} /> : null}
-      {eventSummary ? <PostEventPreview event={eventSummary} onPress={() => onPressEvent?.(eventSummary.id)} /> : null}
+      <PostLinkedPreviews
+        listing={post.listingSummary}
+        event={post.eventSummary}
+        onPressListing={onPressListing}
+        onPressEvent={onPressEvent}
+      />
 
       <PostFooter
         liked={post.liked}
         likeCount={post.likeCount}
         commentCount={post.comments.length}
         onToggleLike={() => onToggleLike(post.id)}
-        onToggleComments={() => setIsCommentsOpen((open) => !open)}
+        onToggleComments={state.toggleComments}
       />
 
-      {isCommentsOpen ? (
+      {state.isCommentsOpen ? (
         <PostComments
           comments={post.comments}
           currentUserId={currentUserId}
-          openMenuId={openCommentMenuId}
-          onToggleMenu={(commentId) => setOpenCommentMenuId((current) => (current === commentId ? null : commentId))}
-          onDeleteComment={handleDeleteComment}
-          draft={draft}
-          onChangeDraft={setDraft}
-          onSend={handleSendComment}
-          isSending={isSendingComment}
+          openMenuId={state.openCommentMenuId}
+          onToggleMenu={state.toggleCommentMenu}
+          onDeleteComment={state.handleDeleteComment}
+          draft={state.draft}
+          onChangeDraft={state.setDraft}
+          onSend={state.handleSendComment}
+          isSending={state.isSendingComment}
         />
       ) : null}
     </Card>

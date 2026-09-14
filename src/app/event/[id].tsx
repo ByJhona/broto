@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import * as Location from 'expo-location';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Users from 'lucide-react-native/icons/users';
@@ -20,55 +18,9 @@ import {
   SectionTitle,
   SubmitButton,
 } from '@/components';
-import { useAuth, useEvents } from '@/hooks';
-import { cancelAttendance, confirmAttendance, createPost, getEventAttendees, getEventById } from '@/services';
-import { Alert, confirm, EVENT_COLOR, EVENT_ICON, formatEventDateTime, Toast, type AlertButton } from '@/utils';
-import { EVENT_STATUS } from '@/types';
-
-async function performEventDelete(
-  eventId: string,
-  removeEvent: (id: string) => Promise<unknown>,
-  setIsActing: (value: boolean) => void,
-  onDone: () => void
-): Promise<void> {
-  const confirmed = await confirm('Excluir evento', 'Isso remove o evento do mapa. Não dá pra desfazer.', {
-    confirmLabel: 'Excluir',
-    destructive: true,
-  });
-  if (!confirmed) return;
-
-  setIsActing(true);
-  try {
-    await removeEvent(eventId);
-    onDone();
-  } catch {
-    Toast.error('Não foi possível excluir o evento.');
-  } finally {
-    setIsActing(false);
-  }
-}
-
-async function performEventCancel(
-  eventId: string,
-  cancelEventById: (id: string) => Promise<unknown>,
-  setIsActing: (value: boolean) => void
-): Promise<void> {
-  const confirmed = await confirm('Cancelar evento', 'As pessoas confirmadas vão ver que o evento foi cancelado.', {
-    confirmLabel: 'Cancelar evento',
-    destructive: true,
-  });
-  if (!confirmed) return;
-
-  setIsActing(true);
-  try {
-    await cancelEventById(eventId);
-    Toast.success('Evento cancelado.');
-  } catch {
-    Toast.error('Não foi possível cancelar o evento.');
-  } finally {
-    setIsActing(false);
-  }
-}
+import { useEventDetail } from '@/hooks';
+import { Alert, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
+import type { PlantEvent } from '@/types';
 
 function buildEventActionButtons(
   isCancelled: boolean,
@@ -90,11 +42,39 @@ function eventStatusNotice(isCancelled: boolean, isPast: boolean): { text: strin
   return null;
 }
 
+function formatAddressText(isLoading: boolean, address: string | null | undefined): string {
+  if (isLoading) return 'Buscando endereço...';
+  return address ?? 'Local aproximado no mapa';
+}
+
+function formatAttendeeCountText(count: number): string {
+  if (count === 1) return '1 pessoa confirmada';
+  return `${count} pessoas confirmadas`;
+}
+
+function buildEventHeaderOptions(
+  isOwner: boolean,
+  isActing: boolean,
+  colors: ThemeColors,
+  onOpenActions: () => void
+) {
+  if (!isOwner) return undefined;
+  return {
+    headerRight: () => (
+      <Pressable onPress={onOpenActions} disabled={isActing} hitSlop={8}>
+        <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+      </Pressable>
+    ),
+  };
+}
+
+type Styles = ReturnType<typeof makeStyles>;
+
 type EventHeroProps = {
   photoUrl: string | null;
   title: string;
   eventDate: string;
-  styles: ReturnType<typeof makeStyles>;
+  styles: Styles;
 };
 
 function EventHero({ photoUrl, title, eventDate, styles }: Readonly<EventHeroProps>) {
@@ -115,200 +95,130 @@ function EventHero({ photoUrl, title, eventDate, styles }: Readonly<EventHeroPro
   );
 }
 
+type EventMetaCardProps = {
+  event: PlantEvent;
+  isAddressLoading: boolean;
+  address: string | null | undefined;
+  onPressOwner: () => void;
+  styles: Styles;
+};
+
+function EventMetaCard({ event, isAddressLoading, address, onPressOwner, styles }: Readonly<EventMetaCardProps>) {
+  return (
+    <Card style={styles.section}>
+      <OwnerRow
+        eyebrow="Organizado por"
+        ownerName={event.ownerName}
+        ownerAvatarUrl={event.ownerAvatarUrl}
+        onPress={onPressOwner}
+      />
+
+      <View style={styles.locationRow}>
+        <MapPin size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+        <Text style={styles.locationText}>{formatAddressText(isAddressLoading, address)}</Text>
+      </View>
+
+      <View style={styles.locationRow}>
+        <Users size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+        <Text style={styles.locationText}>{formatAttendeeCountText(event.attendeeCount)}</Text>
+      </View>
+    </Card>
+  );
+}
+
+type EventStatusNoticeProps = {
+  notice: { text: string; muted: boolean } | null;
+  styles: Styles;
+};
+
+function EventStatusNotice({ notice, styles }: Readonly<EventStatusNoticeProps>) {
+  if (!notice) return null;
+  return <Text style={notice.muted ? styles.statusNoticeMuted : styles.statusNotice}>{notice.text}</Text>;
+}
+
+type EventDescriptionCardProps = {
+  description: string | null;
+  styles: Styles;
+};
+
+function EventDescriptionCard({ description, styles }: Readonly<EventDescriptionCardProps>) {
+  if (!description) return null;
+  return (
+    <Card style={styles.section}>
+      <SectionTitle>Descrição</SectionTitle>
+      <Text style={styles.description}>{description}</Text>
+    </Card>
+  );
+}
+
 export default function EventDetailScreen() {
-  const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { removeEvent, cancelEventById } = useEvents();
-  const [isActing, setIsActing] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareCaption, setShareCaption] = useState('');
-  const [isSharing, setIsSharing] = useState(false);
+  const detail = useEventDetail(id);
 
-  const eventQuery = useQuery({
-    queryKey: ['event', id, user?.id],
-    queryFn: () => getEventById(id, user?.id),
-    enabled: !!id,
-  });
-
-  const event = eventQuery.data;
-  const isOwner = !!user && event?.userId === user.id;
-  // eslint-disable-next-line react-hooks/purity -- reading the wall clock to check if the event date already passed
-  const isPast = !!event && new Date(event.eventDate).getTime() < Date.now();
-  const isCancelled = event?.status === EVENT_STATUS.CANCELLED;
-  const canRsvp = !isOwner && !isCancelled && !isPast;
-
-  const attendeesQuery = useQuery({
-    queryKey: ['event-attendees', id],
-    queryFn: () => getEventAttendees(id),
-    enabled: !!id,
-  });
-
-  const addressQuery = useQuery({
-    queryKey: ['event-address', event?.latitude, event?.longitude],
-    queryFn: async () => {
-      const [result] = await Location.reverseGeocodeAsync({ latitude: event!.latitude, longitude: event!.longitude });
-      if (!result) return null;
-      return [result.street, result.subregion || result.city, result.region].filter(Boolean).join(', ') || null;
-    },
-    enabled: !!event,
-    staleTime: Infinity,
-  });
-
-  if (eventQuery.isLoading) {
+  if (detail.isLoading) {
     return <LoadingScreen />;
   }
 
-  if (!event) {
+  if (!detail.event) {
     return <EmptyState icon={EVENT_ICON} title="Evento não encontrado" message="Esse evento pode ter sido removido." />;
   }
 
-  const invalidateEvent = () => {
-    queryClient.invalidateQueries({ queryKey: ['event', id] });
-    queryClient.invalidateQueries({ queryKey: ['event-attendees', id] });
-    queryClient.invalidateQueries({ queryKey: ['events'] });
-  };
-
-  const handleToggleAttendance = async () => {
-    if (!user) return;
-    setIsActing(true);
-    try {
-      if (event.isAttending) {
-        await cancelAttendance(event.id, user.id);
-      } else {
-        await confirmAttendance(event.id);
-      }
-      invalidateEvent();
-    } catch (err) {
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível atualizar sua presença.');
-    } finally {
-      setIsActing(false);
-    }
-  };
-
-  const handleDelete = () => performEventDelete(event.id, removeEvent, setIsActing, () => router.back());
-
-  const handleCancelEvent = () => performEventCancel(event.id, cancelEventById, setIsActing);
-
-  const handlePressOwner = () => {
-    router.push({ pathname: '/profile/[id]', params: { id: event.userId } });
-  };
-
-  const handlePressAttendee = (attendeeId: string) => {
-    router.push({ pathname: '/profile/[id]', params: { id: attendeeId } });
-  };
-
-  const handleOpenShareModal = () => {
-    setShareCaption(`Marquei um evento: "${event.title}"!`);
-    setIsShareModalOpen(true);
-  };
-
-  const handleSubmitShare = async () => {
-    if (!user) return;
-    setIsSharing(true);
-    try {
-      await createPost(user.id, shareCaption.trim(), [], null, event.photoUrl ? [event.photoUrl] : [], null, event.id);
-      setIsShareModalOpen(false);
-      Toast.success('Evento compartilhado na Comunidade!');
-    } catch {
-      Toast.error('Não foi possível compartilhar na Comunidade.');
-    } finally {
-      setIsSharing(false);
-    }
-  };
+  const { event } = detail;
 
   const handleOpenActions = () => {
-    const buttons = buildEventActionButtons(isCancelled, isPast, {
-      onShare: handleOpenShareModal,
-      onCancel: handleCancelEvent,
-      onDelete: handleDelete,
+    const buttons = buildEventActionButtons(detail.isCancelled, detail.isPast, {
+      onShare: detail.handleOpenShareModal,
+      onCancel: detail.handleCancelEvent,
+      onDelete: detail.handleDelete,
     });
     Alert.alert('Editar evento', undefined, buttons);
   };
 
-  const statusNotice = eventStatusNotice(isCancelled, isPast);
+  const statusNotice = eventStatusNotice(detail.isCancelled, detail.isPast);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
-    >
-      <Stack.Screen
-        options={
-          isOwner
-            ? {
-                headerRight: () => (
-                  <Pressable onPress={handleOpenActions} disabled={isActing} hitSlop={8}>
-                    <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-                  </Pressable>
-                ),
-              }
-            : undefined
-        }
-      />
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
+      <Stack.Screen options={buildEventHeaderOptions(detail.isOwner, detail.isActing, colors, handleOpenActions)} />
 
       <EventHero photoUrl={event.photoUrl} title={event.title} eventDate={event.eventDate} styles={styles} />
 
       <ScreenContent>
-        <Card style={styles.section}>
-          <OwnerRow
-            eyebrow="Organizado por"
-            ownerName={event.ownerName}
-            ownerAvatarUrl={event.ownerAvatarUrl}
-            onPress={handlePressOwner}
-          />
+        <EventMetaCard
+          event={event}
+          isAddressLoading={detail.addressQuery.isLoading}
+          address={detail.addressQuery.data}
+          onPressOwner={detail.handlePressOwner}
+          styles={styles}
+        />
 
-          <View style={styles.locationRow}>
-            <MapPin size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.locationText}>
-              {addressQuery.isLoading ? 'Buscando endereço...' : (addressQuery.data ?? 'Local aproximado no mapa')}
-            </Text>
-          </View>
+        <EventStatusNotice notice={statusNotice} styles={styles} />
 
-          <View style={styles.locationRow}>
-            <Users size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.locationText}>
-              {event.attendeeCount === 1 ? '1 pessoa confirmada' : `${event.attendeeCount} pessoas confirmadas`}
-            </Text>
-          </View>
-        </Card>
+        <EventDescriptionCard description={event.description} styles={styles} />
 
-        {statusNotice ? (
-          <Text style={statusNotice.muted ? styles.statusNoticeMuted : styles.statusNotice}>{statusNotice.text}</Text>
-        ) : null}
+        <EventAttendeesSection attendees={detail.attendeesQuery.data} onPressAttendee={detail.handlePressAttendee} />
 
-        {event.description ? (
-          <Card style={styles.section}>
-            <SectionTitle>Descrição</SectionTitle>
-            <Text style={styles.description}>{event.description}</Text>
-          </Card>
-        ) : null}
-
-        <EventAttendeesSection attendees={attendeesQuery.data} onPressAttendee={handlePressAttendee} />
-
-        {canRsvp ? (
+        {detail.canRsvp ? (
           <SubmitButton
             label={event.isAttending ? 'Cancelar presença' : 'Confirmar presença'}
-            onPress={handleToggleAttendance}
-            loading={isActing}
+            onPress={detail.handleToggleAttendance}
+            loading={detail.isActing}
           />
         ) : null}
       </ScreenContent>
 
       <PromptModal
-        visible={isShareModalOpen}
+        visible={detail.isShareModalOpen}
         title="Compartilhar na Comunidade"
         label="Comentário"
-        value={shareCaption}
-        onChangeText={setShareCaption}
+        value={detail.shareCaption}
+        onChangeText={detail.setShareCaption}
         submitLabel="Compartilhar"
-        isSubmitting={isSharing}
-        onSubmit={handleSubmitShare}
-        onCancel={() => setIsShareModalOpen(false)}
+        isSubmitting={detail.isSharing}
+        onSubmit={detail.handleSubmitShare}
+        onCancel={detail.closeShareModal}
       />
     </ScrollView>
   );

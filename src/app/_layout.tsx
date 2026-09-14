@@ -74,6 +74,7 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="plant" options={{ headerShown: false }} />
+          <Stack.Screen name="group" options={{ headerShown: false }} />
           <Stack.Screen name="post" options={{ headerShown: false }} />
           <Stack.Screen name="event" options={{ headerShown: false }} />
           <Stack.Screen name="identify" options={{ headerShown: false }} />

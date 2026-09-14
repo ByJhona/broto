@@ -14,6 +14,7 @@ export * from './notificationsModule';
 export * from './plantDiagnosis';
 export * from './plantGrowth';
 export * from './plantChat';
+export * from './plantGroups';
 export * from './plantIdentification';
 export * from './plantListings';
 export * from './plants';

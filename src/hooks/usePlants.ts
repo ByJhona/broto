@@ -28,6 +28,7 @@ export function usePlants() {
         species: plant.species,
         commonName: plant.commonName,
         photoUrl: plant.photoUrls[0] ?? null,
+        groupId: plant.groupId,
         wateringDays: plant.wateringDays,
         sunLevel: plant.sunLevel,
       };

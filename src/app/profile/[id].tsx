@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Settings from 'lucide-react-native/icons/settings';
 import Sprout from 'lucide-react-native/icons/sprout';
@@ -10,7 +9,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-quer
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import type { CommunityPost, PlantEvent, PlantListing, UserProfile } from '@/types';
 import { Avatar, CollapsibleSection, CommunityPostCard, EmptyState, EventCard, ListingCard, LoadingScreen } from '@/components';
-import { useAuth, useFollow, useUserLocation } from '@/hooks';
+import { useAuth, useFollow, usePersistedCollapse, useUserLocation } from '@/hooks';
 import {
   getProfile,
   getCommunityPosts,
@@ -128,6 +127,72 @@ function ProfileEventsRow({
   );
 }
 
+type Styles = ReturnType<typeof makeStyles>;
+
+function profileListingsTitle(isOwnProfile: boolean): string {
+  return isOwnProfile ? 'Minhas ofertas' : 'Ofertas';
+}
+
+function profileEventsTitle(isOwnProfile: boolean): string {
+  return isOwnProfile ? 'Meus eventos' : 'Eventos';
+}
+
+function profileEmptyPostsMessage(isOwnProfile: boolean, name: string): string {
+  return isOwnProfile ? 'Você ainda não publicou nada na comunidade.' : `${name} ainda não publicou nada.`;
+}
+
+type ProfileActionsProps = {
+  isOwnProfile: boolean;
+  following: boolean;
+  onToggleFollow: () => void;
+  onPressMessage: () => void;
+  colors: ThemeColors;
+  styles: Styles;
+};
+
+function ProfileActions({
+  isOwnProfile,
+  following,
+  onToggleFollow,
+  onPressMessage,
+  colors,
+  styles,
+}: Readonly<ProfileActionsProps>) {
+  if (isOwnProfile) return null;
+  return (
+    <View style={styles.actionsRow}>
+      <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
+        <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
+          {following ? 'Seguindo' : 'Seguir'}
+        </Text>
+      </Pressable>
+      <Pressable style={styles.messageButton} onPress={onPressMessage} hitSlop={8}>
+        <MessageCircle size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+      </Pressable>
+    </View>
+  );
+}
+
+type ProfileEmptyPostsProps = {
+  hasPosts: boolean;
+  isLoading: boolean;
+  isOwnProfile: boolean;
+  name: string;
+  styles: Styles;
+};
+
+function ProfileEmptyPosts({ hasPosts, isLoading, isOwnProfile, name, styles }: Readonly<ProfileEmptyPostsProps>) {
+  if (hasPosts || isLoading) return null;
+  return (
+    <EmptyState
+      icon={Sprout}
+      title="Nenhum recado ainda"
+      message={profileEmptyPostsMessage(isOwnProfile, name)}
+      style={styles.emptyState}
+    />
+  );
+}
+
 function ProfileHeader({
   name,
   profile,
@@ -168,22 +233,18 @@ function ProfileHeader({
           </View>
         </View>
 
-        {!isOwnProfile ? (
-          <View style={styles.actionsRow}>
-            <Pressable style={[styles.followButton, following && styles.followButtonActive]} onPress={onToggleFollow}>
-              <Text style={[styles.followButtonText, following && styles.followButtonTextActive]}>
-                {following ? 'Seguindo' : 'Seguir'}
-              </Text>
-            </Pressable>
-            <Pressable style={styles.messageButton} onPress={onPressMessage} hitSlop={8}>
-              <MessageCircle size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
-          </View>
-        ) : null}
+        <ProfileActions
+          isOwnProfile={isOwnProfile}
+          following={following}
+          onToggleFollow={onToggleFollow}
+          onPressMessage={onPressMessage}
+          colors={colors}
+          styles={styles}
+        />
       </View>
 
       <ProfileListingsRow
-        title={isOwnProfile ? 'Minhas ofertas' : 'Ofertas'}
+        title={profileListingsTitle(isOwnProfile)}
         listings={listings}
         onPressListing={onPressListing}
         isCollapsed={isOffersCollapsed}
@@ -192,7 +253,7 @@ function ProfileHeader({
       />
 
       <ProfileEventsRow
-        title={isOwnProfile ? 'Meus eventos' : 'Eventos'}
+        title={profileEventsTitle(isOwnProfile)}
         events={events}
         onPressEvent={onPressEvent}
         isCollapsed={isEventsCollapsed}
@@ -200,14 +261,7 @@ function ProfileHeader({
         userLocation={userLocation}
       />
 
-      {posts.length === 0 && !isLoading ? (
-        <EmptyState
-          icon={Sprout}
-          title="Nenhum recado ainda"
-          message={isOwnProfile ? 'Você ainda não publicou nada na comunidade.' : `${name} ainda não publicou nada.`}
-          style={styles.emptyState}
-        />
-      ) : null}
+      <ProfileEmptyPosts hasPosts={posts.length > 0} isLoading={isLoading} isOwnProfile={isOwnProfile} name={name} styles={styles} />
     </View>
   );
 }
@@ -224,33 +278,10 @@ export default function PublicProfileScreen() {
   const userLocation = useUserLocation();
 
   const isOwnProfile = id === user?.id;
-  const [isOffersCollapsed, setIsOffersCollapsed] = useState(false);
-  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem(OFFERS_COLLAPSED_KEY).then((stored) => {
-      if (stored === '1') setIsOffersCollapsed(true);
-    });
-    AsyncStorage.getItem(EVENTS_COLLAPSED_KEY).then((stored) => {
-      if (stored === '1') setIsEventsCollapsed(true);
-    });
-  }, []);
-
-  const handleToggleOffersCollapsed = () => {
-    setIsOffersCollapsed((current) => {
-      const next = !current;
-      AsyncStorage.setItem(OFFERS_COLLAPSED_KEY, next ? '1' : '0');
-      return next;
-    });
-  };
-
-  const handleToggleEventsCollapsed = () => {
-    setIsEventsCollapsed((current) => {
-      const next = !current;
-      AsyncStorage.setItem(EVENTS_COLLAPSED_KEY, next ? '1' : '0');
-      return next;
-    });
-  };
+  const { isCollapsed: isOffersCollapsed, toggleCollapsed: handleToggleOffersCollapsed } =
+    usePersistedCollapse(OFFERS_COLLAPSED_KEY);
+  const { isCollapsed: isEventsCollapsed, toggleCollapsed: handleToggleEventsCollapsed } =
+    usePersistedCollapse(EVENTS_COLLAPSED_KEY);
 
   const profileQuery = useQuery({
     queryKey: ['profile', id],

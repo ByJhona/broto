@@ -5,6 +5,8 @@ export type Plant = {
   species: string | null;
   commonName: string | null;
   photoUrls: string[];
+  groupId: string | null;
+  groupName: string | null;
   wateringDays: number | null;
   sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
   origin: string | null;
@@ -26,6 +28,7 @@ export type PlantSummary = {
   species: string | null;
   commonName: string | null;
   photoUrl: string | null;
+  groupId: string | null;
   wateringDays: number | null;
   sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
 };

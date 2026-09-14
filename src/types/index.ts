@@ -4,5 +4,6 @@ export * from './community';
 export * from './event';
 export * from './notification';
 export * from './plant';
+export * from './plant-group';
 export * from './plant-listing';
 export * from './profile';

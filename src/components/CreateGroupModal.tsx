@@ -1,0 +1,59 @@
+import { useState } from 'react';
+import { usePlantGroups } from '@/hooks';
+import type { PlantGroup } from '@/types';
+import { PromptModal } from './PromptModal';
+
+type CreateGroupModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  onCreated: (group: PlantGroup) => void;
+};
+
+export function CreateGroupModal({ visible, onClose, onCreated }: Readonly<CreateGroupModalProps>) {
+  const { addGroup } = usePlantGroups();
+  const [nameDraft, setNameDraft] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleClose = () => {
+    setNameDraft('');
+    setError(null);
+    onClose();
+  };
+
+  const handleSubmit = async () => {
+    const trimmed = nameDraft.trim();
+    if (!trimmed) {
+      setError('Dá um nome pro grupo.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const group = await addGroup(trimmed);
+      setNameDraft('');
+      setError(null);
+      onCreated(group);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível criar o grupo.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <PromptModal
+      visible={visible}
+      title="Como você quer chamar esse grupo?"
+      label="Nome"
+      value={nameDraft}
+      onChangeText={setNameDraft}
+      placeholder="Suculentas"
+      error={error}
+      submitLabel="Criar"
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit}
+      onCancel={handleClose}
+    />
+  );
+}

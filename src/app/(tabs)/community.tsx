@@ -1,29 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Search from 'lucide-react-native/icons/search';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { CollapsibleSection, CommunityComposer, CommunityPostCard, EventCard, IconButton, ListingCard, SectionTitle } from '@/components';
-import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
-import { useAuth, useEvents, useListings, useUserLocation } from '@/hooks';
-import {
-  getCommunityPosts,
-  getPostById,
-  createPost,
-  toggleLike,
-  addComment,
-  deletePost,
-  deleteComment,
-  getFollowingIds,
-  updatePostInAllFeeds,
-  removePostFromAllFeeds,
-  removeCommentFromAllFeeds,
-  type CommunityPostsQueryData,
-} from '@/services';
-import { useRouter } from 'expo-router';
-import { formatDistanceTo, Toast } from '@/utils';
+import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type PlantEvent } from '@/types';
+import { useCommunityFeed, useListings, useUserLocation } from '@/hooks';
+import { formatDistanceTo } from '@/utils';
+
+type UserLocation = ReturnType<typeof useUserLocation>;
+type Listing = ReturnType<typeof useListings>['listings'][number];
 
 type FeedScope = 'todos' | 'seguindo';
 
@@ -35,234 +22,202 @@ const FEED_FILTERS: { value: CommunityFeedFilter | null; label: string }[] = [
   { value: COMMUNITY_POST_TYPE.DICA, label: 'Dicas' },
 ];
 
-const POSTS_STALE_TIME = 30_000;
-const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
-const EVENTS_COLLAPSED_KEY = 'broto:community-events-collapsed';
-const OFFERS_COLLAPSED_KEY = 'broto:community-offers-collapsed';
+type Styles = ReturnType<typeof makeStyles>;
 
-type PostsQueryData = CommunityPostsQueryData;
+type CommunityScopeTabsProps = {
+  scope: FeedScope;
+  onChange: (scope: FeedScope) => void;
+  styles: Styles;
+};
+
+function CommunityScopeTabs({ scope, onChange, styles }: Readonly<CommunityScopeTabsProps>) {
+  return (
+    <View style={styles.scopeRow}>
+      <Pressable style={[styles.scopeTab, scope === 'todos' && styles.scopeTabActive]} onPress={() => onChange('todos')}>
+        <Text style={[styles.scopeTabText, scope === 'todos' && styles.scopeTabTextActive]}>Todos</Text>
+      </Pressable>
+      <Pressable
+        style={[styles.scopeTab, scope === 'seguindo' && styles.scopeTabActive]}
+        onPress={() => onChange('seguindo')}
+      >
+        <Text style={[styles.scopeTabText, scope === 'seguindo' && styles.scopeTabTextActive]}>Seguindo</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+type CommunityFilterChipsProps = {
+  filter: CommunityFeedFilter | null;
+  onChange: (filter: CommunityFeedFilter | null) => void;
+  styles: Styles;
+};
+
+function CommunityFilterChips({ filter, onChange, styles }: Readonly<CommunityFilterChipsProps>) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipRow}>
+      {FEED_FILTERS.map((item) => (
+        <Pressable
+          key={item.label}
+          style={[styles.filterChip, filter === item.value && styles.filterChipActive]}
+          onPress={() => onChange(item.value)}
+        >
+          <Text style={[styles.filterChipText, filter === item.value && styles.filterChipTextActive]}>{item.label}</Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
+
+type CommunityOffersCarouselProps = {
+  listings: Listing[];
+  userLocation: UserLocation | null;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  onSeeMore: () => void;
+  onPressListing: (listingId: string) => void;
+  styles: Styles;
+};
+
+function CommunityOffersCarousel({
+  listings,
+  userLocation,
+  isCollapsed,
+  onToggleCollapsed,
+  onSeeMore,
+  onPressListing,
+  styles,
+}: Readonly<CommunityOffersCarouselProps>) {
+  if (listings.length === 0) return null;
+  return (
+    <CollapsibleSection title="Ofertas recentes" onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+        {listings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
+            onPress={() => onPressListing(listing.id)}
+          />
+        ))}
+      </ScrollView>
+    </CollapsibleSection>
+  );
+}
+
+type CommunityEventsCarouselProps = {
+  events: PlantEvent[];
+  userLocation: UserLocation | null;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  onSeeMore: () => void;
+  onPressEvent: (eventId: string) => void;
+  styles: Styles;
+};
+
+function CommunityEventsCarousel({
+  events,
+  userLocation,
+  isCollapsed,
+  onToggleCollapsed,
+  onSeeMore,
+  onPressEvent,
+  styles,
+}: Readonly<CommunityEventsCarouselProps>) {
+  if (events.length === 0) return null;
+  return (
+    <CollapsibleSection title="Próximos eventos" onSeeMore={onSeeMore} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+        {events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
+            onPress={() => onPressEvent(event.id)}
+          />
+        ))}
+      </ScrollView>
+    </CollapsibleSection>
+  );
+}
+
+type CommunityFeedHeaderProps = {
+  feed: ReturnType<typeof useCommunityFeed>;
+  colors: ThemeColors;
+  styles: Styles;
+  onSearch: () => void;
+  onSeeMoreListings: () => void;
+  onSeeMoreEvents: () => void;
+};
+
+function CommunityFeedHeader({ feed, colors, styles, onSearch, onSeeMoreListings, onSeeMoreEvents }: Readonly<CommunityFeedHeaderProps>) {
+  return (
+    <View>
+      <View style={styles.header}>
+        <View style={styles.headerTextBox}>
+          <Text style={styles.title}>Comunidade</Text>
+          <Text style={styles.subtitle}>A comunidade de quem tá aprendendo a cuidar de plantas</Text>
+        </View>
+        <IconButton style={styles.searchButton} onPress={onSearch}>
+          <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        </IconButton>
+      </View>
+
+      <CommunityOffersCarousel
+        listings={feed.listings}
+        userLocation={feed.userLocation}
+        isCollapsed={feed.isOffersCollapsed}
+        onToggleCollapsed={feed.handleToggleOffersCollapsed}
+        onSeeMore={onSeeMoreListings}
+        onPressListing={feed.handlePressListing}
+        styles={styles}
+      />
+
+      <CommunityEventsCarousel
+        events={feed.upcomingEvents}
+        userLocation={feed.userLocation}
+        isCollapsed={feed.isEventsCollapsed}
+        onToggleCollapsed={feed.handleToggleEventsCollapsed}
+        onSeeMore={onSeeMoreEvents}
+        onPressEvent={feed.handlePressEvent}
+        styles={styles}
+      />
+
+      <CommunityComposer onPost={feed.handleCreatePost} />
+
+      <View style={styles.filtersRow}>
+        <CommunityScopeTabs scope={feed.scope} onChange={feed.setScope} styles={styles} />
+        <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
+      </View>
+
+      <SectionTitle style={styles.postsSectionTitle}>Publicações</SectionTitle>
+
+      {feed.isInitialLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
+    </View>
+  );
+}
 
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { user } = useAuth();
-  const { events: upcomingEvents } = useEvents();
-  const { listings } = useListings();
-  const userLocation = useUserLocation();
-  const queryClient = useQueryClient();
-  const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
-  const [scope, setScope] = useState<FeedScope>('todos');
-  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
-  const [isOffersCollapsed, setIsOffersCollapsed] = useState(false);
-
-  useEffect(() => {
-    AsyncStorage.getItem(EVENTS_COLLAPSED_KEY).then((stored) => {
-      if (stored === '1') setIsEventsCollapsed(true);
-    });
-    AsyncStorage.getItem(OFFERS_COLLAPSED_KEY).then((stored) => {
-      if (stored === '1') setIsOffersCollapsed(true);
-    });
-  }, []);
-
-  const handleToggleEventsCollapsed = () => {
-    setIsEventsCollapsed((current) => {
-      const next = !current;
-      AsyncStorage.setItem(EVENTS_COLLAPSED_KEY, next ? '1' : '0');
-      return next;
-    });
-  };
-
-  const handleToggleOffersCollapsed = () => {
-    setIsOffersCollapsed((current) => {
-      const next = !current;
-      AsyncStorage.setItem(OFFERS_COLLAPSED_KEY, next ? '1' : '0');
-      return next;
-    });
-  };
-
-  const followingIdsQuery = useQuery({
-    queryKey: ['following-ids', user?.id],
-    queryFn: () => getFollowingIds(user!.id),
-    enabled: !!user?.id && scope === 'seguindo',
-    staleTime: FOLLOWING_IDS_STALE_TIME,
-  });
-
-  const followedAuthorIds = followingIdsQuery.data ?? null;
-
-  const queryKey = useMemo(
-    () => ['community-posts', scope, filter, user?.id] as const,
-    [scope, filter, user?.id]
-  );
-
-  const postsQuery = useInfiniteQuery({
-    queryKey,
-    queryFn: ({ pageParam }) =>
-      getCommunityPosts(user!.id, pageParam, filter, scope === 'seguindo' ? followedAuthorIds : null),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: !!user?.id && (scope === 'todos' || followedAuthorIds !== null),
-    staleTime: POSTS_STALE_TIME,
-  });
-
-  const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
-  const isInitialLoading =
-    posts.length === 0 && (postsQuery.isFetching || (scope === 'seguindo' && followingIdsQuery.isFetching));
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await postsQuery.refetch();
-    setRefreshing(false);
-  };
-
-  const handleLoadMore = () => {
-    if (postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
-      postsQuery.fetchNextPage();
-    }
-  };
-
-  const handleToggleLike = useCallback(
-    async (postId: string) => {
-      if (!user?.id) return;
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const post = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
-      if (!post) return;
-
-      const wasLiked = post.liked;
-      updatePostInAllFeeds(queryClient, postId, (p) => ({
-        ...p,
-        liked: !p.liked,
-        likeCount: p.likeCount + (p.liked ? -1 : 1),
-      }));
-
-      try {
-        await toggleLike(postId, user.id, wasLiked);
-      } catch {
-        updatePostInAllFeeds(queryClient, postId, () => post);
-      }
-    },
-    [user, queryClient, queryKey]
-  );
-
-  const handleAddComment = useCallback(
-    async (postId: string, text: string) => {
-      if (!user?.id) return;
-      try {
-        await addComment(postId, user.id, text);
-        const updated = await getPostById(postId, user.id);
-        if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    [user, queryClient]
-  );
-
-  const handleCreatePost = async (text: string, imageUris: string[], postType: CommunityPostType | null) => {
-    if (!user?.id) return;
-    try {
-      const newPostId = await createPost(user.id, text, imageUris, postType);
-      const newPost = await getPostById(newPostId, user.id);
-      const matchesFilter = filter === OFFER_FEED_FILTER ? !!newPost?.listingId : newPost?.postType === filter;
-      if (newPost && scope === 'todos' && (!filter || matchesFilter)) {
-        queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
-          if (!old) return old;
-          const [firstPage, ...restPages] = old.pages;
-          return { ...old, pages: [{ ...firstPage, posts: [newPost, ...firstPage.posts] }, ...restPages] };
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      Toast.error('Não foi possível publicar. Tente novamente.');
-      throw err;
-    }
-  };
-
-  const handlePressAuthor = useCallback(
-    (authorId: string) => {
-      router.push({ pathname: '/profile/[id]', params: { id: authorId } });
-    },
-    [router]
-  );
-
-  const handlePressListing = useCallback(
-    (listingId: string) => {
-      router.push({ pathname: '/listing/[id]', params: { id: listingId } });
-    },
-    [router]
-  );
-
-  const handlePressEvent = useCallback(
-    (eventId: string) => {
-      router.push({ pathname: '/event/[id]', params: { id: eventId } });
-    },
-    [router]
-  );
-
-  const handleDeletePost = useCallback(
-    async (postId: string) => {
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
-      removePostFromAllFeeds(queryClient, postId);
-      try {
-        await deletePost(postId);
-      } catch {
-        if (previousPost) {
-          queryClient.setQueryData<PostsQueryData>(queryKey, (old) => {
-            if (!old) return old;
-            const [firstPage, ...restPages] = old.pages;
-            return { ...old, pages: [{ ...firstPage, posts: [previousPost, ...firstPage.posts] }, ...restPages] };
-          });
-        }
-        Toast.error('Não foi possível excluir a publicação.');
-      }
-    },
-    [queryClient, queryKey]
-  );
-
-  const handleDeleteComment = useCallback(
-    async (commentId: string) => {
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const previousPost = cached?.pages
-        .flatMap((page) => page.posts)
-        .find((post) => post.comments.some((comment) => comment.id === commentId));
-      removeCommentFromAllFeeds(queryClient, commentId);
-      try {
-        await deleteComment(commentId);
-      } catch {
-        if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
-        Toast.error('Não foi possível excluir o recado.');
-      }
-    },
-    [queryClient, queryKey]
-  );
+  const feed = useCommunityFeed();
 
   const renderItem = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <CommunityPostCard
         post={item}
-        currentUserId={user?.id}
-        onToggleLike={handleToggleLike}
-        onAddComment={handleAddComment}
-        onDelete={handleDeletePost}
-        onDeleteComment={handleDeleteComment}
-        onPressAuthor={handlePressAuthor}
-        onPressListing={handlePressListing}
-        onPressEvent={handlePressEvent}
+        currentUserId={feed.user?.id}
+        onToggleLike={feed.handleToggleLike}
+        onAddComment={feed.handleAddComment}
+        onDelete={feed.handleDeletePost}
+        onDeleteComment={feed.handleDeleteComment}
+        onPressAuthor={feed.handlePressAuthor}
+        onPressListing={feed.handlePressListing}
+        onPressEvent={feed.handlePressEvent}
       />
     ),
-    [
-      user?.id,
-      handleToggleLike,
-      handleAddComment,
-      handleDeletePost,
-      handleDeleteComment,
-      handlePressAuthor,
-      handlePressListing,
-      handlePressEvent,
-    ]
+    [feed]
   );
 
   return (
@@ -270,109 +225,25 @@ export default function CommunityScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + Metrics.spacing.lg }]}
       showsVerticalScrollIndicator={false}
-      data={posts}
+      data={feed.posts}
       keyExtractor={(post) => post.id}
       renderItem={renderItem}
-      onEndReached={handleLoadMore}
+      onEndReached={feed.handleLoadMore}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+        <RefreshControl refreshing={feed.refreshing} onRefresh={feed.handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
       ListHeaderComponent={
-        <View>
-          <View style={styles.header}>
-            <View style={styles.headerTextBox}>
-              <Text style={styles.title}>Comunidade</Text>
-              <Text style={styles.subtitle}>A comunidade de quem tá aprendendo a cuidar de plantas</Text>
-            </View>
-            <IconButton style={styles.searchButton} onPress={() => router.push('/search')}>
-              <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-            </IconButton>
-          </View>
-
-          {listings.length > 0 ? (
-            <CollapsibleSection
-              title="Ofertas recentes"
-              onSeeMore={() => router.push('/listing/list')}
-              isCollapsed={isOffersCollapsed}
-              onToggleCollapsed={handleToggleOffersCollapsed}
-            >
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-                {listings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
-                    onPress={() => router.push({ pathname: '/listing/[id]', params: { id: listing.id } })}
-                  />
-                ))}
-              </ScrollView>
-            </CollapsibleSection>
-          ) : null}
-
-          {upcomingEvents.length > 0 ? (
-            <CollapsibleSection
-              title="Próximos eventos"
-              onSeeMore={() => router.push('/event/list')}
-              isCollapsed={isEventsCollapsed}
-              onToggleCollapsed={handleToggleEventsCollapsed}
-            >
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-                {upcomingEvents.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
-                    onPress={() => router.push({ pathname: '/event/[id]', params: { id: event.id } })}
-                  />
-                ))}
-              </ScrollView>
-            </CollapsibleSection>
-          ) : null}
-
-          <CommunityComposer onPost={handleCreatePost} />
-
-          <View style={styles.filtersRow}>
-            <View style={styles.scopeRow}>
-              <Pressable
-                style={[styles.scopeTab, scope === 'todos' && styles.scopeTabActive]}
-                onPress={() => setScope('todos')}
-              >
-                <Text style={[styles.scopeTabText, scope === 'todos' && styles.scopeTabTextActive]}>Todos</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.scopeTab, scope === 'seguindo' && styles.scopeTabActive]}
-                onPress={() => setScope('seguindo')}
-              >
-                <Text style={[styles.scopeTabText, scope === 'seguindo' && styles.scopeTabTextActive]}>Seguindo</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterChipRow}
-            >
-              {FEED_FILTERS.map((item) => (
-                <Pressable
-                  key={item.label}
-                  style={[styles.filterChip, filter === item.value && styles.filterChipActive]}
-                  onPress={() => setFilter(item.value)}
-                >
-                  <Text style={[styles.filterChipText, filter === item.value && styles.filterChipTextActive]}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-
-          <SectionTitle style={styles.postsSectionTitle}>Publicações</SectionTitle>
-
-          {isInitialLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
-        </View>
+        <CommunityFeedHeader
+          feed={feed}
+          colors={colors}
+          styles={styles}
+          onSearch={() => router.push('/search')}
+          onSeeMoreListings={() => router.push('/listing/list')}
+          onSeeMoreEvents={() => router.push('/event/list')}
+        />
       }
-      ListFooterComponent={postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
+      ListFooterComponent={feed.postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
     />
   );
 }

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Circle from 'lucide-react-native/icons/circle';
+import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { addDays, CATEGORY_ICONS, daysBetween, formatShortDate, today } from '@/utils';
 import { TASK_CATEGORY, type CareTask } from '@/types';
@@ -13,6 +14,8 @@ type CareTaskItemProps = {
   onToggle: (id: string) => void;
   onLongPress?: (id: string) => void;
 };
+
+type Styles = ReturnType<typeof makeStyles>;
 
 function timeOfDay(task: CareTask): string {
   return `${String(task.reminderHour).padStart(2, '0')}:${String(task.reminderMinute).padStart(2, '0')}`;
@@ -46,6 +49,66 @@ function subtitleFor(task: CareTask): string {
   return [task.plantName, statusLabel(task), isAutomatic ? 'Automático' : null].filter(Boolean).join(' · ');
 }
 
+function cardStyle(styles: Styles, done: boolean, pressed: boolean) {
+  return [styles.card, done && styles.cardDone, pressed && styles.cardPressed];
+}
+
+function titleStyle(styles: Styles, done: boolean) {
+  return [styles.title, done && styles.textDone];
+}
+
+function subtitleStyle(styles: Styles, overdue: boolean) {
+  return [styles.subtitle, overdue && styles.subtitleOverdue];
+}
+
+function iconBackgroundColor(colors: ThemeColors, done: boolean): string {
+  return done ? colors.card : colors.muted;
+}
+
+function buildLongPressHandler(onLongPress: ((id: string) => void) | undefined, taskId: string) {
+  return onLongPress ? () => onLongPress(taskId) : undefined;
+}
+
+type CareTaskLeadingIconProps = {
+  task: CareTask;
+  Icon: LucideIcon;
+  colors: ThemeColors;
+  styles: Styles;
+};
+
+function CareTaskLeadingIcon({ task, Icon, colors, styles }: Readonly<CareTaskLeadingIconProps>) {
+  if (task.plantPhotoUrl) {
+    return (
+      <Image
+        source={{ uri: task.plantPhotoUrl }}
+        style={styles.iconPhoto}
+        contentFit="cover"
+        recyclingKey={task.id}
+        cachePolicy="memory-disk"
+      />
+    );
+  }
+  return (
+    <Icon
+      size={Metrics.icon.normal}
+      color={task.done ? colors.mutedForeground : colors.leaf}
+      strokeWidth={Metrics.icon.strokeWidth}
+    />
+  );
+}
+
+type CareTaskStatusIconProps = {
+  done: boolean;
+  colors: ThemeColors;
+};
+
+function CareTaskStatusIcon({ done, colors }: Readonly<CareTaskStatusIconProps>) {
+  if (done) {
+    return <CheckCircle2 size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+  }
+  return <Circle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+}
+
 export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: Readonly<CareTaskItemProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -56,40 +119,19 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
   return (
     <Pressable
       onPress={() => onToggle(task.id)}
-      onLongPress={onLongPress ? () => onLongPress(task.id) : undefined}
-      style={({ pressed }) => [styles.card, task.done && styles.cardDone, pressed && styles.cardPressed]}
+      onLongPress={buildLongPressHandler(onLongPress, task.id)}
+      style={({ pressed }) => cardStyle(styles, task.done, pressed)}
     >
-      <IconBadge
-        backgroundColor={task.done ? colors.card : colors.muted}
-        style={styles.iconOverflow}
-      >
-        {task.plantPhotoUrl ? (
-          <Image
-            source={{ uri: task.plantPhotoUrl }}
-            style={styles.iconPhoto}
-            contentFit="cover"
-            recyclingKey={task.id}
-            cachePolicy="memory-disk"
-          />
-        ) : (
-          <Icon
-            size={Metrics.icon.normal}
-            color={task.done ? colors.mutedForeground : colors.leaf}
-            strokeWidth={Metrics.icon.strokeWidth}
-          />
-        )}
+      <IconBadge backgroundColor={iconBackgroundColor(colors, task.done)} style={styles.iconOverflow}>
+        <CareTaskLeadingIcon task={task} Icon={Icon} colors={colors} styles={styles} />
       </IconBadge>
 
       <View style={styles.textContainer}>
-        <Text style={[styles.title, task.done && styles.textDone]}>{task.title}</Text>
-        <Text style={[styles.subtitle, isOverdue && styles.subtitleOverdue]}>{subtitle}</Text>
+        <Text style={titleStyle(styles, task.done)}>{task.title}</Text>
+        <Text style={subtitleStyle(styles, isOverdue)}>{subtitle}</Text>
       </View>
 
-      {task.done ? (
-        <CheckCircle2 size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-      ) : (
-        <Circle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-      )}
+      <CareTaskStatusIcon done={task.done} colors={colors} />
     </Pressable>
   );
 });

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
@@ -17,8 +17,10 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
   Card,
+  CreateGroupModal,
   EmptyState,
   InfoChip,
+  ListRow,
   PlantChat,
   PlantGrowthSection,
   PlantPhotoHero,
@@ -30,10 +32,9 @@ import {
   SpeciesInfoSection,
   SpeciesInfoSkeleton,
 } from '@/components';
-import { useAuth, useCareTasks, useCredits } from '@/hooks';
-import { deletePlant, getPlant, updatePlantName } from '@/services';
-import { TASK_CATEGORY, type Plant, type PlantSummary } from '@/types';
-import { Alert, confirm, daysBetween, sunLevelLabel, Toast, today } from '@/utils';
+import { usePlantDetail } from '@/hooks';
+import { type Plant } from '@/types';
+import { daysBetween, sunLevelLabel, today } from '@/utils';
 
 const CARE_LEVEL_LABEL: Record<NonNullable<Plant['careLevel']>, string> = {
   easy: 'Fácil de cuidar',
@@ -59,6 +60,30 @@ type StatTile = {
   value: string;
   icon: LucideIcon;
 };
+
+function buildCareStats(plant: Plant): StatTile[] {
+  const careStats: StatTile[] = [];
+  if (plant.wateringDays != null) {
+    careStats.push({ key: 'watering', icon: Droplet, value: `Regar a cada ${plant.wateringDays} dias` });
+  }
+  if (plant.sunLevel != null) {
+    careStats.push({ key: 'light', icon: Sun, value: sunLevelLabel(plant.sunLevel) });
+  }
+  if (plant.origin) careStats.push({ key: 'origin', icon: MapPin, value: plant.origin });
+  if (plant.careLevel) {
+    careStats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[plant.careLevel], value: CARE_LEVEL_LABEL[plant.careLevel] });
+  }
+  if (plant.toxicToPets != null) {
+    careStats.push({
+      key: 'petSafety',
+      icon: PawPrint,
+      value: plant.toxicToPets ? 'Não é segura para pets' : 'Segura para pets',
+    });
+  }
+  return careStats;
+}
+
+type Styles = ReturnType<typeof makeStyles>;
 
 function PlantDetailSkeleton() {
   const colors = useColors();
@@ -95,181 +120,33 @@ function PlantDetailSkeleton() {
   );
 }
 
-export default function PlantDetailScreen() {
-  const router = useRouter();
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { credits } = useCredits();
-  const {
-    tasks: careTasksList,
-    isLoading: isCareTasksLoading,
-    createTask,
-    toggleTask,
-    refresh: refreshCareTasks,
-  } = useCareTasks();
-  const isPremium = credits?.planId === 'premium';
+type PlantCareStatsCardProps = {
+  careStats: StatTile[];
+  styles: Styles;
+};
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-  const [nameDraft, setNameDraft] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-  const [isSavingName, setIsSavingName] = useState(false);
-
-  const plantsListKey = ['plants', user?.id] as const;
-
-  const { data: plant = null, isLoading, isPlaceholderData } = useQuery({
-    queryKey: ['plant', id],
-    queryFn: () => getPlant(id!),
-    enabled: !!id,
-    placeholderData: () => {
-      const summary = queryClient.getQueryData<PlantSummary[]>(plantsListKey)?.find((item) => item.id === id);
-      if (!summary) return undefined;
-      return {
-        ...summary,
-        photoUrls: summary.photoUrl ? [summary.photoUrl] : [],
-        origin: null,
-        description: null,
-        wateringDescription: null,
-        careLevel: null,
-        toxicToPets: null,
-        toxicToPetsNotes: null,
-        toxicToHumans: null,
-        toxicToHumansNotes: null,
-        funFacts: null,
-        commonProblems: null,
-      };
-    },
-  });
-
-  useEffect(() => {
-    if (!plant || !isPremium || isCareTasksLoading) return;
-
-    const hasReminder = careTasksList.some(
-      (task) => task.plantId === plant.id && task.category === TASK_CATEGORY.GROWTH_CHECK
-    );
-    if (hasReminder) return;
-
-    createTask({
-      title: `Analisar ${plant.name}`,
-      plantId: plant.id,
-      plantName: plant.name,
-      plantPhotoUrl: plant.photoUrls[0] ?? null,
-      category: TASK_CATEGORY.GROWTH_CHECK,
-      notes: 'Tire uma foto pra IA acompanhar a evolução dessa planta.',
-      recurrenceDays: 14,
-    });
-  }, [plant, isPremium, isCareTasksLoading, careTasksList, createTask]);
-
-  const handleOpenRename = () => {
-    if (!plant) return;
-    setNameDraft(plant.name);
-    setRenameError(null);
-    setIsRenameModalOpen(true);
-  };
-
-  const handleSaveName = async () => {
-    if (!plant) return;
-
-    const trimmed = nameDraft.trim();
-    if (!trimmed) {
-      setRenameError('Dá um nome pra sua planta.');
-      return;
-    }
-
-    setIsSavingName(true);
-    try {
-      await updatePlantName(plant.id, trimmed);
-      queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
-        current ? { ...current, name: trimmed } : current
-      );
-      queryClient.setQueryData<PlantSummary[]>(plantsListKey, (current = []) =>
-        current.map((item) => (item.id === plant.id ? { ...item, name: trimmed } : item))
-      );
-      setIsRenameModalOpen(false);
-    } catch (err) {
-      setRenameError(err instanceof Error ? err.message : 'Não foi possível salvar o nome.');
-    } finally {
-      setIsSavingName(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!plant) return;
-
-    const confirmed = await confirm(
-      'Excluir planta',
-      `Tem certeza que quer excluir "${plant.name}"? Essa ação não pode ser desfeita.`,
-      { confirmLabel: 'Excluir', destructive: true }
-    );
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      await deletePlant(plant.id);
-      queryClient.removeQueries({ queryKey: ['plant', plant.id] });
-      await refreshCareTasks();
-      router.replace('/garden');
-    } catch (err) {
-      setIsDeleting(false);
-      Toast.error(err instanceof Error ? err.message : 'Não foi possível excluir a planta.');
-    }
-  };
-
-  const handleOpenActions = () => {
-    Alert.alert('Editar planta', undefined, [
-      { text: 'Renomear', onPress: handleOpenRename },
-      { text: 'Excluir planta', style: 'destructive', onPress: handleDelete },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
-  };
-
-  if (isLoading && !plant) {
-    return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
-      >
-        <Stack.Screen options={{ title: '' }} />
-        <PlantDetailSkeleton />
-      </ScrollView>
-    );
-  }
-
-  if (!plant) {
-    return (
-      <View style={styles.centered}>
-        <Stack.Screen options={{ title: '' }} />
-        <EmptyState icon={Leaf} message="Planta não encontrada." />
+function PlantCareStatsCard({ careStats, styles }: Readonly<PlantCareStatsCardProps>) {
+  if (careStats.length === 0) return null;
+  return (
+    <Card style={styles.section}>
+      <SectionTitle>Cuidados ideais</SectionTitle>
+      <View style={styles.chipRow}>
+        {careStats.map((stat) => (
+          <InfoChip key={stat.key} value={stat.value} icon={stat.icon} />
+        ))}
       </View>
-    );
-  }
+    </Card>
+  );
+}
 
-  const careStats: StatTile[] = [];
-  if (plant.wateringDays != null) {
-    careStats.push({ key: 'watering', icon: Droplet, value: `Regar a cada ${plant.wateringDays} dias` });
-  }
-  if (plant.sunLevel != null) {
-    careStats.push({ key: 'light', icon: Sun, value: sunLevelLabel(plant.sunLevel) });
-  }
-  if (plant.origin) careStats.push({ key: 'origin', icon: MapPin, value: plant.origin });
-  if (plant.careLevel) {
-    careStats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[plant.careLevel], value: CARE_LEVEL_LABEL[plant.careLevel] });
-  }
-  if (plant.toxicToPets != null) {
-    careStats.push({
-      key: 'petSafety',
-      icon: PawPrint,
-      value: plant.toxicToPets ? 'Não é segura para pets' : 'Segura para pets',
-    });
-  }
+type PlantSpeciesInfoProps = {
+  plant: Plant;
+  isPlaceholderData: boolean;
+};
 
-  let speciesInfoContent: React.ReactNode = null;
+function PlantSpeciesInfo({ plant, isPlaceholderData }: Readonly<PlantSpeciesInfoProps>) {
   if (plant.description) {
-    speciesInfoContent = (
+    return (
       <SpeciesInfoSection
         info={{
           description: plant.description,
@@ -283,9 +160,38 @@ export default function PlantDetailScreen() {
         }}
       />
     );
-  } else if (isPlaceholderData) {
-    speciesInfoContent = <SpeciesInfoSkeleton />;
   }
+  if (isPlaceholderData) return <SpeciesInfoSkeleton />;
+  return null;
+}
+
+export default function PlantDetailScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const detail = usePlantDetail(id);
+
+  if (detail.isLoading && !detail.plant) {
+    return (
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
+        <Stack.Screen options={{ title: '' }} />
+        <PlantDetailSkeleton />
+      </ScrollView>
+    );
+  }
+
+  if (!detail.plant) {
+    return (
+      <View style={styles.centered}>
+        <Stack.Screen options={{ title: '' }} />
+        <EmptyState icon={Leaf} message="Planta não encontrada." />
+      </View>
+    );
+  }
+
+  const { plant } = detail;
+  const careStats = buildCareStats(plant);
 
   return (
     <KeyboardAwareScrollView
@@ -298,60 +204,59 @@ export default function PlantDetailScreen() {
         options={{
           title: '',
           headerRight: () => (
-            <Pressable onPress={handleOpenActions} disabled={isDeleting} hitSlop={8}>
+            <Pressable onPress={detail.handleOpenActions} disabled={detail.isDeleting} hitSlop={8}>
               <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ),
         }}
       />
 
-      <PlantPhotoHero
-        plant={plant}
-        onPhotoUrlsChange={(photoUrls) =>
-          queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
-            current ? { ...current, photoUrls } : current
-          )
-        }
-      />
+      <PlantPhotoHero plant={plant} onPhotoUrlsChange={detail.setPhotoUrls} />
 
       <PromptModal
-        visible={isRenameModalOpen}
+        visible={detail.isRenameModalOpen}
         title="Como você quer chamar essa planta?"
         label="Nome"
-        value={nameDraft}
-        onChangeText={setNameDraft}
+        value={detail.nameDraft}
+        onChangeText={detail.setNameDraft}
         placeholder="Samba"
-        error={renameError}
+        error={detail.renameError}
         submitLabel="Salvar"
-        isSubmitting={isSavingName}
-        onSubmit={handleSaveName}
-        onCancel={() => setIsRenameModalOpen(false)}
+        isSubmitting={detail.isSavingName}
+        onSubmit={detail.handleSaveName}
+        onCancel={detail.closeRenameModal}
+      />
+
+      <CreateGroupModal
+        visible={detail.isCreateGroupModalOpen}
+        onClose={() => detail.setIsCreateGroupModalOpen(false)}
+        onCreated={detail.handleGroupCreated}
       />
 
       <ScreenContent>
         <Text style={styles.sinceLabel}>{daysWithYouLabel(plant.createdAt)}</Text>
 
-        {careStats.length > 0 ? (
-          <Card style={styles.section}>
-            <SectionTitle>Cuidados ideais</SectionTitle>
-            <View style={styles.chipRow}>
-              {careStats.map((stat) => (
-                <InfoChip key={stat.key} value={stat.value} icon={stat.icon} />
-              ))}
-            </View>
-          </Card>
-        ) : null}
+        <Card style={styles.section}>
+          <ListRow
+            eyebrow="Grupo"
+            title={plant.groupName ?? 'Nenhum grupo'}
+            trailing={<ChevronRight size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+            onPress={detail.handleOpenGroupPicker}
+          />
+        </Card>
 
-        <PlantRemindersSection plantId={plant.id} tasks={careTasksList} onToggle={toggleTask} />
+        <PlantCareStatsCard careStats={careStats} styles={styles} />
+
+        <PlantRemindersSection plantId={plant.id} tasks={detail.careTasksList} onToggle={detail.toggleTask} />
 
         <Card style={styles.section}>
           <SectionTitle>Pergunte sobre sua planta</SectionTitle>
           <PlantChat plantId={plant.id} />
         </Card>
 
-        <PlantGrowthSection plant={plant} isPremium={isPremium} />
+        <PlantGrowthSection plant={plant} isPremium={detail.isPremium} />
 
-        {speciesInfoContent}
+        <PlantSpeciesInfo plant={plant} isPlaceholderData={detail.isPlaceholderData} />
       </ScreenContent>
     </KeyboardAwareScrollView>
   );

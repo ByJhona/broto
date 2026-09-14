@@ -3,10 +3,17 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { usePersistedCollapse } from '@/hooks';
 import type { CareTask } from '@/types';
 import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
-import { SectionTitle } from './SectionTitle';
+import { CollapsibleSection } from './CollapsibleSection';
+
+const REMINDERS_COLLAPSED_KEY = 'broto:garden-reminders-collapsed';
+
+function remindersSectionTitle(count: number): string {
+  return count > 0 ? `Lembretes (${count})` : 'Lembretes';
+}
 
 type GardenRemindersSectionProps = {
   tasks: CareTask[];
@@ -17,27 +24,33 @@ export function GardenRemindersSection({ tasks, onToggle }: Readonly<GardenRemin
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { isCollapsed, toggleCollapsed } = usePersistedCollapse(REMINDERS_COLLAPSED_KEY);
 
   const reminders = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
 
   return (
     <Card style={styles.section}>
-      <View style={styles.remindersHeader}>
-        <SectionTitle style={styles.remindersSectionTitle}>Lembretes</SectionTitle>
-        <Pressable style={styles.addReminderButton} onPress={() => router.push('/task/new')} hitSlop={8}>
-          <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-        </Pressable>
-      </View>
-
-      {reminders.length === 0 ? (
-        <Text style={styles.emptyRemindersText}>Nenhum lembrete ainda. Toque no + pra criar o primeiro.</Text>
-      ) : (
-        reminders.map((task) => (
-          <View key={task.id} style={styles.reminderItemSpacing}>
-            <CareTaskItem task={task} onToggle={onToggle} />
-          </View>
-        ))
-      )}
+      <CollapsibleSection
+        title={remindersSectionTitle(reminders.length)}
+        style={styles.collapsibleSection}
+        headerAction={
+          <Pressable style={styles.addReminderButton} onPress={() => router.push('/task/new')} hitSlop={8}>
+            <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+          </Pressable>
+        }
+        isCollapsed={isCollapsed}
+        onToggleCollapsed={toggleCollapsed}
+      >
+        {reminders.length === 0 ? (
+          <Text style={styles.emptyRemindersText}>Nenhum lembrete ainda. Toque no + pra criar o primeiro.</Text>
+        ) : (
+          reminders.map((task) => (
+            <View key={task.id} style={styles.reminderItemSpacing}>
+              <CareTaskItem task={task} onToggle={onToggle} />
+            </View>
+          ))
+        )}
+      </CollapsibleSection>
     </Card>
   );
 }
@@ -47,12 +60,7 @@ const makeStyles = (colors: ThemeColors) =>
     section: {
       marginBottom: Metrics.spacing.lg,
     },
-    remindersHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    remindersSectionTitle: {
+    collapsibleSection: {
       marginBottom: 0,
     },
     addReminderButton: {
@@ -66,7 +74,6 @@ const makeStyles = (colors: ThemeColors) =>
     emptyRemindersText: {
       fontSize: 13,
       color: colors.mutedForeground,
-      marginTop: Metrics.spacing.sm,
     },
     reminderItemSpacing: {
       marginTop: Metrics.spacing.sm,
