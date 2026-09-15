@@ -5,7 +5,15 @@ import * as Location from 'expo-location';
 import { i18n, useTranslation } from '@/i18n';
 import { useAuth } from './useAuth';
 import { useEvents } from './useEvents';
-import { cancelAttendance, confirmAttendance, createPost, getEventAttendees, getEventById } from '@/services';
+import {
+  BOOST_DURATION_HOURS,
+  boostContent,
+  cancelAttendance,
+  confirmAttendance,
+  createPost,
+  getEventAttendees,
+  getEventById,
+} from '@/services';
 import { confirm, Toast } from '@/utils';
 import { EVENT_STATUS } from '@/types';
 
@@ -77,6 +85,23 @@ async function performToggleAttendance(
     onDone();
   } catch (err) {
     Toast.error(err instanceof Error ? err.message : i18n.t('event:rsvpUpdateError'));
+  } finally {
+    setIsActing(false);
+  }
+}
+
+async function performEventBoost(
+  eventId: string,
+  setIsActing: (value: boolean) => void,
+  onDone: () => void
+): Promise<void> {
+  setIsActing(true);
+  try {
+    await boostContent('event', eventId);
+    onDone();
+    Toast.success(i18n.t('event:boostSuccess', { hours: BOOST_DURATION_HOURS }));
+  } catch (err) {
+    Toast.error(err instanceof Error ? err.message : i18n.t('event:boostError'));
   } finally {
     setIsActing(false);
   }
@@ -160,6 +185,11 @@ export function useEventDetail(id: string) {
     performEventCancel(event.id, cancelEventById, setIsActing);
   };
 
+  const handleBoost = () => {
+    if (!event) return;
+    performEventBoost(event.id, setIsActing, invalidateEvent);
+  };
+
   const handlePressOwner = () => {
     if (!event) return;
     router.push({ pathname: '/profile/[id]', params: { id: event.userId } });
@@ -199,6 +229,7 @@ export function useEventDetail(id: string) {
     handleToggleAttendance,
     handleDelete,
     handleCancelEvent,
+    handleBoost,
     handlePressOwner,
     handlePressAttendee,
     handleOpenShareModal,

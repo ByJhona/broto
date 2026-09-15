@@ -20,11 +20,12 @@ type PlantListingRow = {
   longitude: number;
   status: ListingStatus;
   created_at: string;
+  boosted_until: string | null;
   owner: { name: string | null; username: string | null; avatar_url: string | null } | null;
 };
 
 const PLANT_LISTING_SELECT =
-  'id, user_id, plant_id, listing_type, title, description, photo_urls, price_cents, latitude, longitude, status, created_at, owner:profiles!user_id(name, username, avatar_url)';
+  'id, user_id, plant_id, listing_type, title, description, photo_urls, price_cents, latitude, longitude, status, created_at, boosted_until, owner:profiles!user_id(name, username, avatar_url)';
 
 function mapPlantListingRow(row: PlantListingRow): PlantListing {
   return {
@@ -42,6 +43,7 @@ function mapPlantListingRow(row: PlantListingRow): PlantListing {
     createdAt: row.created_at,
     ownerName: row.owner?.name || row.owner?.username || null,
     ownerAvatarUrl: row.owner?.avatar_url ?? null,
+    boostedUntil: row.boosted_until,
   };
 }
 
@@ -51,6 +53,7 @@ export async function getAvailableListings(): Promise<PlantListing[]> {
     .select(PLANT_LISTING_SELECT)
     .eq('status', LISTING_STATUS.AVAILABLE)
     .is('deleted_at', null)
+    .order('boosted_until', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
 
   if (error) throw error;

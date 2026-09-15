@@ -31,4 +31,5 @@ export type PlantListing = {
   createdAt: string;
   ownerName: string | null;
   ownerAvatarUrl: string | null;
+  boostedUntil: string | null;
 };

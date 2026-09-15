@@ -1,5 +1,6 @@
 export * from './appVersion';
 export * from './auth';
+export * from './boosts';
 export * from './careTasks';
 export * from './chat';
 export * from './credits';

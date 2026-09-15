@@ -25,6 +25,9 @@
 
   "markCompletedAction": "Marcar como concluída",
   "markExpiredAction": "Marcar como expirada",
+  "boostListingAction": "Impulsionar oferta",
+  "boostSuccess": "Oferta impulsionada por {{hours}}h!",
+  "boostError": "Não foi possível impulsionar a oferta.",
   "reactivateListingAction": "Reativar oferta",
   "shareToCommunityAction": "Compartilhar na Comunidade",
   "deleteListingAction": "Excluir oferta",

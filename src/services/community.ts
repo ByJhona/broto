@@ -9,6 +9,8 @@ import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type C
 const PAGE_SIZE = 10;
 export const MAX_POST_PHOTOS = 5;
 
+const FEATURED_POSTS_LIMIT = 10;
+
 const POST_SELECT = `
   *,
   profiles!posts_user_id_fkey (name, username, avatar_url),
@@ -56,6 +58,7 @@ type PostRow = {
   listing_id: string | null;
   event_id: string | null;
   created_at: string;
+  boosted_until: string | null;
   profiles: {
     name: string | null;
     username: string | null;
@@ -125,6 +128,7 @@ function formatPost(row: PostRow): CommunityPost {
       : null,
     likeCount: row.post_likes?.[0]?.count || 0,
     liked: (row.likedByUser?.[0]?.count || 0) > 0,
+    boostedUntil: row.boosted_until,
     comments: (row.post_comments || [])
       .slice()
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -189,6 +193,25 @@ export async function getCommunityPosts(
   const nextCursor = rows.length === PAGE_SIZE ? rows[rows.length - 1].created_at : null;
 
   return { posts, nextCursor };
+}
+
+export async function getFeaturedPosts(userId: string): Promise<CommunityPost[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('likedByUser.user_id', userId)
+    .is('deleted_at', null)
+    .is('post_comments.deleted_at', null)
+    .gt('boosted_until', new Date().toISOString())
+    .order('boosted_until', { ascending: false })
+    .limit(FEATURED_POSTS_LIMIT);
+
+  if (error) {
+    console.error('Error fetching featured posts:', error);
+    return [];
+  }
+
+  return (data as unknown as PostRow[]).map(formatPost);
 }
 
 export async function getPostById(postId: string, userId: string): Promise<CommunityPost | null> {

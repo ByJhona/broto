@@ -20,6 +20,7 @@ export * from './EventCard';
 export * from './ExchangePlantPickerModal';
 export * from './ExpandableCard';
 export * from './CreateChoiceSheet';
+export * from './FeaturedBadge';
 export * from './FilterChipRow';
 export * from './FormError';
 export * from './FormField';

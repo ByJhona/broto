@@ -25,6 +25,9 @@
 
   "markCompletedAction": "Mark as completed",
   "markExpiredAction": "Mark as expired",
+  "boostListingAction": "Boost listing",
+  "boostSuccess": "Listing boosted for {{hours}}h!",
+  "boostError": "Couldn't boost the listing.",
   "reactivateListingAction": "Reactivate listing",
   "shareToCommunityAction": "Share to Community",
   "deleteListingAction": "Delete listing",

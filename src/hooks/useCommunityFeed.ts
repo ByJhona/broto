@@ -5,6 +5,7 @@ import { i18n } from '@/i18n';
 import { useAuth } from './useAuth';
 import {
   getCommunityPosts,
+  getFeaturedPosts,
   getPostById,
   createPost,
   toggleLike,
@@ -16,6 +17,8 @@ import {
   removePostFromAllFeeds,
   removeCommentFromAllFeeds,
   subscribeToNewPosts,
+  boostContent,
+  BOOST_DURATION_HOURS,
   type CommunityPostsQueryData,
   type NewPostEvent,
 } from '@/services';
@@ -64,6 +67,12 @@ export function useCommunityFeed() {
   });
 
   const followedAuthorIds = followingIdsQuery.data ?? null;
+
+  const featuredPostsQuery = useQuery({
+    queryKey: ['featured-posts', user?.id],
+    queryFn: () => getFeaturedPosts(user!.id),
+    enabled: !!user?.id,
+  });
 
   const queryKey = useMemo(() => ['community-posts', scope, filter, user?.id] as const, [scope, filter, user?.id]);
 
@@ -210,6 +219,20 @@ export function useCommunityFeed() {
     [queryClient, queryKey]
   );
 
+  const handleBoostPost = useCallback(
+    async (postId: string) => {
+      try {
+        const boostedUntil = await boostContent('post', postId);
+        updatePostInAllFeeds(queryClient, postId, (post) => ({ ...post, boostedUntil }));
+        queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
+        Toast.success(i18n.t('community:boostSuccess', { hours: BOOST_DURATION_HOURS }));
+      } catch (err) {
+        Toast.error(err instanceof Error ? err.message : i18n.t('community:boostError'));
+      }
+    },
+    [queryClient]
+  );
+
   const handleDeleteComment = useCallback(
     async (commentId: string) => {
       const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
@@ -230,6 +253,7 @@ export function useCommunityFeed() {
   return {
     user,
     posts,
+    featuredPosts: featuredPostsQuery.data ?? [],
     isInitialLoading,
     refreshing,
     postsQuery,
@@ -249,5 +273,6 @@ export function useCommunityFeed() {
     handlePressEvent,
     handleDeletePost,
     handleDeleteComment,
+    handleBoostPost,
   };
 }

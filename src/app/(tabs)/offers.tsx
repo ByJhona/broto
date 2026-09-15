@@ -10,7 +10,8 @@ import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { DistancePill, EmptyState, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
+import { DistancePill, EmptyState, FeaturedBadge, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
+import { isBoostActive } from '@/services';
 import { useEvents, useListings, useUserLocation } from '@/hooks';
 import {
   EVENT_COLOR,
@@ -145,13 +146,16 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
               variant="card"
               style={styles.row}
               leading={
-                coverPhotoUrl ? (
-                  <Image source={{ uri: coverPhotoUrl }} style={styles.thumb} contentFit="cover" />
-                ) : (
-                  <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: color }]}>
-                    <Icon size={20} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-                  </View>
-                )
+                <View style={styles.thumbWrapper}>
+                  {coverPhotoUrl ? (
+                    <Image source={{ uri: coverPhotoUrl }} style={styles.thumb} contentFit="cover" />
+                  ) : (
+                    <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: color }]}>
+                      <Icon size={20} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                    </View>
+                  )}
+                  {isBoostActive(item.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
+                </View>
               }
               title={item.title}
               titleTrailing={
@@ -212,13 +216,16 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
               variant="card"
               style={styles.row}
               leading={
-                item.photoUrl ? (
-                  <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
-                ) : (
-                  <View style={[styles.thumb, styles.thumbPlaceholder]}>
-                    <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-                  </View>
-                )
+                <View style={styles.thumbWrapper}>
+                  {item.photoUrl ? (
+                    <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
+                  ) : (
+                    <View style={[styles.thumb, styles.thumbPlaceholder]}>
+                      <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+                    </View>
+                  )}
+                  {isBoostActive(item.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
+                </View>
               }
               title={item.title}
               subtitle={subtitle}
@@ -337,6 +344,14 @@ const makeStyles = (colors: ThemeColors) =>
     thumbPlaceholder: {
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    thumbWrapper: {
+      position: 'relative',
+    },
+    thumbBadge: {
+      position: 'absolute',
+      bottom: -4,
+      right: -4,
     },
     typeBadge: {
       flexDirection: 'row',

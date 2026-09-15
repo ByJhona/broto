@@ -64,6 +64,37 @@ function CommunityFilterChips({ filter, onChange, styles }: Readonly<CommunityFi
   );
 }
 
+type FeaturedPostsSectionProps = {
+  feed: ReturnType<typeof useCommunityFeed>;
+  styles: Styles;
+};
+
+function FeaturedPostsSection({ feed, styles }: Readonly<FeaturedPostsSectionProps>) {
+  const { t } = useTranslation('community');
+  if (feed.featuredPosts.length === 0) return null;
+
+  return (
+    <View style={styles.featuredSection}>
+      <SectionTitle style={styles.postsSectionTitle}>{t('featuredSectionTitle')}</SectionTitle>
+      {feed.featuredPosts.map((post) => (
+        <CommunityPostCard
+          key={post.id}
+          post={post}
+          currentUserId={feed.user?.id}
+          onToggleLike={feed.handleToggleLike}
+          onAddComment={feed.handleAddComment}
+          onDelete={feed.handleDeletePost}
+          onDeleteComment={feed.handleDeleteComment}
+          onBoost={feed.handleBoostPost}
+          onPressAuthor={feed.handlePressAuthor}
+          onPressListing={feed.handlePressListing}
+          onPressEvent={feed.handlePressEvent}
+        />
+      ))}
+    </View>
+  );
+}
+
 type CommunityFeedHeaderProps = {
   feed: ReturnType<typeof useCommunityFeed>;
   colors: ThemeColors;
@@ -93,6 +124,8 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<Commun
       <View style={styles.filtersRow}>
         <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
       </View>
+
+      <FeaturedPostsSection feed={feed} styles={styles} />
 
       <SectionTitle style={styles.postsSectionTitle}>{t('postsSectionTitle')}</SectionTitle>
 
@@ -143,6 +176,7 @@ export default function CommunityScreen() {
         onAddComment={feed.handleAddComment}
         onDelete={feed.handleDeletePost}
         onDeleteComment={feed.handleDeleteComment}
+        onBoost={feed.handleBoostPost}
         onPressAuthor={feed.handlePressAuthor}
         onPressListing={feed.handlePressListing}
         onPressEvent={feed.handlePressEvent}
@@ -204,6 +238,9 @@ const makeStyles = (colors: ThemeColors) =>
   },
   postsSectionTitle: {
     marginBottom: Metrics.spacing.md,
+  },
+  featuredSection: {
+    marginBottom: Metrics.spacing.lg,
   },
   scopeControl: {
     marginBottom: Metrics.spacing.md,

@@ -20,4 +20,5 @@ export type PlantEvent = {
   ownerAvatarUrl: string | null;
   attendeeCount: number;
   isAttending: boolean;
+  boostedUntil: string | null;
 };

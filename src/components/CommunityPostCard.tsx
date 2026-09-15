@@ -8,6 +8,7 @@ import Lightbulb from 'lucide-react-native/icons/lightbulb';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import MoreVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Send from 'lucide-react-native/icons/send';
+import Sparkles from 'lucide-react-native/icons/sparkles';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
@@ -29,8 +30,10 @@ import {
   LISTING_TYPE_ICONS,
   listingBadgeLabel,
 } from '@/utils';
+import { isBoostActive } from '@/services';
 import { Avatar } from './Avatar';
 import { Card } from './Card';
+import { FeaturedBadge } from './FeaturedBadge';
 import { IconBadge } from './IconBadge';
 import { ListRow } from './ListRow';
 import { PostPhotoGallery } from './PostPhotoGallery';
@@ -59,7 +62,8 @@ function usePostCardState(
   post: CommunityPost,
   onAddComment: (postId: string, text: string) => Promise<void>,
   onDelete?: (postId: string) => void,
-  onDeleteComment?: (commentId: string) => void
+  onDeleteComment?: (commentId: string) => void,
+  onBoost?: (postId: string) => void
 ) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -100,6 +104,11 @@ function usePostCardState(
     if (confirmed) onDeleteComment?.(commentId);
   };
 
+  const handleBoost = () => {
+    setIsMenuOpen(false);
+    onBoost?.(post.id);
+  };
+
   return {
     isCommentsOpen,
     toggleComments: () => setIsCommentsOpen((open) => !open),
@@ -114,19 +123,21 @@ function usePostCardState(
     handleSendComment,
     handleDelete,
     handleDeleteComment,
+    handleBoost,
   };
 }
 
 type PostMenuProps = {
   isOpen: boolean;
   onToggle: () => void;
+  onBoost: () => void;
   onDelete: () => void;
 };
 
-function PostMenu({ isOpen, onToggle, onDelete }: Readonly<PostMenuProps>) {
+function PostMenu({ isOpen, onToggle, onBoost, onDelete }: Readonly<PostMenuProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'community']);
   return (
     <View>
       <Pressable style={styles.menuButton} onPress={onToggle} hitSlop={8}>
@@ -134,6 +145,10 @@ function PostMenu({ isOpen, onToggle, onDelete }: Readonly<PostMenuProps>) {
       </Pressable>
       {isOpen ? (
         <View style={styles.menu}>
+          <Pressable style={styles.menuItem} onPress={onBoost}>
+            <Sparkles size={14} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+            <Text style={styles.menuItemTextPrimary}>{t('community:boostPostAction')}</Text>
+          </Pressable>
           <Pressable style={styles.menuItem} onPress={onDelete}>
             <Trash2 size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
             <Text style={styles.menuItemText}>{t('delete')}</Text>
@@ -358,6 +373,7 @@ type PostHeaderProps = {
   isOwnPost: boolean;
   isMenuOpen: boolean;
   onToggleMenu: () => void;
+  onBoost: () => void;
   onDelete: () => void;
   onPressAuthor?: (authorId: string) => void;
   colors: ThemeColors;
@@ -369,6 +385,7 @@ function PostHeader({
   isOwnPost,
   isMenuOpen,
   onToggleMenu,
+  onBoost,
   onDelete,
   onPressAuthor,
   colors,
@@ -384,12 +401,13 @@ function PostHeader({
         subtitle={postMetaText(post)}
         onPress={authorPressHandler(onPressAuthor, post.authorId)}
       />
+      {isBoostActive(post.boostedUntil) ? <FeaturedBadge /> : null}
       {TypeIcon ? (
         <IconBadge size={28}>
           <TypeIcon size={14} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
       ) : null}
-      {isOwnPost ? <PostMenu isOpen={isMenuOpen} onToggle={onToggleMenu} onDelete={onDelete} /> : null}
+      {isOwnPost ? <PostMenu isOpen={isMenuOpen} onToggle={onToggleMenu} onBoost={onBoost} onDelete={onDelete} /> : null}
     </View>
   );
 }
@@ -420,6 +438,7 @@ type CommunityPostCardProps = {
   onPressEvent?: (eventId: string) => void;
   onDelete?: (postId: string) => void;
   onDeleteComment?: (commentId: string) => void;
+  onBoost?: (postId: string) => void;
 };
 
 export const CommunityPostCard = memo(function CommunityPostCard({
@@ -432,11 +451,12 @@ export const CommunityPostCard = memo(function CommunityPostCard({
   onPressEvent,
   onDelete,
   onDeleteComment,
+  onBoost,
 }: Readonly<CommunityPostCardProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const isOwnPost = !!currentUserId && currentUserId === post.authorId;
-  const state = usePostCardState(post, onAddComment, onDelete, onDeleteComment);
+  const state = usePostCardState(post, onAddComment, onDelete, onDeleteComment, onBoost);
 
   return (
     <Card style={styles.card}>
@@ -445,6 +465,7 @@ export const CommunityPostCard = memo(function CommunityPostCard({
         isOwnPost={isOwnPost}
         isMenuOpen={state.isMenuOpen}
         onToggleMenu={state.toggleMenu}
+        onBoost={state.handleBoost}
         onDelete={state.handleDelete}
         onPressAuthor={onPressAuthor}
         colors={colors}
@@ -534,6 +555,11 @@ const makeStyles = (colors: ThemeColors) =>
     fontSize: 13,
     fontWeight: '600',
     color: colors.destructive,
+  },
+  menuItemTextPrimary: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
   },
   caption: {
     fontSize: 14,

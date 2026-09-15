@@ -54,13 +54,14 @@ export class InsufficientCreditsError extends Error {
   }
 }
 
-export type CreditSpendReason = 'identification' | 'diagnosis' | 'growth_check' | 'chat_question';
+export type CreditSpendReason = 'identification' | 'diagnosis' | 'growth_check' | 'chat_question' | 'boost_content';
 
 export const CREDIT_COSTS: Record<CreditSpendReason, number> = {
   identification: 2,
   diagnosis: 4,
   growth_check: 2,
   chat_question: 1,
+  boost_content: 20,
 };
 
 export type PlanCatalogItem = {

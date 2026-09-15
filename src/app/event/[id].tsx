@@ -10,6 +10,7 @@ import {
   Card,
   EmptyState,
   EventAttendeesSection,
+  FeaturedBadge,
   LoadingScreen,
   OwnerRow,
   PlantHero,
@@ -19,6 +20,7 @@ import {
   SubmitButton,
 } from '@/components';
 import { useEventDetail } from '@/hooks';
+import { isBoostActive } from '@/services';
 import { Alert, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
 import type { PlantEvent } from '@/types';
 import { useTranslation } from '@/i18n';
@@ -29,10 +31,11 @@ function buildEventActionButtons(
   t: Translate,
   isCancelled: boolean,
   isPast: boolean,
-  handlers: { onShare: () => void; onCancel: () => void; onDelete: () => void }
+  handlers: { onShare: () => void; onCancel: () => void; onBoost: () => void; onDelete: () => void }
 ): AlertButton[] {
   const buttons: AlertButton[] = [{ text: t('shareToCommunity'), onPress: handlers.onShare }];
   if (!isCancelled && !isPast) {
+    buttons.push({ text: t('boostEventAction'), onPress: handlers.onBoost });
     buttons.push({ text: t('cancelEventAction'), style: 'destructive', onPress: handlers.onCancel });
   }
   buttons.push({ text: t('deleteEventAction'), style: 'destructive', onPress: handlers.onDelete });
@@ -77,18 +80,24 @@ type EventHeroProps = {
   photoUrl: string | null;
   title: string;
   eventDate: string;
+  featured: boolean;
   styles: Styles;
 };
 
-function EventHero({ photoUrl, title, eventDate, styles }: Readonly<EventHeroProps>) {
+function EventHero({ photoUrl, title, eventDate, featured, styles }: Readonly<EventHeroProps>) {
   if (photoUrl) {
-    return <PlantHero photoUrl={photoUrl} name={title} species={formatEventDateTime(eventDate)} />;
+    return (
+      <PlantHero photoUrl={photoUrl} name={title} species={formatEventDateTime(eventDate)}>
+        {featured ? <FeaturedBadge style={styles.featuredBadgeFloating} /> : null}
+      </PlantHero>
+    );
   }
 
   return (
     <>
       <View style={styles.heroPlaceholder}>
         <EVENT_ICON size={Metrics.icon.xl} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+        {featured ? <FeaturedBadge style={styles.featuredBadgeFloating} /> : null}
       </View>
       <View style={styles.plainHeader}>
         <Text style={styles.plainHeaderName}>{title}</Text>
@@ -178,6 +187,7 @@ export default function EventDetailScreen() {
     const buttons = buildEventActionButtons(t, detail.isCancelled, detail.isPast, {
       onShare: detail.handleOpenShareModal,
       onCancel: detail.handleCancelEvent,
+      onBoost: detail.handleBoost,
       onDelete: detail.handleDelete,
     });
     Alert.alert(t('editEventActionsTitle'), undefined, buttons);
@@ -189,7 +199,13 @@ export default function EventDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
       <Stack.Screen options={buildEventHeaderOptions(detail.isOwner, detail.isActing, colors, handleOpenActions)} />
 
-      <EventHero photoUrl={event.photoUrl} title={event.title} eventDate={event.eventDate} styles={styles} />
+      <EventHero
+        photoUrl={event.photoUrl}
+        title={event.title}
+        eventDate={event.eventDate}
+        featured={isBoostActive(event.boostedUntil)}
+        styles={styles}
+      />
 
       <ScreenContent>
         <EventMetaCard
@@ -237,11 +253,17 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.background,
     },
     heroPlaceholder: {
+      position: 'relative',
       width: '100%',
       height: 260,
       backgroundColor: colors.muted,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    featuredBadgeFloating: {
+      position: 'absolute',
+      top: Metrics.spacing.md,
+      right: Metrics.spacing.md,
     },
     plainHeader: {
       alignItems: 'center',

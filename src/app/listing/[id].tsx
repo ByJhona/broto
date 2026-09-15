@@ -25,10 +25,13 @@ import {
 } from '@/components';
 import { useAuth, useListings, usePlants } from '@/hooks';
 import {
+  BOOST_DURATION_HOURS,
+  boostContent,
   createPost,
   getListingById,
   getListingProposals,
   hasSentProposal,
+  isBoostActive,
   respondToProposal,
   sendInterestProposal,
   sendOfferProposal,
@@ -55,6 +58,7 @@ type ListingActionHandlers = {
   onMarkExpired: () => void;
   onReactivate: () => void;
   onShare: () => void;
+  onBoost: () => void;
   onDelete: () => void;
 };
 
@@ -63,6 +67,7 @@ function buildListingActionButtons(status: ListingStatus, handlers: ListingActio
   if (status === LISTING_STATUS.AVAILABLE) {
     buttons.push({ text: t('markCompletedAction'), onPress: handlers.onMarkCompleted });
     buttons.push({ text: t('markExpiredAction'), onPress: handlers.onMarkExpired });
+    buttons.push({ text: t('boostListingAction'), onPress: handlers.onBoost });
   }
   if (status === LISTING_STATUS.EXPIRED) {
     buttons.push({ text: t('reactivateListingAction'), onPress: handlers.onReactivate });
@@ -282,6 +287,20 @@ export default function ListingDetailScreen() {
     }
   };
 
+  const handleBoost = async () => {
+    setIsActing(true);
+    try {
+      await boostContent('listing', listing.id);
+      queryClient.invalidateQueries({ queryKey: ['plant-listing', id] });
+      queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
+      Toast.success(t('boostSuccess', { hours: BOOST_DURATION_HOURS }));
+    } catch (err) {
+      Toast.error(err instanceof Error ? err.message : t('boostError'));
+    } finally {
+      setIsActing(false);
+    }
+  };
+
   const handleDelete = async () => {
     const confirmed = await confirm(t('deleteConfirmTitle'), t('deleteConfirmMessage'), {
       confirmLabel: t('deleteConfirmLabel'),
@@ -334,6 +353,7 @@ export default function ListingDetailScreen() {
           onMarkExpired: handleMarkExpired,
           onReactivate: handleReactivate,
           onShare: handleOpenShareModal,
+          onBoost: handleBoost,
           onDelete: handleDelete,
         },
         t
@@ -369,6 +389,7 @@ export default function ListingDetailScreen() {
         typeColor={LISTING_TYPE_COLORS[listing.listingType]}
         typeLabel={listingTypeLabel(listing.listingType)}
         priceLabel={listing.priceCents != null ? formatPrice(listing.priceCents) : null}
+        featured={isBoostActive(listing.boostedUntil)}
       />
 
       <ScreenContent>

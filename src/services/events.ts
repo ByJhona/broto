@@ -16,12 +16,13 @@ type EventRow = {
   longitude: number;
   status: EventStatus;
   created_at: string;
+  boosted_until: string | null;
   owner: { name: string | null; username: string | null; avatar_url: string | null } | null;
   attendees: { count: number }[];
 };
 
 const EVENT_SELECT =
-  'id, user_id, title, description, photo_url, event_date, latitude, longitude, status, created_at, owner:profiles!user_id(name, username, avatar_url), attendees:event_attendees(count)';
+  'id, user_id, title, description, photo_url, event_date, latitude, longitude, status, created_at, boosted_until, owner:profiles!user_id(name, username, avatar_url), attendees:event_attendees(count)';
 
 async function getAttendingEventIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase.from('event_attendees').select('event_id').eq('user_id', userId);
@@ -45,6 +46,7 @@ function mapEventRow(row: EventRow, attendingEventIds: Set<string>): PlantEvent 
     ownerAvatarUrl: row.owner?.avatar_url ?? null,
     attendeeCount: row.attendees?.[0]?.count ?? 0,
     isAttending: attendingEventIds.has(row.id),
+    boostedUntil: row.boosted_until,
   };
 }
 
@@ -55,6 +57,7 @@ export async function getUpcomingEvents(userId?: string | null): Promise<PlantEv
     .gte('event_date', new Date().toISOString())
     .eq('status', EVENT_STATUS.ACTIVE)
     .is('deleted_at', null)
+    .order('boosted_until', { ascending: false, nullsFirst: false })
     .order('event_date', { ascending: true });
 
   if (error) throw error;

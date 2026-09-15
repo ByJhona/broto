@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { FeaturedBadge } from './FeaturedBadge';
 import { PhotoViewerModal } from './PhotoViewerModal';
 
 const HERO_HEIGHT = 260;
@@ -13,6 +14,7 @@ type ListingPhotoGalleryProps = {
   typeColor: string;
   typeLabel: string;
   priceLabel?: string | null;
+  featured?: boolean;
 };
 
 export function ListingPhotoGallery({
@@ -22,6 +24,7 @@ export function ListingPhotoGallery({
   typeColor,
   typeLabel,
   priceLabel,
+  featured,
 }: Readonly<ListingPhotoGalleryProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -58,8 +61,10 @@ export function ListingPhotoGallery({
           </View>
         </View>
 
+        {featured ? <FeaturedBadge style={styles.featuredBadgeFloating} /> : null}
+
         {photoUrls.length > 0 ? (
-          <View style={styles.photoCounter}>
+          <View style={[styles.photoCounter, featured && styles.photoCounterBelowFeatured]}>
             <Text style={styles.photoCounterText}>
               {photoIndex + 1}/{photoUrls.length}
             </Text>
@@ -100,6 +105,14 @@ const makeStyles = (colors: ThemeColors) =>
       borderRadius: Metrics.radius.full,
       paddingVertical: 4,
       paddingHorizontal: Metrics.spacing.sm,
+    },
+    photoCounterBelowFeatured: {
+      top: Metrics.spacing.md * 2 + 20,
+    },
+    featuredBadgeFloating: {
+      position: 'absolute',
+      top: Metrics.spacing.md,
+      right: Metrics.spacing.md,
     },
     photoCounterText: {
       fontSize: 12,

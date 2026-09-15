@@ -53,4 +53,5 @@ export type CommunityPost = {
   likeCount: number;
   liked: boolean;
   comments: CommunityComment[];
+  boostedUntil: string | null;
 };
