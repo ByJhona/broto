@@ -47,6 +47,11 @@ export type PlantCommonProblem = {
   likelyCause: string;
 };
 
+export type PlantReferencePhoto = {
+  url: string;
+  sourceUrl: string;
+};
+
 export type PlantSpeciesInfo = {
   scientificName: string;
   description: string;
@@ -62,6 +67,7 @@ export type PlantSpeciesInfo = {
   funFacts: string[];
   commonProblems: PlantCommonProblem[];
   origin: string | null;
+  referencePhotos: PlantReferencePhoto[];
 };
 
 export type SpeciesInfoDisplay = {

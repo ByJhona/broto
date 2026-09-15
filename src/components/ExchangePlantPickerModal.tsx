@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
@@ -32,7 +33,7 @@ export function ExchangePlantPickerModal({ visible, plants, onSelect, onClose }:
                 <Pressable key={plant.id} style={styles.row} onPress={() => onSelect(plant)}>
                   <View style={styles.avatar}>
                     {plant.photoUrl ? (
-                      <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} />
+                      <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
                     ) : (
                       <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                     )}

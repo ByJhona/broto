@@ -83,6 +83,55 @@ type OpenAiPlantInfo = {
   origin: string | null;
 };
 
+type ReferencePhoto = { url: string; sourceUrl: string };
+
+type CommonsSearchResponse = {
+  query?: {
+    pages?: Record<
+      string,
+      {
+        index: number;
+        imageinfo?: { thumburl: string; descriptionurl: string; mime: string }[];
+      }
+    >;
+  };
+};
+
+const REFERENCE_PHOTOS_LIMIT = 6;
+
+async function fetchReferencePhotos(scientificName: string): Promise<ReferencePhoto[]> {
+  const params = new URLSearchParams({
+    action: 'query',
+    generator: 'search',
+    gsrsearch: scientificName,
+    gsrnamespace: '6',
+    gsrlimit: String(REFERENCE_PHOTOS_LIMIT),
+    prop: 'imageinfo',
+    iiprop: 'url|mime',
+    iiurlwidth: '800',
+    format: 'json',
+  });
+
+  try {
+    const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
+      headers: { 'User-Agent': 'broto-app/1.0 (https://github.com/byjhona/broto)' },
+    });
+
+    if (!response.ok) return [];
+
+    const body = (await response.json()) as CommonsSearchResponse;
+    const pages = Object.values(body.query?.pages ?? {}).sort((a, b) => b.index - a.index);
+
+    return pages
+      .map((page) => page.imageinfo?.[0])
+      .filter((info): info is NonNullable<typeof info> => !!info && info.mime.startsWith('image/'))
+      .map((info) => ({ url: info.thumburl, sourceUrl: info.descriptionurl }));
+  } catch (error) {
+    console.error('Erro buscando fotos de referência no Wikimedia Commons:', error);
+    return [];
+  }
+}
+
 async function fetchFromOpenAi(scientificName: string, commonName: string | null): Promise<OpenAiPlantInfo> {
   const content = await callOpenAI({
     messages: [
@@ -135,8 +184,12 @@ Deno.serve(async (req) => {
   }
 
   let info: OpenAiPlantInfo;
+  let referencePhotos: ReferencePhoto[];
   try {
-    info = await fetchFromOpenAi(scientificName, body.commonName ?? null);
+    [info, referencePhotos] = await Promise.all([
+      fetchFromOpenAi(scientificName, body.commonName ?? null),
+      fetchReferencePhotos(scientificName),
+    ]);
   } catch (error) {
     console.error('Erro consultando a OpenAI:', error);
     return new Response('Não foi possível buscar informações da planta', { status: 502 });
@@ -160,6 +213,7 @@ Deno.serve(async (req) => {
         fun_facts: info.funFacts,
         common_problems: info.commonProblems,
         origin: info.origin,
+        reference_photos: referencePhotos,
       },
       { onConflict: 'scientific_name' }
     )
@@ -184,6 +238,7 @@ Deno.serve(async (req) => {
         fun_facts: info.funFacts,
         common_problems: info.commonProblems,
         origin: info.origin,
+        reference_photos: referencePhotos,
       }),
       { headers: { 'Content-Type': 'application/json' } }
     );

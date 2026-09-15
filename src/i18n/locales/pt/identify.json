@@ -1,5 +1,7 @@
 {
   "resultTitle": "Identificação",
+  "referencePhotosCaption": "Fotos: Wikimedia Commons",
+  "noReferencePhotosMessage": "Nenhuma foto de referência encontrada pra essa espécie.",
   "suggestedCareTitle": "Cuidados sugeridos",
   "wateringEvery": "Regar a cada {{days}} dias",
   "identificationSectionTitle": "Identificação",

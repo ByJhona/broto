@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image } from 'expo-image';
 import Pencil from 'lucide-react-native/icons/pencil';
 import Plus from 'lucide-react-native/icons/plus';
 import Trash2 from 'lucide-react-native/icons/trash-2';
@@ -64,7 +65,7 @@ export function PlantPhotoHero({ plant, onPhotoUrlsChange, onEditName }: Readonl
           {plant.photoUrls.map((url) => (
             <View key={url} style={{ width: windowWidth }}>
               <Pressable onPress={() => setViewerPhotoUrl(url)}>
-                <Image source={{ uri: url }} style={[styles.galleryImage, { width: windowWidth }]} />
+                <Image source={{ uri: url }} style={[styles.galleryImage, { width: windowWidth }]} contentFit="cover" />
               </Pressable>
               <Pressable style={styles.deleteBadge} onPress={() => handleRemovePhoto(url)} hitSlop={8}>
                 <IconBadge backgroundColor={Overlays.scrimMedium} size={32}>

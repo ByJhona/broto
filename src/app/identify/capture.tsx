@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -14,8 +15,10 @@ import { OfflineBanner } from '@/components';
 import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
 import type { PlantDiagnosis } from '@/types';
-import { Alert, requireLogin } from '@/utils';
+import { Alert, requireLogin, Toast } from '@/utils';
 import { useTranslation } from '@/i18n';
+
+const PLANT_SCANNING_ANIMATION = require('../../../assets/animations/plant-scanning.json');
 
 type CaptureMode = 'identify' | 'diagnose';
 
@@ -84,7 +87,6 @@ export default function CaptureScreen() {
   const { t } = useTranslation('photo');
   const [mode, setMode] = useState<CaptureMode>(params.mode === 'diagnose' ? 'diagnose' : 'identify');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -141,7 +143,6 @@ export default function CaptureScreen() {
   };
 
   const processPhoto = async (photoUri: string) => {
-    setError(null);
     setIsProcessing(true);
 
     try {
@@ -150,7 +151,7 @@ export default function CaptureScreen() {
       if (err instanceof InsufficientCreditsError) {
         if (isFocusedRef.current) showInsufficientCreditsAlert();
       } else {
-        setError(err instanceof Error ? err.message : t('processPhotoError'));
+        Toast.error(err instanceof Error ? err.message : t('processPhotoError'));
       }
     } finally {
       setIsProcessing(false);
@@ -183,7 +184,7 @@ export default function CaptureScreen() {
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      setError(t('galleryPermissionError'));
+      Toast.error(t('galleryPermissionError'));
       return;
     }
 
@@ -202,7 +203,7 @@ export default function CaptureScreen() {
   if (isProcessing) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.primary} size="large" />
+        <LottieView source={PLANT_SCANNING_ANIMATION} autoPlay loop style={styles.loadingAnimation} />
         <Text style={styles.loadingText}>{copy.loading}</Text>
       </View>
     );
@@ -224,7 +225,6 @@ export default function CaptureScreen() {
         <Pressable onPress={handlePickFromGallery}>
           <Text style={styles.galleryLink}>{t('chooseFromGalleryCta')}</Text>
         </Pressable>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
     );
   }
@@ -248,7 +248,6 @@ export default function CaptureScreen() {
             <OfflineBanner message={t('offlineMessage')} />
           </View>
         ) : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
 
       <View style={styles.controls}>
@@ -282,6 +281,10 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     backgroundColor: colors.background,
     padding: Metrics.spacing.lg,
+  },
+  loadingAnimation: {
+    width: 220,
+    height: 220,
   },
   loadingText: {
     fontSize: 15,
@@ -418,11 +421,5 @@ const makeStyles = (colors: ThemeColors) =>
   controlsSpacer: {
     width: 48,
     height: 48,
-  },
-  error: {
-    color: colors.destructive,
-    fontSize: 13,
-    marginTop: Metrics.spacing.md,
-    textAlign: 'center',
   },
   });

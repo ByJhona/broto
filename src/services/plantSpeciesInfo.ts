@@ -16,6 +16,7 @@ type PlantSpeciesInfoRow = {
   fun_facts: string[];
   common_problems: PlantSpeciesInfo['commonProblems'];
   origin: string | null;
+  reference_photos: PlantSpeciesInfo['referencePhotos'];
 };
 
 function mapRow(row: PlantSpeciesInfoRow): PlantSpeciesInfo {
@@ -34,6 +35,7 @@ function mapRow(row: PlantSpeciesInfoRow): PlantSpeciesInfo {
     funFacts: row.fun_facts,
     commonProblems: row.common_problems,
     origin: row.origin,
+    referencePhotos: row.reference_photos,
   };
 }
 
