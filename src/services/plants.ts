@@ -94,7 +94,7 @@ export async function getPlants(): Promise<PlantSummary[]> {
     .select(PLANT_SUMMARY_SELECT)
     .eq('user_id', userId)
     .is('deleted_at', null)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
 
@@ -107,7 +107,7 @@ export async function getPlantsByUserId(userId: string): Promise<PlantSummary[]>
     .select(PLANT_SUMMARY_SELECT)
     .eq('user_id', userId)
     .is('deleted_at', null)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching plants for user:', error);
@@ -123,7 +123,7 @@ export async function getPlantsByGroupId(groupId: string): Promise<PlantSummary[
     .select(PLANT_SUMMARY_SELECT)
     .eq('group_id', groupId)
     .is('deleted_at', null)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (error) throw error;
 
