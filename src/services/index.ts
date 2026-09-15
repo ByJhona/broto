@@ -2,8 +2,6 @@ export * from './appVersion';
 export * from './auth';
 export * from './careTasks';
 export * from './chat';
-export * from './exactAlarms';
-export * from './localReminders';
 export * from './credits';
 export * from './events';
 export * from './functionErrors';

@@ -16,8 +16,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
       "versionCode": 29,

@@ -1,5 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { sendExpoPushNotifications } from '../_shared/expoPush.ts';
+import { recordPushTickets, sendExpoPushNotifications } from '../_shared/expoPush.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -77,11 +77,13 @@ Deno.serve(async (req) => {
     data: { notificationId },
   }));
 
-  const { deliveredTokens, staleTokens } = await sendExpoPushNotifications(messages);
+  const { deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
 
   if (staleTokens.length > 0) {
     await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);
   }
+
+  await recordPushTickets(supabaseAdmin, tickets);
 
   return new Response(JSON.stringify({ sent: deliveredTokens.length }), {
     headers: { 'Content-Type': 'application/json' },

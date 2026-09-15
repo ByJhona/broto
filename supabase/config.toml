@@ -387,6 +387,11 @@ verify_jwt = false
 # Vault, not a Supabase user JWT.
 verify_jwt = false
 
+[functions.check-push-receipts]
+# Called by pg_cron (see the care_reminders_cron_and_receipts migration)
+# with a custom Authorization secret from Vault, not a Supabase user JWT.
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

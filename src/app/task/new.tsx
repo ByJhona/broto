@@ -12,7 +12,6 @@ import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { FormError, FormField, PillSelector, PlantPickerRow, SubmitButton } from '@/components';
 import { useCareTasks, usePlants } from '@/hooks';
-import { requestExactAlarmAccessOnce } from '@/services';
 import { useTaskCategories } from '@/utils';
 import { TASK_CATEGORY, type TaskCategory } from '@/types';
 import { useTranslation } from '@/i18n';
@@ -109,7 +108,6 @@ export default function NewTaskScreen() {
         reminderHour,
         reminderMinute,
       });
-      requestExactAlarmAccessOnce();
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('createError'));

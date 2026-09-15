@@ -1,5 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { sendExpoPushNotifications, type ExpoPushMessage } from '../_shared/expoPush.ts';
+import { recordPushTickets, sendExpoPushNotifications, type ExpoPushMessage } from '../_shared/expoPush.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -14,25 +14,30 @@ type CareTaskRow = {
   user_id: string;
   title: string;
   plant_name: string | null;
+  plant_photo_url: string | null;
   start_date: string;
   recurrence_days: number | null;
+  reminder_hour: number;
+  reminder_minute: number;
   last_completed_occurrence: string | null;
 };
 
-function brazilNow(): { hour: number; date: string } {
+function brazilNow(): { hour: number; minute: number; date: string } {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: REMINDER_TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
+    minute: '2-digit',
     hour12: false,
   }).formatToParts(new Date());
 
   const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
   const hour = Number(get('hour')) % 24;
+  const minute = Number(get('minute'));
   const date = `${get('year')}-${get('month')}-${get('day')}`;
-  return { hour, date };
+  return { hour, minute, date };
 }
 
 function addDays(date: string, days: number): string {
@@ -57,6 +62,34 @@ function currentOccurrenceDate(task: CareTaskRow, todayDate: string): string {
   return addDays(task.start_date, cyclesPassed * task.recurrence_days);
 }
 
+function isReminderTimeReached(task: CareTaskRow, currentHour: number, currentMinute: number): boolean {
+  if (task.reminder_hour < currentHour) return true;
+  return task.reminder_hour === currentHour && task.reminder_minute <= currentMinute;
+}
+
+function buildMessage(tasks: CareTaskRow[], token: string): ExpoPushMessage {
+  const title = tasks.length === 1 ? tasks[0].title : `${tasks.length} lembretes de cuidado`;
+  const body =
+    tasks.length === 1
+      ? tasks[0].plant_name
+        ? `Planta: ${tasks[0].plant_name}`
+        : 'Hora de cuidar da sua planta.'
+      : tasks.map((task) => task.title).join(', ');
+
+  const singleTaskPhoto = tasks.length === 1 ? tasks[0].plant_photo_url : null;
+
+  return {
+    to: token,
+    title,
+    body,
+    data: { careTaskIds: tasks.map((task) => task.id) },
+    channelId: 'reminders',
+    priority: 'high',
+    ...(tasks.length === 1 ? { categoryId: 'care-task' } : null),
+    ...(singleTaskPhoto ? { richContent: { image: singleTaskPhoto } } : null),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
@@ -66,11 +99,11 @@ Deno.serve(async (req) => {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const { hour, date } = brazilNow();
+  const { hour, minute, date } = brazilNow();
 
   const { data: candidateTasks, error: tasksError } = await supabaseAdmin
     .from('care_tasks')
-    .select('id, user_id, title, plant_name, start_date, recurrence_days, last_completed_occurrence')
+    .select('id, user_id, title, plant_name, plant_photo_url, start_date, recurrence_days, reminder_hour, reminder_minute, last_completed_occurrence')
     .lte('reminder_hour', hour)
     .or(`last_reminded_occurrence.is.null,last_reminded_occurrence.neq.${date}`);
 
@@ -80,6 +113,7 @@ Deno.serve(async (req) => {
   }
 
   const dueTasks = ((candidateTasks ?? []) as CareTaskRow[]).filter((task) => {
+    if (!isReminderTimeReached(task, hour, minute)) return false;
     const dueDate = currentOccurrenceDate(task, date);
     return dueDate === date && task.last_completed_occurrence !== dueDate;
   });
@@ -116,29 +150,14 @@ Deno.serve(async (req) => {
     const tokens = tokensByUser.get(userId) ?? [];
     if (tokens.length === 0) continue;
 
-    const title = tasks.length === 1 ? tasks[0].title : `${tasks.length} lembretes de cuidado`;
-    const body =
-      tasks.length === 1
-        ? tasks[0].plant_name
-          ? `Planta: ${tasks[0].plant_name}`
-          : 'Hora de cuidar da sua planta.'
-        : tasks.map((task) => task.title).join(', ');
-
     const careTaskIds = tasks.map((task) => task.id);
     for (const token of tokens) {
       queuedPushes.set(token, { userId, careTaskIds });
-      messages.push({
-        to: token,
-        title,
-        body,
-        data: { careTaskIds },
-        channelId: 'reminders',
-        ...(careTaskIds.length === 1 ? { categoryId: 'care-task' } : null),
-      });
+      messages.push(buildMessage(tasks, token));
     }
   }
 
-  const { deliveredTokens, staleTokens } = await sendExpoPushNotifications(messages);
+  const { deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
 
   const deliveredTaskIds = new Set<string>();
   const notifiedUserIds = new Set<string>();
@@ -152,6 +171,8 @@ Deno.serve(async (req) => {
   if (staleTokens.length > 0) {
     await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);
   }
+
+  await recordPushTickets(supabaseAdmin, tickets);
 
   if (deliveredTaskIds.size > 0) {
     await supabaseAdmin

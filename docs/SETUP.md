@@ -49,7 +49,7 @@ npx supabase link --project-ref qjooaimeitfrlficipgp
 npx supabase db push
 ```
 
-Isso cria todas as tabelas, policies, triggers e o `cron.schedule` de `send-care-reminders`. As extensões `pg_net` e `vault` são provisionadas automaticamente pela Supabase — não precisam ser criadas manualmente.
+Isso cria todas as tabelas, policies, triggers e o `cron.schedule` de `send-care-reminders` (a cada 15 minutos) e `check-push-receipts` (idem). As extensões `pg_net` e `vault` são provisionadas automaticamente pela Supabase — não precisam ser criadas manualmente.
 
 ### 4.3 Deployar as edge functions
 
@@ -57,7 +57,7 @@ Isso cria todas as tabelas, policies, triggers e o `cron.schedule` de `send-care
 npx supabase functions deploy
 ```
 
-Funções existentes: `revenuecat-webhook`, `plant-species-info`, `analyze-plant-growth`, `diagnose-plant`, `plant-chat`, `identify-plant`, `send-care-reminders`, `send-notification-push`.
+Funções existentes: `revenuecat-webhook`, `plant-species-info`, `analyze-plant-growth`, `diagnose-plant`, `plant-chat`, `identify-plant`, `send-care-reminders`, `send-notification-push`, `check-push-receipts`.
 
 ### 4.4 Configurar os secrets das functions
 
@@ -66,7 +66,7 @@ npx supabase secrets set OPENAI_API_KEY=<chave da OpenAI>
 npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=<valor definido no passo 5.2>
 ```
 
-`DB_WEBHOOK_SECRET` e `CRON_SECRET` não são escolhidos por você: cada migration (`notification_push` e `care_tasks_sync`) já gera o valor com `vault.create_secret` ao rodar `db push`. Depois de aplicar as migrations, copie esses valores do Vault para os secrets das functions:
+`DB_WEBHOOK_SECRET`, `CRON_SECRET` e `PUSH_RECEIPTS_CRON_SECRET` não são escolhidos por você: cada um vem de um valor gerado com `vault.create_secret` (o de `care_reminders_cron_secret` e `notification_push_secret` foi criado direto no SQL editor do projeto; o de `push_receipts_cron_secret` é criado pela migration `20260101008000_care_reminders_cron_and_receipts.sql` ao rodar `db push`, apenas se ainda não existir). Depois de aplicar as migrations, copie os três valores do Vault para os secrets das functions:
 
 ```bash
 # pegue o valor gerado
@@ -75,6 +75,9 @@ npx supabase secrets set DB_WEBHOOK_SECRET=<valor retornado>
 
 npx supabase db execute "select decrypted_secret from vault.decrypted_secrets where name = 'care_reminders_cron_secret'"
 npx supabase secrets set CRON_SECRET=<valor retornado>
+
+npx supabase db execute "select decrypted_secret from vault.decrypted_secrets where name = 'push_receipts_cron_secret'"
+npx supabase secrets set PUSH_RECEIPTS_CRON_SECRET=<valor retornado>
 ```
 
 Confira o que já está configurado com `npx supabase secrets list` e `npx supabase functions list`.

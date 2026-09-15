@@ -1,3 +1,5 @@
+import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+
 export type ExpoPushMessage = {
   to: string;
   title: string;
@@ -5,18 +7,25 @@ export type ExpoPushMessage = {
   data?: Record<string, unknown>;
   channelId?: string;
   categoryId?: string;
+  priority?: 'default' | 'normal' | 'high';
+  richContent?: { image: string };
 };
 
-type ExpoPushTicket = { status: string; details?: { error?: string } };
+type ExpoPushTicket = { status: string; id?: string; details?: { error?: string } };
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const EXPO_PUSH_CHUNK_SIZE = 100;
 
-export async function sendExpoPushNotifications(
-  messages: ExpoPushMessage[]
-): Promise<{ deliveredTokens: string[]; staleTokens: string[] }> {
+export type SendExpoPushResult = {
+  deliveredTokens: string[];
+  staleTokens: string[];
+  tickets: { token: string; ticketId: string }[];
+};
+
+export async function sendExpoPushNotifications(messages: ExpoPushMessage[]): Promise<SendExpoPushResult> {
   const deliveredTokens: string[] = [];
   const staleTokens: string[] = [];
+  const tickets: { token: string; ticketId: string }[] = [];
 
   for (let i = 0; i < messages.length; i += EXPO_PUSH_CHUNK_SIZE) {
     const chunk = messages.slice(i, i + EXPO_PUSH_CHUNK_SIZE);
@@ -33,10 +42,10 @@ export async function sendExpoPushNotifications(
     }
 
     const result = await response.json();
-    const tickets = (result.data ?? []) as ExpoPushTicket[];
+    const chunkTickets = (result.data ?? []) as ExpoPushTicket[];
 
     chunk.forEach((message, index) => {
-      const ticket = tickets[index];
+      const ticket = chunkTickets[index];
       if (ticket?.status === 'error') {
         if (ticket.details?.error === 'DeviceNotRegistered') {
           staleTokens.push(message.to);
@@ -44,8 +53,22 @@ export async function sendExpoPushNotifications(
         return;
       }
       deliveredTokens.push(message.to);
+      if (ticket?.id) tickets.push({ token: message.to, ticketId: ticket.id });
     });
   }
 
-  return { deliveredTokens, staleTokens };
+  return { deliveredTokens, staleTokens, tickets };
+}
+
+export async function recordPushTickets(
+  supabaseAdmin: SupabaseClient,
+  tickets: { token: string; ticketId: string }[]
+): Promise<void> {
+  if (tickets.length === 0) return;
+
+  const { error } = await supabaseAdmin
+    .from('push_tickets')
+    .insert(tickets.map((ticket) => ({ ticket_id: ticket.ticketId, token: ticket.token })));
+
+  if (error) console.error('Erro registrando push tickets para checagem de recibo:', error);
 }
