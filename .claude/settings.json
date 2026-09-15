@@ -1,10 +1,19 @@
 {
-  "enabledPlugins": {
-    "expo@claude-plugins-official": true
-  },
   "permissions": {
     "allow": [
-      "Bash(taskkill //PID 19544 //F //T)"
+      "Bash(taskkill //PID 19544 //F //T)",
+      "Bash(xargs grep -l \"priceString\")",
+      "Bash(npx eslint *)",
+      "Bash(curl -s \"https://qjooaimeitfrlficipgp.supabase.co/rest/v1/plans?select=id,name,description,monthly_credits,max_active_listings,max_events_per_month,max_listing_photos,credit_renewal_period\" -H \"apikey: sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\" -H \"Authorization: Bearer sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\")",
+      "Bash(curl -s \"https://qjooaimeitfrlficipgp.supabase.co/rest/v1/plans?select=id,name,revenuecat_entitlement_id,sort_order&order=sort_order\" -H \"apikey: sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\" -H \"Authorization: Bearer sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\")",
+      "Bash(curl -s \"https://qjooaimeitfrlficipgp.supabase.co/rest/v1/credit_packs?select=id,name,credits,sort_order&order=sort_order\" -H \"apikey: sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\" -H \"Authorization: Bearer sb_publishable_H5rfHHg-Oab-2cpDPJis-A_mPw6PJ4e\")",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Read(//tmp/**)",
+      "Read(//c/tmp/**)"
     ]
+  },
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true
   }
 }

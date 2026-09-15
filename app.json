@@ -2,7 +2,7 @@
   "expo": {
     "name": "Broto",
     "slug": "broto",
-    "version": "1.0.21",
+    "version": "1.0.23",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -19,7 +19,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 29,
+      "versionCode": 31,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
