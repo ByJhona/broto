@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -70,6 +70,18 @@ type SectionListProps = {
   bottomInset: number;
 };
 
+function usePullToRefresh(refresh: () => Promise<unknown>) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
+  return { isRefreshing, handleRefresh };
+}
+
 type SearchBarProps = {
   value: string;
   onChangeText: (value: string) => void;
@@ -106,10 +118,11 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('listing');
-  const { listings } = useListings();
+  const { listings, refresh } = useListings();
   const userLocation = useUserLocation();
   const [filter, setFilter] = useState<TypeFilter>(null);
   const [query, setQuery] = useState('');
+  const { isRefreshing, handleRefresh } = usePullToRefresh(refresh);
 
   const filterOptions: { value: TypeFilter; label: string }[] = [
     { value: null, label: t('filterAll') },
@@ -132,6 +145,9 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
         data={filteredListings}
         keyExtractor={(listing) => listing.id}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+        }
         ListHeaderComponent={<FilterChipRow options={filterOptions} value={filter} onChange={setFilter} style={styles.filterRow} />}
         ListEmptyComponent={<EmptyState icon={Leaf} message={t('noListingsFound')} style={styles.empty} />}
         renderItem={({ item }) => {
@@ -180,10 +196,11 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('event');
-  const { events } = useEvents();
+  const { events, refresh } = useEvents();
   const userLocation = useUserLocation();
   const [sortMode, setSortMode] = useState<EventSortMode>('proximos');
   const [query, setQuery] = useState('');
+  const { isRefreshing, handleRefresh } = usePullToRefresh(refresh);
   const EventIcon = EVENT_ICON;
 
   const sortOptions: { value: EventSortMode; label: string }[] = [
@@ -205,6 +222,9 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
         contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
         data={sortedEvents}
         keyExtractor={(event) => event.id}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+        }
         ListHeaderComponent={<FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />}
         ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
         renderItem={({ item }) => {
