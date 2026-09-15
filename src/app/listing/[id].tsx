@@ -28,9 +28,11 @@ import {
   BOOST_DURATION_HOURS,
   boostContent,
   createPost,
+  CREDIT_COSTS,
   getListingById,
   getListingProposals,
   hasSentProposal,
+  InsufficientCreditsError,
   isBoostActive,
   respondToProposal,
   sendInterestProposal,
@@ -287,6 +289,13 @@ export default function ListingDetailScreen() {
     }
   };
 
+  const showInsufficientCreditsAlert = () => {
+    Alert.alert(t('insufficientCreditsTitle'), t('boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+      { text: t('common:notNow'), style: 'cancel' },
+      { text: t('common:seePlans'), onPress: () => router.push('/profile/plans') },
+    ]);
+  };
+
   const handleBoost = async () => {
     setIsActing(true);
     try {
@@ -295,7 +304,11 @@ export default function ListingDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
       Toast.success(t('boostSuccess', { hours: BOOST_DURATION_HOURS }));
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : t('boostError'));
+      if (err instanceof InsufficientCreditsError) {
+        showInsufficientCreditsAlert();
+      } else {
+        Toast.error(t('boostError'));
+      }
     } finally {
       setIsActing(false);
     }

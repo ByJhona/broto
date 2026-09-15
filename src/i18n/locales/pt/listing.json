@@ -28,6 +28,8 @@
   "boostListingAction": "Impulsionar oferta",
   "boostSuccess": "Oferta impulsionada por {{hours}}h!",
   "boostError": "Não foi possível impulsionar a oferta.",
+  "insufficientCreditsTitle": "Créditos insuficientes",
+  "boostCreditsMessage": "Impulsionar uma oferta custa {{cost}} créditos. Quer ver os planos?",
   "reactivateListingAction": "Reativar oferta",
   "shareToCommunityAction": "Compartilhar na Comunidade",
   "deleteListingAction": "Excluir oferta",

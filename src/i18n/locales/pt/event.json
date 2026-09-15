@@ -9,6 +9,8 @@
   "boostEventAction": "Impulsionar evento",
   "boostSuccess": "Evento impulsionado por {{hours}}h!",
   "boostError": "Não foi possível impulsionar o evento.",
+  "insufficientCreditsTitle": "Créditos insuficientes",
+  "boostCreditsMessage": "Impulsionar um evento custa {{cost}} créditos. Quer ver os planos?",
   "deleteEventAction": "Excluir evento",
   "editEventActionsTitle": "Editar evento",
   "eventCancelledNotice": "Esse evento foi cancelado pelo organizador.",

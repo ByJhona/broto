@@ -28,6 +28,8 @@
   "boostListingAction": "Boost listing",
   "boostSuccess": "Listing boosted for {{hours}}h!",
   "boostError": "Couldn't boost the listing.",
+  "insufficientCreditsTitle": "Insufficient credits",
+  "boostCreditsMessage": "Boosting a listing costs {{cost}} credits. Want to see the plans?",
   "reactivateListingAction": "Reactivate listing",
   "shareToCommunityAction": "Share to Community",
   "deleteListingAction": "Delete listing",

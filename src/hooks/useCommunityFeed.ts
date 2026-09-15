@@ -19,11 +19,13 @@ import {
   subscribeToNewPosts,
   boostContent,
   BOOST_DURATION_HOURS,
+  CREDIT_COSTS,
+  InsufficientCreditsError,
   type CommunityPostsQueryData,
   type NewPostEvent,
 } from '@/services';
 import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
-import { Toast } from '@/utils';
+import { Alert, Toast } from '@/utils';
 
 export type FeedScope = 'todos' | 'seguindo';
 
@@ -227,10 +229,17 @@ export function useCommunityFeed() {
         queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
         Toast.success(i18n.t('community:boostSuccess', { hours: BOOST_DURATION_HOURS }));
       } catch (err) {
-        Toast.error(err instanceof Error ? err.message : i18n.t('community:boostError'));
+        if (err instanceof InsufficientCreditsError) {
+          Alert.alert(i18n.t('community:insufficientCreditsTitle'), i18n.t('community:boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+            { text: i18n.t('common:notNow'), style: 'cancel' },
+            { text: i18n.t('common:seePlans'), onPress: () => router.push('/profile/plans') },
+          ]);
+        } else {
+          Toast.error(i18n.t('community:boostError'));
+        }
       }
     },
-    [queryClient]
+    [queryClient, router]
   );
 
   const handleDeleteComment = useCallback(

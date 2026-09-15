@@ -15,6 +15,8 @@
   "boostPostAction": "Boost post",
   "boostSuccess": "Post boosted for {{hours}}h!",
   "boostError": "Couldn't boost the post.",
+  "insufficientCreditsTitle": "Insufficient credits",
+  "boostCreditsMessage": "Boosting a post costs {{cost}} credits. Want to see the plans?",
   "newPostsBanner_one": "{{count}} new post",
   "newPostsBanner_other": "{{count}} new posts",
   "composerPlaceholder": "What are you thinking, gardener?",

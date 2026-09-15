@@ -15,6 +15,8 @@
   "boostPostAction": "Impulsionar publicação",
   "boostSuccess": "Publicação impulsionada por {{hours}}h!",
   "boostError": "Não foi possível impulsionar a publicação.",
+  "insufficientCreditsTitle": "Créditos insuficientes",
+  "boostCreditsMessage": "Impulsionar uma publicação custa {{cost}} créditos. Quer ver os planos?",
   "newPostsBanner_one": "{{count}} post novo",
   "newPostsBanner_other": "{{count}} posts novos",
   "composerPlaceholder": "No que você está pensando, jardineiro?",

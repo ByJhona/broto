@@ -9,6 +9,8 @@
   "boostEventAction": "Boost event",
   "boostSuccess": "Event boosted for {{hours}}h!",
   "boostError": "Couldn't boost the event.",
+  "insufficientCreditsTitle": "Insufficient credits",
+  "boostCreditsMessage": "Boosting an event costs {{cost}} credits. Want to see the plans?",
   "deleteEventAction": "Delete event",
   "editEventActionsTitle": "Edit event",
   "eventCancelledNotice": "This event was cancelled by the organizer.",

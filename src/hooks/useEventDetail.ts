@@ -11,10 +11,12 @@ import {
   cancelAttendance,
   confirmAttendance,
   createPost,
+  CREDIT_COSTS,
   getEventAttendees,
   getEventById,
+  InsufficientCreditsError,
 } from '@/services';
-import { confirm, Toast } from '@/utils';
+import { Alert, confirm, Toast } from '@/utils';
 import { EVENT_STATUS } from '@/types';
 
 async function reverseGeocodeEventAddress(latitude: number, longitude: number): Promise<string | null> {
@@ -90,8 +92,16 @@ async function performToggleAttendance(
   }
 }
 
+function showInsufficientCreditsAlert(router: ReturnType<typeof useRouter>): void {
+  Alert.alert(i18n.t('event:insufficientCreditsTitle'), i18n.t('event:boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+    { text: i18n.t('common:notNow'), style: 'cancel' },
+    { text: i18n.t('common:seePlans'), onPress: () => router.push('/profile/plans') },
+  ]);
+}
+
 async function performEventBoost(
   eventId: string,
+  router: ReturnType<typeof useRouter>,
   setIsActing: (value: boolean) => void,
   onDone: () => void
 ): Promise<void> {
@@ -101,7 +111,11 @@ async function performEventBoost(
     onDone();
     Toast.success(i18n.t('event:boostSuccess', { hours: BOOST_DURATION_HOURS }));
   } catch (err) {
-    Toast.error(err instanceof Error ? err.message : i18n.t('event:boostError'));
+    if (err instanceof InsufficientCreditsError) {
+      showInsufficientCreditsAlert(router);
+    } else {
+      Toast.error(i18n.t('event:boostError'));
+    }
   } finally {
     setIsActing(false);
   }
@@ -187,7 +201,7 @@ export function useEventDetail(id: string) {
 
   const handleBoost = () => {
     if (!event) return;
-    performEventBoost(event.id, setIsActing, invalidateEvent);
+    performEventBoost(event.id, router, setIsActing, invalidateEvent);
   };
 
   const handlePressOwner = () => {
