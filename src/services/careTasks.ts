@@ -1,3 +1,4 @@
+import type { NotificationResponse } from 'expo-notifications';
 import { i18n } from '@/i18n';
 import { addDays, daysBetween, today } from '@/utils';
 import { getNotificationsModule } from './notificationsModule';
@@ -121,6 +122,16 @@ export const CARE_TASK_CATEGORY = 'care-task';
 const MARK_DONE_ACTION = 'mark-done';
 export const REMINDERS_CHANNEL_ID = 'reminders';
 
+async function handleMarkDoneResponse(response: NotificationResponse): Promise<void> {
+  if (response.actionIdentifier !== MARK_DONE_ACTION) return;
+
+  const data = response.notification.request.content.data as { careTaskId?: string; careTaskIds?: string[] } | undefined;
+  const careTaskId = data?.careTaskId ?? data?.careTaskIds?.[0];
+  if (!careTaskId) return;
+
+  await markCareTaskDoneById(careTaskId);
+}
+
 export async function registerCareTaskNotificationHandlers(): Promise<void> {
   const notifications = await getNotificationsModule();
   if (!notifications) return;
@@ -134,17 +145,10 @@ export async function registerCareTaskNotificationHandlers(): Promise<void> {
     { identifier: MARK_DONE_ACTION, buttonTitle: 'Marcar como feito', options: { opensAppToForeground: false } },
   ]);
 
-  notifications.addNotificationResponseReceivedListener(async (response) => {
-    if (response.actionIdentifier !== MARK_DONE_ACTION) return;
+  notifications.addNotificationResponseReceivedListener(handleMarkDoneResponse);
 
-    const data = response.notification.request.content.data as
-      | { careTaskId?: string; careTaskIds?: string[] }
-      | undefined;
-    const careTaskId = data?.careTaskId ?? data?.careTaskIds?.[0];
-    if (!careTaskId) return;
-
-    await markCareTaskDoneById(careTaskId);
-  });
+  const launchResponse = await notifications.getLastNotificationResponseAsync();
+  if (launchResponse) await handleMarkDoneResponse(launchResponse);
 }
 
 export async function createCareTask(input: CreateCareTaskInput): Promise<CareTask> {
