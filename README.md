@@ -8,8 +8,8 @@ Broto é um app mobile para quem cuida de plantas: identifica espécies e proble
 - Identificação de espécies por foto (IA)
 - Diagnóstico de problemas (pragas, doenças, deficiências) por foto
 - Acompanhamento de crescimento com fotos ao longo do tempo
-- Ficha de espécie (rega, luz, toxicidade) via Perenual
-- Tarefas e lembretes de cuidado, com notificação push e alarme exato no Android
+- Ficha de espécie (rega, luz, toxicidade) via IA
+- Tarefas e lembretes de cuidado, com notificação push agendada no servidor
 - Chat com IA sobre uma planta específica
 
 **Comunidade**
@@ -34,7 +34,7 @@ Broto é um app mobile para quem cuida de plantas: identifica espécies e proble
 | App | [Expo](https://expo.dev) SDK 57 · React Native · TypeScript · [expo-router](https://docs.expo.dev/router/introduction/) |
 | Estado/dados | [TanStack Query](https://tanstack.com/query) |
 | Backend | [Supabase](https://supabase.com) (Postgres, Auth, Storage, Edge Functions, Realtime) |
-| IA | OpenAI (identificação, diagnóstico, crescimento, chat), Perenual (ficha de espécie) |
+| IA | OpenAI (identificação, diagnóstico, crescimento, chat, ficha de espécie) |
 | Pagamentos | [RevenueCat](https://www.revenuecat.com) |
 | Build/distribuição | [EAS](https://docs.expo.dev/eas/) |
 
@@ -71,7 +71,7 @@ npx expo prebuild --platform android
 npx expo run:android
 ```
 
-Notificações push e alarmes exatos não funcionam no Expo Go — use sempre um dev client (`expo run:android`).
+Notificações push não funcionam no Expo Go — use sempre um dev client (`expo run:android`).
 
 ## Scripts disponíveis
 
