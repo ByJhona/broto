@@ -1,6 +1,18 @@
-import { useCallback, useMemo } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, RefreshControl, ActivityIndicator } from 'react-native';
+import { useCallback, useMemo, useRef } from 'react';
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  RefreshControl,
+  ActivityIndicator,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ArrowUp from 'lucide-react-native/icons/arrow-up';
 import Search from 'lucide-react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
@@ -89,12 +101,38 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<Commun
   );
 }
 
+type NewPostsBannerProps = {
+  count: number;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+};
+
+function NewPostsBanner({ count, onPress, style }: Readonly<NewPostsBannerProps>) {
+  const { t } = useTranslation('community');
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  if (count === 0) return null;
+
+  return (
+    <Pressable style={[styles.newPostsBanner, style]} onPress={onPress}>
+      <ArrowUp size={16} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Text style={styles.newPostsBannerText}>{t('newPostsBanner', { count })}</Text>
+    </Pressable>
+  );
+}
+
 export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const feed = useCommunityFeed();
+  const listRef = useRef<FlatList>(null);
+
+  const handleShowNewPosts = () => {
+    feed.handleShowNewPosts();
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
 
   const renderItem = useCallback(
     ({ item }: { item: CommunityPost }) => (
@@ -114,21 +152,25 @@ export default function CommunityScreen() {
   );
 
   return (
-    <FlatList
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + Metrics.spacing.lg }]}
-      showsVerticalScrollIndicator={false}
-      data={feed.posts}
-      keyExtractor={(post) => post.id}
-      renderItem={renderItem}
-      onEndReached={feed.handleLoadMore}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        <RefreshControl refreshing={feed.refreshing} onRefresh={feed.handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
-      }
-      ListHeaderComponent={<CommunityFeedHeader feed={feed} colors={colors} styles={styles} onSearch={() => router.push('/search')} />}
-      ListFooterComponent={feed.postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
-    />
+    <View style={styles.container}>
+      <FlatList
+        ref={listRef}
+        style={styles.container}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + Metrics.spacing.lg }]}
+        showsVerticalScrollIndicator={false}
+        data={feed.posts}
+        keyExtractor={(post) => post.id}
+        renderItem={renderItem}
+        onEndReached={feed.handleLoadMore}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl refreshing={feed.refreshing} onRefresh={feed.handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+        }
+        ListHeaderComponent={<CommunityFeedHeader feed={feed} colors={colors} styles={styles} onSearch={() => router.push('/search')} />}
+        ListFooterComponent={feed.postsQuery.isFetchingNextPage ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
+      />
+      <NewPostsBanner count={feed.newPostsCount} onPress={handleShowNewPosts} style={{ top: insets.top + Metrics.spacing.sm }} />
+    </View>
   );
 }
 
@@ -200,5 +242,26 @@ const makeStyles = (colors: ThemeColors) =>
   },
   loader: {
     marginVertical: Metrics.spacing.lg,
+  },
+  newPostsBanner: {
+    position: 'absolute',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: Metrics.radius.full,
+    paddingVertical: Metrics.spacing.sm,
+    paddingHorizontal: Metrics.spacing.md,
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  newPostsBannerText: {
+    color: colors.primaryForeground,
+    fontSize: 13,
+    fontWeight: '700',
   },
   });

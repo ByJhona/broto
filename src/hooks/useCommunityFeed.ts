@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { i18n } from '@/i18n';
 import { useAuth } from './useAuth';
 import {
@@ -15,7 +15,10 @@ import {
   updatePostInAllFeeds,
   removePostFromAllFeeds,
   removeCommentFromAllFeeds,
+  bumpLikeCountInAllFeeds,
+  subscribeToFeedActivity,
   type CommunityPostsQueryData,
+  type FeedActivityEvent,
 } from '@/services';
 import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
 import { Toast } from '@/utils';
@@ -33,6 +36,23 @@ function replaceFirstPagePost(old: PostsQueryData | undefined, post: CommunityPo
   return { ...old, pages: [{ ...firstPage, posts: [post, ...firstPage.posts] }, ...restPages] };
 }
 
+async function applyCommentUpdate(queryClient: QueryClient, postId: string, userId: string): Promise<void> {
+  const updated = await getPostById(postId, userId);
+  if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
+}
+
+function eventMatchesFeed(
+  event: Extract<FeedActivityEvent, { kind: 'newPost' }>,
+  scope: FeedScope,
+  filter: CommunityFeedFilter | null,
+  followedAuthorIds: string[] | null
+): boolean {
+  if (scope === 'seguindo') return !!followedAuthorIds?.includes(event.authorId);
+  if (!filter) return true;
+  if (filter === OFFER_FEED_FILTER) return event.hasListing;
+  return event.postType === filter;
+}
+
 export function useCommunityFeed() {
   const router = useRouter();
   const { user } = useAuth();
@@ -40,6 +60,7 @@ export function useCommunityFeed() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
   const [scope, setScope] = useState<FeedScope>('todos');
+  const [newPostsCount, setNewPostsCount] = useState(0);
 
   const followingIdsQuery = useQuery({
     queryKey: ['following-ids', user?.id],
@@ -65,6 +86,42 @@ export function useCommunityFeed() {
   const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
   const isInitialLoading =
     posts.length === 0 && (postsQuery.isFetching || (scope === 'seguindo' && followingIdsQuery.isFetching));
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubscribe = subscribeToFeedActivity((event) => {
+      if (event.kind === 'newPost') {
+        if (event.authorId === user.id) return;
+        if (eventMatchesFeed(event, scope, filter, followedAuthorIds)) setNewPostsCount((count) => count + 1);
+        return;
+      }
+      if (event.kind === 'likeChanged') {
+        if (event.actorId === user.id) return;
+        bumpLikeCountInAllFeeds(queryClient, event.postId, event.delta);
+        return;
+      }
+      if (event.actorId === user.id) return;
+      applyCommentUpdate(queryClient, event.postId, user.id);
+    });
+
+    return unsubscribe;
+  }, [user?.id, scope, filter, followedAuthorIds, queryClient]);
+
+  const handleSetScope = (nextScope: FeedScope) => {
+    setNewPostsCount(0);
+    setScope(nextScope);
+  };
+
+  const handleSetFilter = (nextFilter: CommunityFeedFilter | null) => {
+    setNewPostsCount(0);
+    setFilter(nextFilter);
+  };
+
+  const handleShowNewPosts = async () => {
+    setNewPostsCount(0);
+    await postsQuery.refetch();
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -193,9 +250,11 @@ export function useCommunityFeed() {
     refreshing,
     postsQuery,
     filter,
-    setFilter,
+    setFilter: handleSetFilter,
     scope,
-    setScope,
+    setScope: handleSetScope,
+    newPostsCount,
+    handleShowNewPosts,
     handleRefresh,
     handleLoadMore,
     handleToggleLike,

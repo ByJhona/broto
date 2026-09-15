@@ -1,4 +1,5 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
+import { randomUUID } from 'expo-crypto';
 import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
@@ -334,4 +335,54 @@ export function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: s
       })),
     };
   });
+}
+
+export function bumpLikeCountInAllFeeds(queryClient: QueryClient, postId: string, delta: 1 | -1) {
+  updatePostInAllFeeds(queryClient, postId, (post) => ({
+    ...post,
+    likeCount: Math.max(0, post.likeCount + delta),
+  }));
+}
+
+export type FeedActivityEvent =
+  | { kind: 'newPost'; postId: string; authorId: string; postType: CommunityPostType | null; hasListing: boolean }
+  | { kind: 'likeChanged'; postId: string; actorId: string; delta: 1 | -1 }
+  | { kind: 'commentAdded'; postId: string; actorId: string };
+
+type PostInsertPayload = {
+  id: string;
+  user_id: string;
+  post_type: CommunityPostType | null;
+  listing_id: string | null;
+  deleted_at: string | null;
+};
+
+type PostLikeRow = { post_id: string; user_id: string };
+type PostCommentInsertPayload = { post_id: string; user_id: string };
+
+export function subscribeToFeedActivity(onEvent: (event: FeedActivityEvent) => void): () => void {
+  const channel = supabase
+    .channel(`community-feed:${randomUUID()}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload) => {
+      const row = payload.new as PostInsertPayload;
+      if (row.deleted_at) return;
+      onEvent({ kind: 'newPost', postId: row.id, authorId: row.user_id, postType: row.post_type, hasListing: !!row.listing_id });
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_likes' }, (payload) => {
+      const row = payload.new as PostLikeRow;
+      onEvent({ kind: 'likeChanged', postId: row.post_id, actorId: row.user_id, delta: 1 });
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'post_likes' }, (payload) => {
+      const row = payload.old as PostLikeRow;
+      onEvent({ kind: 'likeChanged', postId: row.post_id, actorId: row.user_id, delta: -1 });
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, (payload) => {
+      const row = payload.new as PostCommentInsertPayload;
+      onEvent({ kind: 'commentAdded', postId: row.post_id, actorId: row.user_id });
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }

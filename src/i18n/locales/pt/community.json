@@ -11,6 +11,8 @@
   "recentOffersTitle": "Ofertas recentes",
   "upcomingEventsTitle": "Próximos eventos",
   "postsSectionTitle": "Publicações",
+  "newPostsBanner_one": "{{count}} post novo",
+  "newPostsBanner_other": "{{count}} posts novos",
   "composerPlaceholder": "No que você está pensando, jardineiro?",
   "postButtonLabel": "Publicar",
   "deletePostTitle": "Excluir publicação",

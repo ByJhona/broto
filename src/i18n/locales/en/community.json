@@ -11,6 +11,8 @@
   "recentOffersTitle": "Recent offers",
   "upcomingEventsTitle": "Upcoming events",
   "postsSectionTitle": "Posts",
+  "newPostsBanner_one": "{{count}} new post",
+  "newPostsBanner_other": "{{count}} new posts",
   "composerPlaceholder": "What are you thinking, gardener?",
   "postButtonLabel": "Post",
   "deletePostTitle": "Delete post",
