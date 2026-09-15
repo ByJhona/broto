@@ -120,21 +120,28 @@ async function getMessageActivity(userId: string): Promise<ConversationActivity[
   });
 }
 
-function proposalPreview(proposalType: ProposalActivityRow['proposal_type']): string {
-  return proposalType === 'offer' ? i18n.t('chat:offerPreview') : i18n.t('chat:interestPreview');
+function proposalPreview(row: ProposalActivityRow): string {
+  if (row.status === 'accepted') return i18n.t('chat:offerStatusAccepted');
+  if (row.status === 'declined') return i18n.t('chat:offerStatusDeclined');
+  return row.proposal_type === 'offer' ? i18n.t('chat:offerPreview') : i18n.t('chat:interestPreview');
+}
+
+function proposalActivityIsSender(row: ProposalActivityRow, userId: string): boolean {
+  if (row.responded_at) return row.recipient_id === userId;
+  return row.sender_id === userId;
 }
 
 async function getProposalActivity(userId: string): Promise<ConversationActivity[]> {
   const rows = await getProposalActivityForUser(userId);
 
   return rows.map((row) => {
-    const isSender = row.sender_id === userId;
+    const isOriginalSender = row.sender_id === userId;
     return {
-      otherUserId: isSender ? row.recipient_id : row.sender_id,
-      otherProfile: isSender ? row.recipient : row.sender,
-      createdAt: row.created_at,
-      preview: proposalPreview(row.proposal_type),
-      isSender,
+      otherUserId: isOriginalSender ? row.recipient_id : row.sender_id,
+      otherProfile: isOriginalSender ? row.recipient : row.sender,
+      createdAt: row.responded_at ?? row.created_at,
+      preview: proposalPreview(row),
+      isSender: proposalActivityIsSender(row, userId),
     };
   });
 }

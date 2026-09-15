@@ -14,4 +14,5 @@ export type Proposal = {
   offeredPlantPhotoUrl: string | null;
   status: OfferStatus;
   createdAt: string;
+  respondedAt: string | null;
 };

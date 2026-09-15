@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import { LISTING_STATUS, OFFER_STATUS, type OfferStatus, type Proposal, type ProposalType } from '@/types';
 
 const PROPOSAL_SELECT =
-  'id, listing_id, sender_id, recipient_id, proposal_type, offered_plant_id, status, created_at, listing:plant_listings(title), offered_plant:plants(name, photo_urls)';
+  'id, listing_id, sender_id, recipient_id, proposal_type, offered_plant_id, status, created_at, responded_at, listing:plant_listings(title), offered_plant:plants(name, photo_urls)';
 
 type ProposalRow = {
   id: string;
@@ -15,6 +15,7 @@ type ProposalRow = {
   offered_plant_id: string | null;
   status: OfferStatus;
   created_at: string;
+  responded_at: string | null;
   listing: { title: string } | null;
   offered_plant: { name: string; photo_urls: string[] } | null;
 };
@@ -32,6 +33,7 @@ function mapProposalRow(row: ProposalRow): Proposal {
     offeredPlantPhotoUrl: row.offered_plant?.photo_urls[0] ?? null,
     status: row.status,
     createdAt: row.created_at,
+    respondedAt: row.responded_at,
   };
 }
 
@@ -179,7 +181,9 @@ export type ProposalActivityRow = {
   sender_id: string;
   recipient_id: string;
   proposal_type: ProposalType;
+  status: OfferStatus;
   created_at: string;
+  responded_at: string | null;
   sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
   recipient: { name: string | null; username: string | null; avatar_url: string | null } | null;
 };
@@ -188,7 +192,7 @@ export async function getProposalActivityForUser(userId: string): Promise<Propos
   const { data, error } = await supabase
     .from('plant_listing_proposals')
     .select(
-      'sender_id, recipient_id, proposal_type, created_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
+      'sender_id, recipient_id, proposal_type, status, created_at, responded_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
     )
     .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
     .order('created_at', { ascending: false });
@@ -197,18 +201,14 @@ export async function getProposalActivityForUser(userId: string): Promise<Propos
   return data as unknown as ProposalActivityRow[];
 }
 
-export function subscribeToOwnProposals(userId: string, onInsert: () => void): () => void {
+export function subscribeToOwnProposals(userId: string, onChange: () => void): () => void {
   const channel = supabase
     .channel(`own-proposals:${userId}:${randomUUID()}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'plant_listing_proposals', filter: `sender_id=eq.${userId}` }, onChange)
     .on(
       'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'plant_listing_proposals', filter: `sender_id=eq.${userId}` },
-      onInsert
-    )
-    .on(
-      'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'plant_listing_proposals', filter: `recipient_id=eq.${userId}` },
-      onInsert
+      { event: '*', schema: 'public', table: 'plant_listing_proposals', filter: `recipient_id=eq.${userId}` },
+      onChange
     )
     .subscribe();
 

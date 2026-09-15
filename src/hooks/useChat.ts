@@ -19,11 +19,14 @@ function itemId(item: ChatTimelineItem): string {
 }
 
 function itemCreatedAt(item: ChatTimelineItem): string {
-  return item.kind === 'message' ? item.message.createdAt : item.proposal.createdAt;
+  return item.kind === 'message' ? item.message.createdAt : (item.proposal.respondedAt ?? item.proposal.createdAt);
 }
 
-function itemSenderId(item: ChatTimelineItem): string {
-  return item.kind === 'message' ? item.message.senderId : item.proposal.senderId;
+function itemIsMine(item: ChatTimelineItem, userId: string | undefined): boolean {
+  if (!userId) return false;
+  if (item.kind === 'message') return item.message.senderId === userId;
+  if (item.proposal.respondedAt) return item.proposal.recipientId === userId;
+  return item.proposal.senderId === userId;
 }
 
 function buildTimeline(messages: ChatMessage[], proposals: Proposal[]): ChatTimelineItem[] {
@@ -91,7 +94,7 @@ export function useChat(otherUserId: string) {
 
   const lastItem = timeline.length > 0 ? timeline[timeline.length - 1] : null;
   const lastItemId = lastItem ? itemId(lastItem) : null;
-  const lastItemIsMine = !!lastItem && itemSenderId(lastItem) === user?.id;
+  const lastItemIsMine = !!lastItem && itemIsMine(lastItem, user?.id);
 
   useEffect(() => {
     if (!user?.id || !otherUserId || !lastItemId || lastItemIsMine) return;
