@@ -2,8 +2,12 @@ import { useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import Sprout from 'lucide-react-native/icons/sprout';
+import Leaf from 'lucide-react-native/icons/leaf';
+import Trees from 'lucide-react-native/icons/trees';
+import Flower2 from 'lucide-react-native/icons/flower-2';
 import Gem from 'lucide-react-native/icons/gem';
-import Zap from 'lucide-react-native/icons/zap';
+import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { CreditPackCard, CreditPackCardSkeleton, PlanCard, PlanCardSkeleton, SectionTitle } from '@/components';
@@ -11,6 +15,7 @@ import { useCredits } from '@/hooks';
 import {
   CATALOG_STALE_TIME,
   CREDIT_PACKS_QUERY_KEY,
+  findStorePackage,
   getCreditPacks,
   getOfferings,
   getPlanCatalog,
@@ -20,17 +25,60 @@ import {
   purchasePackage,
   type PlanCatalogItem,
 } from '@/services';
-import { formatPrice, Toast } from '@/utils';
+import { Toast } from '@/utils';
+import { PACKAGE_TYPE } from 'react-native-purchases';
 
-const CREDIT_PACK_ICONS = [Zap, Gem];
+const CREDIT_PACK_ICONS: Record<string, LucideIcon> = {
+  credits_30: Sprout,
+  credits_80: Leaf,
+  credits_200: Trees,
+  credits_500: Flower2,
+};
+
+function creditPackIcon(packId: string): LucideIcon {
+  return CREDIT_PACK_ICONS[packId] ?? Gem;
+}
+
+const OFFERINGS_QUERY_KEY = ['offerings'] as const;
+
+function isFreePlan(plan: PlanCatalogItem): boolean {
+  return plan.revenuecatEntitlementId === null;
+}
 
 function getPlanCtaLabel(
   plan: PlanCatalogItem,
   purchasingId: string | null,
   t: (key: string) => string
 ): string | undefined {
-  if (plan.priceCents === 0) return undefined;
+  if (isFreePlan(plan)) return undefined;
   return purchasingId === plan.id ? t('processing') : t('subscribe');
+}
+
+function pricePeriodKey(packageType: PACKAGE_TYPE): string {
+  if (packageType === PACKAGE_TYPE.ANNUAL) return 'priceYearly';
+  if (packageType === PACKAGE_TYPE.WEEKLY) return 'priceWeekly';
+  return 'priceMonthly';
+}
+
+function displaySubscriptionPrice(
+  offerings: Awaited<ReturnType<typeof getOfferings>>,
+  plan: PlanCatalogItem,
+  t: (key: string, options?: { price: string }) => string
+): string {
+  if (isFreePlan(plan)) return t('free');
+
+  const pkg = findStorePackage(offerings, plan.id);
+  if (!pkg) return t('comingSoon');
+
+  return t(pricePeriodKey(pkg.packageType), { price: pkg.product.priceString });
+}
+
+function displayPackPrice(
+  offerings: Awaited<ReturnType<typeof getOfferings>>,
+  packId: string,
+  t: (key: string) => string
+): string {
+  return findStorePackage(offerings, packId)?.product.priceString ?? t('comingSoon');
 }
 
 export default function PlansScreen() {
@@ -54,13 +102,20 @@ export default function PlansScreen() {
     staleTime: CATALOG_STALE_TIME,
   });
 
+  const offeringsQuery = useQuery({
+    queryKey: OFFERINGS_QUERY_KEY,
+    queryFn: getOfferings,
+    staleTime: CATALOG_STALE_TIME,
+  });
+
   const plans = plansQuery.data ?? [];
   const creditPacks = creditPacksQuery.data ?? [];
+  const offerings = offeringsQuery.data ?? null;
   const isLoading = plansQuery.isLoading || creditPacksQuery.isLoading;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([plansQuery.refetch(), creditPacksQuery.refetch(), refreshCredits()]);
+    await Promise.all([plansQuery.refetch(), creditPacksQuery.refetch(), offeringsQuery.refetch(), refreshCredits()]);
     setIsRefreshing(false);
   };
 
@@ -74,10 +129,8 @@ export default function PlansScreen() {
 
     setPurchasingId(productId);
     try {
-      const offerings = await getOfferings();
-      const pkg = offerings?.current?.availablePackages.find(
-        (item) => item.identifier === productId || item.product.identifier === productId
-      );
+      const { data: freshOfferings } = await offeringsQuery.refetch();
+      const pkg = findStorePackage(freshOfferings ?? null, productId);
 
       if (!pkg) {
         Toast.error(t('notYetAvailableInStores'));
@@ -120,13 +173,11 @@ export default function PlansScreen() {
                 id: plan.id,
                 name: plan.name,
                 description: plan.description,
-                price: plan.priceCents === 0 ? t('free') : t('priceMonthly', { price: formatPrice(plan.priceCents) }),
+                price: displaySubscriptionPrice(offerings, plan, t),
               }}
               isCurrent={isCurrent}
               ctaLabel={getPlanCtaLabel(plan, purchasingId, t)}
-              onPressCta={
-                plan.priceCents === 0 ? undefined : () => handlePurchase(plan.id, t('subscriptionConfirmed'))
-              }
+              onPressCta={isFreePlan(plan) ? undefined : () => handlePurchase(plan.id, t('subscriptionConfirmed'))}
             />
           );
         })
@@ -141,12 +192,13 @@ export default function PlansScreen() {
               <CreditPackCardSkeleton />
             </>
           ) : (
-            creditPacks.map((pack, index) => (
+            creditPacks.map((pack) => (
               <CreditPackCard
                 key={pack.id}
-                icon={CREDIT_PACK_ICONS[index % CREDIT_PACK_ICONS.length]}
+                icon={creditPackIcon(pack.id)}
                 name={pack.name}
-                price={formatPrice(pack.priceCents)}
+                credits={pack.credits}
+                price={displayPackPrice(offerings, pack.id, t)}
                 ctaLabel={purchasingId === pack.id ? t('processing') : t('buy')}
                 onPressCta={() => handlePurchase(pack.id, t('creditsAddedToAccount'))}
               />

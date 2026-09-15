@@ -4,6 +4,7 @@
   "eventsTabSubtitle": "Feiras, trocas e encontros perto de você",
   "eventsSearchPlaceholder": "Buscar por evento...",
   "eventDetailTitle": "Evento",
+  "limitReachedMessage": "Você atingiu o limite de eventos deste mês do plano gratuito. Assine o Broto+ para criar sem limite.",
   "shareToCommunity": "Compartilhar na Comunidade",
   "cancelEventAction": "Cancelar evento",
   "boostEventAction": "Impulsionar evento",

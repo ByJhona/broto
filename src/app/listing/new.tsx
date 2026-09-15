@@ -18,10 +18,11 @@ import {
   ShareToCommunityToggle,
   SubmitButton,
 } from '@/components';
-import { usePlants } from '@/hooks';
-import { MAX_LISTING_PHOTOS } from '@/services';
+import { useCredits, usePlants } from '@/hooks';
 import { listingShareVerb, listingTypes, pickPhoto } from '@/utils';
 import { LISTING_TYPE, type ListingType } from '@/types';
+
+const FREE_PLAN_MAX_PHOTOS = 3;
 
 export default function NewListingScreen() {
   const router = useRouter();
@@ -30,6 +31,8 @@ export default function NewListingScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('listing');
   const { plants } = usePlants();
+  const { credits } = useCredits();
+  const maxPhotos = credits?.maxListingPhotos ?? FREE_PLAN_MAX_PHOTOS;
   const listingTypeOptions = listingTypes();
 
   const [listingType, setListingType] = useState<ListingType>(LISTING_TYPE.DONATION);
@@ -106,7 +109,7 @@ export default function NewListingScreen() {
             photoUrls={imageUris}
             onAdd={handleAddPhoto}
             onRemove={handleRemovePhoto}
-            max={MAX_LISTING_PHOTOS}
+            max={maxPhotos}
           />
         </Card>
 

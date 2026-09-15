@@ -4,6 +4,7 @@
   "eventsTabSubtitle": "Fairs, swaps, and meetups near you",
   "eventsSearchPlaceholder": "Search for an event...",
   "eventDetailTitle": "Event",
+  "limitReachedMessage": "You've reached the free plan's monthly event limit. Subscribe to Broto+ to create without limits.",
   "shareToCommunity": "Share to Community",
   "cancelEventAction": "Cancel event",
   "boostEventAction": "Boost event",

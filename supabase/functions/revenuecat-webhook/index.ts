@@ -5,7 +5,6 @@ type RevenueCatEvent = {
   type: string;
   app_user_id: string;
   product_id?: string;
-  entitlement_ids?: string[];
   expiration_at_ms?: number;
   store?: string;
 };
@@ -25,19 +24,18 @@ const supabaseAdmin = createClient(
 );
 
 async function handleSubscriptionEvent(event: RevenueCatEvent) {
-  const entitlementIds = event.entitlement_ids ?? [];
-  if (entitlementIds.length === 0) return;
+  if (!event.product_id) return;
 
   const { data: plan, error: planError } = await supabaseAdmin
     .from('plans')
     .select('id, monthly_credits')
-    .in('revenuecat_entitlement_id', entitlementIds)
+    .eq('id', event.product_id)
     .maybeSingle();
 
   if (planError) throw planError;
 
   if (!plan) {
-    console.warn('Nenhum plano corresponde aos entitlements:', entitlementIds);
+    console.warn('Nenhum plano corresponde ao produto:', event.product_id);
     return;
   }
 

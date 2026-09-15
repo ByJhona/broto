@@ -1,0 +1,98 @@
+COMO ADICIONAR OS NOVOS PRODUTOS (PLAY CONSOLE + REVENUECAT)
+==============================================================
+
+Isso cobre os 5 produtos novos que já estão prontos no banco do broto,
+esperando um produto real na loja com o MESMO nome (id) pra funcionar:
+
+  - premium_annual  → assinatura "Broto+ Anual"
+  - credits_30      → Pacote Broto      (30 créditos)
+  - credits_80      → Pacote Verde      (80 créditos)
+  - credits_200     → Pacote Floresta   (200 créditos)
+  - credits_500     → Pacote Jardim     (500 créditos)
+
+IMPORTANTE: o Product ID que você escolher no Play Console tem que ser
+EXATAMENTE igual ao nome de cada item acima (sem maiúscula, sem espaço,
+sem sufixo automático). É assim que o app encontra o preço e que o
+webhook do RevenueCat sabe quantos créditos liberar quando alguém compra.
+
+
+1. PLAY CONSOLE — criar os produtos
+------------------------------------
+
+Acesse: Play Console > seu app > Monetizar > Produtos
+
+a) Assinatura "Broto+ Anual"
+   - Vá em "Assinaturas" > Criar assinatura
+   - NÃO adicione como um novo "plano base" dentro da assinatura "premium"
+     que já existe hoje — crie uma assinatura NOVA e separada. Isso evita
+     um jeito diferente (e mais confuso) de nomear produto que o Google
+     usa pra planos base dentro da mesma assinatura.
+   - Product ID: premium_annual
+   - Nome: Broto+ Anual
+   - Período de cobrança: 1 ano
+   - Preço sugerido: R$ 149,90/ano (equivale a ~R$ 12,49/mês, uns 37%
+     mais barato que o mensal atual de R$ 9,90 — ajuste se quiser outro
+     valor, isso não trava nada no código)
+   - Ative o produto.
+
+b) Pacotes de crédito (Broto, Verde, Floresta, Jardim)
+   - Vá em "Produtos no app" > Criar produto (produto gerenciado, compra única)
+   - Crie os 4, um de cada vez, com esses Product IDs exatos:
+
+       Product ID       Nome                Preço sugerido
+       ---------------  ------------------  --------------
+       credits_30       Pacote Broto        R$ 9,90
+       credits_80       Pacote Verde        R$ 19,90
+       credits_200      Pacote Floresta     R$ 39,90
+       credits_500      Pacote Jardim       R$ 79,90
+
+   - Ative os 4 produtos.
+
+c) Despublicar os pacotes antigos
+   - Os produtos antigos credits_10, credits_25 e credits_60 não existem
+     mais no banco do broto (foram substituídos pelos 4 acima). Despublique
+     ou desative esses 3 no Play Console pra ninguém comprar algo que o
+     app não vai mais reconhecer.
+
+
+2. REVENUECAT — conectar os produtos
+--------------------------------------
+
+Acesse: app.revenuecat.com > seu projeto
+
+a) Espere alguns minutos depois de ativar no Play Console — o RevenueCat
+   importa os produtos da loja automaticamente. Confira em
+   "Products" se os 5 apareceram (premium_annual, credits_30, credits_80,
+   credits_200, credits_500).
+
+b) Assinatura anual → mesmo Entitlement do plano mensal
+   - Vá em "Entitlements" > broto_prod (o entitlement que o plano
+     "Broto+" mensal já usa)
+   - Em "Attached Products", adicione premium_annual também.
+   - Isso é essencial: é o que garante que quem assina o anual ganha
+     exatamente os mesmos recursos de quem assina o mensal.
+   - NÃO crie um entitlement novo pra ele.
+
+c) Pacotes de crédito → sem entitlement
+   - credits_30/80/200/500 não precisam de entitlement nenhum (créditos
+     avulsos não desbloqueiam recurso nenhum sozinhos, só somam saldo).
+     Deixe como estão em "Products", sem anexar a nenhum entitlement.
+
+d) Adicionar todos na Offering atual
+   - Vá em "Offerings" > a offering marcada como "Current"
+   - Adicione um Package pra cada um dos 5 produtos novos (Add Package)
+   - Esse passo é o mais fácil de esquecer: se o produto não estiver
+     numa Package dentro da Offering "Current", o app continua
+     mostrando "Em breve" pra ele mesmo já ativo na loja.
+
+
+3. DEPOIS DE CONFIGURAR
+--------------------------
+
+Não precisa mexer em mais nada no código ou no banco — as linhas já
+existem esperando por esses IDs. Assim que o RevenueCat reconhecer os
+produtos na Offering "Current", o app já mostra o preço real (puxado
+direto da loja) e a compra funciona normalmente.
+
+Teste comprando um pacote pequeno (credits_30) primeiro pra confirmar
+que os créditos chegam na conta antes de divulgar os outros.

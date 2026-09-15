@@ -7,6 +7,9 @@ export type CreditsState = {
   monthlyCredits: number | null;
   balance: number | null;
   creditRenewalPeriod: 'weekly' | 'monthly';
+  maxActiveListings: number | null;
+  maxEventsPerMonth: number | null;
+  maxListingPhotos: number | null;
 };
 
 export function canAfford(credits: CreditsState | null, cost: number): boolean {
@@ -19,7 +22,6 @@ export type CreditPack = {
   id: string;
   name: string;
   credits: number;
-  priceCents: number;
 };
 
 type CreditsRow = {
@@ -28,6 +30,9 @@ type CreditsRow = {
   monthly_credits: number | null;
   balance: number | null;
   credit_renewal_period: 'weekly' | 'monthly';
+  max_active_listings: number | null;
+  max_events_per_month: number | null;
+  max_listing_photos: number | null;
 };
 
 export async function getCredits(): Promise<CreditsState | null> {
@@ -44,6 +49,9 @@ export async function getCredits(): Promise<CreditsState | null> {
     monthlyCredits: data.monthly_credits,
     balance: data.balance,
     creditRenewalPeriod: data.credit_renewal_period,
+    maxActiveListings: data.max_active_listings,
+    maxEventsPerMonth: data.max_events_per_month,
+    maxListingPhotos: data.max_listing_photos,
   };
 }
 
@@ -58,8 +66,8 @@ export type CreditSpendReason = 'identification' | 'diagnosis' | 'growth_check' 
 
 export const CREDIT_COSTS: Record<CreditSpendReason, number> = {
   identification: 2,
-  diagnosis: 4,
-  growth_check: 2,
+  diagnosis: 5,
+  growth_check: 3,
   chat_question: 1,
   boost_content: 20,
 };
@@ -68,7 +76,6 @@ export type PlanCatalogItem = {
   id: string;
   name: string;
   description: string;
-  priceCents: number;
   monthlyCredits: number | null;
   revenuecatEntitlementId: string | null;
 };
@@ -90,7 +97,6 @@ export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
       id: string;
       name: string;
       description: string;
-      price_cents: number;
       monthly_credits: number | null;
       revenuecat_entitlement_id: string | null;
     }[]
@@ -98,7 +104,6 @@ export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
     id: row.id,
     name: row.name,
     description: row.description,
-    priceCents: row.price_cents,
     monthlyCredits: row.monthly_credits,
     revenuecatEntitlementId: row.revenuecat_entitlement_id,
   }));
@@ -112,10 +117,9 @@ export async function getCreditPacks(): Promise<CreditPack[]> {
     return [];
   }
 
-  return (data as { id: string; name: string; credits: number; price_cents: number }[]).map((row) => ({
+  return (data as { id: string; name: string; credits: number }[]).map((row) => ({
     id: row.id,
     name: row.name,
     credits: row.credits,
-    priceCents: row.price_cents,
   }));
 }

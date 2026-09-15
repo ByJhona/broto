@@ -7,6 +7,7 @@
 
   "titleRequired": "Give the listing a title.",
   "priceRequired": "Enter the plant's price.",
+  "limitReachedMessage": "You've reached the free plan's active listing limit. Subscribe to Broto+ to publish without limits.",
   "photosSectionTitle": "Photos",
   "listingTypeSectionTitle": "Listing type",
   "priceLabel": "Price",

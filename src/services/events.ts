@@ -133,7 +133,10 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
     .select(EVENT_SELECT)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    if (error.message === 'event_limit_reached') throw new Error(i18n.t('event:limitReachedMessage'));
+    throw error;
+  }
 
   const row = event as unknown as EventRow;
 

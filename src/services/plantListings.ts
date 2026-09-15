@@ -5,8 +5,6 @@ import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
 import { LISTING_STATUS, type ListingStatus, type ListingType, type PlantListing } from '@/types';
 
-export const MAX_LISTING_PHOTOS = 5;
-
 type PlantListingRow = {
   id: string;
   user_id: string;
@@ -137,7 +135,10 @@ export async function createListing(input: CreateListingInput): Promise<PlantLis
     .select(PLANT_LISTING_SELECT)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    if (error.message === 'listing_limit_reached') throw new Error(i18n.t('listing:limitReachedMessage'));
+    throw error;
+  }
 
   const row = listing as unknown as PlantListingRow;
   const photoUris = input.photoUris ?? [];

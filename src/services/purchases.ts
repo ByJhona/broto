@@ -45,6 +45,14 @@ export async function getOfferings() {
   }
 }
 
+type Offerings = Awaited<ReturnType<typeof Purchases.getOfferings>>;
+
+export function findStorePackage(offerings: Offerings | null, productId: string) {
+  return offerings?.current?.availablePackages.find(
+    (item) => item.identifier === productId || item.product.identifier === productId
+  );
+}
+
 export async function purchasePackage(pkg: Parameters<typeof Purchases.purchasePackage>[0]) {
   return Purchases.purchasePackage(pkg);
 }
