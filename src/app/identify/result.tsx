@@ -12,17 +12,18 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
   EmptyState,
   InfoChip,
-  PlantHero,
+  NewBadgeModal,
   PromptModal,
   ScreenContent,
   SectionTitle,
   SpeciesInfoSection,
   SpeciesInfoSkeleton,
+  SpeciesPhotoHero,
   SubmitButton,
 } from '@/components';
 import { useAuth, usePlants } from '@/hooks';
-import { getPlantSpeciesInfo } from '@/services';
-import type { PlantCandidate, PlantSpeciesInfo } from '@/types';
+import { checkNewlyEarnedBadge, getPlantSpeciesInfo } from '@/services';
+import type { Badge, PlantCandidate, PlantSpeciesInfo } from '@/types';
 import { requireLogin, sunLevelLabel, type SunLevel } from '@/utils';
 import { useTranslation } from '@/i18n';
 
@@ -40,7 +41,7 @@ export default function IdentifyResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const { addPlant } = usePlants();
   const { t } = useTranslation('identify');
   const params = useLocalSearchParams<{ candidates: string }>();
@@ -56,6 +57,8 @@ export default function IdentifyResultScreen() {
   const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
   const [speciesInfo, setSpeciesInfo] = useState<PlantSpeciesInfo | null>(null);
   const [lightLevel, setLightLevel] = useState<SunLevel | null>(null);
+  const [newBadge, setNewBadge] = useState<Badge | null>(null);
+  const [addedPlantId, setAddedPlantId] = useState<string | null>(null);
 
   const isSpeciesInfoStale = !selected || speciesInfo?.scientificName !== selected.scientificName;
 
@@ -106,12 +109,14 @@ export default function IdentifyResultScreen() {
     setError(null);
     setIsSubmitting(true);
     try {
+      const earnedBadge = user?.id ? await checkNewlyEarnedBadge(user.id, selected.scientificName) : null;
+
       const plant = await addPlant({
         name: name.trim(),
         species: selected.scientificName,
         commonName: selected.commonName,
         wateringDays: wateringDays.trim() ? Number(wateringDays) : null,
-        photoUrl: selected.imageUrl,
+        photoUrl: speciesInfo?.referencePhotos[0]?.url ?? null,
         sunLevel: lightLevel,
         origin: speciesInfo?.origin ?? null,
         description: speciesInfo?.description ?? null,
@@ -124,12 +129,29 @@ export default function IdentifyResultScreen() {
         funFacts: speciesInfo?.funFacts ?? null,
         commonProblems: speciesInfo?.commonProblems ?? null,
       });
-      router.replace(`/plant/${plant.id}`);
+
+      if (earnedBadge) {
+        setIsNicknameModalOpen(false);
+        setAddedPlantId(plant.id);
+        setNewBadge(earnedBadge);
+      } else {
+        router.replace(`/plant/${plant.id}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('saveError'));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleClaimBadge = () => {
+    setNewBadge(null);
+    router.replace(user?.id ? `/profile/${user.id}` : `/plant/${addedPlantId}`);
+  };
+
+  const handleCloseBadgeModal = () => {
+    setNewBadge(null);
+    router.replace(`/plant/${addedPlantId}`);
   };
 
   if (!selected) {
@@ -143,23 +165,12 @@ export default function IdentifyResultScreen() {
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {selected.imageUrl ? (
-          <PlantHero
-            photoUrl={selected.imageUrl}
-            name={selected.commonName ?? selected.scientificName}
-            species={selected.scientificName}
-          />
-        ) : (
-          <>
-            <View style={styles.heroPlaceholder}>
-              <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-            </View>
-            <View style={styles.plainHeader}>
-              <Text style={styles.plainHeaderName}>{selected.commonName ?? selected.scientificName}</Text>
-              <Text style={styles.plainHeaderSpecies}>{selected.scientificName}</Text>
-            </View>
-          </>
-        )}
+        <SpeciesPhotoHero
+          photos={speciesInfo?.referencePhotos ?? []}
+          isLoading={isSpeciesInfoStale}
+          name={selected.commonName ?? selected.scientificName}
+          species={selected.scientificName}
+        />
 
         <ScreenContent>
           <View style={styles.section}>
@@ -222,6 +233,8 @@ export default function IdentifyResultScreen() {
         onSubmit={handleSubmit}
         onCancel={() => setIsNicknameModalOpen(false)}
       />
+
+      <NewBadgeModal badge={newBadge} onClaim={handleClaimBadge} onClose={handleCloseBadgeModal} />
     </View>
   );
 }
@@ -241,29 +254,6 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     padding: Metrics.spacing.xl,
     backgroundColor: colors.background,
-  },
-  heroPlaceholder: {
-    width: '100%',
-    height: 260,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plainHeader: {
-    alignItems: 'center',
-    paddingTop: Metrics.spacing.lg,
-  },
-  plainHeaderName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.foreground,
-    textAlign: 'center',
-  },
-  plainHeaderSpecies: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    color: colors.mutedForeground,
-    marginTop: 2,
   },
   section: {
     marginBottom: Metrics.spacing.lg,

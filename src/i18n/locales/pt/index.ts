@@ -10,6 +10,7 @@ import communityPostType from './communityPostType.json';
 import notifications from './notifications.json';
 import validation from './validation.json';
 import auth from './auth.json';
+import badge from './badge.json';
 import profile from './profile.json';
 import credits from './credits.json';
 import garden from './garden.json';
@@ -42,6 +43,7 @@ export default {
   notifications,
   validation,
   auth,
+  badge,
   profile,
   credits,
   garden,

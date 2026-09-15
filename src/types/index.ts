@@ -1,3 +1,4 @@
+export * from './badges';
 export * from './care-task';
 export * from './chat';
 export * from './community';

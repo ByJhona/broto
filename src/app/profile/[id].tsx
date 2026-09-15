@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,8 +8,19 @@ import Sprout from 'lucide-react-native/icons/sprout';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import type { CommunityPost, PlantEvent, PlantListing, UserProfile } from '@/types';
-import { Avatar, CollapsibleSection, CommunityPostCard, EmptyState, EventCard, ListingCard, LoadingScreen } from '@/components';
+import type { CommunityPost, EarnedBadge, PlantEvent, PlantListing, UserProfile } from '@/types';
+import {
+  Avatar,
+  BadgeDetailModal,
+  CollapsibleSection,
+  CommunityPostCard,
+  EmptyState,
+  EventCard,
+  ListingCard,
+  LoadingScreen,
+  PixelBadge,
+  SectionTitle,
+} from '@/components';
 import { useAuth, useFollow, usePersistedCollapse, useUserLocation } from '@/hooks';
 import {
   getProfile,
@@ -17,6 +28,7 @@ import {
   getPostById,
   getListingsByUserId,
   getEventsByUserId,
+  getUserBadgesWithDetails,
   toggleLike,
   addComment,
   deletePost,
@@ -43,6 +55,7 @@ type ProfileHeaderProps = {
   counts: { followers: number; following: number };
   listings: PlantListing[];
   events: PlantEvent[];
+  badges: EarnedBadge[];
   posts: CommunityPost[];
   isLoading: boolean;
   onPressListing: (listingId: string) => void;
@@ -128,6 +141,35 @@ function ProfileEventsRow({
   );
 }
 
+type ProfileBadgesRowProps = {
+  title: string;
+  badges: EarnedBadge[];
+};
+
+function ProfileBadgesRow({ title, badges }: Readonly<ProfileBadgesRowProps>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const [selectedBadge, setSelectedBadge] = useState<EarnedBadge | null>(null);
+  if (badges.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <SectionTitle>{title}</SectionTitle>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+        {badges.map((badge) => (
+          <Pressable key={badge.id} style={styles.badgeItem} onPress={() => setSelectedBadge(badge)}>
+            <PixelBadge pixelArt={badge.pixelArt} size={56} />
+            <Text style={styles.badgeName} numberOfLines={1}>
+              {badge.name}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+      <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
+    </View>
+  );
+}
+
 type Styles = ReturnType<typeof makeStyles>;
 
 function profileListingsTitle(isOwnProfile: boolean, t: (key: string) => string): string {
@@ -210,6 +252,7 @@ function ProfileHeader({
   counts,
   listings,
   events,
+  badges,
   posts,
   isLoading,
   onPressListing,
@@ -250,6 +293,8 @@ function ProfileHeader({
           styles={styles}
         />
       </View>
+
+      <ProfileBadgesRow title={t('badgesTitle')} badges={badges} />
 
       <ProfileListingsRow
         title={profileListingsTitle(isOwnProfile, t)}
@@ -313,6 +358,13 @@ export default function PublicProfileScreen() {
     staleTime: PROFILE_STALE_TIME,
   });
 
+  const badgesQuery = useQuery({
+    queryKey: ['badges-by-user', id],
+    queryFn: () => getUserBadgesWithDetails(id!),
+    enabled: !!id,
+    staleTime: PROFILE_STALE_TIME,
+  });
+
   const postsQueryKey = useMemo(() => ['community-posts', 'author', id, user?.id] as const, [id, user?.id]);
 
   const postsQuery = useInfiniteQuery({
@@ -327,11 +379,18 @@ export default function PublicProfileScreen() {
   const profile = profileQuery.data ?? null;
   const listings = listingsQuery.data ?? [];
   const events = eventsQuery.data ?? [];
+  const badges = badgesQuery.data ?? [];
   const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
   const isLoading = profileQuery.isLoading || (posts.length === 0 && postsQuery.isFetching);
 
   const handleRefresh = async () => {
-    await Promise.all([profileQuery.refetch(), listingsQuery.refetch(), eventsQuery.refetch(), postsQuery.refetch()]);
+    await Promise.all([
+      profileQuery.refetch(),
+      listingsQuery.refetch(),
+      eventsQuery.refetch(),
+      badgesQuery.refetch(),
+      postsQuery.refetch(),
+    ]);
   };
 
   const handleLoadMore = () => {
@@ -461,7 +520,13 @@ export default function PublicProfileScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={
         <RefreshControl
-          refreshing={profileQuery.isRefetching || listingsQuery.isRefetching || eventsQuery.isRefetching || postsQuery.isRefetching}
+          refreshing={
+            profileQuery.isRefetching ||
+            listingsQuery.isRefetching ||
+            eventsQuery.isRefetching ||
+            badgesQuery.isRefetching ||
+            postsQuery.isRefetching
+          }
           onRefresh={handleRefresh}
           tintColor={colors.leaf}
           colors={[colors.leaf]}
@@ -492,6 +557,7 @@ export default function PublicProfileScreen() {
             counts={counts}
             listings={listings}
             events={events}
+            badges={badges}
             posts={posts}
             isLoading={isLoading}
             onPressListing={handlePressListing}
@@ -592,6 +658,19 @@ const makeStyles = (colors: ThemeColors) =>
   },
   carouselRow: {
     gap: Metrics.spacing.md,
+  },
+  section: {
+    marginBottom: Metrics.spacing.lg,
+  },
+  badgeItem: {
+    alignItems: 'center',
+    width: 72,
+  },
+  badgeName: {
+    fontSize: 11,
+    color: colors.mutedForeground,
+    marginTop: Metrics.spacing.xs,
+    textAlign: 'center',
   },
   emptyState: {
     marginTop: Metrics.spacing.xl,
