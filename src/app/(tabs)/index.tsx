@@ -43,6 +43,8 @@ const INITIAL_REGION = {
 
 const LOCATED_REGION_DELTA = 0.01;
 
+const COLLAPSE_HEADER_ON_MAP_GESTURE = false;
+
 type PlacingParams = {
   placingListing?: string;
   placingEvent?: string;
@@ -308,7 +310,7 @@ export default function HomeScreen() {
         onPress={() => setSelectedPin(null)}
         onRegionChangeStart={(_region, details) => {
           if (details?.isGesture) {
-            setIsHeaderExpanded(false);
+            if (COLLAPSE_HEADER_ON_MAP_GESTURE) setIsHeaderExpanded(false);
             setSelectedPin(null);
           }
         }}

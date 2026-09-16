@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import Award from 'lucide-react-native/icons/award';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Settings from 'lucide-react-native/icons/settings';
 import Sprout from 'lucide-react-native/icons/sprout';
@@ -146,25 +147,43 @@ type ProfileBadgesRowProps = {
   badges: EarnedBadge[];
 };
 
+type BadgesEmptyStateProps = {
+  styles: Styles;
+  colors: ThemeColors;
+};
+
+function BadgesEmptyState({ styles, colors }: Readonly<BadgesEmptyStateProps>) {
+  const { t } = useTranslation('badge');
+  return (
+    <View style={styles.badgesEmptyState}>
+      <Award size={Metrics.icon.large} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Text style={styles.badgesEmptyText}>{t('noBadgesMessage')}</Text>
+    </View>
+  );
+}
+
 function ProfileBadgesRow({ title, badges }: Readonly<ProfileBadgesRowProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [selectedBadge, setSelectedBadge] = useState<EarnedBadge | null>(null);
-  if (badges.length === 0) return null;
 
   return (
     <View style={styles.section}>
       <SectionTitle>{title}</SectionTitle>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-        {badges.map((badge) => (
-          <Pressable key={badge.id} style={styles.badgeItem} onPress={() => setSelectedBadge(badge)}>
-            <PixelBadge pixelArt={badge.pixelArt} size={56} />
-            <Text style={styles.badgeName} numberOfLines={1}>
-              {badge.name}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {badges.length === 0 ? (
+        <BadgesEmptyState styles={styles} colors={colors} />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
+          {badges.map((badge) => (
+            <Pressable key={badge.id} style={styles.badgeItem} onPress={() => setSelectedBadge(badge)}>
+              <PixelBadge pixelArt={badge.pixelArt} size={56} />
+              <Text style={styles.badgeName} numberOfLines={1}>
+                {badge.name}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
       <BadgeDetailModal badge={selectedBadge} onClose={() => setSelectedBadge(null)} />
     </View>
   );
@@ -671,6 +690,21 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
     textAlign: 'center',
+  },
+  badgesEmptyState: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.sm,
+    backgroundColor: colors.card,
+    borderRadius: Metrics.radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: Metrics.spacing.md,
+  },
+  badgesEmptyText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.mutedForeground,
   },
   emptyState: {
     marginTop: Metrics.spacing.xl,

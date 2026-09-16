@@ -30,5 +30,6 @@ export function authErrorMessage(error: unknown, fallback: string): string {
     return i18n.t('errors:networkError');
   }
 
-  return message;
+  console.error('Erro de autenticação não mapeado:', message);
+  return fallback;
 }

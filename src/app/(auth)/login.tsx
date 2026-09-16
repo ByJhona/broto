@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
 import { useTranslation } from '@/i18n';
 import { useAuth, useNetworkStatus } from '@/hooks';
-import { authErrorMessage } from '@/utils';
+import { authErrorMessage, Toast } from '@/utils';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -45,13 +45,12 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    setError(null);
     setIsGoogleSubmitting(true);
     try {
       const result = await signInWithGoogle();
       if (result) goToApp();
     } catch (err) {
-      setError(authErrorMessage(err, t('googleSignInError')));
+      Toast.error(authErrorMessage(err, t('googleSignInError')));
     } finally {
       setIsGoogleSubmitting(false);
     }

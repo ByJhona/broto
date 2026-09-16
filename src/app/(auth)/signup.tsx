@@ -7,7 +7,7 @@ import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSi
 import { useTranslation } from '@/i18n';
 import { useAuth, useNetworkStatus } from '@/hooks';
 import { isUsernameAvailable } from '@/services';
-import { authErrorMessage, normalizeUsername, validateUsername } from '@/utils';
+import { authErrorMessage, normalizeUsername, Toast, validateUsername } from '@/utils';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -80,13 +80,12 @@ export default function SignupScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    setError(null);
     setIsGoogleSubmitting(true);
     try {
       const result = await signInWithGoogle();
       if (result) goToApp();
     } catch (err) {
-      setError(authErrorMessage(err, t('googleSignInError')));
+      Toast.error(authErrorMessage(err, t('googleSignInError')));
     } finally {
       setIsGoogleSubmitting(false);
     }

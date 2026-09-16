@@ -23,6 +23,16 @@ export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModa
   return (
     <Modal visible={!!badge} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
+        <View style={styles.card}>
+          <Text style={styles.title}>{t('newBadgeTitle')}</Text>
+          {badge ? <BadgeCard badge={badge} /> : null}
+          <View style={styles.actions}>
+            <SubmitButton label={t('claim')} onPress={onClaim} />
+          </View>
+          <Pressable style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeText}>{t('close')}</Text>
+          </Pressable>
+        </View>
         {badge ? (
           <LottieView
             key={badge.id}
@@ -32,14 +42,6 @@ export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModa
             style={styles.confetti}
           />
         ) : null}
-        <View style={styles.card}>
-          <Text style={styles.title}>{t('newBadgeTitle')}</Text>
-          {badge ? <BadgeCard badge={badge} /> : null}
-          <SubmitButton label={t('claim')} onPress={onClaim} />
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>{t('close')}</Text>
-          </Pressable>
-        </View>
       </View>
     </Modal>
   );
@@ -76,6 +78,10 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.foreground,
       marginBottom: Metrics.spacing.md,
       textAlign: 'center',
+    },
+    actions: {
+      alignSelf: 'stretch',
+      marginTop: Metrics.spacing.lg,
     },
     closeButton: {
       alignItems: 'center',
