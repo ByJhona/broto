@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { FeaturedBadge } from './FeaturedBadge';

@@ -75,6 +75,7 @@ type DiagnosisPayload = {
 
 async function diagnosePhoto(photoUrl: string): Promise<DiagnosisPayload> {
   const content = await callOpenAI({
+    model: 'gpt-5.6-sol',
     messages: [
       {
         role: 'system',

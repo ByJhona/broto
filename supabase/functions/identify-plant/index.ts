@@ -78,6 +78,7 @@ type PlantCandidate = {
 
 async function classifyPhoto(photoUrl: string): Promise<IdentificationPayload> {
   const content = await callOpenAI({
+    model: 'gpt-5.6-sol',
     messages: [
       {
         role: 'system',

@@ -34,13 +34,15 @@ export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModa
           </Pressable>
         </View>
         {badge ? (
-          <LottieView
-            key={badge.id}
-            source={CONFETTI_ANIMATION}
-            autoPlay
-            loop={false}
-            style={styles.confetti}
-          />
+          <View pointerEvents="none" style={styles.confetti}>
+            <LottieView
+              key={badge.id}
+              source={CONFETTI_ANIMATION}
+              autoPlay
+              loop={false}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
         ) : null}
       </View>
     </Modal>
@@ -58,11 +60,10 @@ const makeStyles = (colors: ThemeColors) =>
     },
     confetti: {
       position: 'absolute',
-      top: 0,
       left: 0,
       right: 0,
+      top: 0,
       bottom: 0,
-      pointerEvents: 'none',
     },
     card: {
       width: '100%',

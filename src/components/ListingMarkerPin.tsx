@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import { useColors } from '@/theme';
 

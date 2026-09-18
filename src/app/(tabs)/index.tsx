@@ -90,23 +90,6 @@ function resolveDraftIcon(placingKind: PlacingKind, listingType: ListingType | u
   return undefined;
 }
 
-const prefetchedPhotoUrls = new Set<string>();
-
-function useDownloadedPhotoUrl(photoUrl: string | null): string | null {
-  const [, forceRender] = useState(0);
-
-  useEffect(() => {
-    if (!photoUrl || prefetchedPhotoUrls.has(photoUrl)) return;
-    Image.prefetch(photoUrl)
-      .then(() => {
-        prefetchedPhotoUrls.add(photoUrl);
-        forceRender((n) => n + 1);
-      })
-      .catch(() => {});
-  }, [photoUrl]);
-
-  return photoUrl && prefetchedPhotoUrls.has(photoUrl) ? photoUrl : null;
-}
 
 type ListingMarkerProps = {
   listing: PlantListing;
@@ -117,7 +100,7 @@ type ListingMarkerProps = {
 function ListingMarker({ listing, isHighlighted, onPress }: Readonly<ListingMarkerProps>) {
   const Icon = LISTING_TYPE_ICONS[listing.listingType];
   const color = LISTING_TYPE_COLORS[listing.listingType];
-  const photoUrl = useDownloadedPhotoUrl(listing.photoUrls[0] ?? null);
+  const photoUrl = listing.photoUrls[0] ?? null;
 
   return (
     <Marker
@@ -137,7 +120,7 @@ type EventMarkerProps = {
 };
 
 function EventMarker({ event, isHighlighted, onPress }: Readonly<EventMarkerProps>) {
-  const photoUrl = useDownloadedPhotoUrl(event.photoUrl);
+  const photoUrl = event.photoUrl;
 
   return (
     <Marker coordinate={{ latitude: event.latitude, longitude: event.longitude }} onPress={onPress} zIndex={isHighlighted ? 1 : 0}>
