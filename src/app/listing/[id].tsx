@@ -4,9 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
+import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
-import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import {
@@ -58,7 +58,6 @@ type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
 
 type ListingActionHandlers = {
   onMarkCompleted: () => void;
-  onMarkExpired: () => void;
   onReactivate: () => void;
   onShare: () => void;
   onBoost: () => void;
@@ -69,10 +68,9 @@ function buildListingActionButtons(status: ListingStatus, handlers: ListingActio
   const buttons: AlertButton[] = [];
   if (status === LISTING_STATUS.AVAILABLE) {
     buttons.push({ text: t('markCompletedAction'), onPress: handlers.onMarkCompleted });
-    buttons.push({ text: t('markExpiredAction'), onPress: handlers.onMarkExpired });
     buttons.push({ text: t('boostListingAction'), onPress: handlers.onBoost });
   }
-  if (status === LISTING_STATUS.EXPIRED) {
+  if (status === LISTING_STATUS.COMPLETED) {
     buttons.push({ text: t('reactivateListingAction'), onPress: handlers.onReactivate });
   }
   buttons.push({ text: t('shareToCommunityAction'), onPress: handlers.onShare });
@@ -252,23 +250,6 @@ export default function ListingDetailScreen() {
     }
   };
 
-  const handleMarkExpired = async () => {
-    const confirmed = await confirm(t('markExpiredConfirmTitle'), t('markExpiredConfirmMessage'), {
-      confirmLabel: t('markExpiredConfirmLabel'),
-    });
-    if (!confirmed) return;
-
-    setIsActing(true);
-    try {
-      await setListingStatus({ id: listing.id, status: LISTING_STATUS.EXPIRED });
-      Toast.success(t('listingExpiredSuccess'));
-    } catch {
-      Toast.error(t('listingUpdateError'));
-    } finally {
-      setIsActing(false);
-    }
-  };
-
   const handleReactivate = async () => {
     setIsActing(true);
     try {
@@ -355,7 +336,6 @@ export default function ListingDetailScreen() {
         listing.status,
         {
           onMarkCompleted: handleMarkCompleted,
-          onMarkExpired: handleMarkExpired,
           onReactivate: handleReactivate,
           onShare: handleOpenShareModal,
           onBoost: handleBoost,
@@ -379,7 +359,7 @@ export default function ListingDetailScreen() {
             ? {
                 headerRight: () => (
                   <Pressable onPress={handleOpenActions} disabled={isActing} hitSlop={8}>
-                    <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+                    <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
                   </Pressable>
                 ),
               }

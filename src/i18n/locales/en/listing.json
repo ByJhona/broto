@@ -25,13 +25,12 @@
   "noListingsFound": "No listings found.",
 
   "markCompletedAction": "Mark as completed",
-  "markExpiredAction": "Mark as expired",
+  "reactivateListingAction": "Reactivate listing",
   "boostListingAction": "Boost listing",
   "boostSuccess": "Listing boosted for {{hours}}h!",
   "boostError": "Couldn't boost the listing.",
   "insufficientCreditsTitle": "Insufficient credits",
   "boostCreditsMessage": "Boosting a listing costs {{cost}} credits. Want to see the plans?",
-  "reactivateListingAction": "Reactivate listing",
   "shareToCommunityAction": "Share to Community",
   "deleteListingAction": "Delete listing",
 
@@ -50,13 +49,7 @@
   "markCompletedConfirmMessage": "Use this once the trade or donation has actually happened. The listing leaves the available list and can't be reactivated afterwards — to offer it again you'll need to create a new listing.",
   "markCompletedConfirmLabel": "Complete",
   "listingUpdateError": "Couldn't update the listing.",
-
-  "markExpiredConfirmTitle": "Mark as expired",
-  "markExpiredConfirmMessage": "Use this when no one has shown interest for now. The listing leaves the available list, but you can reactivate it later.",
-  "markExpiredConfirmLabel": "Mark as expired",
-  "listingExpiredSuccess": "Listing marked as expired.",
-
-  "listingReactivatedSuccess": "Listing reactivated!",
+  "listingReactivatedSuccess": "Listing reactivated.",
 
   "deleteConfirmTitle": "Delete listing",
   "deleteConfirmMessage": "This removes the listing from the map. This can't be undone.",

@@ -9,8 +9,6 @@
   "shareVerb_sale": "I'm selling",
   "status_completed": "Completed",
   "status_cancelled": "Cancelled",
-  "status_expired": "Expired",
   "notice_completed": "This listing has already been completed.",
-  "notice_cancelled": "This listing was cancelled.",
-  "notice_expired": "This listing has expired."
+  "notice_cancelled": "This listing was cancelled."
 }

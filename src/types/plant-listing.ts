@@ -11,7 +11,6 @@ export const LISTING_STATUS = {
   AVAILABLE: 'available',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
-  EXPIRED: 'expired',
 } as const;
 
 export type ListingStatus = (typeof LISTING_STATUS)[keyof typeof LISTING_STATUS];

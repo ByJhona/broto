@@ -25,13 +25,12 @@
   "noListingsFound": "Nenhuma oferta encontrada.",
 
   "markCompletedAction": "Marcar como concluída",
-  "markExpiredAction": "Marcar como expirada",
+  "reactivateListingAction": "Reativar oferta",
   "boostListingAction": "Impulsionar oferta",
   "boostSuccess": "Oferta impulsionada por {{hours}}h!",
   "boostError": "Não foi possível impulsionar a oferta.",
   "insufficientCreditsTitle": "Créditos insuficientes",
   "boostCreditsMessage": "Impulsionar uma oferta custa {{cost}} créditos. Quer ver os planos?",
-  "reactivateListingAction": "Reativar oferta",
   "shareToCommunityAction": "Compartilhar na Comunidade",
   "deleteListingAction": "Excluir oferta",
 
@@ -50,13 +49,7 @@
   "markCompletedConfirmMessage": "Use isso quando a troca ou doação já foi concretizada. A oferta sai da lista de disponíveis e não pode ser reativada depois — pra oferecer de novo, você precisa criar uma nova oferta.",
   "markCompletedConfirmLabel": "Concluir",
   "listingUpdateError": "Não foi possível atualizar a oferta.",
-
-  "markExpiredConfirmTitle": "Marcar como expirada",
-  "markExpiredConfirmMessage": "Use isso quando ninguém mais demonstrou interesse por enquanto. A oferta sai da lista de disponíveis, mas você pode reativá-la depois.",
-  "markExpiredConfirmLabel": "Marcar como expirada",
-  "listingExpiredSuccess": "Oferta marcada como expirada.",
-
-  "listingReactivatedSuccess": "Oferta reativada!",
+  "listingReactivatedSuccess": "Oferta reativada.",
 
   "deleteConfirmTitle": "Excluir oferta",
   "deleteConfirmMessage": "Isso remove a oferta do mapa. Não dá pra desfazer.",
