@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { SkeletonBlock } from './Skeleton';
 
 type DistancePillProps = {
-  label: string;
+  label: string | null;
 };
 
 export function DistancePill({ label }: Readonly<DistancePillProps>) {
@@ -14,9 +15,13 @@ export function DistancePill({ label }: Readonly<DistancePillProps>) {
   return (
     <View style={styles.pill}>
       <MapPin size={11} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-      <Text style={styles.pillText} numberOfLines={1}>
-        {label}
-      </Text>
+      {label ? (
+        <Text style={styles.pillText} numberOfLines={1}>
+          {label}
+        </Text>
+      ) : (
+        <SkeletonBlock width={28} height={11} radius={Metrics.radius.sm} />
+      )}
     </View>
   );
 }

@@ -37,7 +37,7 @@ export function EventCallout({ event, distanceLabel, onPress }: Readonly<EventCa
         )
       }
       title={event.title}
-      titleTrailing={distanceLabel ? <DistancePill label={distanceLabel} /> : undefined}
+      titleTrailing={<DistancePill label={distanceLabel ?? null} />}
       subtitle={subtitle}
       trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
     />
