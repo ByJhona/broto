@@ -15,17 +15,18 @@ import {
   getFollowingIds,
   updatePostInAllFeeds,
   removePostFromAllFeeds,
+  removePostFromFeaturedPosts,
   removeCommentFromAllFeeds,
   subscribeToNewPosts,
   boostContent,
   BOOST_DURATION_HOURS,
-  CREDIT_COSTS,
   InsufficientCreditsError,
   type CommunityPostsQueryData,
   type NewPostEvent,
 } from '@/services';
 import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
 import { Alert, Toast } from '@/utils';
+import { useCreditCosts } from './useCreditCosts';
 
 export type FeedScope = 'todos' | 'seguindo';
 
@@ -55,6 +56,7 @@ function eventMatchesFeed(
 export function useCommunityFeed() {
   const router = useRouter();
   const { user } = useAuth();
+  const creditCosts = useCreditCosts();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
@@ -209,12 +211,14 @@ export function useCommunityFeed() {
       const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
       const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
       removePostFromAllFeeds(queryClient, postId);
+      removePostFromFeaturedPosts(queryClient, postId);
       try {
         await deletePost(postId);
       } catch {
         if (previousPost) {
           queryClient.setQueryData<PostsQueryData>(queryKey, (old) => replaceFirstPagePost(old, previousPost));
         }
+        queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
         Toast.error(i18n.t('community:deletePostError'));
       }
     },
@@ -230,7 +234,7 @@ export function useCommunityFeed() {
         Toast.success(i18n.t('community:boostSuccess', { hours: BOOST_DURATION_HOURS }));
       } catch (err) {
         if (err instanceof InsufficientCreditsError) {
-          Alert.alert(i18n.t('community:insufficientCreditsTitle'), i18n.t('community:boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+          Alert.alert(i18n.t('community:insufficientCreditsTitle'), i18n.t('community:boostCreditsMessage', { cost: creditCosts.boost_content }), [
             { text: i18n.t('common:notNow'), style: 'cancel' },
             { text: i18n.t('common:seePlans'), onPress: () => router.push('/profile/plans') },
           ]);
@@ -239,7 +243,7 @@ export function useCommunityFeed() {
         }
       }
     },
-    [queryClient, router]
+    [queryClient, router, creditCosts]
   );
 
   const handleDeleteComment = useCallback(

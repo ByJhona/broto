@@ -343,6 +343,14 @@ export function removePostFromAllFeeds(queryClient: QueryClient, postId: string)
   });
 }
 
+const FEATURED_POSTS_QUERY_PREFIX = ['featured-posts'] as const;
+
+export function removePostFromFeaturedPosts(queryClient: QueryClient, postId: string) {
+  queryClient.setQueriesData<CommunityPost[]>({ queryKey: FEATURED_POSTS_QUERY_PREFIX }, (old) =>
+    old?.filter((post) => post.id !== postId)
+  );
+}
+
 function withoutComment(post: CommunityPost, commentId: string): CommunityPost {
   return { ...post, comments: post.comments.filter((comment) => comment.id !== commentId) };
 }

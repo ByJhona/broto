@@ -16,6 +16,7 @@ import {
   toggleLike,
   updatePostInAllFeeds,
   removePostFromAllFeeds,
+  removePostFromFeaturedPosts,
   type CommunityPostsQueryData,
 } from '@/services';
 import type { CommunityPost } from '@/types';
@@ -89,6 +90,7 @@ export default function PostDetailScreen() {
     try {
       await deletePost(post.id);
       removePostFromAllFeeds(queryClient, post.id);
+      removePostFromFeaturedPosts(queryClient, post.id);
       router.back();
     } catch {
       Toast.error(t('deletePostError'));

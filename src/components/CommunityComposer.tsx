@@ -82,11 +82,11 @@ export function CommunityComposer({ onPost }: Readonly<CommunityComposerProps>) 
         />
       </View>
 
-      <View style={styles.photoGrid}>
-        <PhotoGrid photoUrls={imageUris} onAdd={handleAttachPhoto} onRemove={handleRemovePhoto} max={MAX_POST_PHOTOS} disabled={isPosting} />
-      </View>
+      <View style={styles.footer}>
+        <View style={styles.photoGrid}>
+          <PhotoGrid photoUrls={imageUris} onAdd={handleAttachPhoto} onRemove={handleRemovePhoto} max={MAX_POST_PHOTOS} disabled={isPosting} scroll />
+        </View>
 
-      <View style={styles.actions}>
         <Pressable
           style={[styles.postButton, !canPost && styles.postButtonDisabled]}
           onPress={handlePost}
@@ -151,14 +151,15 @@ const makeStyles = (colors: ThemeColors) =>
     fontSize: 14,
     color: colors.foreground,
   },
-  photoGrid: {
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: Metrics.spacing.sm,
     marginTop: Metrics.spacing.sm,
   },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: Metrics.spacing.sm,
+  photoGrid: {
+    flex: 1,
   },
   postButton: {
     backgroundColor: colors.primary,

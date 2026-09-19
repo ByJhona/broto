@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useRef, useState, type ElementRef } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardChatScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import Leaf from 'lucide-react-native/icons/leaf';
@@ -29,11 +29,16 @@ export default function ChatScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ElementRef<typeof KeyboardChatScrollView>>(null);
+  const [inputHeight, setInputHeight] = useState(0);
   const { otherUserId } = useLocalSearchParams<{ otherUserId: string }>();
   const [draft, setDraft] = useState('');
   const { t } = useTranslation('chat');
   const offerStatusLabel = getOfferStatusLabel(t);
+
+  const handleInputLayout = (event: LayoutChangeEvent) => {
+    setInputHeight(event.nativeEvent.layout.height);
+  };
 
   const { timeline, isLoading, sendMessage, isSending, respondToProposal, currentUserId } = useChat(otherUserId);
 
@@ -142,8 +147,9 @@ export default function ChatScreen() {
           style={styles.emptyContainer}
         />
       ) : (
-        <ScrollView
+        <KeyboardChatScrollView
           ref={scrollRef}
+          offset={inputHeight}
           style={styles.messagesScroll}
           contentContainerStyle={styles.messages}
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
@@ -158,10 +164,13 @@ export default function ChatScreen() {
               </View>
             );
           })}
-        </ScrollView>
+        </KeyboardChatScrollView>
       )}
 
-      <KeyboardStickyView style={[styles.inputRow, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
+      <KeyboardStickyView
+        onLayout={handleInputLayout}
+        style={[styles.inputRow, { paddingBottom: insets.bottom + Metrics.spacing.md }]}
+      >
         <TextInput
           style={styles.input}
           value={draft}
@@ -316,6 +325,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'flex-end',
       gap: Metrics.spacing.sm,
       padding: Metrics.spacing.md,
+      backgroundColor: colors.background,
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },

@@ -36,6 +36,7 @@ import {
   deleteComment,
   updatePostInAllFeeds,
   removePostFromAllFeeds,
+  removePostFromFeaturedPosts,
   removeCommentFromAllFeeds,
   type CommunityPostsQueryData,
 } from '@/services';
@@ -460,10 +461,12 @@ export default function PublicProfileScreen() {
       const cached = queryClient.getQueryData<CommunityPostsQueryData>(postsQueryKey);
       const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
       removePostFromAllFeeds(queryClient, postId);
+      removePostFromFeaturedPosts(queryClient, postId);
       try {
         await deletePost(postId);
       } catch {
         if (previousPost) updatePostInAllFeeds(queryClient, postId, () => previousPost);
+        queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
         Toast.error(t('deletePostError'));
       }
     },

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import Plus from 'lucide-react-native/icons/plus';
 import X from 'lucide-react-native/icons/x';
@@ -12,16 +12,17 @@ type PhotoGridProps = {
   onPressPhoto?: (photoUrl: string) => void;
   max: number;
   disabled?: boolean;
+  scroll?: boolean;
 };
 
 const TILE_SIZE = 76;
 
-export function PhotoGrid({ photoUrls, onAdd, onRemove, onPressPhoto, max, disabled }: Readonly<PhotoGridProps>) {
+export function PhotoGrid({ photoUrls, onAdd, onRemove, onPressPhoto, max, disabled, scroll }: Readonly<PhotoGridProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  return (
-    <View style={styles.row}>
+  const tiles = (
+    <>
       {photoUrls.map((url) => (
         <View key={url} style={styles.tile}>
           <Pressable onPress={() => onPressPhoto?.(url)} disabled={!onPressPhoto}>
@@ -38,8 +39,18 @@ export function PhotoGrid({ photoUrls, onAdd, onRemove, onPressPhoto, max, disab
           <Plus size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       ) : null}
-    </View>
+    </>
   );
+
+  if (scroll) {
+    return (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollRow}>
+        {tiles}
+      </ScrollView>
+    );
+  }
+
+  return <View style={styles.row}>{tiles}</View>;
 }
 
 const makeStyles = (colors: ThemeColors) =>
@@ -47,6 +58,10 @@ const makeStyles = (colors: ThemeColors) =>
     row: {
       flexDirection: 'row',
       flexWrap: 'wrap',
+      gap: Metrics.spacing.sm,
+    },
+    scrollRow: {
+      flexDirection: 'row',
       gap: Metrics.spacing.sm,
     },
     tile: {
