@@ -5,6 +5,7 @@ import { useColors, type ThemeColors } from '@/theme';
 import type { PixelArt } from '@/types';
 
 const ART_SCALE = 0.78;
+const BADGE_GOLD = '#D4AF37';
 
 type PixelBadgeProps = {
   pixelArt: PixelArt;
@@ -36,9 +37,10 @@ export function PixelBadge({ pixelArt, size = 96 }: Readonly<PixelBadgeProps>) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const rects = useMemo(() => buildPixelRects(pixelArt), [pixelArt]);
   const artSize = size * ART_SCALE;
+  const borderWidth = Math.max(2, Math.round(size * 0.04));
 
   return (
-    <View style={[styles.frame, { width: size, height: size, borderRadius: size / 2 }]}>
+    <View style={[styles.frame, { width: size, height: size, borderRadius: size / 2, borderWidth }]}>
       <Svg width={artSize} height={artSize} viewBox={`0 0 ${pixelArt.size} ${pixelArt.size}`}>
         {rects.map((rect) => (
           <Rect key={rect.key} x={rect.x} y={rect.y} width={1} height={1} fill={rect.color} />
@@ -54,6 +56,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.card,
+      borderColor: BADGE_GOLD,
       overflow: 'hidden',
     },
   });
