@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import MapPin from 'lucide-react-native/icons/map-pin';
-import Pencil from 'lucide-react-native/icons/pencil';
 import Users from 'lucide-react-native/icons/users';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import {
@@ -69,7 +69,7 @@ function buildEventHeaderOptions(
   return {
     headerRight: () => (
       <Pressable onPress={onOpenActions} disabled={isActing} hitSlop={8}>
-        <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+        <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
       </Pressable>
     ),
   };
