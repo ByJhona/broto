@@ -19,3 +19,7 @@ export const Alert = {
     handler?.(title, message, buttons);
   },
 };
+
+export function closeAlertButton(t: (key: string) => string): AlertButton {
+  return { text: t('common:close'), style: 'cancel' };
+}

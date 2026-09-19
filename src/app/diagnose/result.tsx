@@ -11,15 +11,17 @@ import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { Card, EmptyState, SectionTitle } from '@/components';
 import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis } from '@/types';
 import { useTranslation } from '@/i18n';
+import { healthStatusColor } from '@/utils';
 
 function getHealthStatusMeta(
   colors: ThemeColors,
   t: (key: string, options?: Record<string, unknown>) => string
 ): Record<DiagnosisHealthStatus, { label: string; color: string; icon: LucideIcon }> {
+  const color = healthStatusColor(colors);
   return {
-    healthy: { label: t('healthyStatusLabel'), color: colors.leaf, icon: CheckCircle2 },
-    attention: { label: t('attentionStatusLabel'), color: colors.secondary, icon: AlertTriangle },
-    urgent: { label: t('urgentStatusLabel'), color: colors.destructive, icon: AlertTriangle },
+    healthy: { label: t('healthyStatusLabel'), color: color.healthy, icon: CheckCircle2 },
+    attention: { label: t('attentionStatusLabel'), color: color.attention, icon: AlertTriangle },
+    urgent: { label: t('urgentStatusLabel'), color: color.urgent, icon: AlertTriangle },
   };
 }
 

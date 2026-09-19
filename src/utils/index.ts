@@ -5,6 +5,7 @@ export * from './confirm';
 export * from './currency';
 export * from './date';
 export * from './communityPostType';
+export * from './diagnosis';
 export * from './distance';
 export * from './eventStyle';
 export * from './greeting';

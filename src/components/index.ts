@@ -7,6 +7,7 @@ export * from './BadgeDetailModal';
 export * from './BrotoLogo';
 export * from './Card';
 export * from './CareTaskItem';
+export * from './CarouselSection';
 export * from './ChatButton';
 export * from './CollapsibleSection';
 export * from './CommunityComposer';
@@ -75,6 +76,7 @@ export * from './Skeleton';
 export * from './SpeciesInfoSection';
 export * from './SpeciesPhotoHero';
 export * from './StatusBadge';
+export * from './StatusNotice';
 export * from './SubmitButton';
 export * from './ToastHost';
 

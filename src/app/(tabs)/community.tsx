@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef } from 'react';
 import {
   FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -17,7 +16,15 @@ import Search from 'lucide-react-native/icons/search';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { CommunityComposer, CommunityPostCard, IconButton, SectionTitle, SegmentedControl, type SegmentedControlOption } from '@/components';
+import {
+  CommunityComposer,
+  CommunityPostCard,
+  FilterChipRow,
+  IconButton,
+  SectionTitle,
+  SegmentedControl,
+  type SegmentedControlOption,
+} from '@/components';
 import { COMMUNITY_POST_TYPE, OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost } from '@/types';
 import { useCommunityFeed, type FeedScope } from '@/hooks';
 
@@ -39,30 +46,6 @@ function getScopeOptions(t: (key: string) => string): SegmentedControlOption<Fee
 }
 
 type Styles = ReturnType<typeof makeStyles>;
-
-type CommunityFilterChipsProps = {
-  filter: CommunityFeedFilter | null;
-  onChange: (filter: CommunityFeedFilter | null) => void;
-  styles: Styles;
-};
-
-function CommunityFilterChips({ filter, onChange, styles }: Readonly<CommunityFilterChipsProps>) {
-  const { t } = useTranslation('community');
-  const feedFilters = getFeedFilters(t);
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipRow}>
-      {feedFilters.map((item) => (
-        <Pressable
-          key={item.label}
-          style={[styles.filterChip, filter === item.value && styles.filterChipActive]}
-          onPress={() => onChange(item.value)}
-        >
-          <Text style={[styles.filterChipText, filter === item.value && styles.filterChipTextActive]}>{item.label}</Text>
-        </Pressable>
-      ))}
-    </ScrollView>
-  );
-}
 
 type FeaturedPostsSectionProps = {
   feed: ReturnType<typeof useCommunityFeed>;
@@ -122,7 +105,7 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch }: Readonly<Commun
       <SegmentedControl options={scopeOptions} value={feed.scope} onChange={feed.setScope} style={styles.scopeControl} />
 
       <View style={styles.filtersRow}>
-        <CommunityFilterChips filter={feed.filter} onChange={feed.setFilter} styles={styles} />
+        <FilterChipRow options={getFeedFilters(t)} value={feed.filter} onChange={feed.setFilter} />
       </View>
 
       <FeaturedPostsSection feed={feed} styles={styles} />
@@ -250,27 +233,6 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     gap: Metrics.spacing.xs,
     marginBottom: Metrics.spacing.lg,
-  },
-  filterChipRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  filterChip: {
-    backgroundColor: colors.muted,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: 5,
-    paddingHorizontal: Metrics.spacing.sm,
-  },
-  filterChipActive: {
-    backgroundColor: colors.leafForeground,
-  },
-  filterChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.mutedForeground,
-  },
-  filterChipTextActive: {
-    color: colors.leaf,
   },
   subtitle: {
     fontSize: 14,

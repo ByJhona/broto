@@ -12,15 +12,17 @@ import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
 import { useTranslation } from '@/i18n';
+import { healthStatusColor } from '@/utils';
 
 function getHealthStatusMeta(
   colors: ThemeColors,
   t: (key: string, options?: Record<string, unknown>) => string
 ): Record<DiagnosisHealthStatus, { label: string; color: string }> {
+  const color = healthStatusColor(colors);
   return {
-    healthy: { label: t('healthyLabel'), color: colors.leaf },
-    attention: { label: t('attentionLabel'), color: colors.secondary },
-    urgent: { label: t('urgentLabel'), color: colors.destructive },
+    healthy: { label: t('healthyLabel'), color: color.healthy },
+    attention: { label: t('attentionLabel'), color: color.attention },
+    urgent: { label: t('urgentLabel'), color: color.urgent },
   };
 }
 

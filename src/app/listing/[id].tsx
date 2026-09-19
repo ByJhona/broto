@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ import {
   PromptModal,
   ScreenContent,
   SectionTitle,
+  StatusNotice,
   type ListingProposal,
 } from '@/components';
 import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
@@ -40,6 +41,7 @@ import {
 } from '@/services';
 import {
   Alert,
+  closeAlertButton,
   confirm,
   formatPrice,
   listingShareVerb,
@@ -75,18 +77,8 @@ function buildListingActionButtons(status: ListingStatus, handlers: ListingActio
   }
   buttons.push({ text: t('shareToCommunityAction'), onPress: handlers.onShare });
   buttons.push({ text: t('deleteListingAction'), style: 'destructive', onPress: handlers.onDelete });
-  buttons.push({ text: t('common:close'), style: 'cancel' });
+  buttons.push(closeAlertButton(t));
   return buttons;
-}
-
-type ListingStatusNoticeProps = {
-  status: ListingStatus;
-  style: StyleProp<TextStyle>;
-};
-
-function ListingStatusNotice({ status, style }: Readonly<ListingStatusNoticeProps>) {
-  if (status === LISTING_STATUS.AVAILABLE) return null;
-  return <Text style={style}>{listingStatusNotice(status)}</Text>;
 }
 
 type ListingProposalsBlockProps = {
@@ -422,7 +414,7 @@ export default function ListingDetailScreen() {
           </View>
         </Card>
 
-        <ListingStatusNotice status={listing.status} style={styles.statusNotice} />
+        <StatusNotice text={listingStatusNotice(listing.status) ?? null} />
 
         {listing.description ? (
           <Card style={styles.section}>
@@ -490,11 +482,5 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       fontSize: 15,
       color: colors.foreground,
-    },
-    statusNotice: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.destructive,
-      marginBottom: Metrics.spacing.lg,
     },
   });

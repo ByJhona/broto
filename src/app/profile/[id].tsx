@@ -13,7 +13,7 @@ import type { CommunityPost, EarnedBadge, PlantEvent, PlantListing, UserProfile 
 import {
   Avatar,
   BadgeDetailModal,
-  CollapsibleSection,
+  CarouselSection,
   CommunityPostCard,
   EmptyState,
   EventCard,
@@ -86,23 +86,21 @@ function ProfileListingsRow({
   onToggleCollapsed,
   userLocation,
 }: Readonly<ProfileListingsRowProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  if (listings.length === 0) return null;
-
   return (
-    <CollapsibleSection title={title} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-        {listings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
-            onPress={() => onPressListing(listing.id)}
-          />
-        ))}
-      </ScrollView>
-    </CollapsibleSection>
+    <CarouselSection
+      title={title}
+      items={listings}
+      keyExtractor={(listing) => listing.id}
+      isCollapsed={isCollapsed}
+      onToggleCollapsed={onToggleCollapsed}
+      renderItem={(listing) => (
+        <ListingCard
+          listing={listing}
+          distanceLabel={formatDistanceTo(userLocation, listing.latitude, listing.longitude)}
+          onPress={() => onPressListing(listing.id)}
+        />
+      )}
+    />
   );
 }
 
@@ -123,23 +121,21 @@ function ProfileEventsRow({
   onToggleCollapsed,
   userLocation,
 }: Readonly<ProfileEventsRowProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  if (events.length === 0) return null;
-
   return (
-    <CollapsibleSection title={title} isCollapsed={isCollapsed} onToggleCollapsed={onToggleCollapsed}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselRow}>
-        {events.map((event) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
-            onPress={() => onPressEvent(event.id)}
-          />
-        ))}
-      </ScrollView>
-    </CollapsibleSection>
+    <CarouselSection
+      title={title}
+      items={events}
+      keyExtractor={(event) => event.id}
+      isCollapsed={isCollapsed}
+      onToggleCollapsed={onToggleCollapsed}
+      renderItem={(event) => (
+        <EventCard
+          event={event}
+          distanceLabel={formatDistanceTo(userLocation, event.latitude, event.longitude)}
+          onPress={() => onPressEvent(event.id)}
+        />
+      )}
+    />
   );
 }
 

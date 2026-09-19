@@ -17,11 +17,12 @@ import {
   PromptModal,
   ScreenContent,
   SectionTitle,
+  StatusNotice,
   SubmitButton,
 } from '@/components';
 import { useEventDetail } from '@/hooks';
 import { isBoostActive } from '@/services';
-import { Alert, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
+import { Alert, closeAlertButton, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
 import type { PlantEvent } from '@/types';
 import { useTranslation } from '@/i18n';
 
@@ -39,7 +40,7 @@ function buildEventActionButtons(
     buttons.push({ text: t('cancelEventAction'), style: 'destructive', onPress: handlers.onCancel });
   }
   buttons.push({ text: t('deleteEventAction'), style: 'destructive', onPress: handlers.onDelete });
-  buttons.push({ text: t('common:close'), style: 'cancel' });
+  buttons.push(closeAlertButton(t));
   return buttons;
 }
 
@@ -139,16 +140,6 @@ function EventMetaCard({ event, isAddressLoading, address, onPressOwner, styles 
   );
 }
 
-type EventStatusNoticeProps = {
-  notice: { text: string; muted: boolean } | null;
-  styles: Styles;
-};
-
-function EventStatusNotice({ notice, styles }: Readonly<EventStatusNoticeProps>) {
-  if (!notice) return null;
-  return <Text style={notice.muted ? styles.statusNoticeMuted : styles.statusNotice}>{notice.text}</Text>;
-}
-
 type EventDescriptionCardProps = {
   description: string | null;
   styles: Styles;
@@ -216,7 +207,7 @@ export default function EventDetailScreen() {
           styles={styles}
         />
 
-        <EventStatusNotice notice={statusNotice} styles={styles} />
+        <StatusNotice text={statusNotice?.text ?? null} muted={statusNotice?.muted} />
 
         <EventDescriptionCard description={event.description} styles={styles} />
 
@@ -299,17 +290,5 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       fontSize: 15,
       color: colors.foreground,
-    },
-    statusNotice: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.destructive,
-      marginBottom: Metrics.spacing.lg,
-    },
-    statusNoticeMuted: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.mutedForeground,
-      marginBottom: Metrics.spacing.lg,
     },
   });
