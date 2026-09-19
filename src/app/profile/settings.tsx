@@ -7,6 +7,7 @@ import CreditCard from 'lucide-react-native/icons/credit-card';
 import LogOut from 'lucide-react-native/icons/log-out';
 import Monitor from 'lucide-react-native/icons/monitor';
 import Moon from 'lucide-react-native/icons/moon';
+import ShieldCheck from 'lucide-react-native/icons/shield-check';
 import Sun from 'lucide-react-native/icons/sun';
 import User from 'lucide-react-native/icons/user';
 import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference } from '@/theme';
@@ -62,7 +63,10 @@ export default function ProfileSettingsScreen() {
     description: getPlanDescription(credits, t),
   };
 
-  const settingsItems = [{ icon: User, label: t('editProfile'), onPress: () => router.push('/profile/edit') }];
+  const settingsItems = [
+    { icon: User, label: t('editProfile'), onPress: () => router.push('/profile/edit') },
+    { icon: ShieldCheck, label: t('privacyAndSecurity'), onPress: () => router.push('/profile/privacy') },
+  ];
 
   const handleSignOut = async () => {
     await signOut();

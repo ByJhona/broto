@@ -29,6 +29,7 @@ import search from './search.json';
 import task from './task.json';
 import home from './home.json';
 import photo from './photo.json';
+import privacy from './privacy.json';
 
 export default {
   common,
@@ -62,4 +63,5 @@ export default {
   task,
   home,
   photo,
+  privacy,
 };
