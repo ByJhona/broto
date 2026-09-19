@@ -43,7 +43,9 @@ const INITIAL_REGION = {
 
 const LOCATED_REGION_DELTA = 0.01;
 
-const COLLAPSE_HEADER_ON_MAP_GESTURE = false;
+function toCoordinates(position: Location.LocationObject): { latitude: number; longitude: number } {
+  return { latitude: position.coords.latitude, longitude: position.coords.longitude };
+}
 
 type PlacingParams = {
   placingListing?: string;
@@ -139,7 +141,6 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { listings, addListing } = useListings();
   const { events, addEvent } = useEvents();
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(true);
   const [mapCenter, setMapCenter] = useState(INITIAL_REGION);
   const [isPublishing, setIsPublishing] = useState(false);
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
@@ -152,15 +153,38 @@ export default function HomeScreen() {
   const draftPhotoUris = parsePhotoList(params.photoUris);
   const draftCoverPhotoUrl = draftPhotoUrls[0] ?? draftPhotoUris[0] ?? null;
 
+  const lastKnownLocationQuery = useQuery({
+    queryKey: ['device-last-known-location'],
+    queryFn: async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') return null;
+      const position = await Location.getLastKnownPositionAsync();
+      return position ? toCoordinates(position) : null;
+    },
+  });
+
   const locationQuery = useQuery({
     queryKey: ['device-location', isPlacing],
     queryFn: async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return null;
       const position = await Location.getCurrentPositionAsync({});
-      return { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      return toCoordinates(position);
     },
   });
+
+  useEffect(() => {
+    if (!lastKnownLocationQuery.data) return;
+    mapRef.current?.animateToRegion(
+      {
+        latitude: lastKnownLocationQuery.data.latitude,
+        longitude: lastKnownLocationQuery.data.longitude,
+        latitudeDelta: LOCATED_REGION_DELTA,
+        longitudeDelta: LOCATED_REGION_DELTA,
+      },
+      0
+    );
+  }, [lastKnownLocationQuery.data]);
 
   useEffect(() => {
     if (!locationQuery.data) return;
@@ -293,7 +317,6 @@ export default function HomeScreen() {
         onPress={() => setSelectedPin(null)}
         onRegionChangeStart={(_region, details) => {
           if (details?.isGesture) {
-            if (COLLAPSE_HEADER_ON_MAP_GESTURE) setIsHeaderExpanded(false);
             setSelectedPin(null);
           }
         }}
@@ -366,7 +389,7 @@ export default function HomeScreen() {
         </>
       ) : (
         <>
-          <HomeHeader expanded={isHeaderExpanded} onExpand={() => setIsHeaderExpanded(true)} />
+          <HomeHeader />
 
           {!selectedPin ? (
             <>
