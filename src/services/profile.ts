@@ -47,7 +47,8 @@ export async function updateProfile(
 ): Promise<UserProfile> {
   const { data, error } = await supabase
     .from('profiles')
-    .upsert({ id: userId, ...updates })
+    .update(updates)
+    .eq('id', userId)
     .select()
     .single();
 
