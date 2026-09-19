@@ -8,16 +8,14 @@ import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { useCreditsGate } from '@/hooks';
-import { analyzePlantGrowth, CREDIT_COSTS, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
+import { useCreditCosts, useCreditsGate } from '@/hooks';
+import { analyzePlantGrowth, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
 import { Alert, formatShortDate, pickPhoto, Toast } from '@/utils';
 import { Card } from './Card';
 import { LockedFeatureCard } from './LockedFeatureCard';
 import { SectionTitle } from './SectionTitle';
 import { SkeletonBlock } from './Skeleton';
-
-const GROWTH_ANALYSIS_CREDIT_COST = CREDIT_COSTS.growth_check;
 
 type PlantGrowthSectionProps = {
   plant: Plant;
@@ -31,6 +29,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
   const { t } = useTranslation('plant');
   const queryClient = useQueryClient();
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
+  const growthAnalysisCreditCost = useCreditCosts().growth_check;
   const checkinsQueryKey = ['plant-growth-checkins', plant.id] as const;
   const { data: checkins = [], isLoading: isCheckinsLoading } = useQuery({
     queryKey: checkinsQueryKey,
@@ -44,7 +43,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
   const showInsufficientCreditsAlert = () => {
     Alert.alert(
       t('insufficientCreditsTitle'),
-      t('growthAnalysisCreditsMessage', { cost: GROWTH_ANALYSIS_CREDIT_COST }),
+      t('growthAnalysisCreditsMessage', { cost: growthAnalysisCreditCost }),
       [
         { text: t('notNow'), style: 'cancel' },
         { text: t('seePlans'), onPress: () => router.push('/profile/plans') },
@@ -53,7 +52,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
   };
 
   const handleAnalyzeGrowth = async () => {
-    if (!canAffordCost(GROWTH_ANALYSIS_CREDIT_COST)) {
+    if (!canAffordCost(growthAnalysisCreditCost)) {
       showInsufficientCreditsAlert();
       return;
     }
@@ -92,7 +91,7 @@ export function PlantGrowthSection({ plant, isPremium }: Readonly<PlantGrowthSec
               <Camera size={16} color={colors.primaryForeground} strokeWidth={2} />
             )}
             <Text style={styles.analyzeButtonText}>
-              {isAnalyzing ? t('analyzing') : t('analyzeButton', { cost: GROWTH_ANALYSIS_CREDIT_COST })}
+              {isAnalyzing ? t('analyzing') : t('analyzeButton', { cost: growthAnalysisCreditCost })}
             </Text>
           </Pressable>
 

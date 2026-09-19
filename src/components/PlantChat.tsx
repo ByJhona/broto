@@ -7,8 +7,8 @@ import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconBadge } from './IconBadge';
-import { useCreditsGate } from '@/hooks';
-import { askPlantQuestion, CREDIT_COSTS, InsufficientCreditsError, type PlantChatMessage } from '@/services';
+import { useCreditCosts, useCreditsGate } from '@/hooks';
+import { askPlantQuestion, InsufficientCreditsError, type PlantChatMessage } from '@/services';
 import { Alert, Toast } from '@/utils';
 
 const MAX_VISIBLE_MESSAGES = 50;
@@ -59,7 +59,7 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
     setIsUnlocked(true);
   };
 
-  const creditCost = CREDIT_COSTS.chat_question;
+  const creditCost = useCreditCosts().chat_question;
 
   const appendMessage = (message: PlantChatMessage) => {
     setMessages((current) => [...current, message].slice(-MAX_VISIBLE_MESSAGES));

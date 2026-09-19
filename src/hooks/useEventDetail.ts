@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
 import { i18n, useTranslation } from '@/i18n';
 import { useAuth } from './useAuth';
+import { useCreditCosts } from './useCreditCosts';
 import { useEvents } from './useEvents';
 import {
   BOOST_DURATION_HOURS,
@@ -11,7 +12,6 @@ import {
   cancelAttendance,
   confirmAttendance,
   createPost,
-  CREDIT_COSTS,
   getEventAttendees,
   getEventById,
   InsufficientCreditsError,
@@ -92,8 +92,8 @@ async function performToggleAttendance(
   }
 }
 
-function showInsufficientCreditsAlert(router: ReturnType<typeof useRouter>): void {
-  Alert.alert(i18n.t('event:insufficientCreditsTitle'), i18n.t('event:boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+function showInsufficientCreditsAlert(router: ReturnType<typeof useRouter>, creditCost: number): void {
+  Alert.alert(i18n.t('event:insufficientCreditsTitle'), i18n.t('event:boostCreditsMessage', { cost: creditCost }), [
     { text: i18n.t('common:notNow'), style: 'cancel' },
     { text: i18n.t('common:seePlans'), onPress: () => router.push('/profile/plans') },
   ]);
@@ -102,6 +102,7 @@ function showInsufficientCreditsAlert(router: ReturnType<typeof useRouter>): voi
 async function performEventBoost(
   eventId: string,
   router: ReturnType<typeof useRouter>,
+  creditCost: number,
   setIsActing: (value: boolean) => void,
   onDone: () => void
 ): Promise<void> {
@@ -112,7 +113,7 @@ async function performEventBoost(
     Toast.success(i18n.t('event:boostSuccess', { hours: BOOST_DURATION_HOURS }));
   } catch (err) {
     if (err instanceof InsufficientCreditsError) {
-      showInsufficientCreditsAlert(router);
+      showInsufficientCreditsAlert(router, creditCost);
     } else {
       Toast.error(i18n.t('event:boostError'));
     }
@@ -145,6 +146,7 @@ export function useEventDetail(id: string) {
   const router = useRouter();
   const { t } = useTranslation('event');
   const { user } = useAuth();
+  const creditCosts = useCreditCosts();
   const queryClient = useQueryClient();
   const { removeEvent, cancelEventById } = useEvents();
   const [isActing, setIsActing] = useState(false);
@@ -201,7 +203,7 @@ export function useEventDetail(id: string) {
 
   const handleBoost = () => {
     if (!event) return;
-    performEventBoost(event.id, router, setIsActing, invalidateEvent);
+    performEventBoost(event.id, router, creditCosts.boost_content, setIsActing, invalidateEvent);
   };
 
   const handlePressOwner = () => {

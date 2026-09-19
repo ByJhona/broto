@@ -64,13 +64,34 @@ export class InsufficientCreditsError extends Error {
 
 export type CreditSpendReason = 'identification' | 'diagnosis' | 'growth_check' | 'chat_question' | 'boost_content';
 
-export const CREDIT_COSTS: Record<CreditSpendReason, number> = {
+export type CreditCosts = Record<CreditSpendReason, number>;
+
+export const DEFAULT_CREDIT_COSTS: CreditCosts = {
   identification: 2,
   diagnosis: 5,
   growth_check: 3,
   chat_question: 1,
   boost_content: 20,
 };
+
+export const CREDIT_COSTS_QUERY_KEY = ['credit-costs'] as const;
+
+export async function getCreditCosts(): Promise<CreditCosts> {
+  const { data, error } = await supabase.from('credit_costs').select('reason, cost');
+
+  if (error || !data) {
+    console.warn('Não foi possível buscar os custos em créditos:', error);
+    return DEFAULT_CREDIT_COSTS;
+  }
+
+  const costs = { ...DEFAULT_CREDIT_COSTS };
+  for (const row of data as { reason: CreditSpendReason; cost: number }[]) {
+    if (row.reason in costs) {
+      costs[row.reason] = row.cost;
+    }
+  }
+  return costs;
+}
 
 export type PlanCatalogItem = {
   id: string;
@@ -107,6 +128,14 @@ export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
     monthlyCredits: row.monthly_credits,
     revenuecatEntitlementId: row.revenuecat_entitlement_id,
   }));
+}
+
+export async function syncSubscription(): Promise<void> {
+  const { error } = await supabase.functions.invoke('sync-subscription');
+
+  if (error) {
+    console.warn('Não foi possível sincronizar a assinatura com o RevenueCat:', error);
+  }
 }
 
 export async function getCreditPacks(): Promise<CreditPack[]> {

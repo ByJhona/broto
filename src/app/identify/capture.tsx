@@ -12,8 +12,8 @@ import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 import { OfflineBanner } from '@/components';
-import { useAuth, useCreditsGate, useNetworkStatus } from '@/hooks';
-import { CREDIT_COSTS, diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
+import { useAuth, useCreditCosts, useCreditsGate, useNetworkStatus } from '@/hooks';
+import { diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
 import type { PlantDiagnosis } from '@/types';
 import { Alert, requireLogin, Toast } from '@/utils';
 import { useTranslation } from '@/i18n';
@@ -113,7 +113,8 @@ export default function CaptureScreen() {
   }, [isFocused]);
 
   const copy = getModeCopy(t)[mode];
-  const creditCost = mode === 'identify' ? CREDIT_COSTS.identification : CREDIT_COSTS.diagnosis;
+  const creditCosts = useCreditCosts();
+  const creditCost = mode === 'identify' ? creditCosts.identification : creditCosts.diagnosis;
 
   const showInsufficientCreditsAlert = () => {
     Alert.alert(t('insufficientCreditsTitle'), t('insufficientCreditsMessage', { cost: creditCost }), [

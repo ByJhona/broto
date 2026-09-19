@@ -23,6 +23,7 @@ import {
   isUserCancelledPurchase,
   PLAN_CATALOG_QUERY_KEY,
   purchasePackage,
+  syncSubscription,
   type PlanCatalogItem,
 } from '@/services';
 import { Toast } from '@/utils';
@@ -115,6 +116,7 @@ export default function PlansScreen() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    await syncSubscription();
     await Promise.all([plansQuery.refetch(), creditPacksQuery.refetch(), offeringsQuery.refetch(), refreshCredits()]);
     setIsRefreshing(false);
   };
@@ -138,8 +140,8 @@ export default function PlansScreen() {
       }
 
       await purchasePackage(pkg);
+      await syncSubscription();
       await refreshCredits();
-      setTimeout(refreshCredits, 2500);
       Toast.success(successMessage);
     } catch (err) {
       if (!isUserCancelledPurchase(err)) {

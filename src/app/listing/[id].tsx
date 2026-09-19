@@ -23,12 +23,11 @@ import {
   SectionTitle,
   type ListingProposal,
 } from '@/components';
-import { useAuth, useListings, usePlants } from '@/hooks';
+import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
 import {
   BOOST_DURATION_HOURS,
   boostContent,
   createPost,
-  CREDIT_COSTS,
   getListingById,
   getListingProposals,
   hasSentProposal,
@@ -140,6 +139,7 @@ export default function ListingDetailScreen() {
   const queryClient = useQueryClient();
   const { setListingStatus, removeListing } = useListings();
   const { plants } = usePlants();
+  const creditCosts = useCreditCosts();
   const [hasActedThisSession, setHasActedThisSession] = useState(false);
   const [isActing, setIsActing] = useState(false);
   const [isPlantPickerOpen, setIsPlantPickerOpen] = useState(false);
@@ -290,7 +290,7 @@ export default function ListingDetailScreen() {
   };
 
   const showInsufficientCreditsAlert = () => {
-    Alert.alert(t('insufficientCreditsTitle'), t('boostCreditsMessage', { cost: CREDIT_COSTS.boost_content }), [
+    Alert.alert(t('insufficientCreditsTitle'), t('boostCreditsMessage', { cost: creditCosts.boost_content }), [
       { text: t('common:notNow'), style: 'cancel' },
       { text: t('common:seePlans'), onPress: () => router.push('/profile/plans') },
     ]);
