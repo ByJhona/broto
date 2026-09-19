@@ -31,3 +31,6 @@ jobs:
 
       - name: Sonar-style static analysis (cognitive complexity, nested conditionals)
         run: npx eslint --config sonar.eslint.config.js "src/**/*.{ts,tsx}"
+
+      - name: Unit tests
+        run: npm test -- --ci
