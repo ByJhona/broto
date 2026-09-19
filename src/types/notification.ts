@@ -1,4 +1,11 @@
-export type NotificationType = 'system' | 'like' | 'comment' | 'listing_interest' | 'listing_message';
+export type NotificationType =
+  | 'system'
+  | 'like'
+  | 'comment'
+  | 'listing_interest'
+  | 'listing_message'
+  | 'care_setup_reminder'
+  | 'care_reminder';
 
 export type Notification = {
   id: string;
@@ -7,6 +14,8 @@ export type Notification = {
   actorName: string | null;
   postId: string | null;
   listingId: string | null;
+  plantId: string | null;
+  plantName: string | null;
   title: string | null;
   message: string | null;
   createdAt: string;

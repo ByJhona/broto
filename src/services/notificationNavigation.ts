@@ -5,7 +5,6 @@ import { getNotificationsModule } from './notificationsModule';
 
 type NotificationTapData = {
   careTaskId?: string;
-  careTaskIds?: string[];
   notificationId?: string;
 };
 
@@ -20,9 +19,8 @@ async function navigateToCareTask(taskId: string): Promise<void> {
 }
 
 async function handleNotificationTap(data: NotificationTapData): Promise<void> {
-  const careTaskId = data.careTaskId ?? data.careTaskIds?.[0];
-  if (careTaskId) {
-    await navigateToCareTask(careTaskId);
+  if (data.careTaskId) {
+    await navigateToCareTask(data.careTaskId);
     return;
   }
 
@@ -34,6 +32,8 @@ async function handleNotificationTap(data: NotificationTapData): Promise<void> {
       router.push({ pathname: '/chat', params: { otherUserId: notification.actorId } });
     } else if (notification?.listingId) {
       router.push({ pathname: '/listing/[id]', params: { id: notification.listingId } });
+    } else if (notification?.plantId) {
+      router.push(`/plant/${notification.plantId}`);
     } else {
       router.push('/(tabs)/community');
     }

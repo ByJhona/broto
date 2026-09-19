@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import Bell from 'lucide-react-native/icons/bell';
 import BellOff from 'lucide-react-native/icons/bell-off';
+import Droplet from 'lucide-react-native/icons/droplet';
 import Heart from 'lucide-react-native/icons/heart';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Sprout from 'lucide-react-native/icons/sprout';
@@ -21,6 +22,8 @@ const TYPE_ICONS: Partial<Record<NotificationType, typeof Heart>> = {
   comment: MessageCircle,
   system: Bell,
   listing_interest: Sprout,
+  care_setup_reminder: Droplet,
+  care_reminder: Droplet,
 };
 
 export default function NotificationsScreen() {
@@ -78,9 +81,11 @@ export default function NotificationsScreen() {
               router.push({ pathname: '/post/[id]', params: { id: item.postId } });
             } else if (item.listingId) {
               router.push({ pathname: '/listing/[id]', params: { id: item.listingId } });
+            } else if (item.plantId) {
+              router.push(`/plant/${item.plantId}`);
             }
           };
-          const isPressable = !!item.postId || !!item.listingId;
+          const isPressable = !!item.postId || !!item.listingId || !!item.plantId;
           return (
             <Card style={styles.item} disabled={!isPressable} onPress={handlePress}>
               <IconBadge size={32}>

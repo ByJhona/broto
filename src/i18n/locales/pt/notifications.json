@@ -4,5 +4,8 @@
   "commentTitle": "Novo recado",
   "commentMessage": "{{actor}} deixou um recado na sua foto!",
   "listingInterestTitle": "Interesse na sua oferta",
-  "listingInterestMessage": "{{actor}} se interessou pela planta que você ofereceu!"
+  "listingInterestMessage": "{{actor}} se interessou pela planta que você ofereceu!",
+  "careSetupReminderTitle": "Configure um lembrete de cuidado",
+  "careSetupReminderMessage": "Sua planta \"{{plant}}\" ainda não tem um lembrete de rega. Que tal configurar um agora?",
+  "careSetupReminderMessageGeneric": "Uma das suas plantas ainda não tem um lembrete de rega. Que tal configurar um agora?"
 }

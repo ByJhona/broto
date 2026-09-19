@@ -10,24 +10,38 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const DEFAULT_ACTOR_NAME: Record<Locale, string> = { pt: 'Alguém', en: 'Someone' };
 
-const NOTIFICATION_COPY: Record<Locale, Record<string, (actorName: string) => { title: string; message: string }>> = {
+type NotificationCopyContext = { actorName: string; plantName: string | null };
+
+const NOTIFICATION_COPY: Record<Locale, Record<string, (ctx: NotificationCopyContext) => { title: string; message: string }>> = {
   pt: {
-    like: (actorName) => ({ title: 'Nova curtida', message: `${actorName} acabou de curtir a sua foto!` }),
-    comment: (actorName) => ({ title: 'Novo recado', message: `${actorName} deixou um recado na sua foto!` }),
-    listing_interest: (actorName) => ({
+    like: ({ actorName }) => ({ title: 'Nova curtida', message: `${actorName} acabou de curtir a sua foto!` }),
+    comment: ({ actorName }) => ({ title: 'Novo recado', message: `${actorName} deixou um recado na sua foto!` }),
+    listing_interest: ({ actorName }) => ({
       title: 'Interesse na sua oferta',
       message: `${actorName} se interessou pela planta que você ofereceu!`,
     }),
-    listing_message: (actorName) => ({ title: 'Nova mensagem', message: `${actorName} te enviou uma mensagem.` }),
+    listing_message: ({ actorName }) => ({ title: 'Nova mensagem', message: `${actorName} te enviou uma mensagem.` }),
+    care_setup_reminder: ({ plantName }) => ({
+      title: 'Configure um lembrete de cuidado',
+      message: plantName
+        ? `Sua planta "${plantName}" ainda não tem um lembrete de rega. Que tal configurar um agora?`
+        : 'Uma das suas plantas ainda não tem um lembrete de rega. Que tal configurar um agora?',
+    }),
   },
   en: {
-    like: (actorName) => ({ title: 'New like', message: `${actorName} just liked your photo!` }),
-    comment: (actorName) => ({ title: 'New comment', message: `${actorName} left a comment on your photo!` }),
-    listing_interest: (actorName) => ({
+    like: ({ actorName }) => ({ title: 'New like', message: `${actorName} just liked your photo!` }),
+    comment: ({ actorName }) => ({ title: 'New comment', message: `${actorName} left a comment on your photo!` }),
+    listing_interest: ({ actorName }) => ({
       title: 'Interest in your listing',
       message: `${actorName} is interested in the plant you offered!`,
     }),
-    listing_message: (actorName) => ({ title: 'New message', message: `${actorName} sent you a message.` }),
+    listing_message: ({ actorName }) => ({ title: 'New message', message: `${actorName} sent you a message.` }),
+    care_setup_reminder: ({ plantName }) => ({
+      title: 'Set up a care reminder',
+      message: plantName
+        ? `Your plant "${plantName}" doesn't have a watering reminder yet. Want to set one up now?`
+        : "One of your plants doesn't have a watering reminder yet. Want to set one up now?",
+    }),
   },
 };
 
@@ -54,7 +68,9 @@ Deno.serve(async (req) => {
 
   const { data: notification, error } = await supabaseAdmin
     .from('notifications')
-    .select('user_id, type, title, message, actor:profiles!actor_id(name, username), recipient:profiles!user_id(locale)')
+    .select(
+      'user_id, type, title, message, actor:profiles!actor_id(name, username), recipient:profiles!user_id(locale), plant:plants!plant_id(name)'
+    )
     .eq('id', notificationId)
     .maybeSingle<{
       user_id: string;
@@ -63,6 +79,7 @@ Deno.serve(async (req) => {
       message: string | null;
       actor: { name: string | null; username: string | null } | null;
       recipient: { locale: string | null } | null;
+      plant: { name: string | null } | null;
     }>();
 
   if (error || !notification) {
@@ -71,8 +88,11 @@ Deno.serve(async (req) => {
 
   const locale = resolveLocale(notification.recipient?.locale);
   const actorName = notification.actor?.name || notification.actor?.username || DEFAULT_ACTOR_NAME[locale];
+  const plantName = notification.plant?.name ?? null;
   const buildCopy = NOTIFICATION_COPY[locale][notification.type];
-  const { title, message } = buildCopy ? buildCopy(actorName) : { title: notification.title, message: notification.message };
+  const { title, message } = buildCopy
+    ? buildCopy({ actorName, plantName })
+    : { title: notification.title, message: notification.message };
 
   if (!title || !message) {
     return new Response(JSON.stringify({ sent: 0 }), { headers: { 'Content-Type': 'application/json' } });
@@ -89,13 +109,14 @@ Deno.serve(async (req) => {
   }
 
   const messages = tokens.map((token) => ({
+    id: token,
     to: token,
     title,
     body: message,
     data: { notificationId },
   }));
 
-  const { deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
+  const { deliveredIds: deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
 
   if (staleTokens.length > 0) {
     await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);

@@ -125,8 +125,8 @@ export const REMINDERS_CHANNEL_ID = 'reminders';
 async function handleMarkDoneResponse(response: NotificationResponse): Promise<void> {
   if (response.actionIdentifier !== MARK_DONE_ACTION) return;
 
-  const data = response.notification.request.content.data as { careTaskId?: string; careTaskIds?: string[] } | undefined;
-  const careTaskId = data?.careTaskId ?? data?.careTaskIds?.[0];
+  const data = response.notification.request.content.data as { careTaskId?: string } | undefined;
+  const careTaskId = data?.careTaskId;
   if (!careTaskId) return;
 
   await markCareTaskDoneById(careTaskId);

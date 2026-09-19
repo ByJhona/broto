@@ -8,9 +8,11 @@ type NotificationRow = {
   type: Notification['type'];
   post_id: string | null;
   listing_id: string | null;
+  plant_id: string | null;
   actor_id: string | null;
   created_at: string;
   actor: { name: string | null; username: string | null } | null;
+  plant: { name: string | null } | null;
 };
 
 function mapNotificationRow(row: NotificationRow): Notification {
@@ -21,13 +23,15 @@ function mapNotificationRow(row: NotificationRow): Notification {
     actorName: row.actor?.name || row.actor?.username || null,
     postId: row.post_id ?? null,
     listingId: row.listing_id ?? null,
+    plantId: row.plant_id ?? null,
+    plantName: row.plant?.name ?? null,
     title: row.title,
     message: row.message,
     createdAt: row.created_at,
   };
 }
 
-const NOTIFICATION_SELECT = '*, actor:profiles!actor_id(name, username)';
+const NOTIFICATION_SELECT = '*, actor:profiles!actor_id(name, username), plant:plants!plant_id(name)';
 
 export async function getNotifications(userId: string): Promise<Notification[]> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

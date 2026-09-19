@@ -14,6 +14,15 @@ export function notificationCopy(notification: Notification): { title: string; m
         title: i18n.t('notifications:listingInterestTitle'),
         message: i18n.t('notifications:listingInterestMessage', { actor }),
       };
+    case 'care_setup_reminder': {
+      const plant = notification.plantName?.trim();
+      return {
+        title: i18n.t('notifications:careSetupReminderTitle'),
+        message: plant
+          ? i18n.t('notifications:careSetupReminderMessage', { plant })
+          : i18n.t('notifications:careSetupReminderMessageGeneric'),
+      };
+    }
     case 'system':
     default:
       return { title: notification.title ?? '', message: notification.message ?? '' };

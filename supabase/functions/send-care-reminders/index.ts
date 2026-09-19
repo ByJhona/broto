@@ -10,14 +10,12 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const REMINDER_TIMEZONE = 'America/Sao_Paulo';
 
-const CARE_REMINDER_COPY: Record<Locale, { multipleTasksTitle: (count: number) => string; plantPrefix: (name: string) => string; genericBody: string }> = {
+const CARE_REMINDER_COPY: Record<Locale, { plantPrefix: (name: string) => string; genericBody: string }> = {
   pt: {
-    multipleTasksTitle: (count) => `${count} lembretes de cuidado`,
     plantPrefix: (name) => `Planta: ${name}`,
     genericBody: 'Hora de cuidar da sua planta.',
   },
   en: {
-    multipleTasksTitle: (count) => `${count} care reminders`,
     plantPrefix: (name) => `Plant: ${name}`,
     genericBody: 'Time to care for your plant.',
   },
@@ -26,6 +24,7 @@ const CARE_REMINDER_COPY: Record<Locale, { multipleTasksTitle: (count: number) =
 type CareTaskRow = {
   id: string;
   user_id: string;
+  plant_id: string | null;
   title: string;
   plant_name: string | null;
   plant_photo_url: string | null;
@@ -81,27 +80,27 @@ function isReminderTimeReached(task: CareTaskRow, currentHour: number, currentMi
   return task.reminder_hour === currentHour && task.reminder_minute <= currentMinute;
 }
 
-function buildMessage(tasks: CareTaskRow[], token: string, locale: Locale): ExpoPushMessage {
+function buildReminderCopy(task: CareTaskRow, locale: Locale): { title: string; message: string } {
   const copy = CARE_REMINDER_COPY[locale];
-  const title = tasks.length === 1 ? tasks[0].title : copy.multipleTasksTitle(tasks.length);
-  const body =
-    tasks.length === 1
-      ? tasks[0].plant_name
-        ? copy.plantPrefix(tasks[0].plant_name)
-        : copy.genericBody
-      : tasks.map((task) => task.title).join(', ');
+  return {
+    title: task.title,
+    message: task.plant_name ? copy.plantPrefix(task.plant_name) : copy.genericBody,
+  };
+}
 
-  const singleTaskPhoto = tasks.length === 1 ? tasks[0].plant_photo_url : null;
+function buildMessage(task: CareTaskRow, token: string, locale: Locale): ExpoPushMessage {
+  const { title, message: body } = buildReminderCopy(task, locale);
 
   return {
+    id: `${task.id}:${token}`,
     to: token,
     title,
     body,
-    data: { careTaskIds: tasks.map((task) => task.id) },
+    data: { careTaskId: task.id },
     channelId: 'reminders',
     priority: 'high',
-    ...(tasks.length === 1 ? { categoryId: 'care-task' } : null),
-    ...(singleTaskPhoto ? { richContent: { image: singleTaskPhoto } } : null),
+    categoryId: 'care-task',
+    ...(task.plant_photo_url ? { richContent: { image: task.plant_photo_url } } : null),
   };
 }
 
@@ -118,7 +117,7 @@ Deno.serve(async (req) => {
 
   const { data: candidateTasks, error: tasksError } = await supabaseAdmin
     .from('care_tasks')
-    .select('id, user_id, title, plant_name, plant_photo_url, start_date, recurrence_days, reminder_hour, reminder_minute, last_completed_occurrence')
+    .select('id, user_id, plant_id, title, plant_name, plant_photo_url, start_date, recurrence_days, reminder_hour, reminder_minute, last_completed_occurrence')
     .lte('reminder_hour', hour)
     .or(`last_reminded_occurrence.is.null,last_reminded_occurrence.neq.${date}`);
 
@@ -139,16 +138,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  const tasksByUser = new Map<string, CareTaskRow[]>();
-  for (const task of dueTasks) {
-    const existing = tasksByUser.get(task.user_id) ?? [];
-    existing.push(task);
-    tasksByUser.set(task.user_id, existing);
-  }
+  const userIds = Array.from(new Set(dueTasks.map((task) => task.user_id)));
 
   const [{ data: pushTokenRows }, { data: profileRows }] = await Promise.all([
-    supabaseAdmin.from('push_tokens').select('user_id, token').in('user_id', Array.from(tasksByUser.keys())),
-    supabaseAdmin.from('profiles').select('id, locale').in('id', Array.from(tasksByUser.keys())),
+    supabaseAdmin.from('push_tokens').select('user_id, token').in('user_id', userIds),
+    supabaseAdmin.from('profiles').select('id, locale').in('id', userIds),
   ]);
 
   const tokensByUser = new Map<string, string[]>();
@@ -163,30 +157,34 @@ Deno.serve(async (req) => {
     localeByUser.set(row.id, resolveLocale(row.locale));
   }
 
-  const queuedPushes = new Map<string, { userId: string; careTaskIds: string[] }>();
+  const taskById = new Map(dueTasks.map((task) => [task.id, task]));
   const messages: ExpoPushMessage[] = [];
+  const taskIdByMessageId = new Map<string, string>();
 
-  for (const [userId, tasks] of tasksByUser) {
-    const tokens = tokensByUser.get(userId) ?? [];
+  for (const task of dueTasks) {
+    const tokens = tokensByUser.get(task.user_id) ?? [];
     if (tokens.length === 0) continue;
 
-    const locale = localeByUser.get(userId) ?? 'pt';
-    const careTaskIds = tasks.map((task) => task.id);
+    const locale = localeByUser.get(task.user_id) ?? 'pt';
     for (const token of tokens) {
-      queuedPushes.set(token, { userId, careTaskIds });
-      messages.push(buildMessage(tasks, token, locale));
+      const message = buildMessage(task, token, locale);
+      taskIdByMessageId.set(message.id, task.id);
+      messages.push(message);
     }
   }
 
-  const { deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
+  if (messages.length === 0) {
+    return new Response(JSON.stringify({ remindedTasks: 0, notifiedUsers: 0 }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const { deliveredIds, staleTokens, tickets } = await sendExpoPushNotifications(messages);
 
   const deliveredTaskIds = new Set<string>();
-  const notifiedUserIds = new Set<string>();
-  for (const token of deliveredTokens) {
-    const queued = queuedPushes.get(token);
-    if (!queued) continue;
-    queued.careTaskIds.forEach((taskId) => deliveredTaskIds.add(taskId));
-    notifiedUserIds.add(queued.userId);
+  for (const messageId of deliveredIds) {
+    const taskId = taskIdByMessageId.get(messageId);
+    if (taskId) deliveredTaskIds.add(taskId);
   }
 
   if (staleTokens.length > 0) {
@@ -196,11 +194,32 @@ Deno.serve(async (req) => {
   await recordPushTickets(supabaseAdmin, tickets);
 
   if (deliveredTaskIds.size > 0) {
+    const notificationRows = Array.from(deliveredTaskIds).map((taskId) => {
+      const task = taskById.get(taskId)!;
+      const locale = localeByUser.get(task.user_id) ?? 'pt';
+      const { title, message } = buildReminderCopy(task, locale);
+
+      return {
+        user_id: task.user_id,
+        type: 'care_reminder',
+        title,
+        message,
+        plant_id: task.plant_id,
+      };
+    });
+
+    const { error: notificationsError } = await supabaseAdmin.from('notifications').insert(notificationRows);
+    if (notificationsError) {
+      console.error('Erro salvando histórico de lembretes:', notificationsError);
+    }
+
     await supabaseAdmin
       .from('care_tasks')
       .update({ last_reminded_occurrence: date })
       .in('id', Array.from(deliveredTaskIds));
   }
+
+  const notifiedUserIds = new Set(Array.from(deliveredTaskIds).map((taskId) => taskById.get(taskId)!.user_id));
 
   return new Response(JSON.stringify({ remindedTasks: deliveredTaskIds.size, notifiedUsers: notifiedUserIds.size }), {
     headers: { 'Content-Type': 'application/json' },

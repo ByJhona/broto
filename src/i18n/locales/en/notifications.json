@@ -4,5 +4,8 @@
   "commentTitle": "New comment",
   "commentMessage": "{{actor}} left a comment on your photo!",
   "listingInterestTitle": "Interest in your listing",
-  "listingInterestMessage": "{{actor}} is interested in the plant you listed!"
+  "listingInterestMessage": "{{actor}} is interested in the plant you listed!",
+  "careSetupReminderTitle": "Set up a care reminder",
+  "careSetupReminderMessage": "Your plant \"{{plant}}\" doesn't have a watering reminder yet. Want to set one up now?",
+  "careSetupReminderMessageGeneric": "One of your plants doesn't have a watering reminder yet. Want to set one up now?"
 }

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 export type ExpoPushMessage = {
+  id: string;
   to: string;
   title: string;
   body: string;
@@ -17,13 +18,13 @@ const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const EXPO_PUSH_CHUNK_SIZE = 100;
 
 export type SendExpoPushResult = {
-  deliveredTokens: string[];
+  deliveredIds: string[];
   staleTokens: string[];
   tickets: { token: string; ticketId: string }[];
 };
 
 export async function sendExpoPushNotifications(messages: ExpoPushMessage[]): Promise<SendExpoPushResult> {
-  const deliveredTokens: string[] = [];
+  const deliveredIds: string[] = [];
   const staleTokens: string[] = [];
   const tickets: { token: string; ticketId: string }[] = [];
 
@@ -33,7 +34,7 @@ export async function sendExpoPushNotifications(messages: ExpoPushMessage[]): Pr
     const response = await fetch(EXPO_PUSH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify(chunk),
+      body: JSON.stringify(chunk.map(({ id: _id, ...message }) => message)),
     });
 
     if (!response.ok) {
@@ -52,12 +53,12 @@ export async function sendExpoPushNotifications(messages: ExpoPushMessage[]): Pr
         }
         return;
       }
-      deliveredTokens.push(message.to);
+      deliveredIds.push(message.id);
       if (ticket?.id) tickets.push({ token: message.to, ticketId: ticket.id });
     });
   }
 
-  return { deliveredTokens, staleTokens, tickets };
+  return { deliveredIds, staleTokens, tickets };
 }
 
 export async function recordPushTickets(
