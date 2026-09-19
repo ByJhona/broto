@@ -68,6 +68,11 @@ export type PlantSpeciesInfo = {
   commonProblems: PlantCommonProblem[];
   origin: string | null;
   referencePhotos: PlantReferencePhoto[];
+  commonNames: string[];
+};
+
+export type PlantSpeciesSearchResult = PlantSpeciesInfo & {
+  id: string;
 };
 
 export type SpeciesInfoDisplay = {

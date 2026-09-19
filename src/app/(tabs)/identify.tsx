@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
 import ArrowRight from 'lucide-react-native/icons/arrow-right';
 import Bell from 'lucide-react-native/icons/bell';
@@ -11,6 +12,7 @@ import Clock from 'lucide-react-native/icons/clock';
 import Cloud from 'lucide-react-native/icons/cloud';
 import Droplet from 'lucide-react-native/icons/droplet';
 import Heart from 'lucide-react-native/icons/heart';
+import Leaf from 'lucide-react-native/icons/leaf';
 import Lightbulb from 'lucide-react-native/icons/lightbulb';
 import Scan from 'lucide-react-native/icons/scan';
 import Sparkles from 'lucide-react-native/icons/sparkles';
@@ -23,7 +25,9 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Card, IconBadge, PlantChat } from '@/components';
-import { CREDIT_COSTS } from '@/services';
+import type { CreditCosts } from '@/services';
+import { useCreditCosts, useRecentlyCatalogedSpecies } from '@/hooks';
+import type { PlantSpeciesSearchResult } from '@/types';
 
 type TFunc = (key: string, options?: Record<string, unknown>) => string;
 
@@ -74,13 +78,13 @@ type FaqItem = {
   answer: string;
 };
 
-function getFaqItems(t: TFunc): FaqItem[] {
+function getFaqItems(t: TFunc, creditCosts: CreditCosts): FaqItem[] {
   return [
     {
       id: 'diagnose',
       icon: Stethoscope,
       question: t('faqDiagnoseQuestion'),
-      answer: t('faqDiagnoseAnswer', { count: CREDIT_COSTS.diagnosis }),
+      answer: t('faqDiagnoseAnswer', { count: creditCosts.diagnosis }),
     },
     {
       id: 'identify',
@@ -152,12 +156,34 @@ export default function IdentifyScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const curiosityColors = useMemo(() => getCuriosityColors(colors), [colors]);
   const [openId, setOpenId] = useState<string | null>(null);
+
+  const { species: recentSpecies } = useRecentlyCatalogedSpecies();
   const { t } = useTranslation('help');
+
+  const handleSelectRecentSpecies = (species: PlantSpeciesSearchResult) => {
+    const candidates = [
+      {
+        score: 1,
+        scientificName: species.scientificName,
+        commonName: species.commonNames[0] ?? null,
+        family: null,
+        genus: null,
+        imageUrl: species.referencePhotos[0]?.url ?? null,
+      },
+    ];
+
+    router.push({
+      pathname: '/identify/result',
+      params: { candidates: JSON.stringify(candidates) },
+    });
+  };
+
+  const creditCosts = useCreditCosts();
   const plantNeeds = getPlantNeeds(t);
   const commonMistakes = getCommonMistakes(t);
   const curiosities = getCuriosities(t);
   const plantBenefits = getPlantBenefits(t);
-  const faqItems = getFaqItems(t);
+  const faqItems = getFaqItems(t, creditCosts);
 
   return (
     <ScrollView
@@ -203,6 +229,44 @@ export default function IdentifyScreen() {
         </Text>
         <PlantChat />
       </Card>
+
+      {recentSpecies.length > 0 ? (
+        <View style={styles.recentSection}>
+          <Text style={styles.subsectionTitle}>{t('recentlyCatalogedTitle')}</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentRow}
+            style={styles.recentScroll}
+          >
+            {recentSpecies.map((species, index) => {
+              const color = curiosityColors[index % curiosityColors.length];
+              const photoUrl = species.referencePhotos[0]?.url;
+              const mainName = species.commonNames[0] ?? species.scientificName;
+              const subtitle = species.commonNames[0] ? species.scientificName : undefined;
+              return (
+                <Pressable
+                  key={species.id}
+                  style={[styles.recentCard, { backgroundColor: color }]}
+                  onPress={() => handleSelectRecentSpecies(species)}
+                >
+                  {photoUrl ? (
+                    <Image source={{ uri: photoUrl }} style={styles.recentImage} contentFit="cover" />
+                  ) : (
+                    <View style={styles.recentImagePlaceholder}>
+                      <Leaf size={24} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                    </View>
+                  )}
+                  <View style={styles.recentInfo}>
+                    <Text style={styles.recentName} numberOfLines={1}>{mainName}</Text>
+                    {subtitle ? <Text style={styles.recentSpecies} numberOfLines={1}>{subtitle}</Text> : null}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionHeaderText}>{t('firstStepsSectionTitle')}</Text>
@@ -378,10 +442,55 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.xl,
   },
   specialistIntro: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.mutedForeground,
-    lineHeight: 18,
     marginBottom: Metrics.spacing.md,
+  },
+  recentSection: {
+    marginTop: Metrics.spacing.lg,
+  },
+  recentScroll: {
+    marginHorizontal: -Metrics.spacing.lg,
+  },
+  recentRow: {
+    paddingHorizontal: Metrics.spacing.lg,
+    gap: Metrics.spacing.sm,
+    paddingBottom: Metrics.spacing.md,
+  },
+  recentCard: {
+    width: 140,
+    height: 180,
+    borderRadius: Metrics.radius.lg,
+    overflow: 'hidden',
+    padding: Metrics.spacing.sm,
+    justifyContent: 'flex-end',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  recentImage: {
+    ...StyleSheet.absoluteFill,
+  },
+  recentImagePlaceholder: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  recentInfo: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: Metrics.spacing.sm,
+    borderRadius: Metrics.radius.md,
+    marginTop: 'auto',
+  },
+  recentName: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: colors.white,
+  },
+  recentSpecies: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
   needsCard: {
     marginBottom: Metrics.spacing.md,

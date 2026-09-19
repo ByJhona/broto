@@ -18,5 +18,10 @@
   "taskRecurrenceEvery": "a cada {{days}} dias",
   "taskDone": "Concluído",
   "taskDoneNextOn": "Concluído — próxima em {{date}}",
-  "taskAutomatic": "Automático"
+  "taskAutomatic": "Automático",
+  "addPlantTitle": "Adicionar planta",
+  "addPlantSearchPlaceholder": "Ex: Espada de São Jorge",
+  "addPlantNotFoundTitle": "Planta não encontrada",
+  "addPlantNotFoundMessage": "Não encontramos essa planta no nosso banco de dados. Que tal identificar por foto?",
+  "addPlantIdentifyByPhoto": "Identificar por foto"
 }

@@ -18,5 +18,10 @@
   "taskRecurrenceEvery": "every {{days}} days",
   "taskDone": "Done",
   "taskDoneNextOn": "Done — next on {{date}}",
-  "taskAutomatic": "Automatic"
+  "taskAutomatic": "Automatic",
+  "addPlantTitle": "Add plant",
+  "addPlantSearchPlaceholder": "E.g. Snake plant",
+  "addPlantNotFoundTitle": "Plant not found",
+  "addPlantNotFoundMessage": "We couldn't find this plant in our database. How about identifying it by photo instead?",
+  "addPlantIdentifyByPhoto": "Identify by photo"
 }

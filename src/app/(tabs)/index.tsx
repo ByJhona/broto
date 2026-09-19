@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, type MarkerPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';

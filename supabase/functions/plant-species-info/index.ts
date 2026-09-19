@@ -47,6 +47,13 @@ const PLANT_INFO_JSON_SCHEMA = {
         maxItems: 4,
       },
       origin: { type: ['string', 'null'] },
+      commonNames: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Nomes populares da planta em português do Brasil, do mais usado ao menos usado.',
+        minItems: 1,
+        maxItems: 4,
+      },
     },
     required: [
       'description',
@@ -62,6 +69,7 @@ const PLANT_INFO_JSON_SCHEMA = {
       'funFacts',
       'commonProblems',
       'origin',
+      'commonNames',
     ],
     additionalProperties: false,
   },
@@ -81,6 +89,7 @@ type OpenAiPlantInfo = {
   funFacts: string[];
   commonProblems: { issue: string; likelyCause: string }[];
   origin: string | null;
+  commonNames: string[];
 };
 
 type ReferencePhoto = { url: string; sourceUrl: string };
@@ -142,7 +151,7 @@ async function fetchFromOpenAi(scientificName: string, commonName: string | null
       },
       {
         role: 'user',
-        content: `Espécie: ${scientificName}${commonName ? ` (nome popular: ${commonName})` : ''}. Preencha os dados de cuidado, toxicidade, curiosidades e problemas comuns dessa planta.`,
+        content: `Espécie: ${scientificName}${commonName ? ` (nome popular: ${commonName})` : ''}. Preencha os dados de cuidado, toxicidade, curiosidades, problemas comuns e nomes populares dessa planta.`,
       },
     ],
     response_format: { type: 'json_schema', json_schema: PLANT_INFO_JSON_SCHEMA },
@@ -214,6 +223,7 @@ Deno.serve(async (req) => {
         common_problems: info.commonProblems,
         origin: info.origin,
         reference_photos: referencePhotos,
+        common_names: info.commonNames,
       },
       { onConflict: 'scientific_name' }
     )
@@ -239,6 +249,7 @@ Deno.serve(async (req) => {
         common_problems: info.commonProblems,
         origin: info.origin,
         reference_photos: referencePhotos,
+        common_names: info.commonNames,
       }),
       { headers: { 'Content-Type': 'application/json' } }
     );

@@ -6,7 +6,9 @@ import { checkForAppUpdate } from '@/services/appVersion';
 import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
 import {
   CATALOG_STALE_TIME,
+  CREDIT_COSTS_QUERY_KEY,
   CREDIT_PACKS_QUERY_KEY,
+  getCreditCosts,
   getCreditPacks,
   getPlanCatalog,
   PLAN_CATALOG_QUERY_KEY,
@@ -53,6 +55,7 @@ function RootNavigator() {
     // skeleton the first time the user navigates there in this session.
     queryClient.query({ queryKey: PLAN_CATALOG_QUERY_KEY, queryFn: getPlanCatalog, staleTime: CATALOG_STALE_TIME }).catch(() => {});
     queryClient.query({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME }).catch(() => {});
+    queryClient.query({ queryKey: CREDIT_COSTS_QUERY_KEY, queryFn: getCreditCosts, staleTime: CATALOG_STALE_TIME }).catch(() => {});
   }, [session]);
 
   const statusBar = <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />;
@@ -74,6 +77,7 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="plant" options={{ headerShown: false }} />
+          <Stack.Screen name="garden" options={{ headerShown: false }} />
           <Stack.Screen name="group" options={{ headerShown: false }} />
           <Stack.Screen name="post" options={{ headerShown: false }} />
           <Stack.Screen name="event" options={{ headerShown: false }} />

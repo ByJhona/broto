@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { PlantSpeciesInfo } from '@/types';
+import type { PlantSpeciesInfo, PlantSpeciesSearchResult } from '@/types';
 
 type PlantSpeciesInfoRow = {
   scientific_name: string;
@@ -17,6 +17,7 @@ type PlantSpeciesInfoRow = {
   common_problems: PlantSpeciesInfo['commonProblems'];
   origin: string | null;
   reference_photos: PlantSpeciesInfo['referencePhotos'];
+  common_names: string[];
 };
 
 function mapRow(row: PlantSpeciesInfoRow): PlantSpeciesInfo {
@@ -36,6 +37,7 @@ function mapRow(row: PlantSpeciesInfoRow): PlantSpeciesInfo {
     commonProblems: row.common_problems,
     origin: row.origin,
     referencePhotos: row.reference_photos,
+    commonNames: row.common_names,
   };
 }
 
@@ -53,4 +55,32 @@ export async function getPlantSpeciesInfo(
   }
 
   return mapRow(data);
+}
+
+export async function searchPlantSpecies(query: string): Promise<PlantSpeciesSearchResult[]> {
+  const { data, error } = await supabase.rpc('search_plant_species', { search_query: query });
+
+  if (error || !data) {
+    console.warn('Não foi possível buscar plantas:', error);
+    return [];
+  }
+
+  return (data as (PlantSpeciesInfoRow & { id: string })[]).map((row) => ({ ...mapRow(row), id: row.id }));
+}
+
+const RECENTLY_CATALOGED_LIMIT = 5;
+
+export async function getRecentlyCatalogedSpecies(): Promise<PlantSpeciesSearchResult[]> {
+  const { data, error } = await supabase
+    .from('plant_species_info')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(RECENTLY_CATALOGED_LIMIT);
+
+  if (error || !data) {
+    console.warn('Não foi possível buscar as espécies catalogadas recentemente:', error);
+    return [];
+  }
+
+  return (data as (PlantSpeciesInfoRow & { id: string })[]).map((row) => ({ ...mapRow(row), id: row.id }));
 }

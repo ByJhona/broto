@@ -2,12 +2,15 @@ import { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Leaf from 'lucide-react-native/icons/leaf';
+import Plus from 'lucide-react-native/icons/plus';
+import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import {
   CreateGroupModal,
   EmptyState,
   GardenRemindersSection,
+  IconButton,
   OfflineBanner,
   PlantCard,
   PlantCardSkeleton,
@@ -37,6 +40,7 @@ function ungroupedEmptyText(hasAnyPlants: boolean, t: (key: string) => string): 
 }
 
 export default function GardenScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -101,6 +105,16 @@ export default function GardenScreen() {
         />
       )}
 
+      <IconButton
+        size={52}
+        backgroundColor={colors.primary}
+        elevated
+        style={[styles.createButton, { bottom: insets.bottom + Metrics.spacing.lg }]}
+        onPress={() => router.push('/garden/add')}
+      >
+        <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+      </IconButton>
+
       <CreateGroupModal
         visible={isCreateGroupOpen}
         onClose={() => setIsCreateGroupOpen(false)}
@@ -112,34 +126,39 @@ export default function GardenScreen() {
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-    paddingBottom: 0,
-  },
-  banner: {
-    ...Metrics.layout.centeredContent,
-    marginTop: Metrics.spacing.md,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.foreground,
-  },
-  empty: {
-    ...Metrics.layout.centeredContent,
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Metrics.spacing.xl,
-  },
-  list: {
-    ...Metrics.layout.centeredContent,
-    flexGrow: 1,
-    padding: Metrics.spacing.lg,
-    gap: Metrics.spacing.md,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      marginBottom: Metrics.spacing.md,
+    },
+    banner: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      marginBottom: Metrics.spacing.md,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.foreground,
+    },
+    empty: {
+      ...Metrics.layout.centeredContent,
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: Metrics.spacing.xl,
+    },
+    list: {
+      ...Metrics.layout.centeredContent,
+      flexGrow: 1,
+      padding: Metrics.spacing.lg,
+      gap: Metrics.spacing.md,
+    },
+    createButton: {
+      position: 'absolute',
+      right: Metrics.spacing.lg,
+    },
   });
