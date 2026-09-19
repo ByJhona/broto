@@ -3,8 +3,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Folder from 'lucide-react-native/icons/folder';
+import Square from 'lucide-react-native/icons/square';
+import SquareCheck from 'lucide-react-native/icons/square-check';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { confirm } from '@/utils';
 import type { PlantGroup } from '@/types';
 
 const GROUP_CARD_WIDTH = 140;
@@ -69,22 +72,79 @@ function GroupPhotoCollage({ photoUrls }: Readonly<GroupPhotoCollageProps>) {
   );
 }
 
-type PlantGroupCardProps = {
-  group: PlantGroup;
+type SelectionBadgeProps = {
+  isSelected: boolean;
+  colors: ThemeColors;
 };
 
-export const PlantGroupCard = memo(function PlantGroupCard({ group }: Readonly<PlantGroupCardProps>) {
+function SelectionBadge({ isSelected, colors }: Readonly<SelectionBadgeProps>) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  return (
+    <View style={styles.selectionBadge}>
+      {isSelected ? (
+        <SquareCheck size={20} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+      ) : (
+        <Square size={20} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+      )}
+    </View>
+  );
+}
+
+async function handleLongPressDelete(
+  group: PlantGroup,
+  onDelete: (id: string) => void,
+  t: (key: string, options?: Record<string, unknown>) => string
+) {
+  const confirmed = await confirm(t('deleteGroupTitle'), t('deleteGroupMessage', { count: group.plantCount }), {
+    confirmLabel: t('common:delete'),
+    destructive: true,
+  });
+  if (confirmed) onDelete(group.id);
+}
+
+type PlantGroupCardProps = {
+  group: PlantGroup;
+  onDelete: (id: string) => void;
+  isSelecting: boolean;
+  isSelected: boolean;
+  onToggleSelected: (id: string) => void;
+};
+
+export const PlantGroupCard = memo(function PlantGroupCard({
+  group,
+  onDelete,
+  isSelecting,
+  isSelected,
+  onToggleSelected,
+}: Readonly<PlantGroupCardProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('group');
 
+  const handlePress = () => {
+    if (isSelecting) {
+      onToggleSelected(group.id);
+    } else {
+      router.push(`/group/${group.id}`);
+    }
+  };
+
+  const handleLongPress = () => {
+    if (isSelecting) return;
+    handleLongPressDelete(group, onDelete, t);
+  };
+
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      onPress={() => router.push(`/group/${group.id}`)}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
     >
-      <GroupPhotoCollage photoUrls={group.previewPhotoUrls} />
+      <View>
+        <GroupPhotoCollage photoUrls={group.previewPhotoUrls} />
+        {isSelecting ? <SelectionBadge isSelected={isSelected} colors={colors} /> : null}
+      </View>
       <Text style={styles.name} numberOfLines={1}>
         {group.name}
       </Text>
@@ -134,6 +194,14 @@ const makeStyles = (colors: ThemeColors) =>
       width: '49.5%',
       height: '49.5%',
       backgroundColor: colors.muted,
+    },
+    selectionBadge: {
+      position: 'absolute',
+      top: Metrics.spacing.xs,
+      right: Metrics.spacing.xs,
+      backgroundColor: `${colors.black}66`,
+      borderRadius: Metrics.radius.full,
+      padding: 2,
     },
     name: {
       marginTop: Metrics.spacing.xs,

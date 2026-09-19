@@ -40,6 +40,7 @@ export function usePlantDetail(id: string | undefined) {
     isLoading: isCareTasksLoading,
     createTask,
     toggleTask,
+    deleteTask,
     refresh: refreshCareTasks,
   } = useCareTasks();
   const { groups } = usePlantGroups();
@@ -186,6 +187,7 @@ export function usePlantDetail(id: string | undefined) {
     isPremium,
     careTasksList,
     toggleTask,
+    deleteTask,
     groups,
     isDeleting,
     isRenameModalOpen,

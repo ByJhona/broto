@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { usePersistedCollapse } from '@/hooks';
+import { useMultiSelect, usePersistedCollapse } from '@/hooks';
+import { confirmAndDeleteMany } from '@/utils';
 import type { CareTask } from '@/types';
 import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
 import { CollapsibleSection } from './CollapsibleSection';
+import { MultiSelectHeaderActions } from './MultiSelectHeaderActions';
 
 const REMINDERS_COLLAPSED_KEY = 'broto:garden-reminders-collapsed';
 
@@ -19,16 +20,33 @@ function remindersSectionTitle(count: number, t: (key: string, options?: Record<
 type GardenRemindersSectionProps = {
   tasks: CareTask[];
   onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
-export function GardenRemindersSection({ tasks, onToggle }: Readonly<GardenRemindersSectionProps>) {
+export function GardenRemindersSection({ tasks, onToggle, onDelete }: Readonly<GardenRemindersSectionProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('garden');
   const { isCollapsed, toggleCollapsed } = usePersistedCollapse(REMINDERS_COLLAPSED_KEY);
+  const selection = useMultiSelect();
 
   const reminders = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
+
+  const handleConfirmDelete = async () => {
+    const title =
+      selection.selectedIds.length === 1
+        ? t('deleteReminderConfirmTitleOne')
+        : t('deleteRemindersConfirmTitleMany', { count: selection.selectedIds.length });
+    const didDelete = await confirmAndDeleteMany(
+      selection.selectedIds,
+      onDelete,
+      title,
+      t('deleteRemindersConfirmMessage'),
+      t('common:delete')
+    );
+    if (didDelete) selection.stopSelecting();
+  };
 
   return (
     <Card style={styles.section}>
@@ -36,9 +54,15 @@ export function GardenRemindersSection({ tasks, onToggle }: Readonly<GardenRemin
         title={remindersSectionTitle(reminders.length, t)}
         style={styles.collapsibleSection}
         headerAction={
-          <Pressable style={styles.addReminderButton} onPress={() => router.push('/task/new')} hitSlop={8}>
-            <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
+          <MultiSelectHeaderActions
+            isSelecting={selection.isSelecting}
+            selectedCount={selection.selectedIds.length}
+            selectAccessibilityLabel={t('selectRemindersAction')}
+            onAdd={() => router.push('/task/new')}
+            onStartSelecting={selection.startSelecting}
+            onCancelSelecting={selection.stopSelecting}
+            onConfirmDelete={handleConfirmDelete}
+          />
         }
         isCollapsed={isCollapsed}
         onToggleCollapsed={toggleCollapsed}
@@ -48,7 +72,14 @@ export function GardenRemindersSection({ tasks, onToggle }: Readonly<GardenRemin
         ) : (
           reminders.map((task) => (
             <View key={task.id} style={styles.reminderItemSpacing}>
-              <CareTaskItem task={task} onToggle={onToggle} />
+              <CareTaskItem
+                task={task}
+                onToggle={onToggle}
+                onDelete={onDelete}
+                isSelecting={selection.isSelecting}
+                isSelected={selection.selectedIds.includes(task.id)}
+                onToggleSelected={selection.toggleSelected}
+              />
             </View>
           ))
         )}
@@ -64,14 +95,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     collapsibleSection: {
       marginBottom: 0,
-    },
-    addReminderButton: {
-      width: 28,
-      height: 28,
-      borderRadius: Metrics.radius.full,
-      backgroundColor: colors.muted,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     emptyRemindersText: {
       fontSize: 13,

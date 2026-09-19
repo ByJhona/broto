@@ -3,8 +3,8 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Folder from 'lucide-react-native/icons/folder';
-import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import {
@@ -149,7 +149,7 @@ export default function GroupDetailScreen() {
           title: group.name,
           headerRight: () => (
             <Pressable onPress={handleOpenActions} disabled={isDeleting} hitSlop={8}>
-              <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ),
         }}

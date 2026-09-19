@@ -21,3 +21,19 @@ export function confirm(title: string, message: string, options: ConfirmOptions 
     ]);
   });
 }
+
+export async function confirmAndDeleteMany(
+  selectedIds: string[],
+  onDelete: (id: string) => void,
+  title: string,
+  message: string,
+  confirmLabel: string
+): Promise<boolean> {
+  if (selectedIds.length === 0) return false;
+
+  const confirmed = await confirm(title, message, { confirmLabel, destructive: true });
+  if (!confirmed) return false;
+
+  selectedIds.forEach((id) => onDelete(id));
+  return true;
+}

@@ -1,41 +1,62 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import Plus from 'lucide-react-native/icons/plus';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { useMultiSelect } from '@/hooks';
+import { confirmAndDeleteMany } from '@/utils';
 import type { CareTask } from '@/types';
 import { Card } from './Card';
 import { CareTaskItem } from './CareTaskItem';
+import { MultiSelectHeaderActions } from './MultiSelectHeaderActions';
 import { SectionTitle } from './SectionTitle';
 
 type PlantRemindersSectionProps = {
   plantId: string;
   tasks: CareTask[];
   onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
-export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<PlantRemindersSectionProps>) {
+export function PlantRemindersSection({ plantId, tasks, onToggle, onDelete }: Readonly<PlantRemindersSectionProps>) {
   const router = useRouter();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('plant');
+  const selection = useMultiSelect();
 
   const reminders = tasks
     .filter((task) => task.plantId === plantId)
     .sort((a, b) => Number(a.done) - Number(b.done));
 
+  const handleConfirmDelete = async () => {
+    const title =
+      selection.selectedIds.length === 1
+        ? t('garden:deleteReminderConfirmTitleOne')
+        : t('garden:deleteRemindersConfirmTitleMany', { count: selection.selectedIds.length });
+    const didDelete = await confirmAndDeleteMany(
+      selection.selectedIds,
+      onDelete,
+      title,
+      t('garden:deleteRemindersConfirmMessage'),
+      t('common:delete')
+    );
+    if (didDelete) selection.stopSelecting();
+  };
+
   return (
     <Card style={styles.section}>
       <View style={styles.remindersHeader}>
         <SectionTitle style={styles.remindersSectionTitle}>{t('remindersTitle')}</SectionTitle>
-        <Pressable
-          style={styles.addReminderButton}
-          onPress={() => router.push({ pathname: '/task/new', params: { plantId } })}
-          hitSlop={8}
-        >
-          <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-        </Pressable>
+        <MultiSelectHeaderActions
+          isSelecting={selection.isSelecting}
+          selectedCount={selection.selectedIds.length}
+          selectAccessibilityLabel={t('garden:selectRemindersAction')}
+          onAdd={() => router.push({ pathname: '/task/new', params: { plantId } })}
+          onStartSelecting={selection.startSelecting}
+          onCancelSelecting={selection.stopSelecting}
+          onConfirmDelete={handleConfirmDelete}
+        />
       </View>
 
       {reminders.length === 0 ? (
@@ -43,7 +64,14 @@ export function PlantRemindersSection({ plantId, tasks, onToggle }: Readonly<Pla
       ) : (
         reminders.map((task) => (
           <View key={task.id} style={styles.reminderItemSpacing}>
-            <CareTaskItem task={task} onToggle={onToggle} />
+            <CareTaskItem
+              task={task}
+              onToggle={onToggle}
+              onDelete={onDelete}
+              isSelecting={selection.isSelecting}
+              isSelected={selection.selectedIds.includes(task.id)}
+              onToggleSelected={selection.toggleSelected}
+            />
           </View>
         ))
       )}
@@ -63,14 +91,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   remindersSectionTitle: {
     marginBottom: 0,
-  },
-  addReminderButton: {
-    width: 28,
-    height: 28,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   emptyRemindersText: {
     fontSize: 13,

@@ -5,10 +5,10 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Droplet from 'lucide-react-native/icons/droplet';
+import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import PawPrint from 'lucide-react-native/icons/paw-print';
-import Pencil from 'lucide-react-native/icons/pencil';
 import SignalHigh from 'lucide-react-native/icons/signal-high';
 import SignalLow from 'lucide-react-native/icons/signal-low';
 import SignalMedium from 'lucide-react-native/icons/signal-medium';
@@ -214,7 +214,7 @@ export default function PlantDetailScreen() {
           title: '',
           headerRight: () => (
             <Pressable onPress={detail.handleOpenActions} disabled={detail.isDeleting} hitSlop={8}>
-              <Pencil size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             </Pressable>
           ),
         }}
@@ -256,7 +256,12 @@ export default function PlantDetailScreen() {
 
         <PlantCareStatsCard careStats={careStats} styles={styles} />
 
-        <PlantRemindersSection plantId={plant.id} tasks={detail.careTasksList} onToggle={detail.toggleTask} />
+        <PlantRemindersSection
+          plantId={plant.id}
+          tasks={detail.careTasksList}
+          onToggle={detail.toggleTask}
+          onDelete={detail.deleteTask}
+        />
 
         <Card style={styles.section}>
           <SectionTitle>{t('askAboutPlantTitle')}</SectionTitle>

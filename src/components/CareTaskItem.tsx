@@ -3,17 +3,22 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Circle from 'lucide-react-native/icons/circle';
+import Square from 'lucide-react-native/icons/square';
+import SquareCheck from 'lucide-react-native/icons/square-check';
 import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { addDays, CATEGORY_ICONS, daysBetween, formatShortDate, today } from '@/utils';
+import { addDays, CATEGORY_ICONS, confirm, daysBetween, formatShortDate, today } from '@/utils';
 import { TASK_CATEGORY, type CareTask } from '@/types';
 import { IconBadge } from './IconBadge';
 
 type CareTaskItemProps = {
   task: CareTask;
   onToggle: (id: string) => void;
-  onLongPress?: (id: string) => void;
+  onDelete: (id: string) => void;
+  isSelecting: boolean;
+  isSelected: boolean;
+  onToggleSelected: (id: string) => void;
 };
 
 type Styles = ReturnType<typeof makeStyles>;
@@ -54,8 +59,8 @@ function subtitleFor(task: CareTask, t: TranslateFn): string {
   return [task.plantName, statusLabel(task, t), isAutomatic ? t('taskAutomatic') : null].filter(Boolean).join(' · ');
 }
 
-function cardStyle(styles: Styles, done: boolean, pressed: boolean) {
-  return [styles.card, done && styles.cardDone, pressed && styles.cardPressed];
+function cardStyle(styles: Styles, done: boolean, isSelected: boolean, pressed: boolean) {
+  return [styles.card, done && styles.cardDone, isSelected && styles.cardSelected, pressed && styles.cardPressed];
 }
 
 function titleStyle(styles: Styles, done: boolean) {
@@ -70,8 +75,12 @@ function iconBackgroundColor(colors: ThemeColors, done: boolean): string {
   return done ? colors.card : colors.muted;
 }
 
-function buildLongPressHandler(onLongPress: ((id: string) => void) | undefined, taskId: string) {
-  return onLongPress ? () => onLongPress(taskId) : undefined;
+async function handleLongPressDelete(task: CareTask, onDelete: (id: string) => void, t: TranslateFn) {
+  const confirmed = await confirm(t('deleteReminderConfirmTitleOne'), t('deleteReminderConfirmMessageOne', { title: task.title }), {
+    confirmLabel: t('common:delete'),
+    destructive: true,
+  });
+  if (confirmed) onDelete(task.id);
 }
 
 type CareTaskLeadingIconProps = {
@@ -102,19 +111,32 @@ function CareTaskLeadingIcon({ task, Icon, colors, styles }: Readonly<CareTaskLe
   );
 }
 
-type CareTaskStatusIconProps = {
+type CareTaskTrailingIconProps = {
   done: boolean;
+  isSelecting: boolean;
+  isSelected: boolean;
   colors: ThemeColors;
 };
 
-function CareTaskStatusIcon({ done, colors }: Readonly<CareTaskStatusIconProps>) {
+function CareTaskTrailingIcon({ done, isSelecting, isSelected, colors }: Readonly<CareTaskTrailingIconProps>) {
+  if (isSelecting) {
+    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+    return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  }
   if (done) {
     return <CheckCircle2 size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
   }
   return <Circle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
 }
 
-export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongPress }: Readonly<CareTaskItemProps>) {
+export const CareTaskItem = memo(function CareTaskItem({
+  task,
+  onToggle,
+  onDelete,
+  isSelecting,
+  isSelected,
+  onToggleSelected,
+}: Readonly<CareTaskItemProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('garden');
@@ -122,11 +144,24 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
   const subtitle = subtitleFor(task, t);
   const isOverdue = !task.done && daysBetween(today(), task.dueDate) < 0;
 
+  const handlePress = () => {
+    if (isSelecting) {
+      onToggleSelected(task.id);
+    } else {
+      onToggle(task.id);
+    }
+  };
+
+  const handleLongPress = () => {
+    if (isSelecting) return;
+    handleLongPressDelete(task, onDelete, t);
+  };
+
   return (
     <Pressable
-      onPress={() => onToggle(task.id)}
-      onLongPress={buildLongPressHandler(onLongPress, task.id)}
-      style={({ pressed }) => cardStyle(styles, task.done, pressed)}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
+      style={({ pressed }) => cardStyle(styles, task.done, isSelected, pressed)}
     >
       <IconBadge backgroundColor={iconBackgroundColor(colors, task.done)} style={styles.iconOverflow}>
         <CareTaskLeadingIcon task={task} Icon={Icon} colors={colors} styles={styles} />
@@ -137,7 +172,7 @@ export const CareTaskItem = memo(function CareTaskItem({ task, onToggle, onLongP
         <Text style={subtitleStyle(styles, isOverdue)}>{subtitle}</Text>
       </View>
 
-      <CareTaskStatusIcon done={task.done} colors={colors} />
+      <CareTaskTrailingIcon done={task.done} isSelecting={isSelecting} isSelected={isSelected} colors={colors} />
     </Pressable>
   );
 });
@@ -157,6 +192,10 @@ const makeStyles = (colors: ThemeColors) =>
   cardDone: {
     backgroundColor: colors.muted,
     borderColor: colors.muted,
+  },
+  cardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}14`,
   },
   cardPressed: {
     opacity: 0.8,

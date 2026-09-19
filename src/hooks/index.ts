@@ -9,6 +9,7 @@ export * from './useEventDetail';
 export * from './useEvents';
 export * from './useFollow';
 export * from './useListings';
+export * from './useMultiSelect';
 export * from './useNetworkStatus';
 export * from './useNotifications';
 export * from './usePersistedCollapse';

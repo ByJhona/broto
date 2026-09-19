@@ -46,8 +46,8 @@ export default function GardenScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { t } = useTranslation('garden');
   const { plants, isLoading, refresh } = usePlants();
-  const { tasks, toggleTask } = useCareTasks();
-  const { groups } = usePlantGroups();
+  const { tasks, toggleTask, deleteTask } = useCareTasks();
+  const { groups, removeGroup } = usePlantGroups();
   const { isOffline } = useNetworkStatus();
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
@@ -64,8 +64,8 @@ export default function GardenScreen() {
   const renderPlantCard = useCallback(({ item }: { item: PlantSummary }) => <PlantCard plant={item} />, []);
   const gardenListHeader = (
     <>
-      <PlantGroupsSection groups={groups} onCreateGroup={() => setIsCreateGroupOpen(true)} />
-      <GardenRemindersSection tasks={tasks} onToggle={toggleTask} />
+      <PlantGroupsSection groups={groups} onCreateGroup={() => setIsCreateGroupOpen(true)} onDeleteGroup={removeGroup} />
+      <GardenRemindersSection tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
     </>
   );
 

@@ -44,6 +44,7 @@ export * from './ListingProposalsSection';
 export * from './ListRow';
 export * from './LoadingScreen';
 export * from './LockedFeatureCard';
+export * from './MultiSelectHeaderActions';
 export * from './NewBadgeModal';
 export * from './NotificationBell';
 export * from './OfflineBanner';
