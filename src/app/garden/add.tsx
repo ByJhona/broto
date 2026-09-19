@@ -1,14 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, Pressable, ActivityIndicator, TextInput } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
-import Search from 'lucide-react-native/icons/search';
-import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, ListRow, SubmitButton } from '@/components';
+import { EmptyState, ListRow, SearchField, SubmitButton } from '@/components';
 import { searchPlantSpecies } from '@/services';
 import type { PlantSpeciesSearchResult } from '@/types';
 
@@ -69,23 +67,13 @@ export default function AddPlantManualScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-        <TextInput
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t('addPlantSearchPlaceholder')}
-          placeholderTextColor={colors.mutedForeground}
-          autoFocus
-          autoCapitalize="sentences"
-        />
-        {query.length > 0 ? (
-          <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchField
+        value={query}
+        onChangeText={setQuery}
+        placeholder={t('addPlantSearchPlaceholder')}
+        autoFocus
+        autoCapitalize="sentences"
+      />
 
       {isLoading ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
 
@@ -149,25 +137,6 @@ const makeStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    searchBar: {
-      ...Metrics.layout.centeredContent,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.sm,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: Metrics.radius.full,
-      paddingHorizontal: Metrics.spacing.md,
-      marginHorizontal: Metrics.spacing.lg,
-      marginTop: Metrics.spacing.md,
-    },
-    searchInput: {
-      flex: 1,
-      paddingVertical: Metrics.spacing.sm,
-      fontSize: 15,
-      color: colors.foreground,
     },
     loader: {
       marginTop: Metrics.spacing.lg,

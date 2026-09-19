@@ -66,6 +66,7 @@ export * from './PriceField';
 export * from './ProfileIcon';
 export * from './PromptModal';
 export * from './ScreenContent';
+export * from './SearchField';
 export * from './SectionTitle';
 export * from './SegmentedControl';
 export * from './SettingsListItem';

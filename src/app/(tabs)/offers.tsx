@@ -1,16 +1,14 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Plus from 'lucide-react-native/icons/plus';
-import Search from 'lucide-react-native/icons/search';
-import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { DistancePill, EmptyState, FeaturedBadge, FilterChipRow, IconButton, ListRow, SegmentedControl } from '@/components';
+import { DistancePill, EmptyState, FeaturedBadge, FilterChipRow, IconButton, ListRow, SearchField, SegmentedControl } from '@/components';
 import { isBoostActive } from '@/services';
 import { useEvents, useListings, useUserLocation } from '@/hooks';
 import {
@@ -50,7 +48,7 @@ function RowTrailing({ distanceLabel, colors }: Readonly<RowTrailingProps>) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.trailingColumn}>
-      {distanceLabel ? <DistancePill label={distanceLabel} /> : null}
+      <DistancePill label={distanceLabel} />
       <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
     </View>
   );
@@ -82,37 +80,6 @@ function usePullToRefresh(refresh: () => Promise<unknown>) {
   return { isRefreshing, handleRefresh };
 }
 
-type SearchBarProps = {
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder: string;
-};
-
-function SearchBar({ value, onChangeText, placeholder }: Readonly<SearchBarProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  return (
-    <View style={styles.searchBar}>
-      <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-      <TextInput
-        style={styles.searchInput}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.mutedForeground}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      {value.length > 0 ? (
-        <Pressable onPress={() => onChangeText('')} hitSlop={8}>
-          <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
 function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
   const router = useRouter();
   const colors = useColors();
@@ -137,7 +104,7 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
 
   return (
     <>
-      <SearchBar value={query} onChangeText={setQuery} placeholder={t('offersSearchPlaceholder')} />
+      <SearchField value={query} onChangeText={setQuery} placeholder={t('offersSearchPlaceholder')} />
 
       <FlatList
         style={styles.list}
@@ -215,7 +182,7 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
 
   return (
     <>
-      <SearchBar value={query} onChangeText={setQuery} placeholder={t('eventsSearchPlaceholder')} />
+      <SearchField value={query} onChangeText={setQuery} placeholder={t('eventsSearchPlaceholder')} />
 
       <FlatList
         style={styles.list}
@@ -322,25 +289,6 @@ const makeStyles = (colors: ThemeColors) =>
       ...Metrics.layout.centeredContent,
       marginHorizontal: Metrics.spacing.lg,
       marginTop: Metrics.spacing.md,
-    },
-    searchBar: {
-      ...Metrics.layout.centeredContent,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.sm,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: Metrics.radius.full,
-      paddingHorizontal: Metrics.spacing.md,
-      marginHorizontal: Metrics.spacing.lg,
-      marginTop: Metrics.spacing.md,
-    },
-    searchInput: {
-      flex: 1,
-      paddingVertical: Metrics.spacing.sm,
-      fontSize: 15,
-      color: colors.foreground,
     },
     list: {
       flex: 1,
