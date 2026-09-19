@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import {
   getChatMessages,
   getProposalsWithUser,
@@ -8,6 +8,7 @@ import {
   sendChatMessage,
   subscribeToChatMessages,
   subscribeToProposalsWithUser,
+  type ChatMessagesPage,
 } from '@/services';
 import { OFFER_STATUS, type ChatMessage, type Proposal } from '@/types';
 import { useAuth } from './useAuth';
@@ -45,6 +46,14 @@ function upsertById<T extends { id: string }>(current: T[], item: T): T[] {
   return next;
 }
 
+function upsertMessageInPages(data: InfiniteData<ChatMessagesPage> | undefined, message: ChatMessage): InfiniteData<ChatMessagesPage> {
+  if (!data || data.pages.length === 0) {
+    return { pages: [{ messages: [message], nextCursor: null }], pageParams: [null] };
+  }
+  const [firstPage, ...restPages] = data.pages;
+  return { ...data, pages: [{ ...firstPage, messages: upsertById(firstPage.messages, message) }, ...restPages] };
+}
+
 export function useChat(otherUserId: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -52,16 +61,26 @@ export function useChat(otherUserId: string) {
   const proposalsKey = useMemo(() => ['chat-proposals', otherUserId] as const, [otherUserId]);
 
   const {
-    data: messages = [],
+    data: messagesData,
     isLoading: isLoadingMessages,
     isError: isMessagesError,
     refetch: refetchMessages,
-  } = useQuery({
+    hasNextPage: hasMoreMessages,
+    isFetchingNextPage: isLoadingMoreMessages,
+    fetchNextPage: loadMoreMessages,
+  } = useInfiniteQuery({
     queryKey: messagesKey,
-    queryFn: () => getChatMessages(otherUserId),
+    queryFn: ({ pageParam }) => getChatMessages(otherUserId, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!otherUserId,
     staleTime: 0,
   });
+
+  const messages = useMemo(
+    () => [...(messagesData?.pages ?? [])].reverse().flatMap((page) => page.messages),
+    [messagesData]
+  );
 
   const {
     data: proposals = [],
@@ -79,7 +98,7 @@ export function useChat(otherUserId: string) {
     if (!otherUserId) return;
 
     const unsubscribe = subscribeToChatMessages(otherUserId, (message) => {
-      queryClient.setQueryData<ChatMessage[]>(messagesKey, (current = []) => upsertById(current, message));
+      queryClient.setQueryData<InfiniteData<ChatMessagesPage>>(messagesKey, (current) => upsertMessageInPages(current, message));
     });
 
     return unsubscribe;
@@ -116,7 +135,7 @@ export function useChat(otherUserId: string) {
   const { mutateAsync: sendMessage, isPending: isSending } = useMutation({
     mutationFn: (body: string) => sendChatMessage({ recipientId: otherUserId, body }),
     onSuccess: (message) => {
-      queryClient.setQueryData<ChatMessage[]>(messagesKey, (current = []) => upsertById(current, message));
+      queryClient.setQueryData<InfiniteData<ChatMessagesPage>>(messagesKey, (current) => upsertMessageInPages(current, message));
     },
   });
 
@@ -145,5 +164,8 @@ export function useChat(otherUserId: string) {
     isSending,
     respondToProposal: respondToProposalItem,
     currentUserId: user?.id ?? null,
+    hasMoreMessages: !!hasMoreMessages,
+    isLoadingMoreMessages,
+    loadMoreMessages,
   };
 }

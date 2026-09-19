@@ -41,7 +41,38 @@ export default function ChatScreen() {
     setInputHeight(event.nativeEvent.layout.height);
   };
 
-  const { timeline, isLoading, isError, retry, sendMessage, isSending, respondToProposal, currentUserId } = useChat(otherUserId);
+  const {
+    timeline,
+    isLoading,
+    isError,
+    retry,
+    sendMessage,
+    isSending,
+    respondToProposal,
+    currentUserId,
+    hasMoreMessages,
+    isLoadingMoreMessages,
+    loadMoreMessages,
+  } = useChat(otherUserId);
+
+  const previousContentHeightRef = useRef(0);
+  const isLoadingOlderRef = useRef(false);
+
+  const handleContentSizeChange = (_width: number, height: number) => {
+    if (isLoadingOlderRef.current) {
+      const delta = height - previousContentHeightRef.current;
+      if (delta > 0) scrollRef.current?.scrollTo({ y: delta, animated: false });
+      isLoadingOlderRef.current = false;
+    } else {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }
+    previousContentHeightRef.current = height;
+  };
+
+  const handleLoadMoreMessages = () => {
+    isLoadingOlderRef.current = true;
+    loadMoreMessages();
+  };
 
   const otherUserQuery = useQuery({
     queryKey: ['profile', otherUserId],
@@ -160,8 +191,15 @@ export default function ChatScreen() {
           offset={inputHeight}
           style={styles.messagesScroll}
           contentContainerStyle={styles.messages}
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={handleContentSizeChange}
         >
+          {hasMoreMessages && (
+            <Pressable style={styles.loadMoreButton} onPress={handleLoadMoreMessages} disabled={isLoadingMoreMessages}>
+              <Text style={styles.loadMoreButtonText}>
+                {isLoadingMoreMessages ? t('loadingEarlierMessages') : t('loadEarlierMessagesAction')}
+              </Text>
+            </Pressable>
+          )}
           {timeline.map((item) => {
             const senderId = item.kind === 'message' ? item.message.senderId : item.proposal.senderId;
             const key = item.kind === 'message' ? item.message.id : item.proposal.id;
@@ -242,6 +280,16 @@ const makeStyles = (colors: ThemeColors) =>
       ...Metrics.layout.centeredContent,
       padding: Metrics.spacing.lg,
       gap: Metrics.spacing.sm,
+    },
+    loadMoreButton: {
+      alignSelf: 'center',
+      paddingVertical: Metrics.spacing.sm,
+      paddingHorizontal: Metrics.spacing.md,
+    },
+    loadMoreButtonText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.primary,
     },
     messageRow: {
       flexDirection: 'row',

@@ -1,4 +1,5 @@
 import { randomUUID } from 'expo-crypto';
+import { getHiddenBefore } from './chat';
 import { updateListingStatus } from './plantListings';
 import { supabase } from './supabase';
 import { LISTING_STATUS, OFFER_STATUS, type OfferStatus, type Proposal, type ProposalType } from '@/types';
@@ -147,11 +148,19 @@ export async function getListingProposals(listingId: string, proposalType: Propo
 }
 
 export async function getProposalsWithUser(otherUserId: string): Promise<Proposal[]> {
-  const { data, error } = await supabase
+  const hiddenBefore = await getHiddenBefore(otherUserId);
+
+  let query = supabase
     .from('plant_listing_proposals')
     .select(PROPOSAL_SELECT)
     .or(`sender_id.eq.${otherUserId},recipient_id.eq.${otherUserId}`)
     .order('created_at', { ascending: true });
+
+  if (hiddenBefore) {
+    query = query.gt('created_at', hiddenBefore);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return (data as unknown as ProposalRow[]).map(mapProposalRow);
@@ -175,30 +184,6 @@ export function subscribeToProposalsWithUser(otherUserId: string, onChange: (pro
   return () => {
     supabase.removeChannel(channel);
   };
-}
-
-export type ProposalActivityRow = {
-  sender_id: string;
-  recipient_id: string;
-  proposal_type: ProposalType;
-  status: OfferStatus;
-  created_at: string;
-  responded_at: string | null;
-  sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
-  recipient: { name: string | null; username: string | null; avatar_url: string | null } | null;
-};
-
-export async function getProposalActivityForUser(userId: string): Promise<ProposalActivityRow[]> {
-  const { data, error } = await supabase
-    .from('plant_listing_proposals')
-    .select(
-      'sender_id, recipient_id, proposal_type, status, created_at, responded_at, sender:profiles!sender_id(name, username, avatar_url), recipient:profiles!recipient_id(name, username, avatar_url)'
-    )
-    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data as unknown as ProposalActivityRow[];
 }
 
 export function subscribeToOwnProposals(userId: string, onChange: () => void): () => void {

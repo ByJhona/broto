@@ -1,4 +1,9 @@
 {
   "emptyTitle": "Nenhuma conversa ainda",
-  "emptyMessage": "Suas conversas sobre ofertas de plantas vão aparecer aqui."
+  "emptyMessage": "Suas conversas sobre ofertas de plantas vão aparecer aqui.",
+  "deleteConversationConfirmTitleOne": "Excluir conversa?",
+  "deleteConversationConfirmMessageOne": "As mensagens trocadas com {{name}} serão excluídas. Se vocês conversarem de novo, o chat começa limpo, sem esse histórico.",
+  "deleteConversationsConfirmTitleMany": "Excluir {{count}} conversas?",
+  "deleteConversationsConfirmMessage": "As mensagens dessas conversas serão excluídas. Se vocês conversarem de novo, os chats começam limpos, sem esse histórico.",
+  "selectConversationsAction": "Selecionar conversas"
 }

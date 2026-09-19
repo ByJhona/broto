@@ -1,4 +1,9 @@
 {
   "emptyTitle": "No conversations yet",
-  "emptyMessage": "Your conversations about plant offers will appear here."
+  "emptyMessage": "Your conversations about plant offers will appear here.",
+  "deleteConversationConfirmTitleOne": "Delete conversation?",
+  "deleteConversationConfirmMessageOne": "Your messages with {{name}} will be deleted. If you chat again, it'll start clean, without this history.",
+  "deleteConversationsConfirmTitleMany": "Delete {{count}} conversations?",
+  "deleteConversationsConfirmMessage": "The messages in these conversations will be deleted. If you chat again, they'll start clean, without this history.",
+  "selectConversationsAction": "Select conversations"
 }

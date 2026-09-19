@@ -12,7 +12,9 @@ type ListRowProps = {
   subtitle?: string;
   trailing?: ReactNode;
   onPress?: () => void;
+  onLongPress?: () => void;
   variant?: 'plain' | 'card';
+  selected?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -25,14 +27,16 @@ export function ListRow({
   subtitle,
   trailing,
   onPress,
+  onLongPress,
   variant = 'plain',
+  selected = false,
   style,
 }: Readonly<ListRowProps>) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const content = (
-    <View style={[styles.row, variant === 'card' && styles.rowCard]}>
+    <View style={[styles.row, variant === 'card' && styles.rowCard, selected && styles.rowSelected]}>
       {leading}
       <View style={styles.body}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -52,10 +56,10 @@ export function ListRow({
     </View>
   );
 
-  if (!onPress) return <View style={style}>{content}</View>;
+  if (!onPress && !onLongPress) return <View style={style}>{content}</View>;
 
   return (
-    <Pressable style={style} onPress={onPress}>
+    <Pressable style={style} onPress={onPress} onLongPress={onLongPress}>
       {content}
     </Pressable>
   );
@@ -74,6 +78,10 @@ const makeStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
       padding: Metrics.spacing.md,
+    },
+    rowSelected: {
+      borderColor: colors.primary,
+      backgroundColor: `${colors.primary}14`,
     },
     body: {
       flex: 1,

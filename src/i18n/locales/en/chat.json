@@ -17,5 +17,7 @@
   "retryButton": "Try again",
   "messagePlaceholder": "Write a message...",
   "offerPreview": "Proposed a trade",
-  "interestPreview": "Expressed interest"
+  "interestPreview": "Expressed interest",
+  "loadEarlierMessagesAction": "Load earlier messages",
+  "loadingEarlierMessages": "Loading..."
 }
