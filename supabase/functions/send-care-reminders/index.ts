@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { recordPushTickets, sendExpoPushNotifications, type ExpoPushMessage } from '../_shared/expoPush.ts';
+import { resolveLocale, type Locale } from '../_shared/locale.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -8,6 +9,19 @@ const CRON_SECRET = Deno.env.get('CRON_SECRET');
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const REMINDER_TIMEZONE = 'America/Sao_Paulo';
+
+const CARE_REMINDER_COPY: Record<Locale, { multipleTasksTitle: (count: number) => string; plantPrefix: (name: string) => string; genericBody: string }> = {
+  pt: {
+    multipleTasksTitle: (count) => `${count} lembretes de cuidado`,
+    plantPrefix: (name) => `Planta: ${name}`,
+    genericBody: 'Hora de cuidar da sua planta.',
+  },
+  en: {
+    multipleTasksTitle: (count) => `${count} care reminders`,
+    plantPrefix: (name) => `Plant: ${name}`,
+    genericBody: 'Time to care for your plant.',
+  },
+};
 
 type CareTaskRow = {
   id: string;
@@ -67,13 +81,14 @@ function isReminderTimeReached(task: CareTaskRow, currentHour: number, currentMi
   return task.reminder_hour === currentHour && task.reminder_minute <= currentMinute;
 }
 
-function buildMessage(tasks: CareTaskRow[], token: string): ExpoPushMessage {
-  const title = tasks.length === 1 ? tasks[0].title : `${tasks.length} lembretes de cuidado`;
+function buildMessage(tasks: CareTaskRow[], token: string, locale: Locale): ExpoPushMessage {
+  const copy = CARE_REMINDER_COPY[locale];
+  const title = tasks.length === 1 ? tasks[0].title : copy.multipleTasksTitle(tasks.length);
   const body =
     tasks.length === 1
       ? tasks[0].plant_name
-        ? `Planta: ${tasks[0].plant_name}`
-        : 'Hora de cuidar da sua planta.'
+        ? copy.plantPrefix(tasks[0].plant_name)
+        : copy.genericBody
       : tasks.map((task) => task.title).join(', ');
 
   const singleTaskPhoto = tasks.length === 1 ? tasks[0].plant_photo_url : null;
@@ -131,16 +146,21 @@ Deno.serve(async (req) => {
     tasksByUser.set(task.user_id, existing);
   }
 
-  const { data: pushTokenRows } = await supabaseAdmin
-    .from('push_tokens')
-    .select('user_id, token')
-    .in('user_id', Array.from(tasksByUser.keys()));
+  const [{ data: pushTokenRows }, { data: profileRows }] = await Promise.all([
+    supabaseAdmin.from('push_tokens').select('user_id, token').in('user_id', Array.from(tasksByUser.keys())),
+    supabaseAdmin.from('profiles').select('id, locale').in('id', Array.from(tasksByUser.keys())),
+  ]);
 
   const tokensByUser = new Map<string, string[]>();
   for (const row of (pushTokenRows ?? []) as { user_id: string; token: string }[]) {
     const existing = tokensByUser.get(row.user_id) ?? [];
     existing.push(row.token);
     tokensByUser.set(row.user_id, existing);
+  }
+
+  const localeByUser = new Map<string, Locale>();
+  for (const row of (profileRows ?? []) as { id: string; locale: string | null }[]) {
+    localeByUser.set(row.id, resolveLocale(row.locale));
   }
 
   const queuedPushes = new Map<string, { userId: string; careTaskIds: string[] }>();
@@ -150,10 +170,11 @@ Deno.serve(async (req) => {
     const tokens = tokensByUser.get(userId) ?? [];
     if (tokens.length === 0) continue;
 
+    const locale = localeByUser.get(userId) ?? 'pt';
     const careTaskIds = tasks.map((task) => task.id);
     for (const token of tokens) {
       queuedPushes.set(token, { userId, careTaskIds });
-      messages.push(buildMessage(tasks, token));
+      messages.push(buildMessage(tasks, token, locale));
     }
   }
 
