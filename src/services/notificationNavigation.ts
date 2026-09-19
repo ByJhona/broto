@@ -49,6 +49,11 @@ export async function registerNotificationTapHandler(): Promise<void> {
 
     handleNotificationTap(response.notification.request.content.data as NotificationTapData);
   });
+}
+
+export async function handleLaunchNotification(): Promise<void> {
+  const notifications = await getNotificationsModule();
+  if (!notifications) return;
 
   const launchResponse = await notifications.getLastNotificationResponseAsync();
   if (launchResponse && launchResponse.actionIdentifier === notifications.DEFAULT_ACTION_IDENTIFIER) {

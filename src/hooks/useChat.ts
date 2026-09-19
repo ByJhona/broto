@@ -51,16 +51,28 @@ export function useChat(otherUserId: string) {
   const messagesKey = useMemo(() => ['chat-messages', otherUserId] as const, [otherUserId]);
   const proposalsKey = useMemo(() => ['chat-proposals', otherUserId] as const, [otherUserId]);
 
-  const { data: messages = [], isLoading: isLoadingMessages } = useQuery({
+  const {
+    data: messages = [],
+    isLoading: isLoadingMessages,
+    isError: isMessagesError,
+    refetch: refetchMessages,
+  } = useQuery({
     queryKey: messagesKey,
     queryFn: () => getChatMessages(otherUserId),
     enabled: !!otherUserId,
+    staleTime: 0,
   });
 
-  const { data: proposals = [], isLoading: isLoadingProposals } = useQuery({
+  const {
+    data: proposals = [],
+    isLoading: isLoadingProposals,
+    isError: isProposalsError,
+    refetch: refetchProposals,
+  } = useQuery({
     queryKey: proposalsKey,
     queryFn: () => getProposalsWithUser(otherUserId),
     enabled: !!otherUserId,
+    staleTime: 0,
   });
 
   useEffect(() => {
@@ -119,9 +131,16 @@ export function useChat(otherUserId: string) {
     },
   });
 
+  const retry = () => {
+    refetchMessages();
+    refetchProposals();
+  };
+
   return {
     timeline,
     isLoading: isLoadingMessages || isLoadingProposals,
+    isError: isMessagesError || isProposalsError,
+    retry,
     sendMessage,
     isSending,
     respondToProposal: respondToProposalItem,

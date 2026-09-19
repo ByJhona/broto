@@ -13,6 +13,8 @@
   "declineButton": "Decline",
   "acceptButton": "Accept",
   "emptyMessage": "No messages yet. Start the conversation!",
+  "loadError": "Could not load this conversation.",
+  "retryButton": "Try again",
   "messagePlaceholder": "Write a message...",
   "offerPreview": "Proposed a trade",
   "interestPreview": "Expressed interest"

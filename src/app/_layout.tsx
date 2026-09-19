@@ -1,7 +1,7 @@
 import { AlertHost } from '@/components/AlertHost';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
-import { i18n, LanguageProvider, useTranslation } from '@/i18n';
+import { i18n, LanguageProvider, useLanguage, useTranslation } from '@/i18n';
 import { checkForAppUpdate } from '@/services/appVersion';
 import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
 import {
@@ -13,7 +13,8 @@ import {
   getPlanCatalog,
   PLAN_CATALOG_QUERY_KEY,
 } from '@/services/credits';
-import { registerNotificationTapHandler } from '@/services/notificationNavigation';
+import { handleLaunchNotification, registerNotificationTapHandler } from '@/services/notificationNavigation';
+import { updateProfile } from '@/services/profile';
 import { registerPushToken, watchPushTokenRefresh } from '@/services/pushTokens';
 import { queryClient } from '@/services/queryClient';
 import { AuthProvider, NotificationsProvider } from '@/store';
@@ -27,6 +28,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();
+  const { language } = useLanguage();
   const colors = useColors();
   const { scheme } = useAppTheme();
   const { t } = useTranslation('nav');
@@ -49,14 +51,20 @@ function RootNavigator() {
   }, []);
 
   useEffect(() => {
+    if (isLoading) return;
+    handleLaunchNotification();
+  }, [isLoading]);
+
+  useEffect(() => {
     if (!session) return;
     registerPushToken();
+    updateProfile(session.user.id, { locale: language }).catch(() => {});
     // Warms the plans-screen cache so it shows cards instantly instead of a
     // skeleton the first time the user navigates there in this session.
     queryClient.query({ queryKey: PLAN_CATALOG_QUERY_KEY, queryFn: getPlanCatalog, staleTime: CATALOG_STALE_TIME }).catch(() => {});
     queryClient.query({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME }).catch(() => {});
     queryClient.query({ queryKey: CREDIT_COSTS_QUERY_KEY, queryFn: getCreditCosts, staleTime: CATALOG_STALE_TIME }).catch(() => {});
-  }, [session]);
+  }, [session, language]);
 
   const statusBar = <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />;
 

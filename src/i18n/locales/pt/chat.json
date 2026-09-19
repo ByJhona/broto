@@ -13,6 +13,8 @@
   "declineButton": "Recusar",
   "acceptButton": "Aceitar",
   "emptyMessage": "Nenhuma mensagem ainda. Comece a conversa!",
+  "loadError": "Não foi possível carregar essa conversa.",
+  "retryButton": "Tentar novamente",
   "messagePlaceholder": "Escreva uma mensagem...",
   "offerPreview": "Propôs uma troca",
   "interestPreview": "Demonstrou interesse"

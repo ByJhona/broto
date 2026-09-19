@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
+import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar, Card, EmptyState, IconButton, LoadingScreen } from '@/components';
@@ -40,7 +41,7 @@ export default function ChatScreen() {
     setInputHeight(event.nativeEvent.layout.height);
   };
 
-  const { timeline, isLoading, sendMessage, isSending, respondToProposal, currentUserId } = useChat(otherUserId);
+  const { timeline, isLoading, isError, retry, sendMessage, isSending, respondToProposal, currentUserId } = useChat(otherUserId);
 
   const otherUserQuery = useQuery({
     queryKey: ['profile', otherUserId],
@@ -110,6 +111,15 @@ export default function ChatScreen() {
     </Card>
   );
 
+  const renderErrorState = () => (
+    <View style={styles.emptyContainer}>
+      <EmptyState icon={TriangleAlert} message={t('loadError')} />
+      <Pressable style={styles.retryButton} onPress={retry}>
+        <Text style={styles.retryButtonText}>{t('retryButton')}</Text>
+      </Pressable>
+    </View>
+  );
+
   const renderTimelineItem = (item: ChatTimelineItem, isMine: boolean) => {
     if (item.kind === 'proposal') {
       return renderProposalCard(item.proposal, isMine);
@@ -140,13 +150,11 @@ export default function ChatScreen() {
         }}
       />
 
-      {timeline.length === 0 ? (
-        <EmptyState
-          icon={MessageCircle}
-          message={t('emptyMessage')}
-          style={styles.emptyContainer}
-        />
-      ) : (
+      {isError && renderErrorState()}
+      {!isError && timeline.length === 0 && (
+        <EmptyState icon={MessageCircle} message={t('emptyMessage')} style={styles.emptyContainer} />
+      )}
+      {!isError && timeline.length > 0 && (
         <KeyboardChatScrollView
           ref={scrollRef}
           offset={inputHeight}
@@ -214,6 +222,18 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       justifyContent: 'center',
       padding: Metrics.spacing.xl,
+      gap: Metrics.spacing.md,
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: Metrics.radius.md,
+      paddingVertical: Metrics.spacing.sm,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    retryButtonText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.primaryForeground,
     },
     messagesScroll: {
       flex: 1,
