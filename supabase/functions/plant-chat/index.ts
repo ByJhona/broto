@@ -60,7 +60,7 @@ async function askOpenAI(systemPrompt: string, history: ChatMessageRow[], questi
     { role: 'user', content: question },
   ];
 
-  return callOpenAI({ messages, max_tokens: 300 });
+  return callOpenAI({ messages, max_completion_tokens: 300 });
 }
 
 Deno.serve(async (req) => {
