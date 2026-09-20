@@ -1,0 +1,9 @@
+{
+  "screenTitle": "Proposta de troca",
+  "wantsToTradeFor": "Quer trocar pela sua oferta \"{{listingTitle}}\"",
+  "viewOfferAction": "Ver oferta",
+  "respondError": "Não foi possível responder a proposta.",
+  "acceptSuccess": "Proposta aceita!",
+  "declineSuccess": "Proposta recusada.",
+  "notFoundMessage": "Essa proposta não existe mais."
+}

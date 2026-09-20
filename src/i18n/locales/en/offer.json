@@ -1,0 +1,9 @@
+{
+  "screenTitle": "Trade proposal",
+  "wantsToTradeFor": "Wants to trade for your listing \"{{listingTitle}}\"",
+  "viewOfferAction": "View offer",
+  "respondError": "Couldn't respond to the offer.",
+  "acceptSuccess": "Offer accepted!",
+  "declineSuccess": "Offer declined.",
+  "notFoundMessage": "This offer no longer exists."
+}

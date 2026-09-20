@@ -91,6 +91,7 @@ function RootNavigator() {
           <Stack.Screen name="event" options={{ headerShown: false }} />
           <Stack.Screen name="identify" options={{ headerShown: false }} />
           <Stack.Screen name="listing" options={{ headerShown: false }} />
+          <Stack.Screen name="offer" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />
           <Stack.Screen name="search" options={{ ...searchScreenOptions, title: t('search') }} />

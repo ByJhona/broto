@@ -18,6 +18,7 @@ import plant from './plant.json';
 import group from './group.json';
 import event from './event.json';
 import listing from './listing.json';
+import offer from './offer.json';
 import community from './community.json';
 import chat from './chat.json';
 import messages from './messages.json';
@@ -52,6 +53,7 @@ export default {
   group,
   event,
   listing,
+  offer,
   community,
   chat,
   messages,
