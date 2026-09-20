@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS public.get_conversations(timestamptz, int);
+
 CREATE OR REPLACE FUNCTION public.get_conversations(p_cursor timestamptz DEFAULT NULL, p_limit int DEFAULT 20)
 RETURNS TABLE (
   other_user_id uuid,
