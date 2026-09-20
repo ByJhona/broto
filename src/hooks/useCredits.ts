@@ -36,6 +36,12 @@ export function useCreditsGate() {
   const queryClient = useQueryClient();
   const queryKey = creditsQueryKey(session?.user.id);
 
+  useQuery({
+    queryKey,
+    queryFn: getCredits,
+    enabled: !!session,
+  });
+
   const canAffordCost = (cost: number) => canAfford(queryClient.getQueryData<CreditsState | null>(queryKey) ?? null, cost);
 
   const applyCreditBalance = (balance: number | null) => applyCreditBalanceTo(queryClient, queryKey, balance);
