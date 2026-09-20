@@ -16,7 +16,8 @@ export type CommunityComment = {
   authorId: string;
   authorName: string;
   authorAvatarUrl?: string | null;
-  text: string;
+  text: string | null;
+  photoUrl: string | null;
   createdAt: string;
 };
 

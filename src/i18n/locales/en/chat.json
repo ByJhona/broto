@@ -19,5 +19,7 @@
   "offerPreview": "Proposed a trade",
   "interestPreview": "Expressed interest",
   "loadEarlierMessagesAction": "Load earlier messages",
-  "loadingEarlierMessages": "Loading..."
+  "loadingEarlierMessages": "Loading...",
+  "photoMessagePreview": "Photo",
+  "sendPhotoAction": "Send photo"
 }

@@ -1,8 +1,18 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { getHiddenBefore } from './chat';
 import { updateListingStatus } from './plantListings';
 import { supabase } from './supabase';
-import { LISTING_STATUS, OFFER_STATUS, type OfferStatus, type Proposal, type ProposalType } from '@/types';
+import {
+  LISTING_STATUS,
+  OFFER_STATUS,
+  type OfferStatus,
+  type Plant,
+  type PlantCommonProblem,
+  type Proposal,
+  type ProposalType,
+} from '@/types';
+import { patchInList, upsertInList } from '@/utils/queryListCache';
 
 const PROPOSAL_SELECT =
   'id, listing_id, sender_id, recipient_id, proposal_type, offered_plant_id, status, created_at, responded_at, listing:plant_listings(title), offered_plant:plants(name, photo_urls)';
@@ -35,6 +45,15 @@ function mapProposalRow(row: ProposalRow): Proposal {
     status: row.status,
     createdAt: row.created_at,
     respondedAt: row.responded_at,
+  };
+}
+
+export function mergeProposal(existing: Proposal, incoming: Proposal): Proposal {
+  return {
+    ...incoming,
+    listingTitle: incoming.listingTitle ?? existing.listingTitle,
+    offeredPlantName: incoming.offeredPlantName ?? existing.offeredPlantName,
+    offeredPlantPhotoUrl: incoming.offeredPlantPhotoUrl ?? existing.offeredPlantPhotoUrl,
   };
 }
 
@@ -200,4 +219,131 @@ export function subscribeToOwnProposals(userId: string, onChange: () => void): (
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+export type OfferedPlantDetail = Pick<
+  Plant,
+  | 'id'
+  | 'name'
+  | 'species'
+  | 'commonName'
+  | 'photoUrls'
+  | 'wateringDays'
+  | 'sunLevel'
+  | 'careLevel'
+  | 'origin'
+  | 'description'
+  | 'wateringDescription'
+  | 'toxicToPets'
+  | 'toxicToPetsNotes'
+  | 'toxicToHumans'
+  | 'toxicToHumansNotes'
+  | 'funFacts'
+  | 'commonProblems'
+>;
+
+export type ProposalDetail = {
+  id: string;
+  listingId: string;
+  listingTitle: string | null;
+  senderId: string;
+  senderName: string | null;
+  senderAvatarUrl: string | null;
+  recipientId: string;
+  status: OfferStatus;
+  createdAt: string;
+  offeredPlant: OfferedPlantDetail | null;
+};
+
+const PROPOSAL_DETAIL_SELECT =
+  'id, listing_id, sender_id, recipient_id, status, created_at, listing:plant_listings(title), sender:profiles!sender_id(name, username, avatar_url), offered_plant:plants(id, name, species, common_name, photo_urls, watering_days, sun_level, care_level, origin, description, watering_description, toxic_to_pets, toxic_to_pets_notes, toxic_to_humans, toxic_to_humans_notes, fun_facts, common_problems)';
+
+type OfferedPlantDetailRow = {
+  id: string;
+  name: string;
+  species: string | null;
+  common_name: string | null;
+  photo_urls: string[];
+  watering_days: number | null;
+  sun_level: Plant['sunLevel'];
+  care_level: Plant['careLevel'];
+  origin: string | null;
+  description: string | null;
+  watering_description: string | null;
+  toxic_to_pets: boolean | null;
+  toxic_to_pets_notes: string | null;
+  toxic_to_humans: boolean | null;
+  toxic_to_humans_notes: string | null;
+  fun_facts: string[] | null;
+  common_problems: PlantCommonProblem[] | null;
+};
+
+type ProposalDetailRow = {
+  id: string;
+  listing_id: string;
+  sender_id: string;
+  recipient_id: string;
+  status: OfferStatus;
+  created_at: string;
+  listing: { title: string } | null;
+  sender: { name: string | null; username: string | null; avatar_url: string | null } | null;
+  offered_plant: OfferedPlantDetailRow | null;
+};
+
+function mapOfferedPlantDetail(row: OfferedPlantDetailRow): OfferedPlantDetail {
+  return {
+    id: row.id,
+    name: row.name,
+    species: row.species,
+    commonName: row.common_name,
+    photoUrls: row.photo_urls,
+    wateringDays: row.watering_days,
+    sunLevel: row.sun_level,
+    careLevel: row.care_level,
+    origin: row.origin,
+    description: row.description,
+    wateringDescription: row.watering_description,
+    toxicToPets: row.toxic_to_pets,
+    toxicToPetsNotes: row.toxic_to_pets_notes,
+    toxicToHumans: row.toxic_to_humans,
+    toxicToHumansNotes: row.toxic_to_humans_notes,
+    funFacts: row.fun_facts,
+    commonProblems: row.common_problems,
+  };
+}
+
+export async function getProposalById(id: string): Promise<ProposalDetail | null> {
+  const { data, error } = await supabase.from('plant_listing_proposals').select(PROPOSAL_DETAIL_SELECT).eq('id', id).maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const row = data as unknown as ProposalDetailRow;
+  return {
+    id: row.id,
+    listingId: row.listing_id,
+    listingTitle: row.listing?.title ?? null,
+    senderId: row.sender_id,
+    senderName: row.sender?.name || row.sender?.username || null,
+    senderAvatarUrl: row.sender?.avatar_url ?? null,
+    recipientId: row.recipient_id,
+    status: row.status,
+    createdAt: row.created_at,
+    offeredPlant: row.offered_plant ? mapOfferedPlantDetail(row.offered_plant) : null,
+  };
+}
+
+export function applyProposalStatusEverywhere(queryClient: QueryClient, proposal: Proposal, currentUserId: string | undefined) {
+  const otherUserId = proposal.senderId === currentUserId ? proposal.recipientId : proposal.senderId;
+  if (otherUserId) {
+    queryClient.setQueryData<Proposal[]>(['chat-proposals', otherUserId], (current = []) =>
+      upsertInList(current, proposal, { merge: mergeProposal })
+    );
+  }
+  queryClient.setQueriesData<ListingProposalSummary[]>({ queryKey: ['plant-listing-proposals', proposal.listingId] }, (old) =>
+    old ? patchInList(old, proposal.id, (item) => ({ ...item, status: proposal.status })) : old
+  );
+  queryClient.setQueryData<ProposalDetail>(['proposal-detail', proposal.id], (current) =>
+    current ? { ...current, status: proposal.status } : current
+  );
 }

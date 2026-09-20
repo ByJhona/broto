@@ -10,7 +10,8 @@ export type ChatMessage = {
   id: string;
   senderId: string;
   recipientId: string;
-  body: string;
+  body: string | null;
+  photoUrl: string | null;
   createdAt: string;
 };
 

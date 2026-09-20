@@ -26,6 +26,7 @@ import {
 } from '@/components';
 import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
 import {
+  applyProposalStatusEverywhere,
   BOOST_DURATION_HOURS,
   boostContent,
   createPost,
@@ -34,6 +35,7 @@ import {
   hasSentProposal,
   InsufficientCreditsError,
   isBoostActive,
+  patchListingInAllCaches,
   respondToProposal,
   sendInterestProposal,
   sendOfferProposal,
@@ -104,17 +106,19 @@ function buildProposals(
   isExchange: boolean,
   proposals: ListingProposalSummary[] | undefined,
   onRespond: (proposalId: string, accept: boolean) => void,
-  t: TranslateFn
+  onViewOffer: (proposalId: string) => void
 ): ListingProposal[] {
   return (proposals ?? []).map((proposal) => ({
     id: proposal.id,
     userId: proposal.senderId,
     name: proposal.senderName,
     avatarUrl: proposal.senderAvatarUrl,
-    detail: isExchange && proposal.offeredPlantName ? t('offeredPlantDetail', { plantName: proposal.offeredPlantName }) : null,
+    offeredPlantName: isExchange ? proposal.offeredPlantName : null,
+    offeredPlantPhotoUrl: isExchange ? proposal.offeredPlantPhotoUrl : null,
     status: proposal.status,
-    onAccept: proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, true) : undefined,
-    onDecline: proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, false) : undefined,
+    onAccept: !isExchange && proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, true) : undefined,
+    onDecline: !isExchange && proposal.status === OFFER_STATUS.PENDING ? () => onRespond(proposal.id, false) : undefined,
+    onViewOffer: isExchange ? () => onViewOffer(proposal.id) : undefined,
   }));
 }
 
@@ -207,10 +211,17 @@ export default function ListingDetailScreen() {
     router.push({ pathname: '/chat', params: { otherUserId } });
   };
 
+  const handleViewOffer = (proposalId: string) => {
+    router.push({ pathname: '/offer/[id]', params: { id: proposalId } });
+  };
+
   const handleRespondProposal = async (proposalId: string, accept: boolean) => {
     try {
-      await respondToProposal(proposalId, accept);
-      invalidateListingActivity();
+      const proposal = await respondToProposal(proposalId, accept);
+      applyProposalStatusEverywhere(queryClient, proposal, user?.id);
+      if (accept) {
+        patchListingInAllCaches(queryClient, proposal.listingId, (item) => ({ ...item, status: LISTING_STATUS.COMPLETED }));
+      }
     } catch {
       Toast.error(t('offerUpdateError'));
     }
@@ -272,9 +283,8 @@ export default function ListingDetailScreen() {
   const handleBoost = async () => {
     setIsActing(true);
     try {
-      await boostContent('listing', listing.id);
-      queryClient.invalidateQueries({ queryKey: ['plant-listing', id] });
-      queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
+      const boostedUntil = await boostContent('listing', listing.id);
+      patchListingInAllCaches(queryClient, listing.id, (item) => ({ ...item, boostedUntil }));
       Toast.success(t('boostSuccess', { hours: BOOST_DURATION_HOURS }));
     } catch (err) {
       if (err instanceof InsufficientCreditsError) {
@@ -346,7 +356,7 @@ export default function ListingDetailScreen() {
     );
   };
 
-  const proposals = buildProposals(isExchange, proposalsQuery.data, handleRespondProposal, t);
+  const proposals = buildProposals(isExchange, proposalsQuery.data, handleRespondProposal, handleViewOffer);
 
   return (
     <ScrollView

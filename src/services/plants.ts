@@ -1,9 +1,11 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { storagePathFromPublicUrl, uniquePhotoFilename } from './storagePath';
 import type { Plant, PlantCommonProblem, PlantSummary } from '@/types';
+import { patchInList, removeFromList } from '@/utils/queryListCache';
 
 export const MAX_PLANT_PHOTOS = 5;
 
@@ -97,22 +99,6 @@ export async function getPlants(): Promise<PlantSummary[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-
-  return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
-}
-
-export async function getPlantsByUserId(userId: string): Promise<PlantSummary[]> {
-  const { data, error } = await supabase
-    .from('plants')
-    .select(PLANT_SUMMARY_SELECT)
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching plants for user:', error);
-    throw error;
-  }
 
   return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
 }
@@ -219,6 +205,20 @@ export async function removePlantPhoto(plantId: string, photoUrl: string): Promi
 export async function updatePlantName(plantId: string, name: string): Promise<void> {
   const { error } = await supabase.from('plants').update({ name }).eq('id', plantId);
   if (error) throw error;
+}
+
+const PLANTS_QUERY_PREFIX = ['plants'] as const;
+
+export function patchPlantInAllCaches(queryClient: QueryClient, id: string, patch: Partial<PlantSummary>) {
+  queryClient.setQueriesData<PlantSummary[]>({ queryKey: PLANTS_QUERY_PREFIX }, (old) =>
+    old ? patchInList(old, id, (item) => ({ ...item, ...patch })) : old
+  );
+  queryClient.setQueryData<Plant>(['plant', id], (current) => (current ? { ...current, ...patch } : current));
+}
+
+export function removePlantFromAllCaches(queryClient: QueryClient, id: string) {
+  queryClient.setQueriesData<PlantSummary[]>({ queryKey: PLANTS_QUERY_PREFIX }, (old) => (old ? removeFromList(old, id) : old));
+  queryClient.removeQueries({ queryKey: ['plant', id] });
 }
 
 export type CreatePlantInput = {

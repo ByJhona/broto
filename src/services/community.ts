@@ -19,7 +19,7 @@ const POST_SELECT = `
   post_likes!post_likes_post_id_fkey (count),
   likedByUser:post_likes!post_likes_post_id_fkey (count),
   post_comments!post_comments_post_id_fkey (
-    id, text, created_at, user_id,
+    id, text, photo_url, created_at, user_id,
     profiles!post_comments_user_id_fkey (name, username, avatar_url)
   )
 `;
@@ -82,7 +82,8 @@ type PostRow = {
   likedByUser: { count: number }[];
   post_comments: {
     id: string;
-    text: string;
+    text: string | null;
+    photo_url: string | null;
     created_at: string;
     user_id: string;
     profiles: {
@@ -136,6 +137,7 @@ function formatPost(row: PostRow): CommunityPost {
         id: comment.id,
         authorId: comment.user_id,
         text: comment.text,
+        photoUrl: comment.photo_url,
         createdAt: formatRelativeTime(comment.created_at),
         authorName: comment.profiles?.name || comment.profiles?.username || 'Jardineiro',
         authorAvatarUrl: comment.profiles?.avatar_url,
@@ -289,10 +291,13 @@ export async function toggleLike(postId: string, userId: string, currentlyLiked:
   }
 }
 
-export async function addComment(postId: string, userId: string, text: string): Promise<void> {
+export async function addComment(postId: string, userId: string, text: string | null, localPhotoUri?: string | null): Promise<void> {
+  const trimmedText = text?.trim() || null;
+  const photoUrl = localPhotoUri ? await uploadPostPhoto(userId, localPhotoUri) : null;
+
   const { error } = await supabase
     .from('post_comments')
-    .insert({ post_id: postId, user_id: userId, text });
+    .insert({ post_id: postId, user_id: userId, text: trimmedText, photo_url: photoUrl });
 
   if (error) throw error;
 }
@@ -349,6 +354,16 @@ export function removePostFromFeaturedPosts(queryClient: QueryClient, postId: st
   queryClient.setQueriesData<CommunityPost[]>({ queryKey: FEATURED_POSTS_QUERY_PREFIX }, (old) =>
     old?.filter((post) => post.id !== postId)
   );
+}
+
+export function applyPostUpdateEverywhere(queryClient: QueryClient, postId: string, updater: (post: CommunityPost) => CommunityPost) {
+  queryClient.setQueryData<CommunityPost>(['post', postId], (current) => (current ? updater(current) : current));
+  updatePostInAllFeeds(queryClient, postId, updater);
+}
+
+export function removePostEverywhere(queryClient: QueryClient, postId: string) {
+  removePostFromAllFeeds(queryClient, postId);
+  removePostFromFeaturedPosts(queryClient, postId);
 }
 
 function withoutComment(post: CommunityPost, commentId: string): CommunityPost {

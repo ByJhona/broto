@@ -13,9 +13,8 @@ import {
   deletePost,
   deleteComment,
   getFollowingIds,
-  updatePostInAllFeeds,
-  removePostFromAllFeeds,
-  removePostFromFeaturedPosts,
+  applyPostUpdateEverywhere,
+  removePostEverywhere,
   removeCommentFromAllFeeds,
   subscribeToNewPosts,
   boostContent,
@@ -140,7 +139,7 @@ export function useCommunityFeed() {
       if (!post) return;
 
       const wasLiked = post.liked;
-      updatePostInAllFeeds(queryClient, postId, (p) => ({
+      applyPostUpdateEverywhere(queryClient, postId, (p) => ({
         ...p,
         liked: !p.liked,
         likeCount: p.likeCount + (p.liked ? -1 : 1),
@@ -149,19 +148,19 @@ export function useCommunityFeed() {
       try {
         await toggleLike(postId, user.id, wasLiked);
       } catch {
-        updatePostInAllFeeds(queryClient, postId, () => post);
+        applyPostUpdateEverywhere(queryClient, postId, () => post);
       }
     },
     [user, queryClient, queryKey]
   );
 
   const handleAddComment = useCallback(
-    async (postId: string, text: string) => {
+    async (postId: string, text: string, photoUri?: string) => {
       if (!user?.id) return;
       try {
-        await addComment(postId, user.id, text);
+        await addComment(postId, user.id, text, photoUri);
         const updated = await getPostById(postId, user.id);
-        if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
+        if (updated) applyPostUpdateEverywhere(queryClient, postId, () => updated);
       } catch (error) {
         console.error(error);
       }
@@ -210,8 +209,7 @@ export function useCommunityFeed() {
     async (postId: string) => {
       const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
       const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
-      removePostFromAllFeeds(queryClient, postId);
-      removePostFromFeaturedPosts(queryClient, postId);
+      removePostEverywhere(queryClient, postId);
       try {
         await deletePost(postId);
       } catch {
@@ -229,7 +227,7 @@ export function useCommunityFeed() {
     async (postId: string) => {
       try {
         const boostedUntil = await boostContent('post', postId);
-        updatePostInAllFeeds(queryClient, postId, (post) => ({ ...post, boostedUntil }));
+        applyPostUpdateEverywhere(queryClient, postId, (post) => ({ ...post, boostedUntil }));
         queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
         Toast.success(i18n.t('community:boostSuccess', { hours: BOOST_DURATION_HOURS }));
       } catch (err) {
@@ -256,7 +254,7 @@ export function useCommunityFeed() {
       try {
         await deleteComment(commentId);
       } catch {
-        if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
+        if (previousPost) applyPostUpdateEverywhere(queryClient, previousPost.id, () => previousPost);
         Toast.error(i18n.t('community:deleteCommentError'));
       }
     },

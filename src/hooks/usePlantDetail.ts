@@ -6,7 +6,7 @@ import { useAuth } from './useAuth';
 import { useCareTasks } from './useCareTasks';
 import { useCredits } from './useCredits';
 import { usePlantGroups } from './usePlantGroups';
-import { deletePlant, getPlant, setPlantGroup, updatePlantName } from '@/services';
+import { deletePlant, getPlant, patchPlantInAllCaches, removePlantFromAllCaches, setPlantGroup, updatePlantName } from '@/services';
 import { TASK_CATEGORY, type Plant, type PlantGroup, type PlantSummary } from '@/types';
 import { Alert, confirm, Toast, type AlertButton } from '@/utils';
 
@@ -101,12 +101,7 @@ export function usePlantDetail(id: string | undefined) {
     setIsSavingName(true);
     try {
       await updatePlantName(plant.id, trimmed);
-      queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
-        current ? { ...current, name: trimmed } : current
-      );
-      queryClient.setQueryData<PlantSummary[]>(plantsListKey, (current = []) =>
-        current.map((item) => (item.id === plant.id ? { ...item, name: trimmed } : item))
-      );
+      patchPlantInAllCaches(queryClient, plant.id, { name: trimmed });
       setIsRenameModalOpen(false);
     } catch (err) {
       setRenameError(err instanceof Error ? err.message : t('saveNameError'));
@@ -127,7 +122,7 @@ export function usePlantDetail(id: string | undefined) {
     setIsDeleting(true);
     try {
       await deletePlant(plant.id);
-      queryClient.removeQueries({ queryKey: ['plant', plant.id] });
+      removePlantFromAllCaches(queryClient, plant.id);
       await refreshCareTasks();
       router.replace('/garden');
     } catch (err) {
@@ -149,12 +144,9 @@ export function usePlantDetail(id: string | undefined) {
 
     try {
       await setPlantGroup(plant.id, groupId);
-      queryClient.setQueryData(['plant', id], (current: Plant | undefined) =>
-        current ? { ...current, groupId, groupName } : current
-      );
+      patchPlantInAllCaches(queryClient, plant.id, { groupId });
+      queryClient.setQueryData(['plant', id], (current: Plant | undefined) => (current ? { ...current, groupName } : current));
       queryClient.invalidateQueries({ queryKey: ['plant-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['plants-by-group'] });
-      queryClient.invalidateQueries({ queryKey: ['plants'] });
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : t('groupUpdateError'));
     }

@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  cancelAttendance,
   cancelEvent,
-  confirmAttendance,
   createEvent,
   deleteEvent,
   getUpcomingEvents,
+  patchEventInAllCaches,
+  removeEventFromAllCaches,
   type CreateEventInput,
 } from '@/services';
+import { EVENT_STATUS } from '@/types';
 import { useAuth } from './useAuth';
 
 const EVENTS_QUERY_KEY = ['events'] as const;
@@ -35,29 +36,15 @@ export function useEvents() {
 
   const { mutateAsync: removeEvent } = useMutation({
     mutationFn: (id: string) => deleteEvent(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
+    onSuccess: (_data, id) => {
+      removeEventFromAllCaches(queryClient, id);
     },
   });
 
   const { mutateAsync: cancelEventById } = useMutation({
     mutationFn: (id: string) => cancelEvent(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
-    },
-  });
-
-  const { mutateAsync: rsvpToEvent } = useMutation({
-    mutationFn: (eventId: string) => confirmAttendance(eventId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
-    },
-  });
-
-  const { mutateAsync: cancelRsvp } = useMutation({
-    mutationFn: (eventId: string) => cancelAttendance(eventId, user!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY });
+    onSuccess: (_data, id) => {
+      patchEventInAllCaches(queryClient, id, (event) => ({ ...event, status: EVENT_STATUS.CANCELLED }));
     },
   });
 
@@ -68,7 +55,5 @@ export function useEvents() {
     addEvent,
     removeEvent,
     cancelEventById,
-    rsvpToEvent,
-    cancelRsvp,
   };
 }

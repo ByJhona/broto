@@ -27,6 +27,7 @@
   "deleteCommentMessage": "Tem certeza que quer excluir esse recado? Essa ação não pode ser desfeita.",
   "footerCommentsLabel": "{{count}} recados",
   "commentPlaceholder": "Deixe um recadinho...",
+  "sendPhotoAction": "Enviar foto",
   "createPostError": "Não foi possível publicar. Tente novamente.",
   "deletePostError": "Não foi possível excluir a publicação.",
   "deleteCommentError": "Não foi possível excluir o recado.",

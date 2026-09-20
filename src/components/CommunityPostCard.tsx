@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
+import Camera from 'lucide-react-native/icons/camera';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Heart from 'lucide-react-native/icons/heart';
 import HelpCircle from 'lucide-react-native/icons/circle-question-mark';
@@ -11,6 +12,7 @@ import Send from 'lucide-react-native/icons/send';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import Trophy from 'lucide-react-native/icons/trophy';
+import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import {
@@ -29,6 +31,7 @@ import {
   LISTING_TYPE_COLORS,
   LISTING_TYPE_ICONS,
   listingBadgeLabel,
+  pickPhoto,
 } from '@/utils';
 import { isBoostActive } from '@/services';
 import { Avatar } from './Avatar';
@@ -60,7 +63,7 @@ function captionStyle(styles: Styles, hasPhotos: boolean) {
 
 function usePostCardState(
   post: CommunityPost,
-  onAddComment: (postId: string, text: string) => Promise<void>,
+  onAddComment: (postId: string, text: string, photoUri?: string) => Promise<void>,
   onDelete?: (postId: string) => void,
   onDeleteComment?: (commentId: string) => void,
   onBoost?: (postId: string) => void
@@ -69,19 +72,28 @@ function usePostCardState(
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [attachedPhotoUri, setAttachedPhotoUri] = useState<string | null>(null);
   const [isSendingComment, setIsSendingComment] = useState(false);
   const { t } = useTranslation(['community', 'common']);
 
   const handleSendComment = async () => {
     const text = draft.trim();
-    if (!text || isSendingComment) return;
+    if (!text && !attachedPhotoUri) return;
+    if (isSendingComment) return;
     setIsSendingComment(true);
     try {
-      await onAddComment(post.id, text);
+      await onAddComment(post.id, text, attachedPhotoUri ?? undefined);
       setDraft('');
+      setAttachedPhotoUri(null);
     } finally {
       setIsSendingComment(false);
     }
+  };
+
+  const handlePickCommentPhoto = async () => {
+    const photoUri = await pickPhoto(t('community:sendPhotoAction'));
+    if (!photoUri) return;
+    setAttachedPhotoUri(photoUri);
   };
 
   const handleDelete = async () => {
@@ -119,8 +131,11 @@ function usePostCardState(
       setOpenCommentMenuId((current) => (current === commentId ? null : commentId)),
     draft,
     setDraft,
+    attachedPhotoUri,
+    clearAttachedPhoto: () => setAttachedPhotoUri(null),
     isSendingComment,
     handleSendComment,
+    handlePickCommentPhoto,
     handleDelete,
     handleDeleteComment,
     handleBoost,
@@ -178,7 +193,8 @@ function CommentRow({ comment, isOwnComment, isMenuOpen, onToggleMenu, onDelete 
         <Text style={styles.commentAuthor}>
           {comment.authorName} <Text style={styles.commentTime}>· {comment.createdAt}</Text>
         </Text>
-        <Text style={styles.commentText}>{comment.text}</Text>
+        {comment.photoUrl ? <Image source={{ uri: comment.photoUrl }} style={styles.commentPhoto} contentFit="cover" /> : null}
+        {comment.text ? <Text style={styles.commentText}>{comment.text}</Text> : null}
       </View>
       {isOwnComment ? (
         <View>
@@ -311,7 +327,10 @@ type PostCommentsProps = {
   onDeleteComment: (commentId: string) => void;
   draft: string;
   onChangeDraft: (text: string) => void;
+  attachedPhotoUri: string | null;
+  onClearPhoto: () => void;
   onSend: () => void;
+  onPickPhoto: () => void;
   isSending: boolean;
 };
 
@@ -323,7 +342,10 @@ function PostComments({
   onDeleteComment,
   draft,
   onChangeDraft,
+  attachedPhotoUri,
+  onClearPhoto,
   onSend,
+  onPickPhoto,
   isSending,
 }: Readonly<PostCommentsProps>) {
   const colors = useColors();
@@ -342,7 +364,19 @@ function PostComments({
         />
       ))}
 
+      {attachedPhotoUri ? (
+        <View style={styles.attachmentPreviewWrapper}>
+          <Image source={{ uri: attachedPhotoUri }} style={styles.attachmentPreview} contentFit="cover" />
+          <Pressable style={styles.attachmentRemoveButton} onPress={onClearPhoto} hitSlop={8}>
+            <X size={12} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          </Pressable>
+        </View>
+      ) : null}
+
       <View style={styles.commentInputRow}>
+        <Pressable style={styles.commentPhotoButton} onPress={onPickPhoto} disabled={isSending}>
+          <Camera size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        </Pressable>
         <TextInput
           style={[styles.commentInput, isSending && styles.commentInputDisabled]}
           value={draft}
@@ -353,9 +387,9 @@ function PostComments({
           editable={!isSending}
         />
         <Pressable
-          style={[styles.commentSend, (isSending || !draft.trim()) && styles.commentSendDisabled]}
+          style={[styles.commentSend, (isSending || (!draft.trim() && !attachedPhotoUri)) && styles.commentSendDisabled]}
           onPress={onSend}
-          disabled={isSending || !draft.trim()}
+          disabled={isSending || (!draft.trim() && !attachedPhotoUri)}
         >
           {isSending ? (
             <ActivityIndicator size="small" color={colors.primaryForeground} />
@@ -432,7 +466,7 @@ type CommunityPostCardProps = {
   post: CommunityPost;
   currentUserId?: string | null;
   onToggleLike: (postId: string) => void;
-  onAddComment: (postId: string, text: string) => Promise<void>;
+  onAddComment: (postId: string, text: string, photoUri?: string) => Promise<void>;
   onPressAuthor?: (authorId: string) => void;
   onPressListing?: (listingId: string) => void;
   onPressEvent?: (eventId: string) => void;
@@ -500,7 +534,10 @@ export const CommunityPostCard = memo(function CommunityPostCard({
           onDeleteComment={state.handleDeleteComment}
           draft={state.draft}
           onChangeDraft={state.setDraft}
+          attachedPhotoUri={state.attachedPhotoUri}
+          onClearPhoto={state.clearAttachedPhoto}
           onSend={state.handleSendComment}
+          onPickPhoto={state.handlePickCommentPhoto}
           isSending={state.isSendingComment}
         />
       ) : null}
@@ -670,11 +707,51 @@ const makeStyles = (colors: ThemeColors) =>
     color: colors.foreground,
     marginTop: 2,
   },
+  commentPhoto: {
+    width: 140,
+    height: 140,
+    borderRadius: Metrics.radius.md,
+    backgroundColor: colors.muted,
+    marginTop: 4,
+  },
+  attachmentPreviewWrapper: {
+    position: 'relative',
+    width: 56,
+    height: 56,
+    marginTop: Metrics.spacing.xs,
+  },
+  attachmentPreview: {
+    width: 56,
+    height: 56,
+    borderRadius: Metrics.radius.md,
+    backgroundColor: colors.muted,
+  },
+  attachmentRemoveButton: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: Metrics.radius.full,
+    backgroundColor: colors.foreground,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   commentInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Metrics.spacing.sm,
     marginTop: Metrics.spacing.xs,
+  },
+  commentPhotoButton: {
+    width: 36,
+    height: 36,
+    borderRadius: Metrics.radius.full,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   commentInput: {
     flex: 1,

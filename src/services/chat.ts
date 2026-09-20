@@ -1,9 +1,12 @@
 import { randomUUID } from 'expo-crypto';
+import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
-import { supabase } from './supabase';
+import { getCurrentUserId, supabase } from './supabase';
+import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
+import { uniquePhotoFilename } from './storagePath';
 import type { ChatConversation, ChatMessage } from '@/types';
 
-const CHAT_MESSAGE_SELECT = 'id, sender_id, recipient_id, body, created_at';
+const CHAT_MESSAGE_SELECT = 'id, sender_id, recipient_id, body, photo_url, created_at';
 const CHAT_MESSAGES_PAGE_SIZE = 30;
 const CONVERSATIONS_PAGE_SIZE = 20;
 
@@ -11,7 +14,8 @@ type ChatMessageRow = {
   id: string;
   sender_id: string;
   recipient_id: string;
-  body: string;
+  body: string | null;
+  photo_url: string | null;
   created_at: string;
 };
 
@@ -21,6 +25,7 @@ function mapChatMessageRow(row: ChatMessageRow): ChatMessage {
     senderId: row.sender_id,
     recipientId: row.recipient_id,
     body: row.body,
+    photoUrl: row.photo_url,
     createdAt: row.created_at,
   };
 }
@@ -68,10 +73,31 @@ export async function getChatMessages(otherUserId: string, cursor: string | null
   return { messages: rows.map(mapChatMessageRow).reverse(), nextCursor };
 }
 
-export async function sendChatMessage(input: { recipientId: string; body: string }): Promise<ChatMessage> {
+async function uploadChatPhoto(userId: string, localUri: string): Promise<string> {
+  const resizedUri = await resizeImageForUpload(localUri, PHOTO_UPLOAD_MAX_WIDTH);
+  const file = new File(resizedUri);
+  const bytes = await file.bytes();
+  const path = `${userId}/${uniquePhotoFilename()}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('chat-photos')
+    .upload(path, bytes, { contentType: 'image/jpeg' });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('chat-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function sendChatMessage(input: { recipientId: string; body?: string | null; photoUri?: string | null }): Promise<ChatMessage> {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
+
+  const photoUrl = input.photoUri ? await uploadChatPhoto(userId, input.photoUri) : null;
+
   const { data, error } = await supabase
     .from('chat_messages')
-    .insert({ recipient_id: input.recipientId, body: input.body })
+    .insert({ recipient_id: input.recipientId, body: input.body ?? null, photo_url: photoUrl })
     .select(CHAT_MESSAGE_SELECT)
     .single();
 
@@ -118,6 +144,7 @@ type ConversationActivityRow = {
   is_proposal: boolean;
   is_sender: boolean;
   message_body: string | null;
+  has_photo: boolean;
   proposal_type: string | null;
   proposal_status: string | null;
 };
@@ -125,7 +152,7 @@ type ConversationActivityRow = {
 type ConversationProfile = { id: string; name: string | null; username: string | null; avatar_url: string | null };
 
 function activityPreview(row: ConversationActivityRow): string {
-  if (!row.is_proposal) return row.message_body ?? '';
+  if (!row.is_proposal) return row.message_body ?? (row.has_photo ? i18n.t('chat:photoMessagePreview') : '');
   if (row.proposal_status === 'accepted') return i18n.t('chat:offerStatusAccepted');
   if (row.proposal_status === 'declined') return i18n.t('chat:offerStatusDeclined');
   return row.proposal_type === 'offer' ? i18n.t('chat:offerPreview') : i18n.t('chat:interestPreview');

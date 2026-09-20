@@ -1,16 +1,20 @@
 import { useEffect, useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import {
+  applyProposalStatusEverywhere,
   getChatMessages,
   getProposalsWithUser,
   markConversationRead,
+  mergeProposal,
+  patchListingInAllCaches,
   respondToProposal,
   sendChatMessage,
   subscribeToChatMessages,
   subscribeToProposalsWithUser,
   type ChatMessagesPage,
 } from '@/services';
-import { OFFER_STATUS, type ChatMessage, type Proposal } from '@/types';
+import { LISTING_STATUS, OFFER_STATUS, type ChatMessage, type Proposal } from '@/types';
+import { upsertInList } from '@/utils';
 import { useAuth } from './useAuth';
 
 export type ChatTimelineItem = { kind: 'message'; message: ChatMessage } | { kind: 'proposal'; proposal: Proposal };
@@ -38,20 +42,12 @@ function buildTimeline(messages: ChatMessage[], proposals: Proposal[]): ChatTime
   return items.sort((a, b) => (itemCreatedAt(a) < itemCreatedAt(b) ? -1 : 1));
 }
 
-function upsertById<T extends { id: string }>(current: T[], item: T): T[] {
-  const index = current.findIndex((existing) => existing.id === item.id);
-  if (index === -1) return [...current, item];
-  const next = [...current];
-  next[index] = item;
-  return next;
-}
-
 function upsertMessageInPages(data: InfiniteData<ChatMessagesPage> | undefined, message: ChatMessage): InfiniteData<ChatMessagesPage> {
   if (!data || data.pages.length === 0) {
     return { pages: [{ messages: [message], nextCursor: null }], pageParams: [null] };
   }
   const [firstPage, ...restPages] = data.pages;
-  return { ...data, pages: [{ ...firstPage, messages: upsertById(firstPage.messages, message) }, ...restPages] };
+  return { ...data, pages: [{ ...firstPage, messages: upsertInList(firstPage.messages, message) }, ...restPages] };
 }
 
 export function useChat(otherUserId: string) {
@@ -108,7 +104,7 @@ export function useChat(otherUserId: string) {
     if (!otherUserId) return;
 
     const unsubscribe = subscribeToProposalsWithUser(otherUserId, (proposal) => {
-      queryClient.setQueryData<Proposal[]>(proposalsKey, (current = []) => upsertById(current, proposal));
+      queryClient.setQueryData<Proposal[]>(proposalsKey, (current = []) => upsertInList(current, proposal, { merge: mergeProposal }));
     });
 
     return unsubscribe;
@@ -133,7 +129,7 @@ export function useChat(otherUserId: string) {
   }, [user?.id, otherUserId, lastItemId, lastItemIsMine, markRead]);
 
   const { mutateAsync: sendMessage, isPending: isSending } = useMutation({
-    mutationFn: (body: string) => sendChatMessage({ recipientId: otherUserId, body }),
+    mutationFn: (input: { body?: string; photoUri?: string }) => sendChatMessage({ recipientId: otherUserId, ...input }),
     onSuccess: (message) => {
       queryClient.setQueryData<InfiniteData<ChatMessagesPage>>(messagesKey, (current) => upsertMessageInPages(current, message));
     },
@@ -142,10 +138,9 @@ export function useChat(otherUserId: string) {
   const { mutateAsync: respondToProposalItem } = useMutation({
     mutationFn: ({ proposalId, accept }: { proposalId: string; accept: boolean }) => respondToProposal(proposalId, accept),
     onSuccess: (proposal) => {
-      queryClient.setQueryData<Proposal[]>(proposalsKey, (current = []) => upsertById(current, proposal));
+      applyProposalStatusEverywhere(queryClient, proposal, user?.id);
       if (proposal.status === OFFER_STATUS.ACCEPTED) {
-        queryClient.invalidateQueries({ queryKey: ['plant-listings'] });
-        queryClient.invalidateQueries({ queryKey: ['plant-listing', proposal.listingId] });
+        patchListingInAllCaches(queryClient, proposal.listingId, (listing) => ({ ...listing, status: LISTING_STATUS.COMPLETED }));
       }
     },
   });

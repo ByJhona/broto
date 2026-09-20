@@ -19,5 +19,7 @@
   "offerPreview": "Propôs uma troca",
   "interestPreview": "Demonstrou interesse",
   "loadEarlierMessagesAction": "Carregar mensagens anteriores",
-  "loadingEarlierMessages": "Carregando..."
+  "loadingEarlierMessages": "Carregando...",
+  "photoMessagePreview": "Foto",
+  "sendPhotoAction": "Enviar foto"
 }

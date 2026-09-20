@@ -1,9 +1,11 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
 import { LISTING_STATUS, type ListingStatus, type ListingType, type PlantListing } from '@/types';
+import { patchInList, removeFromList } from '@/utils/queryListCache';
 
 type PlantListingRow = {
   id: string;
@@ -170,5 +172,25 @@ export async function deleteListing(id: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
+}
+
+const PLANT_LISTINGS_QUERY_PREFIX = ['plant-listings'] as const;
+
+export function patchListingInAllCaches(
+  queryClient: QueryClient,
+  id: string,
+  updater: (listing: PlantListing) => PlantListing
+) {
+  queryClient.setQueriesData<PlantListing[]>({ queryKey: PLANT_LISTINGS_QUERY_PREFIX }, (old) =>
+    old ? patchInList(old, id, updater) : old
+  );
+  queryClient.setQueryData<PlantListing>(['plant-listing', id], (current) => (current ? updater(current) : current));
+}
+
+export function removeListingFromAllCaches(queryClient: QueryClient, id: string) {
+  queryClient.setQueriesData<PlantListing[]>({ queryKey: PLANT_LISTINGS_QUERY_PREFIX }, (old) =>
+    old ? removeFromList(old, id) : old
+  );
+  queryClient.removeQueries({ queryKey: ['plant-listing', id] });
 }
 

@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createListing, deleteListing, getAvailableListings, updateListingStatus, type CreateListingInput } from '@/services';
+import {
+  createListing,
+  deleteListing,
+  getAvailableListings,
+  patchListingInAllCaches,
+  removeListingFromAllCaches,
+  updateListingStatus,
+  type CreateListingInput,
+} from '@/services';
 import type { ListingStatus } from '@/types';
 import { useAuth } from './useAuth';
 
@@ -28,15 +36,15 @@ export function useListings() {
 
   const { mutateAsync: setListingStatus } = useMutation({
     mutationFn: ({ id, status }: { id: string; status: ListingStatus }) => updateListingStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
+    onSuccess: (_data, { id, status }) => {
+      patchListingInAllCaches(queryClient, id, (listing) => ({ ...listing, status }));
     },
   });
 
   const { mutateAsync: removeListing } = useMutation({
     mutationFn: (id: string) => deleteListing(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
+    onSuccess: (_data, id) => {
+      removeListingFromAllCaches(queryClient, id);
     },
   });
 

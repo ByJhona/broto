@@ -23,6 +23,9 @@
 
   "filterAll": "Tudo",
   "noListingsFound": "Nenhuma oferta encontrada.",
+  "scopeAll": "Todas",
+  "scopeMine": "Minhas",
+  "noOwnListingsFound": "Você ainda não tem nenhuma oferta.",
 
   "markCompletedAction": "Marcar como concluída",
   "reactivateListingAction": "Reativar oferta",
@@ -71,7 +74,7 @@
   "interestedPeopleTitle": "Pessoas interessadas",
   "noExchangeProposals": "Ninguém propôs uma troca ainda.",
   "noInterestedPeople": "Ninguém demonstrou interesse ainda.",
-  "offeredPlantDetail": "Quer trocar por: {{plantName}}",
+  "offeredPlantLabel": "Oferece em troca:",
 
   "interestSentLabel": "Interesse enviado",
   "wantToBuyLabel": "Quero comprar",

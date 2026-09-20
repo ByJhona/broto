@@ -1,9 +1,11 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
 import { EVENT_STATUS, type EventStatus, type PlantEvent } from '@/types';
+import { patchInList, removeFromList } from '@/utils/queryListCache';
 
 type EventRow = {
   id: string;
@@ -173,6 +175,18 @@ export async function confirmAttendance(eventId: string): Promise<void> {
 export async function cancelAttendance(eventId: string, userId: string): Promise<void> {
   const { error } = await supabase.from('event_attendees').delete().eq('event_id', eventId).eq('user_id', userId);
   if (error) throw error;
+}
+
+const EVENTS_QUERY_PREFIX = ['events'] as const;
+
+export function patchEventInAllCaches(queryClient: QueryClient, id: string, updater: (event: PlantEvent) => PlantEvent) {
+  queryClient.setQueriesData<PlantEvent[]>({ queryKey: EVENTS_QUERY_PREFIX }, (old) => (old ? patchInList(old, id, updater) : old));
+  queryClient.setQueriesData<PlantEvent>({ queryKey: ['event', id] }, (current) => (current ? updater(current) : current));
+}
+
+export function removeEventFromAllCaches(queryClient: QueryClient, id: string) {
+  queryClient.setQueriesData<PlantEvent[]>({ queryKey: EVENTS_QUERY_PREFIX }, (old) => (old ? removeFromList(old, id) : old));
+  queryClient.removeQueries({ queryKey: ['event', id] });
 }
 
 export type EventAttendee = {

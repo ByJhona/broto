@@ -23,6 +23,9 @@
 
   "filterAll": "All",
   "noListingsFound": "No listings found.",
+  "scopeAll": "All",
+  "scopeMine": "Mine",
+  "noOwnListingsFound": "You don't have any listings yet.",
 
   "markCompletedAction": "Mark as completed",
   "reactivateListingAction": "Reactivate listing",
@@ -71,7 +74,7 @@
   "interestedPeopleTitle": "Interested people",
   "noExchangeProposals": "No one has proposed a trade yet.",
   "noInterestedPeople": "No one has shown interest yet.",
-  "offeredPlantDetail": "Wants to trade for: {{plantName}}",
+  "offeredPlantLabel": "Offers in trade:",
 
   "interestSentLabel": "Interest sent",
   "wantToBuyLabel": "I want to buy",

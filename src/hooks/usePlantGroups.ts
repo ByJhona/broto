@@ -40,6 +40,7 @@ export function usePlantGroups() {
     onSuccess: (_data, id) => {
       queryClient.setQueryData<PlantGroup[]>(queryKey, (current = []) => current.filter((group) => group.id !== id));
       queryClient.invalidateQueries({ queryKey: ['plants'] });
+      queryClient.invalidateQueries({ queryKey: ['plant'] });
     },
   });
 

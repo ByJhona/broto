@@ -1,6 +1,7 @@
 import { useEffect, type PropsWithChildren } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getNotificationById, supabase } from '@/services';
+import { upsertInList } from '@/utils';
 import { useAuthContext } from './auth';
 import type { Notification } from '@/types';
 
@@ -25,7 +26,9 @@ export function NotificationsProvider({ children }: Readonly<PropsWithChildren>)
         async (payload) => {
           const newNotif = await getNotificationById(payload.new.id);
           if (!newNotif) return;
-          queryClient.setQueryData<Notification[]>(queryKey, (current = []) => [newNotif, ...current]);
+          queryClient.setQueryData<Notification[]>(queryKey, (current = []) =>
+            upsertInList(current, newNotif, { position: 'start' })
+          );
         }
       )
       .on(

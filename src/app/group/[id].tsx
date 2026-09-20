@@ -17,7 +17,7 @@ import {
   SubmitButton,
 } from '@/components';
 import { usePlantGroups, usePlants } from '@/hooks';
-import { getPlantsByGroupId, setPlantGroup } from '@/services';
+import { getPlantsByGroupId, patchPlantInAllCaches, setPlantGroup } from '@/services';
 import type { PlantSummary } from '@/types';
 import { Alert, confirm, Toast } from '@/utils';
 
@@ -36,7 +36,7 @@ export default function GroupDetailScreen() {
 
   const group = groups.find((item) => item.id === id) ?? null;
 
-  const plantsQueryKey = ['plants-by-group', id] as const;
+  const plantsQueryKey = ['plants', 'by-group', id] as const;
   const {
     data: groupPlants = [],
     isLoading,
@@ -119,9 +119,9 @@ export default function GroupDetailScreen() {
     const isInGroup = groupPlantIds.has(plant.id);
     try {
       await setPlantGroup(plant.id, isInGroup ? null : group.id);
+      patchPlantInAllCaches(queryClient, plant.id, { groupId: isInGroup ? null : group.id });
       await refetch();
       queryClient.invalidateQueries({ queryKey: ['plant-groups'] });
-      queryClient.invalidateQueries({ queryKey: ['plants'] });
     } catch (err) {
       Toast.error(err instanceof Error ? err.message : t('updatePlantGroupError'));
     }

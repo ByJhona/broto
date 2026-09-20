@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
 import { i18n, useTranslation } from '@/i18n';
 import { useAuth } from './useAuth';
@@ -15,6 +15,7 @@ import {
   getEventAttendees,
   getEventById,
   InsufficientCreditsError,
+  patchEventInAllCaches,
 } from '@/services';
 import { Alert, confirm, Toast } from '@/utils';
 import { EVENT_STATUS } from '@/types';
@@ -104,12 +105,12 @@ async function performEventBoost(
   router: ReturnType<typeof useRouter>,
   creditCost: number,
   setIsActing: (value: boolean) => void,
-  onDone: () => void
+  queryClient: QueryClient
 ): Promise<void> {
   setIsActing(true);
   try {
-    await boostContent('event', eventId);
-    onDone();
+    const boostedUntil = await boostContent('event', eventId);
+    patchEventInAllCaches(queryClient, eventId, (item) => ({ ...item, boostedUntil }));
     Toast.success(i18n.t('event:boostSuccess', { hours: BOOST_DURATION_HOURS }));
   } catch (err) {
     if (err instanceof InsufficientCreditsError) {
@@ -203,7 +204,7 @@ export function useEventDetail(id: string) {
 
   const handleBoost = () => {
     if (!event) return;
-    performEventBoost(event.id, router, creditCosts.boost_content, setIsActing, invalidateEvent);
+    performEventBoost(event.id, router, creditCosts.boost_content, setIsActing, queryClient);
   };
 
   const handlePressOwner = () => {

@@ -10,13 +10,12 @@ import { CommunityPostCard, EmptyState, LoadingScreen } from '@/components';
 import { useAuth } from '@/hooks';
 import {
   addComment,
+  applyPostUpdateEverywhere,
   deleteComment,
   deletePost,
   getPostById,
+  removePostEverywhere,
   toggleLike,
-  updatePostInAllFeeds,
-  removePostFromAllFeeds,
-  removePostFromFeaturedPosts,
   type CommunityPostsQueryData,
 } from '@/services';
 import type { CommunityPost } from '@/types';
@@ -59,26 +58,21 @@ export default function PostDetailScreen() {
     if (!user?.id || !post) return;
     const previous = post;
     const updater = (p: CommunityPost) => ({ ...p, liked: !p.liked, likeCount: p.likeCount + (p.liked ? -1 : 1) });
-    // ['post', id] can still be empty here even though `post` has a value — placeholderData
-    // isn't written to the cache, so the updater must tolerate a missing current entry.
-    queryClient.setQueryData(['post', id], (current: CommunityPost | undefined) => (current ? updater(current) : current));
-    updatePostInAllFeeds(queryClient, post.id, updater);
+    applyPostUpdateEverywhere(queryClient, post.id, updater);
     try {
       await toggleLike(post.id, user.id, previous.liked);
     } catch {
-      queryClient.setQueryData(['post', id], previous);
-      updatePostInAllFeeds(queryClient, post.id, () => previous);
+      applyPostUpdateEverywhere(queryClient, post.id, () => previous);
     }
   };
 
-  const handleAddComment = async (postId: string, text: string) => {
+  const handleAddComment = async (postId: string, text: string, photoUri?: string) => {
     if (!user?.id) return;
     try {
-      await addComment(postId, user.id, text);
+      await addComment(postId, user.id, text, photoUri);
       const updated = await getPostById(postId, user.id);
       if (updated) {
-        queryClient.setQueryData(['post', id], updated);
-        updatePostInAllFeeds(queryClient, postId, () => updated);
+        applyPostUpdateEverywhere(queryClient, postId, () => updated);
       }
     } catch (error) {
       console.error(error);
@@ -89,8 +83,7 @@ export default function PostDetailScreen() {
     if (!post) return;
     try {
       await deletePost(post.id);
-      removePostFromAllFeeds(queryClient, post.id);
-      removePostFromFeaturedPosts(queryClient, post.id);
+      removePostEverywhere(queryClient, post.id);
       router.back();
     } catch {
       Toast.error(t('deletePostError'));
@@ -101,13 +94,11 @@ export default function PostDetailScreen() {
     if (!post) return;
     const previous = post;
     const updater = (p: CommunityPost) => ({ ...p, comments: p.comments.filter((comment) => comment.id !== commentId) });
-    queryClient.setQueryData(['post', id], (current: CommunityPost | undefined) => (current ? updater(current) : current));
-    updatePostInAllFeeds(queryClient, post.id, updater);
+    applyPostUpdateEverywhere(queryClient, post.id, updater);
     try {
       await deleteComment(commentId);
     } catch {
-      queryClient.setQueryData(['post', id], previous);
-      updatePostInAllFeeds(queryClient, post.id, () => previous);
+      applyPostUpdateEverywhere(queryClient, post.id, () => previous);
       Toast.error(t('deleteCommentError'));
     }
   };

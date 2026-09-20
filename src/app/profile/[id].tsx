@@ -34,9 +34,8 @@ import {
   addComment,
   deletePost,
   deleteComment,
-  updatePostInAllFeeds,
-  removePostFromAllFeeds,
-  removePostFromFeaturedPosts,
+  applyPostUpdateEverywhere,
+  removePostEverywhere,
   removeCommentFromAllFeeds,
   type CommunityPostsQueryData,
 } from '@/services';
@@ -188,14 +187,6 @@ function ProfileBadgesRow({ title, badges }: Readonly<ProfileBadgesRowProps>) {
 
 type Styles = ReturnType<typeof makeStyles>;
 
-function profileListingsTitle(isOwnProfile: boolean, t: (key: string) => string): string {
-  return isOwnProfile ? t('myListings') : t('listings');
-}
-
-function profileEventsTitle(isOwnProfile: boolean, t: (key: string) => string): string {
-  return isOwnProfile ? t('myEvents') : t('events');
-}
-
 function profileEmptyPostsMessage(
   isOwnProfile: boolean,
   name: string,
@@ -312,23 +303,27 @@ function ProfileHeader({
 
       <ProfileBadgesRow title={t('badgesTitle')} badges={badges} />
 
-      <ProfileListingsRow
-        title={profileListingsTitle(isOwnProfile, t)}
-        listings={listings}
-        onPressListing={onPressListing}
-        isCollapsed={isOffersCollapsed}
-        onToggleCollapsed={onToggleOffersCollapsed}
-        userLocation={userLocation}
-      />
+      {isOwnProfile ? null : (
+        <ProfileListingsRow
+          title={t('listings')}
+          listings={listings}
+          onPressListing={onPressListing}
+          isCollapsed={isOffersCollapsed}
+          onToggleCollapsed={onToggleOffersCollapsed}
+          userLocation={userLocation}
+        />
+      )}
 
-      <ProfileEventsRow
-        title={profileEventsTitle(isOwnProfile, t)}
-        events={events}
-        onPressEvent={onPressEvent}
-        isCollapsed={isEventsCollapsed}
-        onToggleCollapsed={onToggleEventsCollapsed}
-        userLocation={userLocation}
-      />
+      {isOwnProfile ? null : (
+        <ProfileEventsRow
+          title={t('events')}
+          events={events}
+          onPressEvent={onPressEvent}
+          isCollapsed={isEventsCollapsed}
+          onToggleCollapsed={onToggleEventsCollapsed}
+          userLocation={userLocation}
+        />
+      )}
 
       <ProfileEmptyPosts hasPosts={posts.length > 0} isLoading={isLoading} isOwnProfile={isOwnProfile} name={name} styles={styles} />
     </View>
@@ -361,16 +356,16 @@ export default function PublicProfileScreen() {
   });
 
   const listingsQuery = useQuery({
-    queryKey: ['listings-by-user', id],
+    queryKey: ['plant-listings', 'by-user', id],
     queryFn: () => getListingsByUserId(id!),
-    enabled: !!id,
+    enabled: !!id && !isOwnProfile,
     staleTime: PROFILE_STALE_TIME,
   });
 
   const eventsQuery = useQuery({
-    queryKey: ['events-by-user', id, user?.id],
+    queryKey: ['events', 'by-user', id, user?.id],
     queryFn: () => getEventsByUserId(id!, user?.id),
-    enabled: !!id,
+    enabled: !!id && !isOwnProfile,
     staleTime: PROFILE_STALE_TIME,
   });
 
@@ -423,7 +418,7 @@ export default function PublicProfileScreen() {
       if (!post) return;
 
       const wasLiked = post.liked;
-      updatePostInAllFeeds(queryClient, postId, (p) => ({
+      applyPostUpdateEverywhere(queryClient, postId, (p) => ({
         ...p,
         liked: !p.liked,
         likeCount: p.likeCount + (p.liked ? -1 : 1),
@@ -432,19 +427,19 @@ export default function PublicProfileScreen() {
       try {
         await toggleLike(postId, user.id, wasLiked);
       } catch {
-        updatePostInAllFeeds(queryClient, postId, () => post);
+        applyPostUpdateEverywhere(queryClient, postId, () => post);
       }
     },
     [user, queryClient, postsQueryKey]
   );
 
   const handleAddComment = useCallback(
-    async (postId: string, text: string) => {
+    async (postId: string, text: string, photoUri?: string) => {
       if (!user?.id) return;
       try {
-        await addComment(postId, user.id, text);
+        await addComment(postId, user.id, text, photoUri);
         const updated = await getPostById(postId, user.id);
-        if (updated) updatePostInAllFeeds(queryClient, postId, () => updated);
+        if (updated) applyPostUpdateEverywhere(queryClient, postId, () => updated);
       } catch (error) {
         console.error(error);
       }
@@ -456,12 +451,11 @@ export default function PublicProfileScreen() {
     async (postId: string) => {
       const cached = queryClient.getQueryData<CommunityPostsQueryData>(postsQueryKey);
       const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
-      removePostFromAllFeeds(queryClient, postId);
-      removePostFromFeaturedPosts(queryClient, postId);
+      removePostEverywhere(queryClient, postId);
       try {
         await deletePost(postId);
       } catch {
-        if (previousPost) updatePostInAllFeeds(queryClient, postId, () => previousPost);
+        if (previousPost) applyPostUpdateEverywhere(queryClient, postId, () => previousPost);
         queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
         Toast.error(t('deletePostError'));
       }
@@ -479,7 +473,7 @@ export default function PublicProfileScreen() {
       try {
         await deleteComment(commentId);
       } catch {
-        if (previousPost) updatePostInAllFeeds(queryClient, previousPost.id, () => previousPost);
+        if (previousPost) applyPostUpdateEverywhere(queryClient, previousPost.id, () => previousPost);
         Toast.error(t('deleteCommentError'));
       }
     },
