@@ -85,55 +85,97 @@
         </div>
 
         <div class="hero-visual">
-          <div class="phone">
-            <div class="phone__notch" aria-hidden="true"></div>
-            <div class="phone__screen">
-              <div class="mock-topbar">
-                <span class="mock-title">Meu jardim</span>
-                <span class="mock-dot"></span>
+          <div class="preview-phones reveal">
+            <div class="phone" aria-hidden="true">
+              <div class="phone__notch"></div>
+              <div class="phone__screen phone__screen--shot">
+                <img src="assets/screenshots/identificar.jpg" alt="" loading="lazy" />
               </div>
+            </div>
 
-              <div class="mock-card">
-                <span class="mock-thumb"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--md"></span>
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-chip">Regar em 2 dias</span>
-                </div>
+            <div class="phone" aria-hidden="true">
+              <div class="phone__notch"></div>
+              <div class="phone__screen phone__screen--shot">
+                <img src="assets/screenshots/jardim.jpg" alt="" loading="lazy" />
               </div>
+            </div>
 
-              <div class="mock-card">
-                <span class="mock-thumb" style="background: linear-gradient(135deg, var(--secondary), var(--primary));"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--lg"></span>
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-chip">Luz indireta</span>
-                </div>
-              </div>
-
-              <div class="mock-card">
-                <span class="mock-thumb"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-line mock-line--md"></span>
-                  <span class="mock-chip">Em dia</span>
-                </div>
-              </div>
-
-              <span class="mock-fab" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              </span>
-
-              <span style="flex:1"></span>
-
-              <div class="mock-tabbar" aria-hidden="true">
-                <span></span>
-                <span class="is-active"></span>
-                <span></span>
-                <span></span>
+            <div class="phone" aria-hidden="true">
+              <div class="phone__notch"></div>
+              <div class="phone__screen phone__screen--shot">
+                <img src="assets/screenshots/mapa.jpg" alt="" loading="lazy" />
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="map-section" id="mapa">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            Descubra o que tem por perto
+          </span>
+          <h2>Trocas, doações e encontros no mapa da sua região</h2>
+          <p class="lede">Veja no mapa quem tá com muda sobrando, quem quer trocar e quais encontros de plantas rolam perto de você — sem precisar vasculhar grupo nenhum.</p>
+        </div>
+
+        <div class="map-mock reveal" aria-hidden="true">
+          <svg class="map-mock__art" viewBox="0 0 400 300" preserveAspectRatio="none">
+            <rect x="34" y="26" width="92" height="72" rx="10" fill="var(--muted)" opacity="0.75"/>
+            <rect x="262" y="34" width="104" height="64" rx="10" fill="var(--muted)" opacity="0.65"/>
+            <rect x="28" y="196" width="76" height="62" rx="10" fill="var(--muted)" opacity="0.65"/>
+            <rect x="292" y="188" width="84" height="70" rx="10" fill="var(--muted)" opacity="0.6"/>
+            <rect x="156" y="184" width="112" height="82" rx="16" fill="var(--accent)" opacity="0.4"/>
+            <path d="M-10 118 C 90 96, 160 158, 258 128 S 410 88, 410 88" fill="none" stroke="var(--card)" stroke-width="16" stroke-linecap="round"/>
+            <path d="M-10 118 C 90 96, 160 158, 258 128 S 410 88, 410 88" fill="none" stroke="rgb(0 0 0 / 0.1)" stroke-width="1.5" stroke-dasharray="7 9"/>
+            <path d="M122 -10 C 100 78, 172 138, 150 216 S 192 310, 192 310" fill="none" stroke="var(--card)" stroke-width="13" stroke-linecap="round"/>
+            <path d="M122 -10 C 100 78, 172 138, 150 216 S 192 310, 192 310" fill="none" stroke="rgb(0 0 0 / 0.1)" stroke-width="1.5" stroke-dasharray="7 9"/>
+            <path d="M-10 224 C 70 246, 190 208, 410 240" fill="none" stroke="var(--card)" stroke-width="11" stroke-linecap="round"/>
+          </svg>
+          <span class="map-mock__blob map-mock__blob--a"></span>
+          <span class="map-mock__blob map-mock__blob--b"></span>
+
+          <span class="map-mock__badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+            28 plantas por perto
+          </span>
+
+          <span class="map-pin" style="top:20%; left:14%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          </span>
+          <span class="map-pin map-pin--accent" style="top:68%; left:18%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          </span>
+          <span class="map-pin" style="top:76%; left:68%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          </span>
+          <span class="map-pin map-pin--accent" style="top:16%; left:74%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          </span>
+          <span class="map-pin" style="top:50%; left:52%;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+          </span>
+
+          <div class="map-callout" style="top:26%; left:34%;">
+            <span class="map-callout__pin">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg>
+            </span>
+            <div class="map-card">
+              <span class="map-card__thumb"></span>
+              <div class="map-card__text">
+                <strong>Costela-de-adão</strong>
+                <span>Doação · 800m</span>
+              </div>
+            </div>
+          </div>
+
+          <span class="map-you">
+            <span class="map-you__pulse"></span>
+            <span class="map-you__dot"></span>
+          </span>
         </div>
       </div>
     </section>
@@ -195,67 +237,28 @@
         <div class="section-head reveal">
           <span class="eyebrow">Uma espiada</span>
           <h2>Feito com o mesmo carinho que você trata suas plantas</h2>
-          <p class="lede">Um app leve, com cara de jardim — não de planilha. As telas abaixo são uma representação do app; capturas reais chegam em breve.</p>
+          <p class="lede">Um app leve, com cara de jardim — não de planilha. Capturas reais do app.</p>
         </div>
 
         <div class="preview-phones reveal">
           <div class="phone" aria-hidden="true">
             <div class="phone__notch"></div>
-            <div class="phone__screen">
-              <div class="mock-topbar"><span class="mock-title">Identificar</span><span class="mock-dot"></span></div>
-              <div class="mock-card" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                <span class="mock-thumb" style="width:100%; height:96px; border-radius:12px;"></span>
-                <span class="mock-line mock-line--md"></span>
-                <span class="mock-line mock-line--sm"></span>
-              </div>
-              <div class="mock-card">
-                <span class="mock-thumb"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-line mock-line--md"></span>
-                </div>
-              </div>
+            <div class="phone__screen phone__screen--shot">
+              <img src="assets/screenshots/oferta.jpg" alt="" loading="lazy" />
             </div>
           </div>
 
           <div class="phone" aria-hidden="true">
             <div class="phone__notch"></div>
-            <div class="phone__screen">
-              <div class="mock-topbar"><span class="mock-title">Comunidade</span><span class="mock-dot"></span></div>
-              <div class="mock-card">
-                <span class="mock-avatar"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-line mock-line--lg"></span>
-                </div>
-              </div>
-              <span class="mock-thumb" style="width:100%; height:80px; border-radius:12px;"></span>
-              <div class="mock-card">
-                <span class="mock-avatar"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-line mock-line--md"></span>
-                </div>
-              </div>
+            <div class="phone__screen phone__screen--shot">
+              <img src="assets/screenshots/comunidade.jpg" alt="" loading="lazy" />
             </div>
           </div>
 
           <div class="phone" aria-hidden="true">
             <div class="phone__notch"></div>
-            <div class="phone__screen">
-              <div class="mock-topbar"><span class="mock-title">Perto de você</span><span class="mock-dot"></span></div>
-              <div class="mock-map">
-                <span class="mock-pin" style="top:35%; left:30%;"></span>
-                <span class="mock-pin" style="top:55%; left:60%;"></span>
-                <span class="mock-pin" style="top:25%; left:70%;"></span>
-              </div>
-              <div class="mock-card">
-                <span class="mock-thumb"></span>
-                <div class="mock-lines">
-                  <span class="mock-line mock-line--sm"></span>
-                  <span class="mock-line mock-line--md"></span>
-                </div>
-              </div>
+            <div class="phone__screen phone__screen--shot">
+              <img src="assets/screenshots/mapa.jpg" alt="" loading="lazy" />
             </div>
           </div>
         </div>
