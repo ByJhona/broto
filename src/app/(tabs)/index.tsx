@@ -102,15 +102,15 @@ type ListingMarkerProps = {
 function ListingMarker({ listing, isHighlighted, onPress }: Readonly<ListingMarkerProps>) {
   const Icon = LISTING_TYPE_ICONS[listing.listingType];
   const color = LISTING_TYPE_COLORS[listing.listingType];
-  const photoUrl = listing.photoUrls[0] ?? null;
 
   return (
     <Marker
       coordinate={{ latitude: listing.latitude, longitude: listing.longitude }}
       onPress={onPress}
       zIndex={isHighlighted ? 1 : 0}
+      tracksViewChanges={isHighlighted}
     >
-      <ListingMarkerPin photoUrl={photoUrl} color={color} icon={Icon} highlighted={isHighlighted} />
+      <ListingMarkerPin color={color} icon={Icon} highlighted={isHighlighted} />
     </Marker>
   );
 }
@@ -122,11 +122,14 @@ type EventMarkerProps = {
 };
 
 function EventMarker({ event, isHighlighted, onPress }: Readonly<EventMarkerProps>) {
-  const photoUrl = event.photoUrl;
-
   return (
-    <Marker coordinate={{ latitude: event.latitude, longitude: event.longitude }} onPress={onPress} zIndex={isHighlighted ? 1 : 0}>
-      <ListingMarkerPin photoUrl={photoUrl} color={EVENT_COLOR} icon={EVENT_ICON} highlighted={isHighlighted} />
+    <Marker
+      coordinate={{ latitude: event.latitude, longitude: event.longitude }}
+      onPress={onPress}
+      zIndex={isHighlighted ? 1 : 0}
+      tracksViewChanges={isHighlighted}
+    >
+      <ListingMarkerPin color={EVENT_COLOR} icon={EVENT_ICON} highlighted={isHighlighted} />
     </Marker>
   );
 }
