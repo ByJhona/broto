@@ -27,6 +27,8 @@ import type { Badge, PlantCandidate, PlantSpeciesInfo } from '@/types';
 import { requireLogin, sunLevelLabel, type SunLevel } from '@/utils';
 import { useTranslation } from '@/i18n';
 
+const SUBMIT_BAR_HEIGHT = 96;
+
 function parseCandidates(raw: string | string[] | undefined): PlantCandidate[] {
   if (!raw || Array.isArray(raw)) return [];
   try {
@@ -164,7 +166,10 @@ export default function IdentifyResultScreen() {
 
   return (
     <View style={styles.container}>
-      <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ paddingBottom: SUBMIT_BAR_HEIGHT + insets.bottom }}
+        keyboardShouldPersistTaps="handled"
+      >
         <SpeciesPhotoHero
           photos={speciesInfo?.referencePhotos ?? []}
           isLoading={isSpeciesInfoStale}
@@ -216,7 +221,7 @@ export default function IdentifyResultScreen() {
         </ScreenContent>
       </KeyboardAwareScrollView>
 
-      <View style={[styles.floatingButton, { bottom: insets.bottom + Metrics.spacing.lg }]}>
+      <View style={[styles.floatingButton, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
         <SubmitButton label={t('addToGardenCta')} onPress={handleOpenNicknameModal} />
       </View>
 
@@ -244,9 +249,6 @@ const makeStyles = (colors: ThemeColors) =>
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingBottom: 100,
   },
   emptyContainer: {
     flex: 1,
@@ -285,12 +287,12 @@ const makeStyles = (colors: ThemeColors) =>
   },
   floatingButton: {
     position: 'absolute',
-    left: Metrics.spacing.lg,
-    right: Metrics.spacing.lg,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: Metrics.spacing.lg,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   });

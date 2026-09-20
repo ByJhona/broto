@@ -1,5 +1,6 @@
 import { useMemo, type PropsWithChildren } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
 
@@ -16,7 +17,8 @@ export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditNa
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const content = (
-    <ImageBackground source={{ uri: photoUrl }} style={styles.hero}>
+    <View style={styles.hero}>
+      <Image source={{ uri: photoUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
       <View style={styles.scrim}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{name}</Text>
@@ -29,7 +31,7 @@ export function PlantHero({ photoUrl, name, species, onPress, disabled, onEditNa
         {species ? <Text style={styles.species}>{species}</Text> : null}
       </View>
       {children}
-    </ImageBackground>
+    </View>
   );
 
   if (onPress) {
@@ -50,6 +52,7 @@ const makeStyles = (colors: ThemeColors) =>
     height: 340,
     justifyContent: 'flex-end',
     backgroundColor: colors.muted,
+    overflow: 'hidden',
   },
   scrim: {
     backgroundColor: Overlays.scrim,
