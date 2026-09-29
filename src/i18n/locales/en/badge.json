@@ -6,5 +6,6 @@
   "noBadgesMessage": "No badges yet. Add plants to your garden to unlock some.",
   "newBadgeTitle": "New badge unlocked!",
   "claim": "Claim",
-  "close": "Close"
+  "close": "Close",
+  "catalogProgress": "{{earned}} of {{total}} earned"
 }

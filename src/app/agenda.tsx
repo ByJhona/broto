@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import CalendarDays from 'lucide-react-native/icons/calendar-days';
 import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { CareTaskItem, EmptyState, MultiSelectHeaderActions, RemindersCalendarView, SegmentedControl } from '@/components';
+import {
+  CareTaskItem,
+  EmptyState,
+  FloatingScreenControls,
+  MultiSelectHeaderActions,
+  RemindersCalendarView,
+  ScreenHeader,
+  SegmentedControl,
+  useScreenTopInset,
+} from '@/components';
 import { useCareTasks, useMultiSelect } from '@/hooks';
 import type { CareTask } from '@/types';
 import { confirmAndDeleteMany } from '@/utils';
@@ -47,6 +56,7 @@ function AgendaList({ tasks, onToggle, onDelete, selection }: Readonly<AgendaLis
 export default function AgendaScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('garden');
   const { tasks, toggleTask, deleteTask } = useCareTasks();
@@ -73,24 +83,24 @@ export default function AgendaScreen() {
   };
 
   return (
+    <View style={styles.container}>
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.xl }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.xl }]}
     >
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <MultiSelectHeaderActions
-              isSelecting={selection.isSelecting}
-              selectedCount={selection.selectedIds.length}
-              selectAccessibilityLabel={t('selectRemindersAction')}
-              onAdd={() => router.push('/task/new')}
-              onStartSelecting={handleStartSelecting}
-              onCancelSelecting={selection.stopSelecting}
-              onConfirmDelete={handleConfirmDelete}
-            />
-          ),
-        }}
+      <ScreenHeader
+        title={t('agendaTitle')}
+        subtitle={t('agendaSubtitle')}
+        trailing={
+          <MultiSelectHeaderActions
+            isSelecting={selection.isSelecting}
+            selectedCount={selection.selectedIds.length}
+            selectAccessibilityLabel={t('selectRemindersAction')}
+            onAdd={() => router.push('/task/new')}
+            onStartSelecting={handleStartSelecting}
+            onCancelSelecting={selection.stopSelecting}
+            onConfirmDelete={handleConfirmDelete}
+          />
+        }
       />
 
       {selection.isSelecting ? null : (
@@ -111,6 +121,8 @@ export default function AgendaScreen() {
         <AgendaList tasks={pendingFirst} onToggle={toggleTask} onDelete={deleteTask} selection={selection} />
       )}
     </ScrollView>
+    <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -124,7 +136,6 @@ const makeStyles = (colors: ThemeColors) =>
       ...Metrics.layout.centeredContent,
       flexGrow: 1,
       paddingHorizontal: Metrics.spacing.lg,
-      paddingTop: Metrics.spacing.md,
     },
     segmented: {
       marginBottom: Metrics.spacing.md,

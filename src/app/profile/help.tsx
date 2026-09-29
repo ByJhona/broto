@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Card, IconBadge, PageTitle } from '@/components';
+import { Card, FloatingScreenControls, IconBadge, ScreenHeader, useScreenTopInset } from '@/components';
 import { getFaqItems, type FaqItem } from '@/components/help/faqItems';
 import { useCreditCosts } from '@/hooks';
 
@@ -39,18 +39,19 @@ function FaqRow({ item, isOpen, onToggle, styles }: Readonly<FaqRowProps>) {
 
 export default function HelpScreen() {
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation('help');
+  const { t } = useTranslation(['help', 'profile']);
   const creditCosts = useCreditCosts();
   const [openId, setOpenId] = useState<string | null>(null);
   const faqItems = getFaqItems(t, creditCosts);
 
   return (
+    <View style={styles.container}>
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.xl }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.xl }]}
     >
-      <PageTitle size="headline" style={styles.title}>{t('faqSectionTitle')}</PageTitle>
+      <ScreenHeader title={t('profile:helpTitle')} subtitle={t('faqSectionTitle')} />
       {faqItems.map((item) => (
         <FaqRow
           key={item.id}
@@ -61,6 +62,8 @@ export default function HelpScreen() {
         />
       ))}
     </ScrollView>
+    <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -72,12 +75,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     content: {
       ...Metrics.layout.centeredContent,
-      padding: Metrics.spacing.lg,
-    },
-    title: {
-      ...Typography.headline,
-      color: colors.foreground,
-      marginBottom: Metrics.spacing.md,
+      paddingHorizontal: Metrics.spacing.lg,
     },
     card: {
       marginBottom: Metrics.spacing.sm,

@@ -1,8 +1,6 @@
 {
   "newEventTitle": "Novo evento",
   "eventsListTitle": "Eventos",
-  "eventsTabSubtitle": "Feiras, trocas e encontros perto de você",
-  "eventsSearchPlaceholder": "Buscar por evento...",
   "eventDetailTitle": "Evento",
   "shareToCommunity": "Compartilhar na Comunidade",
   "cancelEventAction": "Cancelar evento",
@@ -29,9 +27,6 @@
   "confirmAttendance": "Confirmar presença",
   "shareCommentLabel": "Comentário",
   "shareSubmitLabel": "Compartilhar",
-  "sortNearest": "Mais próximos",
-  "sortRecent": "Mais recentes",
-  "noEventsNearby": "Nenhum evento por perto ainda.",
   "noOwnEventsFound": "Você ainda não organizou nenhum evento.",
   "titleLabel": "Título",
   "titlePlaceholder": "Feira de trocas no parque",

@@ -7,7 +7,7 @@ export default function DiagnoseLayout() {
   const { t } = useTranslation('diagnose');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="index" options={{ title: t('historyTitle') }} />
+      <Stack.Screen name="index" options={{ headerShown: false, title: t('historyTitle') }} />
       <Stack.Screen name="result" options={{ headerShown: false, title: t('resultTitle') }} />
     </Stack>
   );

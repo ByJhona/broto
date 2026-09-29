@@ -3,6 +3,7 @@ import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { GoogleMaps } from 'expo-maps';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Search from 'lucide-react-native/icons/search';
 import { Metrics, useAppTheme, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { CreateChoiceSheet, FilterChipRow, HomeHeader, type FilterChipOption } from '@/components';
@@ -46,6 +47,16 @@ const INITIAL_CAMERA = {
 
 const LOCATED_ZOOM = 15;
 
+function nearbyPeekLabel(count: number, isNearUser: boolean, t: (key: string, options?: Record<string, unknown>) => string): string {
+  if (count === 0) return t('searchMapPrompt');
+  return t(isNearUser ? 'nearbyYou' : 'nearbyArea', { count });
+}
+
+function nearbySheetTitle(filter: MapFilter, isNearUser: boolean, t: (key: string) => string): string {
+  if (filter === MAP_FILTER_EVENTS) return t('upcomingEventsTitle');
+  return isNearUser ? t('nearbyYouTitle') : t('nearbyAreaTitle');
+}
+
 function mapFilterOptions(t: (key: string) => string): FilterChipOption<MapFilter>[] {
   return [
     { value: MAP_FILTER_ALL, label: t('filterAll') },
@@ -80,7 +91,7 @@ export default function HomeScreen() {
   const isPlacing = resolvePlacingKind(params) !== null;
   const { lastKnownLocation, currentLocation, refreshCurrentLocation } = useHomeLocation(isPlacing);
   const { isPublishing, confirmPlacing } = usePlacementPublishing(params, mapCenter);
-  const nearby = useNearbySheet(listings, events, currentLocation ?? lastKnownLocation, mapCenter);
+  const nearby = useNearbySheet({ listings, events, userLocation: currentLocation ?? lastKnownLocation, mapCenter, filter: mapFilter });
 
   useEffect(() => {
     if (!isMapLoaded || !lastKnownLocation) return;
@@ -185,21 +196,26 @@ export default function HomeScreen() {
               style={styles.mapFiltersRow}
             />
           </View>
-          {!selectedPin && nearby.items.length > 0 ? (
+          {selectedPin ? null : (
             <NearbyPeek
-              label={t(nearby.isNearUser ? 'nearbyYou' : 'nearbyArea', { count: nearby.items.length })}
+              label={nearbyPeekLabel(nearby.nearbyCount, nearby.isNearUser, t)}
+              icon={nearby.nearbyCount > 0 ? undefined : Search}
               onOpen={nearby.open}
               style={{ bottom: insets.bottom + Metrics.spacing.lg }}
             />
-          ) : null}
+          )}
           <MapActionButtons visible={!selectedPin} onCreate={() => setIsCreateChoiceOpen(true)} onLocate={handleLocateMe} />
         </>
       )}
 
       <NearbySheet
         visible={nearby.isOpen}
-        title={nearby.isNearUser ? t('nearbyYouTitle') : t('nearbyAreaTitle')}
+        title={nearbySheetTitle(mapFilter, nearby.isNearUser, t)}
         items={nearby.items}
+        query={nearby.query}
+        onChangeQuery={nearby.setQuery}
+        hiddenCount={nearby.hiddenCount}
+        onShowAll={nearby.showAll}
         onSelect={handleSelectNearby}
         onClose={nearby.close}
       />

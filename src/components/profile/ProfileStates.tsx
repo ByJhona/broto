@@ -6,9 +6,10 @@ import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { EVENT_ICON } from '@/utils';
 import { EmptyState } from '../EmptyState';
-import { useColumnWidth } from '../gridLayout';
+import { PostCardSkeleton } from '../communityPost/PostCardSkeleton';
+import { GRID_GAP, useGridCardWidth } from '../gridLayout';
 import { SkeletonBlock } from '../Skeleton';
-import { POST_GRID_COLUMNS, PROFILE_TAB, type ProfileTab } from './profileTabs';
+import { PROFILE_TAB, type ProfileTab } from './profileTabs';
 
 const EMPTY_COPY: Record<ProfileTab, { icon: LucideIcon; title: string; own: string; other: string }> = {
   [PROFILE_TAB.POSTS]: { icon: Sprout, title: 'noPostsYet', own: 'emptyPostsOwn', other: 'emptyPostsOther' },
@@ -16,7 +17,7 @@ const EMPTY_COPY: Record<ProfileTab, { icon: LucideIcon; title: string; own: str
   [PROFILE_TAB.EVENTS]: { icon: EVENT_ICON, title: 'noEventsYet', own: 'emptyEventsOwn', other: 'emptyEventsOther' },
 };
 
-const SKELETON_TILES = ['a', 'b', 'c', 'd', 'e', 'f'];
+const SKELETON_TILES = ['a', 'b', 'c', 'd'];
 
 type ProfileTabEmptyProps = {
   tab: ProfileTab;
@@ -37,12 +38,13 @@ export function ProfileTabEmpty({ tab, isOwnProfile, name }: Readonly<ProfileTab
   );
 }
 
-export function ProfileGridSkeleton() {
-  const tileSize = useColumnWidth(POST_GRID_COLUMNS, Metrics.spacing.xs);
+export function ProfileGridSkeleton({ tab }: Readonly<{ tab: ProfileTab }>) {
+  const cardWidth = useGridCardWidth();
+  if (tab === PROFILE_TAB.POSTS) return <PostCardSkeleton />;
   return (
     <View style={styles.grid}>
       {SKELETON_TILES.map((key) => (
-        <SkeletonBlock key={key} width={tileSize} height={tileSize} radius={Metrics.radius.md} />
+        <SkeletonBlock key={key} width={cardWidth} height={cardWidth} radius={Metrics.radius.lg} />
       ))}
     </View>
   );
@@ -51,11 +53,13 @@ export function ProfileGridSkeleton() {
 export function ProfileSkeleton() {
   return (
     <View style={styles.profile}>
-      <SkeletonBlock width={Metrics.size.hero} height={Metrics.size.hero} radius={Metrics.radius.full} />
-      <SkeletonBlock width="50%" height={Metrics.fontSize.headline} />
-      <SkeletonBlock width="30%" />
+      <View style={styles.identity}>
+        <SkeletonBlock width={Metrics.size.hero} height={Metrics.size.hero} radius={Metrics.radius.full} />
+        <SkeletonBlock width="50%" height={Metrics.fontSize.headline} />
+        <SkeletonBlock width="30%" />
+      </View>
       <SkeletonBlock height={Metrics.size.hero} radius={Metrics.radius.lg} />
-      <ProfileGridSkeleton />
+      <PostCardSkeleton />
     </View>
   );
 }
@@ -67,9 +71,12 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Metrics.spacing.xs,
+    gap: GRID_GAP,
   },
   profile: {
+    gap: Metrics.spacing.md,
+  },
+  identity: {
     alignItems: 'center',
     gap: Metrics.spacing.md,
   },

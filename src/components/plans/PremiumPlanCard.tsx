@@ -15,7 +15,7 @@ import { InfoChip } from '../InfoChip';
 import { OutlineButton } from '../OutlineButton';
 import { SegmentedControl } from '../SegmentedControl';
 import { SubmitButton } from '../SubmitButton';
-import { annualSavingsPercent, billingLabelKey, pricePeriodKey, type StoreOfferings } from './storePricing';
+import { annualSavingsPercent, billingLabelKey, monthlyPlanId, pricePeriodKey, type StoreOfferings } from './storePricing';
 
 type PremiumPlanCardProps = {
   plans: PlanCatalogItem[];
@@ -26,20 +26,18 @@ type PremiumPlanCardProps = {
   onManage: () => void;
 };
 
-function initialPlanId(plans: PlanCatalogItem[], currentPlanId: string | null): string {
-  return plans.find((plan) => plan.id === currentPlanId)?.id ?? plans[plans.length - 1].id;
-}
-
 export function PremiumPlanCard({ plans, offerings, currentPlanId, purchasingId, onSubscribe, onManage }: Readonly<PremiumPlanCardProps>) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('credits');
-  const [selectedId, setSelectedId] = useState(() => initialPlanId(plans, currentPlanId));
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const subscribedId = plans.find((plan) => plan.id === currentPlanId)?.id;
+  const selectedId = pickedId ?? subscribedId ?? monthlyPlanId(plans, offerings);
   const selectedPlan = plans.find((plan) => plan.id === selectedId) ?? plans[0];
   const selectedPackage = findStorePackage(offerings, selectedPlan.id);
   const packages = plans.map((plan) => findStorePackage(offerings, plan.id));
   const savings = annualSavingsPercent(packages);
-  const isSubscribed = plans.some((plan) => plan.id === currentPlanId);
+  const isSubscribed = !!subscribedId;
   const isAnnual = selectedPackage?.packageType === PACKAGE_TYPE.ANNUAL;
   const pricePerMonth = isAnnual ? selectedPackage.product.pricePerMonthString : null;
 
@@ -58,7 +56,7 @@ export function PremiumPlanCard({ plans, offerings, currentPlanId, purchasingId,
         {isSubscribed ? <InfoChip size="sm" icon={CircleCheck} value={t('yourPlan')} /> : null}
       </View>
 
-      {plans.length > 1 ? <SegmentedControl options={options} value={selectedPlan.id} onChange={setSelectedId} /> : null}
+      {plans.length > 1 ? <SegmentedControl options={options} value={selectedPlan.id} onChange={setPickedId} /> : null}
 
       <View style={styles.priceBlock}>
         <Text style={styles.price}>

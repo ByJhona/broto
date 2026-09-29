@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,28 +8,40 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Camera from 'lucide-react-native/icons/camera';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, LoadingScreen, ScreenContent } from '@/components';
+import { Avatar, FloatingScreenControls, FormField, IconBadge, ScreenHeader, SkeletonBlock, useScreenTopInset } from '@/components';
+import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
 import { useAuth } from '@/hooks';
-import { getProfile, updateProfile, uploadAvatar } from '@/services';
+import { getProfile, updateProfile, uploadAvatar, UsernameTakenError } from '@/services';
 import { normalizeUsername, Toast, validateUsername } from '@/utils';
+
+function EditProfileSkeleton() {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <View style={styles.skeleton}>
+      <SkeletonBlock width={Metrics.size.hero} height={Metrics.size.hero} radius={Metrics.radius.full} />
+      <SkeletonBlock height={Metrics.size.xl} radius={Metrics.radius.md} />
+      <SkeletonBlock height={Metrics.size.xl} radius={Metrics.radius.md} />
+    </View>
+  );
+}
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('profile');
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -69,182 +81,127 @@ export default function EditProfileScreen() {
     }
   };
 
+  const validate = (): string | null => {
+    if (!name.trim()) return t('nameRequiredError');
+    return validateUsername(username);
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      Toast.error(t('nameRequiredError'));
-      return;
-    }
-
-    const usernameError = validateUsername(username);
-    if (usernameError) {
-      Toast.error(usernameError);
-      return;
-    }
+    const validationError = validate();
+    setError(validationError);
+    if (validationError) return;
 
     setSaving(true);
     try {
-      let finalAvatarUrl = avatarUrl;
-
-      if (localAvatarUri) {
-        setUploadingAvatar(true);
-        finalAvatarUrl = await uploadAvatar(user.id, localAvatarUri);
-        setUploadingAvatar(false);
-      }
-
+      const finalAvatarUrl = localAvatarUri ? await uploadAvatar(user.id, localAvatarUri) : avatarUrl;
       const updated = await updateProfile(user.id, {
-        name: trimmedName,
+        name: name.trim(),
         username: normalizeUsername(username),
         avatar_url: finalAvatarUrl,
       });
       queryClient.setQueryData(['profile', user.id], updated);
       Toast.success(t('profileUpdatedSuccess'));
       router.back();
-    } catch (err: any) {
-      Toast.error(err.message || t('profileUpdateError'));
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof UsernameTakenError ? err.message : t('profileUpdateError'));
     } finally {
       setSaving(false);
-      setUploadingAvatar(false);
     }
   };
 
-  if (loading) {
-    return <LoadingScreen size="large" />;
-  }
-
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={Metrics.spacing.lg}
-    >
-      <ScreenContent style={styles.form}>
-        <View style={styles.avatarSection}>
-          <Pressable style={styles.avatarContainer} onPress={handlePickImage}>
-            <Avatar 
-              name={name || user?.email || 'User'} 
-              url={localAvatarUri || avatarUrl} 
-              size={Metrics.size.hero} 
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + COMPOSE_FOOTER_CLEARANCE }]}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={COMPOSE_FOOTER_CLEARANCE}
+      >
+        <ScreenHeader title={t('editProfileTitle')} />
+
+        {loading ? (
+          <EditProfileSkeleton />
+        ) : (
+          <View>
+            <Pressable
+              style={styles.avatarSection}
+              onPress={handlePickImage}
+              accessibilityRole="button"
+              accessibilityLabel={t('changePhotoHint')}
+            >
+              <View>
+                <Avatar name={name || user?.email || ''} url={localAvatarUri || avatarUrl} size={Metrics.size.hero} />
+                <IconBadge backgroundColor={colors.primary} style={styles.cameraBadge}>
+                  <Camera size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                </IconBadge>
+              </View>
+              <Text style={styles.avatarHint}>{t('changePhotoHint')}</Text>
+            </Pressable>
+
+            <FormField
+              label={t('displayNameLabel')}
+              value={name}
+              onChangeText={setName}
+              placeholder={t('displayNamePlaceholder')}
+              autoCorrect={false}
             />
-            <View style={styles.cameraBadge}>
-              <Camera size={Metrics.icon.small} color={colors.white} />
+
+            <View>
+              <FormField
+                label={t('usernameLabel')}
+                value={username}
+                onChangeText={setUsername}
+                placeholder={t('usernamePlaceholder')}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Text style={styles.hint}>{t('usernameHint')}</Text>
             </View>
-          </Pressable>
-          <Text style={styles.avatarHint}>{t('changePhotoHint')}</Text>
-        </View>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('displayNameLabel')}</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder={t('displayNamePlaceholder')}
-            placeholderTextColor={colors.mutedForeground}
-            autoCorrect={false}
-          />
-        </View>
+          </View>
+        )}
+      </KeyboardAwareScrollView>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{t('usernameLabel')}</Text>
-          <TextInput
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-            placeholder={t('usernamePlaceholder')}
-            placeholderTextColor={colors.mutedForeground}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Text style={styles.hint}>{t('usernameHint')}</Text>
-        </View>
-
-        <Pressable
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving || uploadingAvatar ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : (
-            <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
-          )}
-        </Pressable>
-      </ScreenContent>
-    </KeyboardAwareScrollView>
+      <ComposeFooter label={t('saveChanges')} onPress={handleSave} loading={saving} disabled={loading} error={error} />
+      <FloatingScreenControls />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  form: {
-    gap: Metrics.spacing.lg,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: Metrics.spacing.md,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: Metrics.spacing.sm,
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.primary,
-    width: Metrics.size.md,
-    height: Metrics.size.md,
-    borderRadius: Metrics.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: colors.background,
-  },
-  avatarHint: {
-    ...Typography.bodySmall,
-    color: colors.mutedForeground,
-  },
-  inputGroup: {
-    gap: Metrics.spacing.sm,
-  },
-  label: {
-    ...Typography.label,
-    color: colors.foreground,
-  },
-  input: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: Metrics.radius.md,
-    paddingHorizontal: Metrics.spacing.md,
-    paddingVertical: Metrics.spacing.md,
-    ...Typography.input,
-    color: colors.foreground,
-  },
-  hint: {
-    ...Typography.caption,
-    color: colors.mutedForeground,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: Metrics.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Metrics.spacing.md,
-  },
-  saveButtonDisabled: {
-    opacity: 0.7,
-  },
-  saveButtonText: {
-    ...Typography.heading,
-    color: colors.white,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      gap: Metrics.spacing.sm,
+      marginBottom: Metrics.spacing.lg,
+    },
+    cameraBadge: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    avatarHint: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
+    },
+    hint: {
+      ...Typography.caption,
+      color: colors.mutedForeground,
+      marginTop: -Metrics.spacing.sm,
+    },
+    skeleton: {
+      alignItems: 'center',
+      gap: Metrics.spacing.lg,
+    },
   });

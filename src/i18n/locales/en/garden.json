@@ -48,5 +48,6 @@
   "plantCareInDays": "In {{days}} days",
   "plantCareNone": "No reminders",
   "addPlantSubtitle": "Search by common or scientific name.",
-  "addPlantIdentifyHint": "Don't know the name? Point the camera at the plant."
+  "addPlantIdentifyHint": "Don't know the name? Point the camera at the plant.",
+  "agendaSubtitle": "All your care reminders."
 }

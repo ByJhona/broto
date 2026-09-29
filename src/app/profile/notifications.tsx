@@ -4,7 +4,15 @@ import { useRouter } from 'expo-router';
 import BellOff from 'lucide-react-native/icons/bell-off';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { CardGroup, EmptyState, FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock } from '@/components';
+import {
+  CardGroup,
+  EmptyState,
+  FloatingScreenControls,
+  InfoSection,
+  PageTitle,
+  SkeletonBlock,
+  useScreenTopInset,
+} from '@/components';
 import { NotificationRow } from '@/components/notifications/NotificationRow';
 import { useNotifications } from '@/hooks';
 import { notificationHref } from '@/services';
@@ -46,6 +54,7 @@ function NotificationsSkeleton() {
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['profile', 'notifications', 'common']);
   const { notifications, isLoading, deleteOne, clearAll } = useNotifications();
@@ -122,7 +131,7 @@ export default function NotificationsScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingTop: topInset,
             paddingBottom: insets.bottom + Metrics.spacing.xl,
           },
         ]}

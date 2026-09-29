@@ -35,9 +35,12 @@ export function HomeHeader({ onLayout }: Readonly<HomeHeaderProps>) {
   return (
     <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.md }]} onLayout={onLayout}>
       <View style={styles.headerTop}>
-        <Text style={styles.greeting} numberOfLines={1}>
-          {getGreeting()}, {firstName}
-        </Text>
+        <View style={styles.greetingBlock}>
+          <Text style={styles.greeting}>{getGreeting()},</Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {firstName}
+          </Text>
+        </View>
         <View style={styles.headerActions}>
           <NotificationBell hasUnread={hasUnread} />
           <ChatButton hasUnread={hasUnreadMessages} />
@@ -77,10 +80,16 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.md,
     },
-    greeting: {
+    greetingBlock: {
       flex: 1,
+    },
+    greeting: {
       ...Typography.label,
       color: colors.leafForeground,
       opacity: 0.85,
+    },
+    name: {
+      ...Typography.title,
+      color: colors.leafForeground,
     },
   });

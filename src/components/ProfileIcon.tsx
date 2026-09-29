@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import UserRound from 'lucide-react-native/icons/user-round';
 import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { useAuth } from '@/hooks';
 import { Avatar } from './Avatar';
 
 type ProfileIconProps = {
@@ -19,12 +18,8 @@ export function ProfileIcon({ name, url, loggedIn = true, size = Metrics.size.xl
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('profile');
-  const { user } = useAuth();
 
-  const handlePress = () => {
-    if (!user?.id) return;
-    router.push({ pathname: '/profile/[id]', params: { id: user.id } });
-  };
+  const handlePress = () => router.navigate('/(tabs)/profile');
 
   return (
     <Pressable

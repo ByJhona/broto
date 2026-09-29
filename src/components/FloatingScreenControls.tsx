@@ -12,6 +12,7 @@ type FloatingScreenControlsProps = {
   onOpenActions?: () => void;
   actionIcon?: LucideIcon;
   actionLabel?: string;
+  showBack?: boolean;
   isBusy?: boolean;
 };
 
@@ -19,6 +20,7 @@ export function FloatingScreenControls({
   onOpenActions,
   actionIcon: ActionIcon = EllipsisVertical,
   actionLabel,
+  showBack = true,
   isBusy = false,
 }: Readonly<FloatingScreenControlsProps>) {
   const router = useRouter();
@@ -28,9 +30,13 @@ export function FloatingScreenControls({
 
   return (
     <View style={[styles.bar, { top: insets.top + Metrics.spacing.sm }]} pointerEvents="box-none">
-      <IconButton accessibilityLabel={t('a11yBack')} size={Metrics.size.md} elevated onPress={() => router.back()}>
-        <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-      </IconButton>
+      {showBack ? (
+        <IconButton accessibilityLabel={t('a11yBack')} size={Metrics.size.md} elevated onPress={() => router.back()}>
+          <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+        </IconButton>
+      ) : (
+        <View />
+      )}
       {onOpenActions ? (
         <IconButton
           accessibilityLabel={actionLabel ?? t('a11yMoreOptions')}

@@ -100,10 +100,10 @@ function RootNavigator() {
           <Stack.Screen name="article" options={{ headerShown: false }} />
           <Stack.Screen name="specialist" options={{ headerShown: false }} />
           <Stack.Screen name="search" options={{ ...searchScreenOptions, title: t('search') }} />
-          <Stack.Screen name="messages" options={{ ...searchScreenOptions, title: t('messages') }} />
+          <Stack.Screen name="messages" options={{ headerShown: false, title: t('messages') }} />
           <Stack.Screen name="chat" options={{ ...searchScreenOptions, title: t('chat') }} />
-          <Stack.Screen name="my-offers" options={{ ...searchScreenOptions, title: t('listing:myOffersTitle') }} />
-          <Stack.Screen name="agenda" options={{ ...searchScreenOptions, title: t('garden:agendaTitle') }} />
+          <Stack.Screen name="my-offers" options={{ headerShown: false, title: t('listing:myOffersTitle') }} />
+          <Stack.Screen name="agenda" options={{ headerShown: false, title: t('garden:agendaTitle') }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>

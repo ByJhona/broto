@@ -68,6 +68,7 @@ export * from './ProfileIcon';
 export * from './PromptModal';
 export * from './RemindersCalendarView';
 export * from './ScreenContent';
+export * from './ScreenHeader';
 export * from './SearchField';
 export * from './SectionTitle';
 export * from './SegmentedControl';

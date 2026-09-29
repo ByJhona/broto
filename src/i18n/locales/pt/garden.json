@@ -48,5 +48,6 @@
   "plantCareInDays": "Em {{days}} dias",
   "plantCareNone": "Sem lembretes",
   "addPlantSubtitle": "Busque pelo nome popular ou científico.",
-  "addPlantIdentifyHint": "Não sabe o nome? Aponte a câmera para a planta."
+  "addPlantIdentifyHint": "Não sabe o nome? Aponte a câmera para a planta.",
+  "agendaSubtitle": "Todos os seus lembretes de cuidado."
 }

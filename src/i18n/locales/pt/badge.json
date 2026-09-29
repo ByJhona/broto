@@ -6,5 +6,6 @@
   "noBadgesMessage": "Nenhum emblema ainda. Cadastre plantas no jardim pra desbloquear.",
   "newBadgeTitle": "Novo emblema desbloqueado!",
   "claim": "Resgatar",
-  "close": "Fechar"
+  "close": "Fechar",
+  "catalogProgress": "{{earned}} de {{total}} conquistados"
 }

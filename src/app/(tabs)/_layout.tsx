@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Home from 'lucide-react-native/icons/house';
 import Users from 'lucide-react-native/icons/users';
-import Store from 'lucide-react-native/icons/store';
+import CircleUserRound from 'lucide-react-native/icons/circle-user-round';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Scan from 'lucide-react-native/icons/scan';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -41,12 +41,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="offers"
+        name="community"
         options={{
-          title: t('offers'),
+          title: t('community'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <Store size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Users size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
           ),
         }}
@@ -70,23 +70,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
-        options={{
-          title: t('community'),
-          tabBarIcon: ({ color, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
-              <Users size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="garden"
         options={{
           title: t('garden'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Leaf size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: t('profile'),
+          tabBarIcon: ({ color, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <CircleUserRound size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
           ),
         }}

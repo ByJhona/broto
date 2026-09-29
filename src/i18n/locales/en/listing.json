@@ -2,8 +2,6 @@
   "newListingScreenTitle": "New listing",
   "listingDetailScreenTitle": "Listing",
   "offersTabTitle": "Offers",
-  "offersTabSubtitle": "Donate, trade, or sell plants near you",
-  "offersSearchPlaceholder": "Search for a plant...",
   "titleRequired": "Give the listing a title.",
   "priceRequired": "Enter the plant's price.",
   "listingTypeSectionTitle": "Listing type",
@@ -17,8 +15,6 @@
   "communityCommentLabel": "Community comment (optional)",
   "yourPlantFallback": "your plant",
   "chooseLocationCta": "Choose location on the map",
-  "filterAll": "All",
-  "noListingsFound": "No listings found.",
   "noOwnListingsFound": "You don't have any listings yet.",
   "markCompletedAction": "Mark as completed",
   "reactivateListingAction": "Reactivate listing",
@@ -74,9 +70,9 @@
   "noPlantsRegistered": "You don't have any registered plants yet.",
   "priceFieldPlaceholder": "$0.00",
   "shareToCommunityTitle": "Post to Community",
-  "myOffersButton": "Mine",
   "myOffersTitle": "My listings and events",
   "manageOpenListings": "Active",
   "manageClosedListings": "Completed and cancelled",
-  "photoHint": "Up to {{max}} photos of the plant you are offering"
+  "photoHint": "Up to {{max}} photos of the plant you are offering",
+  "myOffersSubtitle": "Follow proposals and the status of what you have posted."
 }

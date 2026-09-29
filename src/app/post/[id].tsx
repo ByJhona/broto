@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
-import { CommunityPostCard, EmptyState, FloatingScreenControls, PostCardSkeleton } from '@/components';
+import { CommunityPostCard, EmptyState, FloatingScreenControls, PostCardSkeleton, useScreenTopInset } from '@/components';
 import { celebrateXpLevelUp, useAuth } from '@/hooks';
 import {
   addComment,
@@ -28,6 +28,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -116,7 +117,7 @@ export default function PostDetailScreen() {
   };
 
   const contentInsets = {
-    paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+    paddingTop: topInset,
     paddingBottom: insets.bottom + Metrics.spacing.lg,
   };
 

@@ -4,7 +4,6 @@
   "healthyLabel": "Healthy",
   "attentionLabel": "Needs attention",
   "urgentLabel": "Urgent care",
-  "historySectionTitle": "History",
   "emptyHistoryMessage": "You haven't run a diagnosis yet. Go to the Photo tab and choose \"Diagnose\" to get started.",
   "healthyStatusLabel": "Your plant is healthy",
   "attentionStatusLabel": "Needs a bit of attention",
@@ -15,5 +14,6 @@
   "analyzePhotoError": "Couldn't analyze the photo.",
   "severityLow": "Mild",
   "severityMedium": "Moderate",
-  "severityHigh": "Severe"
+  "severityHigh": "Severe",
+  "historySubtitle": "Your plants' health over time."
 }

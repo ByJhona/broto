@@ -4,7 +4,6 @@
   "healthyLabel": "Saudável",
   "attentionLabel": "Precisa de atenção",
   "urgentLabel": "Cuidado urgente",
-  "historySectionTitle": "Histórico",
   "emptyHistoryMessage": "Você ainda não fez nenhum diagnóstico. Vá na aba Foto e escolha \"Diagnosticar\" pra começar.",
   "healthyStatusLabel": "Sua planta está saudável",
   "attentionStatusLabel": "Precisa de um pouco de atenção",
@@ -15,5 +14,6 @@
   "analyzePhotoError": "Não foi possível analisar a foto.",
   "severityLow": "Leve",
   "severityMedium": "Moderado",
-  "severityHigh": "Grave"
+  "severityHigh": "Grave",
+  "historySubtitle": "A saúde das suas plantas ao longo do tempo."
 }

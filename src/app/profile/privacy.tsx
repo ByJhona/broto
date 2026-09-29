@@ -2,13 +2,16 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { FloatingScreenControls, ScreenHeader, useScreenTopInset } from '@/components';
+import { Toast } from '@/utils';
 
 type Section = { title: string; body: string };
 
 export default function PrivacyScreen() {
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation('privacy');
+  const { t } = useTranslation(['privacy', 'profile']);
 
   const sections: Section[] = [
     { title: t('section1Title'), body: t('section1Body') },
@@ -24,13 +27,22 @@ export default function PrivacyScreen() {
 
   const contactEmail = t('contactEmail');
 
+  const handleContact = async () => {
+    try {
+      await Linking.openURL(`mailto:${contactEmail}`);
+    } catch (err) {
+      console.error(err);
+      Toast.info(contactEmail);
+    }
+  };
+
   return (
+    <View style={styles.container}>
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.xl }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.xl }]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.lastUpdated}>{t('lastUpdated')}</Text>
+      <ScreenHeader title={t('profile:privacyTitle')} subtitle={t('lastUpdated')} />
       <Text style={styles.intro}>{t('intro')}</Text>
 
       {sections.map((section) => (
@@ -43,11 +55,13 @@ export default function PrivacyScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('contactTitle')}</Text>
         <Text style={styles.sectionBody}>{t('contactBody')}</Text>
-        <Pressable onPress={() => Linking.openURL(`mailto:${contactEmail}`)}>
+        <Pressable onPress={handleContact} accessibilityRole="link">
           <Text style={styles.contactEmail}>{contactEmail}</Text>
         </Pressable>
       </View>
     </ScrollView>
+    <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -59,12 +73,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     content: {
       ...Metrics.layout.centeredContent,
-      padding: Metrics.spacing.lg,
-    },
-    lastUpdated: {
-      ...Typography.bodySmall,
-      color: colors.mutedForeground,
-      marginBottom: Metrics.spacing.md,
+      paddingHorizontal: Metrics.spacing.lg,
     },
     intro: {
       ...Typography.body,

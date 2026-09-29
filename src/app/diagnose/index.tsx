@@ -7,12 +7,22 @@ import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
-import { Card, EmptyState, ListRow, SectionHeading, SkeletonBlock } from '@/components';
+import {
+  CardGroup,
+  EmptyState,
+  FloatingScreenControls,
+  ListRow,
+  ScreenHeader,
+  SkeletonBlock,
+  useScreenTopInset,
+} from '@/components';
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
 import { useTranslation } from '@/i18n';
-import { healthStatusColor } from '@/utils';
+import { formatShortDate, healthStatusColor } from '@/utils';
+
+const SKELETON_ROWS = ['a', 'b', 'c'];
 
 function getHealthStatusMeta(
   colors: ThemeColors,
@@ -26,26 +36,20 @@ function getHealthStatusMeta(
   };
 }
 
-function formatDiagnosisDate(iso: string): string {
-  const date = new Date(iso);
-  const dayMonth = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  return `${dayMonth} ${date.getFullYear()}`;
-}
-
 function DiagnosisHistorySkeleton() {
   const styles = useThemedStyles(makeStyles);
   return (
-    <>
-      {[0, 1].map((key) => (
-        <Card key={key} style={styles.historyRow}>
+    <CardGroup>
+      {SKELETON_ROWS.map((key) => (
+        <View key={key} style={styles.skeletonRow}>
           <SkeletonBlock width={Metrics.size.lg} height={Metrics.size.lg} radius={Metrics.radius.md} />
-          <View style={styles.historyTextBox}>
-            <SkeletonBlock width="60%" height={Metrics.fontSize.small} />
-            <SkeletonBlock width="40%" height={Metrics.fontSize.caption} style={styles.skeletonGap} />
+          <View style={styles.skeletonText}>
+            <SkeletonBlock width="50%" />
+            <SkeletonBlock width="30%" height={Metrics.fontSize.caption} />
           </View>
-        </Card>
+        </View>
       ))}
-    </>
+    </CardGroup>
   );
 }
 
@@ -53,6 +57,7 @@ export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('diagnose');
   const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors, t), [colors, t]);
@@ -62,82 +67,80 @@ export default function DiagnosisHistoryScreen() {
     queryFn: () => getDiagnosisHistory(user!.id),
     enabled: !!user?.id,
   });
-  const showSkeleton = isLoading && history.length === 0;
-  const isEmpty = !showSkeleton && history.length === 0;
+  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
 
   const openResult = (item: PlantDiagnosis) => {
     router.push({ pathname: '/diagnose/result', params: { diagnosis: JSON.stringify(item) } });
   };
 
+  const renderHistory = () => {
+    if (isLoading && history.length === 0) return <DiagnosisHistorySkeleton />;
+    if (history.length === 0) return <EmptyState icon={Sparkles} message={t('emptyHistoryMessage')} style={styles.empty} />;
+    return (
+      <CardGroup>
+        {history.map((item) => {
+          const meta = healthStatusMeta[item.healthStatus];
+          return (
+            <ListRow
+              key={item.id}
+              style={styles.row}
+              leading={<Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />}
+              title={meta.label}
+              titleColor={meta.color}
+              subtitle={formatShortDate(item.createdAt)}
+              trailing={chevron}
+              onPress={() => openResult(item)}
+            />
+          );
+        })}
+      </CardGroup>
+    );
+  };
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-      showsVerticalScrollIndicator={false}
-    >
-      {showSkeleton && (
-        <>
-          <SectionHeading title={t('historySectionTitle')} />
-          <DiagnosisHistorySkeleton />
-        </>
-      )}
-      {isEmpty && (
-        <EmptyState icon={Sparkles} message={t('emptyHistoryMessage')} style={styles.empty} />
-      )}
-      {!showSkeleton && !isEmpty && (
-        <>
-          <SectionHeading title={t('historySectionTitle')} />
-          {history.map((item) => {
-            const meta = healthStatusMeta[item.healthStatus];
-            return (
-              <ListRow
-                key={item.id}
-                style={styles.historyRow}
-                variant="card"
-                leading={<Image source={{ uri: item.photoUrl }} style={styles.historyThumb} contentFit="cover" />}
-                title={meta.label}
-                titleColor={meta.color}
-                subtitle={formatDiagnosisDate(item.createdAt)}
-                trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
-                onPress={() => openResult(item)}
-              />
-            );
-          })}
-        </>
-      )}
-    </ScrollView>
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.xl }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader title={t('historyTitle')} subtitle={t('historySubtitle')} />
+        {renderHistory()}
+      </ScrollView>
+      <FloatingScreenControls />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-  },
-  empty: {
-    paddingVertical: Metrics.spacing.xl,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-    marginBottom: Metrics.spacing.sm,
-  },
-  historyThumb: {
-    width: Metrics.size.lg,
-    height: Metrics.size.lg,
-    borderRadius: Metrics.radius.md,
-    backgroundColor: colors.muted,
-  },
-  historyTextBox: {
-    flex: 1,
-  },
-  skeletonGap: {
-    marginTop: Metrics.spacing.xs,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    empty: {
+      paddingVertical: Metrics.spacing.xl,
+    },
+    row: {
+      paddingVertical: Metrics.spacing.sm,
+    },
+    thumb: {
+      width: Metrics.size.lg,
+      height: Metrics.size.lg,
+      borderRadius: Metrics.radius.md,
+      backgroundColor: colors.muted,
+    },
+    skeletonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Metrics.spacing.md,
+      paddingVertical: Metrics.spacing.sm,
+    },
+    skeletonText: {
+      flex: 1,
+      gap: Metrics.spacing.sm,
+    },
   });

@@ -1,12 +1,21 @@
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import Square from 'lucide-react-native/icons/square';
 import SquareCheck from 'lucide-react-native/icons/square-check';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, EmptyState, ListRow, LoadingScreen, MultiSelectHeaderActions } from '@/components';
+import {
+  Avatar,
+  EmptyState,
+  FloatingScreenControls,
+  ListRow,
+  MultiSelectHeaderActions,
+  ScreenHeader,
+  SkeletonBlock,
+  useScreenTopInset,
+} from '@/components';
 import { useConversations, useMultiSelect } from '@/hooks';
 import { confirm, confirmAndDeleteMany, formatShortDate } from '@/utils';
 import type { ChatConversation } from '@/types';
@@ -28,6 +37,8 @@ function ConversationTrailingIcon({ isSelecting, isSelected, hasUnread, colors, 
   return null;
 }
 
+const SKELETON_ROWS = ['a', 'b', 'c', 'd'];
+
 async function handleLongPressDelete(
   conversation: ChatConversation,
   onDelete: (id: string) => void,
@@ -45,6 +56,7 @@ export default function MessagesScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('messages');
   const { conversations, isLoading, removeConversation, isLoadingMore, loadMore } = useConversations();
@@ -65,40 +77,40 @@ export default function MessagesScreen() {
     if (didDelete) selection.stopSelecting();
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  const header = (
+    <ScreenHeader
+      title={t('title')}
+      trailing={
+        conversations.length > 0 ? (
+          <MultiSelectHeaderActions
+            isSelecting={selection.isSelecting}
+            selectedCount={selection.selectedIds.length}
+            selectAccessibilityLabel={t('selectConversationsAction')}
+            onStartSelecting={selection.startSelecting}
+            onCancelSelecting={selection.stopSelecting}
+            onConfirmDelete={handleConfirmDeleteMany}
+          />
+        ) : undefined
+      }
+    />
+  );
 
-  if (conversations.length === 0) {
-    return (
-      <EmptyState
-        icon={MessageSquare}
-        title={t('emptyTitle')}
-        message={t('emptyMessage')}
-        style={styles.centered}
-      />
-    );
-  }
+  const emptyState = isLoading ? (
+    <View style={styles.skeleton}>
+      {SKELETON_ROWS.map((key) => (
+        <SkeletonBlock key={key} height={Metrics.size.xxl} radius={Metrics.radius.lg} />
+      ))}
+    </View>
+  ) : (
+    <EmptyState icon={MessageSquare} title={t('emptyTitle')} message={t('emptyMessage')} style={styles.empty} />
+  );
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <MultiSelectHeaderActions
-              isSelecting={selection.isSelecting}
-              selectedCount={selection.selectedIds.length}
-              selectAccessibilityLabel={t('selectConversationsAction')}
-              onStartSelecting={selection.startSelecting}
-              onCancelSelecting={selection.stopSelecting}
-              onConfirmDelete={handleConfirmDeleteMany}
-            />
-          ),
-        }}
-      />
+    <View style={styles.container}>
       <FlatList
-        style={styles.container}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+        contentContainerStyle={[styles.list, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+        ListHeaderComponent={header}
+        ListEmptyComponent={emptyState}
         data={conversations}
         keyExtractor={(item) => item.otherUserId}
         renderItem={({ item }) => {
@@ -140,7 +152,8 @@ export default function MessagesScreen() {
         onEndReachedThreshold={0.4}
         ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.loadingMore} color={colors.primary} /> : null}
       />
-    </>
+      <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -150,12 +163,11 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    centered: {
-      ...Metrics.layout.centeredContent,
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: Metrics.spacing.xl,
-      backgroundColor: colors.background,
+    empty: {
+      marginTop: Metrics.spacing.xl,
+    },
+    skeleton: {
+      gap: Metrics.spacing.sm,
     },
     list: {
       ...Metrics.layout.centeredContent,

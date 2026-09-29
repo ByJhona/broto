@@ -22,10 +22,11 @@ import {
   PageTitle,
   SegmentedControl,
   SettingsListItem,
+  useScreenTopInset,
 } from '@/components';
 import { useAuth, useCredits, useManageSubscription } from '@/hooks';
 import { getProfile, type CreditsState } from '@/services';
-import { confirm } from '@/utils';
+import { confirm, Toast } from '@/utils';
 
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: 'pt', label: 'Português' },
@@ -50,6 +51,7 @@ export default function ProfileSettingsScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['settings', 'privacy']);
   const { preference, setPreference } = useAppTheme();
@@ -91,8 +93,14 @@ export default function ProfileSettingsScreen() {
       confirmLabel: t('deleteAccountContact'),
     });
     if (!confirmed) return;
+    const email = t('privacy:contactEmail');
     const subject = encodeURIComponent(t('deleteAccountEmailSubject'));
-    await Linking.openURL(`mailto:${t('privacy:contactEmail')}?subject=${subject}`);
+    try {
+      await Linking.openURL(`mailto:${email}?subject=${subject}`);
+    } catch (err) {
+      console.error(err);
+      Toast.info(t('deleteAccountEmailFallback', { email }));
+    }
   };
 
   return (
@@ -101,7 +109,7 @@ export default function ProfileSettingsScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingTop: topInset,
             paddingBottom: insets.bottom + Metrics.spacing.xl,
           },
         ]}

@@ -1,5 +1,5 @@
 import { PACKAGE_TYPE, type PurchasesPackage } from 'react-native-purchases';
-import { findStorePackage, type CreditPack, type getOfferings } from '@/services';
+import { findStorePackage, type CreditPack, type getOfferings, type PlanCatalogItem } from '@/services';
 import { formatCurrency } from '@/utils';
 
 export type StoreOfferings = Awaited<ReturnType<typeof getOfferings>>;
@@ -47,4 +47,18 @@ export function bestValuePackId(packs: CreditPack[], offerings: StoreOfferings):
     }
   }
   return bestId;
+}
+
+export function monthlyPlanId(plans: PlanCatalogItem[], offerings: StoreOfferings): string {
+  const monthly = plans.find((plan) => findStorePackage(offerings, plan.id)?.packageType === PACKAGE_TYPE.MONTHLY);
+  return (monthly ?? plans[0]).id;
+}
+
+export function cheapestPackId(packs: CreditPack[], offerings: StoreOfferings): string {
+  const priced = packs.flatMap((pack) => {
+    const pkg = findStorePackage(offerings, pack.id);
+    return pkg ? [{ id: pack.id, price: pkg.product.price }] : [];
+  });
+  if (priced.length > 0) return priced.reduce((cheapest, pack) => (pack.price < cheapest.price ? pack : cheapest)).id;
+  return packs.reduce((smallest, pack) => (pack.credits < smallest.credits ? pack : smallest)).id;
 }

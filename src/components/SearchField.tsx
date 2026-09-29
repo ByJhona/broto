@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
@@ -11,6 +11,7 @@ type SearchFieldProps = {
   autoFocus?: boolean;
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoCorrect?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function SearchField({
@@ -20,13 +21,14 @@ export function SearchField({
   autoFocus = false,
   autoCapitalize = 'none',
   autoCorrect = false,
+  style,
 }: Readonly<SearchFieldProps>) {
   const colors = useColors();
   const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
 
   return (
-    <View style={styles.searchBar}>
+    <View style={[styles.searchBar, style]}>
       <Search size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
       <TextInput
         style={styles.searchInput}

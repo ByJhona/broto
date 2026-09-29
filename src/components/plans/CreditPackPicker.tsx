@@ -14,7 +14,7 @@ import { GRID_GAP, useGridCardWidth } from '../gridLayout';
 import { IconBadge } from '../IconBadge';
 import { InfoChip } from '../InfoChip';
 import { SubmitButton } from '../SubmitButton';
-import { bestValuePackId, pricePerCredit, type StoreOfferings } from './storePricing';
+import { bestValuePackId, cheapestPackId, pricePerCredit, type StoreOfferings } from './storePricing';
 
 const PACK_ICONS: Record<string, LucideIcon> = {
   credits_30: Sprout,
@@ -74,7 +74,8 @@ export function CreditPackPicker({ packs, offerings, purchasingId, onBuy }: Read
   const { t } = useTranslation('credits');
   const tileWidth = useGridCardWidth();
   const bestValueId = bestValuePackId(packs, offerings);
-  const [selectedId, setSelectedId] = useState(() => bestValueId ?? packs[0].id);
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const selectedId = pickedId ?? cheapestPackId(packs, offerings);
   const selectedPack = packs.find((pack) => pack.id === selectedId) ?? packs[0];
   const selectedPrice = findStorePackage(offerings, selectedPack.id)?.product.priceString ?? t('comingSoon');
 
@@ -89,7 +90,7 @@ export function CreditPackPicker({ packs, offerings, purchasingId, onBuy }: Read
             isSelected={pack.id === selectedPack.id}
             isBestValue={pack.id === bestValueId}
             width={tileWidth}
-            onSelect={() => setSelectedId(pack.id)}
+            onSelect={() => setPickedId(pack.id)}
           />
         ))}
       </View>

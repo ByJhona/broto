@@ -8,7 +8,15 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Clock from 'lucide-react-native/icons/clock';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
-import { CardGroup, FloatingScreenControls, InfoSection, ListRow, PillSelector, PlantPickerRow } from '@/components';
+import {
+  CardGroup,
+  FloatingScreenControls,
+  InfoSection,
+  ListRow,
+  PillSelector,
+  PlantPickerRow,
+  useScreenTopInset,
+} from '@/components';
 import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
 import { ComposeTitleBlock } from '@/components/compose/ComposeTitleBlock';
 import { PickerRow } from '@/components/compose/PickerRow';
@@ -53,6 +61,7 @@ function LockedPlantRow({ plant }: Readonly<{ plant: PlantSummary }>) {
 export default function NewTaskScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const params = useLocalSearchParams<{ plantId?: string }>();
@@ -138,7 +147,7 @@ export default function NewTaskScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingTop: topInset,
             paddingBottom: insets.bottom + COMPOSE_FOOTER_CLEARANCE,
           },
         ]}

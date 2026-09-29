@@ -3,7 +3,8 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
-import { BadgeDetailModal, PixelBadge, SectionHeading } from '@/components';
+import { BadgeDetailModal, FloatingScreenControls, PixelBadge, ScreenHeader, SectionHeading, useScreenTopInset } from '@/components';
+import { useTranslation } from '@/i18n';
 import { useAuth } from '@/hooks';
 import { getBadgeCatalog, getUserBadges } from '@/services';
 import type { Badge, BadgeBatch } from '@/types';
@@ -63,6 +64,8 @@ type SelectedBadge = { badge: Badge; grantedAt: string | null };
 
 export default function BadgeCatalogScreen() {
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
+  const { t } = useTranslation('badge');
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { user } = useAuth();
@@ -86,6 +89,8 @@ export default function BadgeCatalogScreen() {
     [userBadgesQuery.data]
   );
 
+  const totalBadges = batches.reduce((sum, batch) => sum + batch.badges.length, 0);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await Promise.all([catalogQuery.refetch(), userBadgesQuery.refetch()]);
@@ -93,13 +98,18 @@ export default function BadgeCatalogScreen() {
   };
 
   return (
+    <View style={styles.container}>
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
+      contentContainerStyle={[styles.content, { paddingTop: topInset, paddingBottom: insets.bottom + Metrics.spacing.lg }]}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
       }
     >
+      <ScreenHeader
+        title={t('catalogTitle')}
+        subtitle={totalBadges > 0 ? t('catalogProgress', { earned: earnedAtByBadgeId.size, total: totalBadges }) : undefined}
+        style={styles.header}
+      />
       {batches.map((batch) => (
         <BadgeBatchSection
           key={batch.id}
@@ -112,6 +122,8 @@ export default function BadgeCatalogScreen() {
 
       <BadgeDetailModal badge={selected?.badge ?? null} grantedAt={selected?.grantedAt} onClose={() => setSelected(null)} />
     </ScrollView>
+    <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -123,8 +135,11 @@ const makeStyles = (colors: ThemeColors) =>
     },
     content: {
       ...Metrics.layout.centeredContent,
-      padding: Metrics.spacing.lg,
+      paddingHorizontal: Metrics.spacing.lg,
       gap: Metrics.spacing.lg,
+    },
+    header: {
+      marginBottom: 0,
     },
     section: {
       gap: Metrics.spacing.xs,

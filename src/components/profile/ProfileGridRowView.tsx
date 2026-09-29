@@ -1,33 +1,42 @@
 import { StyleSheet, View } from 'react-native';
-import { Metrics } from '@/theme';
 import { formatDistanceTo } from '@/utils';
+import type { usePostActions } from '@/hooks';
+import { CommunityPostCard } from '../CommunityPostCard';
 import { EventCard } from '../EventCard';
-import { GRID_GAP, useColumnWidth, useGridCardWidth } from '../gridLayout';
+import { GRID_GAP, useGridCardWidth } from '../gridLayout';
 import { ListingCard } from '../ListingCard';
-import { PostGridTile } from './PostGridTile';
-import { POST_GRID_COLUMNS, PROFILE_TAB, type ProfileGridRow } from './profileTabs';
-
-const POST_GRID_GAP = Metrics.spacing.xs;
+import { PROFILE_TAB, type ProfileGridRow } from './profileTabs';
 
 type ProfileGridRowViewProps = {
   row: ProfileGridRow;
   userLocation: { latitude: number; longitude: number } | null;
-  onPressPost: (postId: string) => void;
+  currentUserId: string | undefined;
+  postActions: ReturnType<typeof usePostActions>;
   onPressListing: (listingId: string) => void;
   onPressEvent: (eventId: string) => void;
 };
 
-export function ProfileGridRowView({ row, userLocation, onPressPost, onPressListing, onPressEvent }: Readonly<ProfileGridRowViewProps>) {
-  const tileSize = useColumnWidth(POST_GRID_COLUMNS, POST_GRID_GAP);
+export function ProfileGridRowView({
+  row,
+  userLocation,
+  currentUserId,
+  postActions,
+  onPressListing,
+  onPressEvent,
+}: Readonly<ProfileGridRowViewProps>) {
   const cardWidth = useGridCardWidth();
 
   if (row.kind === PROFILE_TAB.POSTS) {
     return (
-      <View style={[styles.row, styles.postRow]}>
-        {row.posts.map((post) => (
-          <PostGridTile key={post.id} post={post} size={tileSize} onPress={() => onPressPost(post.id)} />
-        ))}
-      </View>
+      <CommunityPostCard
+        post={row.post}
+        currentUserId={currentUserId}
+        onToggleLike={postActions.handleToggleLike}
+        onDelete={postActions.handleDeletePost}
+        onBoost={postActions.handleBoostPost}
+        onPressListing={onPressListing}
+        onPressEvent={onPressEvent}
+      />
     );
   }
 
@@ -65,10 +74,6 @@ export function ProfileGridRowView({ row, userLocation, onPressPost, onPressList
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-  },
-  postRow: {
-    gap: POST_GRID_GAP,
-    marginBottom: POST_GRID_GAP,
   },
   cardRow: {
     gap: GRID_GAP,

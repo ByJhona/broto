@@ -2,8 +2,6 @@
   "newListingScreenTitle": "Nova oferta",
   "listingDetailScreenTitle": "Oferta",
   "offersTabTitle": "Ofertas",
-  "offersTabSubtitle": "Doe, troque ou venda plantas perto de você",
-  "offersSearchPlaceholder": "Buscar por planta...",
   "titleRequired": "Dá um título pra oferta.",
   "priceRequired": "Informa o preço da planta.",
   "listingTypeSectionTitle": "Tipo de oferta",
@@ -17,8 +15,6 @@
   "communityCommentLabel": "Comentário na Comunidade (opcional)",
   "yourPlantFallback": "sua planta",
   "chooseLocationCta": "Escolher local no mapa",
-  "filterAll": "Tudo",
-  "noListingsFound": "Nenhuma oferta encontrada.",
   "noOwnListingsFound": "Você ainda não tem nenhuma oferta.",
   "markCompletedAction": "Marcar como concluída",
   "reactivateListingAction": "Reativar oferta",
@@ -74,9 +70,9 @@
   "noPlantsRegistered": "Você ainda não tem plantas cadastradas.",
   "priceFieldPlaceholder": "R$ 0,00",
   "shareToCommunityTitle": "Publicar na Comunidade",
-  "myOffersButton": "Minhas",
   "myOffersTitle": "Minhas ofertas e eventos",
   "manageOpenListings": "Ativas",
   "manageClosedListings": "Concluídas e canceladas",
-  "photoHint": "Até {{max}} fotos da planta que você vai oferecer"
+  "photoHint": "Até {{max}} fotos da planta que você vai oferecer",
+  "myOffersSubtitle": "Acompanhe propostas e o status do que você publicou."
 }

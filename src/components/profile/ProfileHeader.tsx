@@ -1,7 +1,11 @@
 import { StyleSheet, View } from 'react-native';
-import { Metrics } from '@/theme';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import ClipboardList from 'lucide-react-native/icons/clipboard-list';
+import { Metrics, useColors } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { EarnedBadge, FollowCounts, UserProfile, XpProgress } from '@/types';
+import { IconBadge } from '../IconBadge';
+import { ListRow } from '../ListRow';
 import { SegmentedControl } from '../SegmentedControl';
 import { ProfileActions } from './ProfileActions';
 import { ProfileBadgesRow } from './ProfileBadgesRow';
@@ -22,6 +26,7 @@ type ProfileHeaderProps = {
   onToggleFollow: () => void;
   onPressMessage: () => void;
   onEditProfile: () => void;
+  onManage?: () => void;
 };
 
 export function ProfileHeader({
@@ -37,7 +42,9 @@ export function ProfileHeader({
   onToggleFollow,
   onPressMessage,
   onEditProfile,
+  onManage,
 }: Readonly<ProfileHeaderProps>) {
+  const colors = useColors();
   const { t } = useTranslation('profile');
   const tabOptions = [
     { value: PROFILE_TAB.POSTS, label: t('postsTab') },
@@ -58,6 +65,20 @@ export function ProfileHeader({
       />
       <ProfileBadgesRow badges={badges} isOwnProfile={isOwnProfile} />
       <SegmentedControl options={tabOptions} value={tab} onChange={onChangeTab} />
+      {onManage ? (
+        <ListRow
+          variant="card"
+          leading={
+            <IconBadge backgroundColor={`${colors.leaf}1F`}>
+              <ClipboardList size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            </IconBadge>
+          }
+          title={t('manageOffersTitle')}
+          subtitle={t('manageOffersSubtitle')}
+          trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+          onPress={onManage}
+        />
+      ) : null}
     </View>
   );
 }

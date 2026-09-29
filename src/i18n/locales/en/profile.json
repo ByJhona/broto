@@ -47,5 +47,8 @@
   "emptyEventsOwn": "Events you create show up here.",
   "emptyEventsOther": "{{name}} hasn't created any events yet.",
   "badgesTitleCount": "Badges · {{count}}",
-  "photoCountLabel": "{{count}} photos"
+  "manageOffersTitle": "Manage listings and events",
+  "manageOffersSubtitle": "Received proposals, status and closed items",
+  "signInToSeeProfileTitle": "Your profile",
+  "signInToSeeProfileMessage": "Sign in to post, offer plants and track your progress."
 }

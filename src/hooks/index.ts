@@ -18,6 +18,7 @@ export * from './useNotifications';
 export * from './usePlantDetail';
 export * from './usePlantGroups';
 export * from './usePlants';
+export * from './usePostActions';
 export * from './usePullToRefresh';
 export * from './useReduceMotion';
 export * from './useRecentlyCatalogedSpecies';

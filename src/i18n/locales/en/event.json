@@ -1,8 +1,6 @@
 {
   "newEventTitle": "New event",
   "eventsListTitle": "Events",
-  "eventsTabSubtitle": "Fairs, swaps, and meetups near you",
-  "eventsSearchPlaceholder": "Search for an event...",
   "eventDetailTitle": "Event",
   "shareToCommunity": "Share to Community",
   "cancelEventAction": "Cancel event",
@@ -29,9 +27,6 @@
   "confirmAttendance": "Confirm attendance",
   "shareCommentLabel": "Comment",
   "shareSubmitLabel": "Share",
-  "sortNearest": "Closest",
-  "sortRecent": "Most recent",
-  "noEventsNearby": "No events nearby yet.",
   "noOwnEventsFound": "You haven't organized any events yet.",
   "titleLabel": "Title",
   "titlePlaceholder": "Plant swap meetup at the park",

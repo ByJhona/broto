@@ -41,6 +41,13 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
   return !data;
 }
 
+export class UsernameTakenError extends Error {
+  constructor() {
+    super(i18n.t('errors:usernameAlreadyInUse'));
+    this.name = 'UsernameTakenError';
+  }
+}
+
 export async function updateProfile(
   userId: string,
   updates: Partial<UserProfile>
@@ -54,7 +61,7 @@ export async function updateProfile(
 
   if (error) {
     if (error.code === '23505') {
-      throw new Error(i18n.t('errors:usernameAlreadyInUse'));
+      throw new UsernameTakenError();
     }
     console.error('Error updating profile:', error);
     throw error;

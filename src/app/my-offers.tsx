@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ActivityIndicator, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, SegmentedControl } from '@/components';
+import { EmptyState, FloatingScreenControls, ScreenHeader, SegmentedControl, useScreenTopInset } from '@/components';
 import { EventRow } from '@/components/offers/EventRow';
 import { ListingRow } from '@/components/offers/ListingRow';
 import { groupEventsByStatus, groupListingsByStatus, isEventClosed } from '@/components/offers/manageSections';
@@ -125,8 +125,10 @@ function MyEvents({ styles }: Readonly<{ styles: Styles }>) {
 
 export default function MyOffersScreen() {
   const styles = useThemedStyles(makeStyles);
+  const topInset = useScreenTopInset();
   const { t } = useTranslation(['listing', 'event']);
-  const [tab, setTab] = useState<ManageTab>('listings');
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<ManageTab>(params.tab === 'events' ? 'events' : 'listings');
 
   const tabOptions: { value: ManageTab; label: string }[] = [
     { value: 'listings', label: t('listing:offersTabTitle') },
@@ -135,8 +137,12 @@ export default function MyOffersScreen() {
 
   return (
     <View style={styles.container}>
-      <SegmentedControl options={tabOptions} value={tab} onChange={setTab} style={styles.segmented} />
+      <View style={[styles.header, { paddingTop: topInset }]}>
+        <ScreenHeader title={t('listing:myOffersTitle')} subtitle={t('listing:myOffersSubtitle')} />
+        <SegmentedControl options={tabOptions} value={tab} onChange={setTab} />
+      </View>
       {tab === 'listings' ? <MyListings styles={styles} /> : <MyEvents styles={styles} />}
+      <FloatingScreenControls />
     </View>
   );
 }
@@ -147,10 +153,9 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    segmented: {
+    header: {
       ...Metrics.layout.centeredContent,
-      marginHorizontal: Metrics.spacing.lg,
-      marginTop: Metrics.spacing.md,
+      paddingHorizontal: Metrics.spacing.lg,
     },
     list: {
       flex: 1,
@@ -160,9 +165,9 @@ const makeStyles = (colors: ThemeColors) =>
       padding: Metrics.spacing.lg,
     },
     sectionTitle: {
-      ...Typography.heading,
+      ...Typography.title,
       color: colors.foreground,
-      marginTop: Metrics.spacing.sm,
+      marginTop: Metrics.spacing.md,
       marginBottom: Metrics.spacing.sm,
     },
     loader: {

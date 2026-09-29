@@ -25,5 +25,12 @@
   "nearbyArea_one": "1 listing or event in this area",
   "nearbyArea_other": "{{count}} listings and events in this area",
   "nearbyYouTitle": "Near you",
-  "nearbyAreaTitle": "In this area"
+  "nearbyAreaTitle": "In this area",
+  "searchMapPrompt": "Search listings and events",
+  "searchMapPlaceholder": "Search by name or description",
+  "searchEmpty": "Nothing found for \"{{query}}\".",
+  "nearbyEmpty": "Nothing nearby yet. Search by name or see everything.",
+  "showAllPins_one": "Show 1 more further away",
+  "showAllPins_other": "Show {{count}} more further away",
+  "upcomingEventsTitle": "Upcoming events"
 }

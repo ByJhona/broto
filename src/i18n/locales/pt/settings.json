@@ -24,5 +24,6 @@
   "deleteAccountTitle": "Excluir sua conta",
   "deleteAccountMessage": "A exclusão da conta e de todos os seus dados é feita pelo nosso suporte. Envie um e-mail e cuidamos disso para você.",
   "deleteAccountContact": "Enviar e-mail",
-  "deleteAccountEmailSubject": "Pedido de exclusão de conta"
+  "deleteAccountEmailSubject": "Pedido de exclusão de conta",
+  "deleteAccountEmailFallback": "Não encontramos um app de e-mail. Escreva para {{email}}."
 }

@@ -47,5 +47,8 @@
   "emptyEventsOwn": "Os eventos que você criar aparecem aqui.",
   "emptyEventsOther": "{{name}} ainda não criou nenhum evento.",
   "badgesTitleCount": "Emblemas · {{count}}",
-  "photoCountLabel": "{{count}} fotos"
+  "manageOffersTitle": "Gerenciar ofertas e eventos",
+  "manageOffersSubtitle": "Propostas recebidas, status e encerrados",
+  "signInToSeeProfileTitle": "Seu perfil",
+  "signInToSeeProfileMessage": "Entre para publicar, oferecer plantas e acompanhar seu progresso."
 }

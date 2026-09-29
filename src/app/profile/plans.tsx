@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock } from '@/components';
+import { FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock, useScreenTopInset } from '@/components';
 import { CreditPackPicker } from '@/components/plans/CreditPackPicker';
 import { FreePlanRow } from '@/components/plans/FreePlanRow';
 import { PlanSummary } from '@/components/plans/PlanSummary';
@@ -47,6 +47,7 @@ export default function PlansScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['credits', 'profile']);
   const { credits, refresh: refreshCredits } = useCredits();
@@ -148,7 +149,7 @@ export default function PlansScreen() {
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingTop: topInset,
             paddingBottom: insets.bottom + Metrics.spacing.xl,
           },
         ]}

@@ -8,7 +8,17 @@ import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, FloatingScreenControls, IconBadge, ListRow, PageTitle, SearchField, SkeletonBlock, SubmitButton } from '@/components';
+import {
+  EmptyState,
+  FloatingScreenControls,
+  IconBadge,
+  ListRow,
+  PageTitle,
+  SearchField,
+  SkeletonBlock,
+  SubmitButton,
+  useScreenTopInset,
+} from '@/components';
 import { searchPlantSpecies } from '@/services';
 import type { PlantSpeciesSearchResult } from '@/types';
 
@@ -75,6 +85,7 @@ function ResultsSkeleton() {
 export default function AddPlantManualScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const { t } = useTranslation('garden');
@@ -118,7 +129,7 @@ export default function AddPlantManualScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg }]}>
+      <View style={[styles.header, { paddingTop: topInset }]}>
         <PageTitle>{t('addPlantTitle')}</PageTitle>
         <Text style={styles.subtitle}>{t('addPlantSubtitle')}</Text>
       </View>
