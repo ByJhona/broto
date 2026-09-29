@@ -5,9 +5,7 @@
   "creditsPerMonth": "{{count}} créditos por mês",
   "freePlanName": "Plano Gratuito",
   "myPlan": "Meu plano",
-  "seeAvailablePlans": "Ver planos disponíveis",
   "manageSubscription": "Gerenciar assinatura",
-  "manageSubscriptionFallback": "Tente gerenciar sua assinatura direto na loja do app.",
   "appearance": "Aparência",
   "themeLight": "Claro",
   "themeDark": "Escuro",
@@ -16,5 +14,15 @@
   "settings": "Configurações",
   "editProfile": "Editar perfil",
   "privacyAndSecurity": "Privacidade e segurança",
-  "signOut": "Sair da conta"
+  "signOut": "Sair da conta",
+  "help": "Ajuda",
+  "support": "Suporte",
+  "signOutConfirmTitle": "Sair da conta?",
+  "signOutConfirmMessage": "Você vai precisar entrar de novo para usar o Broto.",
+  "appVersion": "Broto · versão {{version}}",
+  "deleteAccount": "Excluir conta",
+  "deleteAccountTitle": "Excluir sua conta",
+  "deleteAccountMessage": "A exclusão da conta e de todos os seus dados é feita pelo nosso suporte. Envie um e-mail e cuidamos disso para você.",
+  "deleteAccountContact": "Enviar e-mail",
+  "deleteAccountEmailSubject": "Pedido de exclusão de conta"
 }

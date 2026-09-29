@@ -7,7 +7,8 @@ export default function PostLayout() {
   const { t } = useTranslation('post');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="[id]" options={{ title: t('postTitle') }} />
+      <Stack.Screen name="new" options={{ headerShown: false, title: t('newPostTitle') }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false, title: t('postTitle') }} />
     </Stack>
   );
 }

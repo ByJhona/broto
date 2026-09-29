@@ -1,189 +1,29 @@
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
-import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
-import ArrowRight from 'lucide-react-native/icons/arrow-right';
-import Bell from 'lucide-react-native/icons/bell';
-import Camera from 'lucide-react-native/icons/camera';
-import ChevronDown from 'lucide-react-native/icons/chevron-down';
-import Clock from 'lucide-react-native/icons/clock';
-import Cloud from 'lucide-react-native/icons/cloud';
-import Droplet from 'lucide-react-native/icons/droplet';
-import Heart from 'lucide-react-native/icons/heart';
-import Leaf from 'lucide-react-native/icons/leaf';
-import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Scan from 'lucide-react-native/icons/scan';
-import Sparkles from 'lucide-react-native/icons/sparkles';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
-import Sun from 'lucide-react-native/icons/sun';
-import Trash2 from 'lucide-react-native/icons/trash-2';
-import TrendingUp from 'lucide-react-native/icons/trending-up';
-import X from 'lucide-react-native/icons/x';
-import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Card, IconBadge, PlantChat } from '@/components';
-import type { CreditCosts } from '@/services';
-import { useCreditCosts, useRecentlyCatalogedSpecies } from '@/hooks';
-import type { PlantSpeciesSearchResult } from '@/types';
-
-type TFunc = (key: string, options?: Record<string, unknown>) => string;
-
-type NeedItem = {
-  icon: LucideIcon;
-  label: string;
-};
-
-function getPlantNeeds(t: TFunc): NeedItem[] {
-  return [
-    { icon: Sun, label: t('needLight') },
-    { icon: Droplet, label: t('needWater') },
-    { icon: Clock, label: t('needTime') },
-  ];
-}
-
-function getCommonMistakes(t: TFunc): string[] {
-  return [t('mistakeOverwatering'), t('mistakePests'), t('mistakeFertilizingSickPlant')];
-}
-
-function getCuriosities(t: TFunc): string[] {
-  return [t('curiosityPhotosynthesis'), t('curiosityPhototropism'), t('curiosityNightLeaves'), t('curiosityFungiNetworks')];
-}
-
-function getCuriosityColors(colors: ThemeColors): string[] {
-  return [colors.leaf, colors.primary, colors.secondary, colors.accent];
-}
-
-type BenefitItem = {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-};
-
-function getPlantBenefits(t: TFunc): BenefitItem[] {
-  return [
-    { icon: Heart, title: t('benefitStressTitle'), description: t('benefitStressDescription') },
-    { icon: Cloud, title: t('benefitHumidityTitle'), description: t('benefitHumidityDescription') },
-    { icon: Sparkles, title: t('benefitRoutineTitle'), description: t('benefitRoutineDescription') },
-    { icon: TrendingUp, title: t('benefitGrowthTitle'), description: t('benefitGrowthDescription') },
-  ];
-}
-
-type FaqItem = {
-  id: string;
-  icon: LucideIcon;
-  question: string;
-  answer: string;
-};
-
-function getFaqItems(t: TFunc, creditCosts: CreditCosts): FaqItem[] {
-  return [
-    {
-      id: 'diagnose',
-      icon: Stethoscope,
-      question: t('faqDiagnoseQuestion'),
-      answer: t('faqDiagnoseAnswer', { count: creditCosts.diagnosis }),
-    },
-    {
-      id: 'identify',
-      icon: Camera,
-      question: t('faqIdentifyQuestion'),
-      answer: t('faqIdentifyAnswer'),
-    },
-    {
-      id: 'care',
-      icon: Droplet,
-      question: t('faqCareQuestion'),
-      answer: t('faqCareAnswer'),
-    },
-    {
-      id: 'sun',
-      icon: Sun,
-      question: t('faqSunQuestion'),
-      answer: t('faqSunAnswer'),
-    },
-    {
-      id: 'watering',
-      icon: Bell,
-      question: t('faqWateringQuestion'),
-      answer: t('faqWateringAnswer'),
-    },
-    {
-      id: 'delete',
-      icon: Trash2,
-      question: t('faqDeleteQuestion'),
-      answer: t('faqDeleteAnswer'),
-    },
-    {
-      id: 'sync',
-      icon: Cloud,
-      question: t('faqSyncQuestion'),
-      answer: t('faqSyncAnswer'),
-    },
-  ];
-}
-
-type ActionCardProps = {
-  icon: LucideIcon;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-  styles: ReturnType<typeof makeStyles>;
-  colors: ThemeColors;
-};
-
-function ActionCard({ icon: Icon, title, subtitle, onPress, styles, colors }: Readonly<ActionCardProps>) {
-  return (
-    <Pressable style={styles.actionCard} onPress={onPress}>
-      <IconBadge size={52} backgroundColor={colors.leafForeground}>
-        <Icon size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-      </IconBadge>
-      <View style={styles.actionTextBox}>
-        <Text style={styles.actionTitle}>{title}</Text>
-        <Text style={styles.actionSubtitle}>{subtitle}</Text>
-      </View>
-      <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-    </Pressable>
-  );
-}
+import { IconBadge, ListRow } from '@/components';
+import { ArticleListItem } from '@/components/articles/ArticleListItem';
+import { FeaturedArticle } from '@/components/articles/FeaturedArticle';
+import { ActionCard } from '@/components/identify/ActionCard';
+import { RecentSpeciesStrip } from '@/components/identify/RecentSpeciesStrip';
+import { makeStyles } from '@/components/identify/styles';
+import { useArticles } from '@/hooks';
 
 export default function IdentifyScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const curiosityColors = useMemo(() => getCuriosityColors(colors), [colors]);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation(['help', 'article']);
+  const { featured, others } = useArticles();
 
-  const { species: recentSpecies } = useRecentlyCatalogedSpecies();
-  const { t } = useTranslation('help');
-
-  const handleSelectRecentSpecies = (species: PlantSpeciesSearchResult) => {
-    const candidates = [
-      {
-        score: 1,
-        scientificName: species.scientificName,
-        commonName: species.commonNames[0] ?? null,
-        family: null,
-        genus: null,
-        imageUrl: species.referencePhotos[0]?.url ?? null,
-      },
-    ];
-
-    router.push({
-      pathname: '/identify/result',
-      params: { candidates: JSON.stringify(candidates) },
-    });
-  };
-
-  const creditCosts = useCreditCosts();
-  const plantNeeds = getPlantNeeds(t);
-  const commonMistakes = getCommonMistakes(t);
-  const curiosities = getCuriosities(t);
-  const plantBenefits = getPlantBenefits(t);
-  const faqItems = getFaqItems(t, creditCosts);
+  const openArticle = (slug: string) => router.push({ pathname: '/article/[slug]', params: { slug } });
 
   return (
     <ScrollView
@@ -219,414 +59,34 @@ export default function IdentifyScreen() {
         <Text style={styles.historyLinkText}>{t('viewPastDiagnoses')}</Text>
       </Pressable>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>{t('specialistSectionTitle')}</Text>
-      </View>
+      <ListRow
+        variant="card"
+        style={styles.specialistRow}
+        leading={
+          <IconBadge size={Metrics.size.lg} backgroundColor={colors.leafForeground}>
+            <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          </IconBadge>
+        }
+        title={t('specialistSectionTitle')}
+        subtitle={t('specialistRowSubtitle')}
+        trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+        onPress={() => router.push('/specialist')}
+      />
 
-      <Card style={styles.specialistCard}>
-        <Text style={styles.specialistIntro}>
-          {t('specialistIntro')}
-        </Text>
-        <PlantChat />
-      </Card>
+      {featured ? <FeaturedArticle article={featured} onPress={() => openArticle(featured.slug)} /> : null}
 
-      {recentSpecies.length > 0 ? (
-        <View style={styles.recentSection}>
-          <Text style={styles.subsectionTitle}>{t('recentlyCatalogedTitle')}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recentRow}
-            style={styles.recentScroll}
-          >
-            {recentSpecies.map((species, index) => {
-              const color = curiosityColors[index % curiosityColors.length];
-              const photoUrl = species.referencePhotos[0]?.url;
-              const mainName = species.commonNames[0] ?? species.scientificName;
-              const subtitle = species.commonNames[0] ? species.scientificName : undefined;
-              return (
-                <Pressable
-                  key={species.id}
-                  style={[styles.recentCard, { backgroundColor: color }]}
-                  onPress={() => handleSelectRecentSpecies(species)}
-                >
-                  {photoUrl ? (
-                    <Image source={{ uri: photoUrl }} style={styles.recentImage} contentFit="cover" />
-                  ) : (
-                    <View style={styles.recentImagePlaceholder}>
-                      <Leaf size={24} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-                    </View>
-                  )}
-                  <View style={styles.recentInfo}>
-                    <Text style={styles.recentName} numberOfLines={1}>{mainName}</Text>
-                    {subtitle ? <Text style={styles.recentSpecies} numberOfLines={1}>{subtitle}</Text> : null}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+      {others.length > 0 ? (
+        <>
+          <Text style={styles.articlesTitle} accessibilityRole="header">
+            {t('article:sectionTitle')}
+          </Text>
+          {others.map((article) => (
+            <ArticleListItem key={article.id} article={article} onPress={() => openArticle(article.slug)} />
+          ))}
+        </>
       ) : null}
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>{t('firstStepsSectionTitle')}</Text>
-      </View>
-
-      <Card style={styles.needsCard}>
-        <Text style={styles.needsTitle}>{t('plantNeedsTitle')}</Text>
-        <View style={styles.needsRow}>
-          {plantNeeds.map((need) => {
-            const Icon = need.icon;
-            return (
-              <View key={need.label} style={styles.needChip}>
-                <Icon size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                <Text style={styles.needChipText}>{need.label}</Text>
-              </View>
-            );
-          })}
-        </View>
-        <Text style={styles.needsCaption}>
-          {t('plantNeedsCaption')}
-        </Text>
-      </Card>
-
-      <View style={styles.mistakesCard}>
-        <View style={styles.mistakesHeader}>
-          <AlertTriangle size={18} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.mistakesTitle}>{t('commonMistakesTitle')}</Text>
-        </View>
-        {commonMistakes.map((mistake) => (
-          <View key={mistake} style={styles.mistakeRow}>
-            <X size={14} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.mistakeText}>{mistake}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.subsectionTitle}>{t('curiositiesTitle')}</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.curiosityRow}
-        style={styles.curiosityScroll}
-      >
-        {curiosities.map((fact, index) => {
-          const color = curiosityColors[index % curiosityColors.length];
-          return (
-            <View key={fact} style={[styles.curiosityCard, { backgroundColor: `${color}1A`, borderColor: color }]}>
-              <Lightbulb size={20} color={color} strokeWidth={Metrics.icon.strokeWidth} />
-              <Text style={styles.curiosityText}>{fact}</Text>
-            </View>
-          );
-        })}
-      </ScrollView>
-
-      <Text style={styles.subsectionTitle}>{t('benefitsTitle')}</Text>
-      <View style={styles.benefitsGrid}>
-        {plantBenefits.map((benefit) => {
-          const Icon = benefit.icon;
-          return (
-            <Card key={benefit.title} style={styles.benefitTile}>
-              <IconBadge size={36} backgroundColor={`${colors.accent}22`}>
-                <Icon size={18} color={colors.accent} strokeWidth={Metrics.icon.strokeWidth} />
-              </IconBadge>
-              <Text style={styles.benefitTitle}>{benefit.title}</Text>
-              <Text style={styles.benefitText}>{benefit.description}</Text>
-            </Card>
-          );
-        })}
-      </View>
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionHeaderText}>{t('faqSectionTitle')}</Text>
-      </View>
-
-      {faqItems.map((item) => {
-        const isOpen = openId === item.id;
-        const Icon = item.icon;
-
-        return (
-          <Card key={item.id} style={styles.card} onPress={() => setOpenId(isOpen ? null : item.id)}>
-            <View style={styles.row}>
-              <IconBadge>
-                <Icon size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-              </IconBadge>
-              <Text style={styles.question}>{item.question}</Text>
-              <ChevronDown
-                size={Metrics.icon.normal}
-                color={colors.mutedForeground}
-                strokeWidth={Metrics.icon.strokeWidth}
-                style={isOpen ? styles.chevronOpen : undefined}
-              />
-            </View>
-
-            {isOpen ? <Text style={styles.answer}>{item.answer}</Text> : null}
-          </Card>
-        );
-      })}
+      <RecentSpeciesStrip />
     </ScrollView>
   );
 }
-
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-  },
-  header: {
-    marginBottom: Metrics.spacing.lg,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.foreground,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.mutedForeground,
-    marginTop: Metrics.spacing.xs,
-  },
-  actionsRow: {
-    gap: Metrics.spacing.sm,
-    marginBottom: Metrics.spacing.md,
-  },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.md,
-    backgroundColor: colors.leaf,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.md,
-  },
-  actionTextBox: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.leafForeground,
-  },
-  actionSubtitle: {
-    fontSize: 13,
-    color: colors.leafForeground,
-    opacity: 0.85,
-    marginTop: 2,
-  },
-  historyLink: {
-    alignItems: 'center',
-    marginBottom: Metrics.spacing.xl,
-  },
-  historyLinkText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.leaf,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.xs,
-    marginBottom: Metrics.spacing.md,
-  },
-  sectionHeaderText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.mutedForeground,
-    textTransform: 'uppercase',
-  },
-  specialistCard: {
-    marginBottom: Metrics.spacing.xl,
-  },
-  specialistIntro: {
-    fontSize: 14,
-    color: colors.mutedForeground,
-    marginBottom: Metrics.spacing.md,
-  },
-  recentSection: {
-    marginTop: Metrics.spacing.lg,
-  },
-  recentScroll: {
-    marginHorizontal: -Metrics.spacing.lg,
-  },
-  recentRow: {
-    paddingHorizontal: Metrics.spacing.lg,
-    gap: Metrics.spacing.sm,
-    paddingBottom: Metrics.spacing.md,
-  },
-  recentCard: {
-    width: 140,
-    height: 180,
-    borderRadius: Metrics.radius.lg,
-    overflow: 'hidden',
-    padding: Metrics.spacing.sm,
-    justifyContent: 'flex-end',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  recentImage: {
-    ...StyleSheet.absoluteFill,
-  },
-  recentImagePlaceholder: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  recentInfo: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    padding: Metrics.spacing.sm,
-    borderRadius: Metrics.radius.md,
-    marginTop: 'auto',
-  },
-  recentName: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: colors.white,
-  },
-  recentSpecies: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
-  },
-  needsCard: {
-    marginBottom: Metrics.spacing.md,
-  },
-  needsTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.foreground,
-    marginBottom: Metrics.spacing.sm,
-  },
-  needsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Metrics.spacing.sm,
-  },
-  needChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.xs,
-    backgroundColor: colors.muted,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: Metrics.spacing.xs,
-    paddingHorizontal: Metrics.spacing.md,
-  },
-  needChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  needsCaption: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    lineHeight: 18,
-    marginTop: Metrics.spacing.sm,
-  },
-  mistakesCard: {
-    backgroundColor: `${colors.destructive}0D`,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: `${colors.destructive}33`,
-    padding: Metrics.spacing.md,
-    marginBottom: Metrics.spacing.md,
-  },
-  mistakesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-    marginBottom: Metrics.spacing.sm,
-  },
-  mistakesTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.destructive,
-    flex: 1,
-  },
-  mistakeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Metrics.spacing.sm,
-    marginTop: Metrics.spacing.sm,
-  },
-  mistakeText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.foreground,
-  },
-  subsectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.foreground,
-    marginBottom: Metrics.spacing.sm,
-  },
-  curiosityScroll: {
-    marginBottom: Metrics.spacing.md,
-  },
-  curiosityRow: {
-    gap: Metrics.spacing.sm,
-    paddingRight: Metrics.spacing.lg,
-  },
-  curiosityCard: {
-    width: 220,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    padding: Metrics.spacing.md,
-    gap: Metrics.spacing.sm,
-  },
-  curiosityText: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colors.foreground,
-  },
-  benefitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Metrics.spacing.sm,
-    marginBottom: Metrics.spacing.md,
-  },
-  benefitTile: {
-    width: '48%',
-  },
-  benefitTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.foreground,
-    marginTop: Metrics.spacing.sm,
-  },
-  benefitText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.mutedForeground,
-    marginTop: 2,
-  },
-  card: {
-    width: '100%',
-    marginBottom: Metrics.spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-  },
-  question: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  chevronOpen: {
-    transform: [{ rotate: '180deg' }],
-  },
-  answer: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    lineHeight: 19,
-    marginTop: Metrics.spacing.sm,
-    paddingLeft: 40 + Metrics.spacing.sm,
-  },
-  });

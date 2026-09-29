@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import UserRound from 'lucide-react-native/icons/user-round';
-import { useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useAuth } from '@/hooks';
 import { Avatar } from './Avatar';
@@ -15,10 +14,10 @@ type ProfileIconProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function ProfileIcon({ name, url, loggedIn = true, size = 52, style }: Readonly<ProfileIconProps>) {
+export function ProfileIcon({ name, url, loggedIn = true, size = Metrics.size.xl, style }: Readonly<ProfileIconProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('profile');
   const { user } = useAuth();
 

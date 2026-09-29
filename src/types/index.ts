@@ -1,3 +1,4 @@
+export * from './article';
 export * from './badges';
 export * from './care-task';
 export * from './chat';
@@ -9,3 +10,4 @@ export * from './plant-group';
 export * from './plant-listing';
 export * from './profile';
 export * from './proposal';
+export * from './xp';

@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, Overlays, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { Badge } from '@/types';
 import { BadgeCard } from './BadgeCard';
@@ -16,8 +15,7 @@ type NewBadgeModalProps = {
 };
 
 export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModalProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('badge');
 
   return (
@@ -74,8 +72,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     title: {
-      fontSize: 17,
-      fontWeight: '700',
+      ...Typography.title,
       color: colors.foreground,
       marginBottom: Metrics.spacing.md,
       textAlign: 'center',
@@ -90,8 +87,7 @@ const makeStyles = (colors: ThemeColors) =>
       padding: Metrics.spacing.sm,
     },
     closeText: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
   });

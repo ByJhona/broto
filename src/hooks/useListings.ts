@@ -8,8 +8,9 @@ import {
   updateListingStatus,
   type CreateListingInput,
 } from '@/services';
-import type { ListingStatus } from '@/types';
+import { LISTING_STATUS, type ListingStatus } from '@/types';
 import { useAuth } from './useAuth';
+import { celebrateXpLevelUp } from './useXp';
 
 const LISTINGS_QUERY_KEY = ['plant-listings'] as const;
 
@@ -38,6 +39,7 @@ export function useListings() {
     mutationFn: ({ id, status }: { id: string; status: ListingStatus }) => updateListingStatus(id, status),
     onSuccess: (_data, { id, status }) => {
       patchListingInAllCaches(queryClient, id, (listing) => ({ ...listing, status }));
+      if (status === LISTING_STATUS.COMPLETED && user?.id) celebrateXpLevelUp(queryClient, user.id);
     },
   });
 

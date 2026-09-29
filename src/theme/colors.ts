@@ -1,5 +1,5 @@
 export const Palette = {
-  terracota: '#B7644A',
+  terracota: '#A3573F',
   argila: '#E7B18E',
   salvia: '#8EA786',
   verdeProfundo: '#455F40',
@@ -44,7 +44,7 @@ export const LightTheme = {
   leafForeground: '#FCFAF4',
   muted: '#F1ECE0',
   mutedForeground: '#626757',
-  destructive: '#D03D37',
+  destructive: '#BF3832',
   border: '#E5DCCD',
 
   tabIconDefault: '#8E8E93',

@@ -1,4 +1,6 @@
+import { ActionSheetHost } from '@/components/ActionSheetHost';
 import { AlertHost } from '@/components/AlertHost';
+import { LevelUpHost } from '@/components/LevelUpHost';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
 import { i18n, LanguageProvider, useLanguage, useTranslation } from '@/i18n';
@@ -17,12 +19,13 @@ import { handleLaunchNotification, registerNotificationTapHandler } from '@/serv
 import { updateProfile } from '@/services/profile';
 import { registerPushToken, watchPushTokenRefresh } from '@/services/pushTokens';
 import { queryClient } from '@/services/queryClient';
+import { getXpProgress } from '@/services/xp';
 import { AuthProvider, NotificationsProvider } from '@/store';
-import { ThemeProvider, useColors, useAppTheme, useThemedStackScreenOptions, type ThemeColors } from '@/theme';
+import { ThemeProvider, useColors, useAppTheme, useThemedStackScreenOptions, type ThemeColors, useThemedStyles } from '@/theme';
 import { Alert } from '@/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { ActivityIndicator, Linking, StatusBar, StyleSheet, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
@@ -33,7 +36,7 @@ function RootNavigator() {
   const { scheme } = useAppTheme();
   const { t } = useTranslation('nav');
   const searchScreenOptions = useThemedStackScreenOptions();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   useEffect(() => {
     registerCareTaskNotificationHandlers();
@@ -61,9 +64,10 @@ function RootNavigator() {
     updateProfile(session.user.id, { locale: language }).catch(() => {});
     // Warms the plans-screen cache so it shows cards instantly instead of a
     // skeleton the first time the user navigates there in this session.
-    queryClient.query({ queryKey: PLAN_CATALOG_QUERY_KEY, queryFn: getPlanCatalog, staleTime: CATALOG_STALE_TIME }).catch(() => {});
-    queryClient.query({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME }).catch(() => {});
-    queryClient.query({ queryKey: CREDIT_COSTS_QUERY_KEY, queryFn: getCreditCosts, staleTime: CATALOG_STALE_TIME }).catch(() => {});
+    queryClient.prefetchQuery({ queryKey: PLAN_CATALOG_QUERY_KEY, queryFn: getPlanCatalog, staleTime: CATALOG_STALE_TIME });
+    queryClient.prefetchQuery({ queryKey: CREDIT_PACKS_QUERY_KEY, queryFn: getCreditPacks, staleTime: CATALOG_STALE_TIME });
+    queryClient.prefetchQuery({ queryKey: CREDIT_COSTS_QUERY_KEY, queryFn: getCreditCosts, staleTime: CATALOG_STALE_TIME });
+    queryClient.prefetchQuery({ queryKey: ['xp', session.user.id], queryFn: () => getXpProgress(session.user.id) });
   }, [session, language]);
 
   const statusBar = <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />;
@@ -86,7 +90,6 @@ function RootNavigator() {
           <Stack.Screen name="profile" options={{ headerShown: false }} />
           <Stack.Screen name="plant" options={{ headerShown: false }} />
           <Stack.Screen name="garden" options={{ headerShown: false }} />
-          <Stack.Screen name="group" options={{ headerShown: false }} />
           <Stack.Screen name="post" options={{ headerShown: false }} />
           <Stack.Screen name="event" options={{ headerShown: false }} />
           <Stack.Screen name="identify" options={{ headerShown: false }} />
@@ -94,17 +97,25 @@ function RootNavigator() {
           <Stack.Screen name="offer" options={{ headerShown: false }} />
           <Stack.Screen name="task" options={{ headerShown: false }} />
           <Stack.Screen name="diagnose" options={{ headerShown: false }} />
+          <Stack.Screen name="article" options={{ headerShown: false }} />
+          <Stack.Screen name="specialist" options={{ headerShown: false }} />
           <Stack.Screen name="search" options={{ ...searchScreenOptions, title: t('search') }} />
           <Stack.Screen name="messages" options={{ ...searchScreenOptions, title: t('messages') }} />
           <Stack.Screen name="chat" options={{ ...searchScreenOptions, title: t('chat') }} />
+          <Stack.Screen name="my-offers" options={{ ...searchScreenOptions, title: t('listing:myOffersTitle') }} />
+          <Stack.Screen name="agenda" options={{ ...searchScreenOptions, title: t('garden:agendaTitle') }} />
         </Stack.Protected>
 
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack.Protected>
+
+        <Stack.Screen name="reset-password" options={{ headerShown: false }} />
       </Stack>
       <AlertHost />
+      <ActionSheetHost />
       <ToastHost />
+      <LevelUpHost />
     </NotificationsProvider>
   );
 }

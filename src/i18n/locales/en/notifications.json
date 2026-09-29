@@ -1,11 +1,15 @@
 {
-  "likeTitle": "New like",
-  "likeMessage": "{{actor}} just liked your photo!",
-  "commentTitle": "New comment",
-  "commentMessage": "{{actor}} left a comment on your photo!",
-  "listingInterestTitle": "Interest in your listing",
-  "listingInterestMessage": "{{actor}} is interested in the plant you listed!",
   "careSetupReminderTitle": "Set up a care reminder",
   "careSetupReminderMessage": "Your plant \"{{plant}}\" doesn't have a watering reminder yet. Want to set one up now?",
-  "careSetupReminderMessageGeneric": "One of your plants doesn't have a watering reminder yet. Want to set one up now?"
+  "careSetupReminderMessageGeneric": "One of your plants doesn't have a watering reminder yet. Want to set one up now?",
+  "likeAction": "liked your photo.",
+  "commentAction": "left a comment on your photo.",
+  "listingInterestAction": "is interested in your listing.",
+  "sectionToday": "Today",
+  "sectionThisWeek": "This week",
+  "sectionEarlier": "Earlier",
+  "countSubtitle_one": "{{count}} notification",
+  "countSubtitle_other": "{{count}} notifications",
+  "deleteAction": "Delete notification",
+  "longPressHint": "Press and hold a notification to delete it."
 }

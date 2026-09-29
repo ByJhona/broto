@@ -73,3 +73,27 @@ export async function recordPushTickets(
 
   if (error) console.error('Erro registrando push tickets para checagem de recibo:', error);
 }
+
+export type PushContent = {
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+};
+
+export async function sendPushToUser(supabaseAdmin: SupabaseClient, userId: string, content: PushContent): Promise<number> {
+  const { data: tokenRows } = await supabaseAdmin.from('push_tokens').select('token').eq('user_id', userId);
+
+  const tokens = ((tokenRows ?? []) as { token: string }[]).map((row) => row.token);
+  if (tokens.length === 0) return 0;
+
+  const messages = tokens.map((token) => ({ id: token, to: token, ...content }));
+  const { deliveredIds, staleTokens, tickets } = await sendExpoPushNotifications(messages);
+
+  if (staleTokens.length > 0) {
+    await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);
+  }
+
+  await recordPushTickets(supabaseAdmin, tickets);
+
+  return deliveredIds.length;
+}

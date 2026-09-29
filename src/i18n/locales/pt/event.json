@@ -4,7 +4,6 @@
   "eventsTabSubtitle": "Feiras, trocas e encontros perto de você",
   "eventsSearchPlaceholder": "Buscar por evento...",
   "eventDetailTitle": "Evento",
-  "limitReachedMessage": "Você atingiu o limite de eventos deste mês do plano gratuito. Assine o Broto+ para criar sem limite.",
   "shareToCommunity": "Compartilhar na Comunidade",
   "cancelEventAction": "Cancelar evento",
   "boostEventAction": "Impulsionar evento",
@@ -33,10 +32,7 @@
   "sortNearest": "Mais próximos",
   "sortRecent": "Mais recentes",
   "noEventsNearby": "Nenhum evento por perto ainda.",
-  "scopeAll": "Todos",
-  "scopeMine": "Meus",
   "noOwnEventsFound": "Você ainda não organizou nenhum evento.",
-  "optionalPhotoLabel": "Foto (opcional)",
   "titleLabel": "Título",
   "titlePlaceholder": "Feira de trocas no parque",
   "descriptionLabel": "Descrição (opcional)",
@@ -62,5 +58,10 @@
   "cancelError": "Não foi possível cancelar o evento.",
   "rsvpUpdateError": "Não foi possível atualizar sua presença.",
   "shareSuccess": "Evento compartilhado na Comunidade!",
-  "shareError": "Não foi possível compartilhar na Comunidade."
+  "shareError": "Não foi possível compartilhar na Comunidade.",
+  "manageOpenEvents": "Próximos",
+  "manageClosedEvents": "Encerrados e cancelados",
+  "photoHint": "Uma foto do local ou de um evento anterior",
+  "dateLabel": "Data",
+  "timeLabel": "Horário"
 }

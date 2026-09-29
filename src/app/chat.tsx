@@ -1,127 +1,65 @@
-import { useMemo, useRef, useState, type ElementRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardChatScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View, type ScrollViewProps } from 'react-native';
+import { KeyboardChatScrollView } from 'react-native-keyboard-controller';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import Camera from 'lucide-react-native/icons/camera';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
-import Leaf from 'lucide-react-native/icons/leaf';
-import MessageCircle from 'lucide-react-native/icons/message-circle';
-import Send from 'lucide-react-native/icons/send';
+import ArrowDown from 'lucide-react-native/icons/arrow-down';
+import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
-import X from 'lucide-react-native/icons/x';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, Card, EmptyState, IconButton, LoadingScreen } from '@/components';
-import { useChat, type ChatTimelineItem } from '@/hooks';
-import { getProfile } from '@/services';
-import { pickPhoto, Toast } from '@/utils';
-import { OFFER_STATUS, type OfferStatus, type Proposal } from '@/types';
+import { Avatar, EmptyState, FloatingPill, OutlineButton, PhotoViewerModal } from '@/components';
+import { buildChatRows, type ChatRow } from '@/components/chat/chatRows';
+import { ChatComposer } from '@/components/chat/ChatComposer';
+import { ChatDayDivider } from '@/components/chat/ChatDayDivider';
+import { ChatIntro } from '@/components/chat/ChatIntro';
+import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
+import { MessageBubble } from '@/components/chat/MessageBubble';
+import { ProposalEventCard } from '@/components/chat/ProposalEventCard';
+import { useChat } from '@/hooks';
+import { getProfile, setActiveChatUser } from '@/services';
+import { ActionSheet, pickPhoto, Toast } from '@/utils';
 
-function getOfferStatusLabel(t: (key: string) => string): Record<OfferStatus, string> {
-  return {
-    [OFFER_STATUS.PENDING]: t('offerStatusPending'),
-    [OFFER_STATUS.ACCEPTED]: t('offerStatusAccepted'),
-    [OFFER_STATUS.DECLINED]: t('offerStatusDeclined'),
-  };
-}
+function useNewMessagesIndicator(latestRow: ChatRow | undefined) {
+  const latestKey = latestRow?.key ?? null;
+  const latestIsMine = latestRow?.kind !== 'day' && !!latestRow?.isMine;
+  const [isAtEnd, setIsAtEnd] = useState(true);
+  const [seenKey, setSeenKey] = useState(latestKey);
+  const [hasUnseen, setHasUnseen] = useState(false);
 
-type ProposalCardActionsProps = {
-  proposal: Proposal;
-  isMine: boolean;
-  offerStatusLabel: Record<OfferStatus, string>;
-  onRespond: (proposalId: string, accept: boolean) => void;
-  onViewOffer: (proposalId: string) => void;
-  colors: ThemeColors;
-  styles: ReturnType<typeof makeStyles>;
-  t: (key: string) => string;
-};
-
-function ProposalCardActions({
-  proposal,
-  isMine,
-  offerStatusLabel,
-  onRespond,
-  onViewOffer,
-  colors,
-  styles,
-  t,
-}: Readonly<ProposalCardActionsProps>) {
-  if (proposal.status !== OFFER_STATUS.PENDING) {
-    return <Text style={styles.offerStatus}>{offerStatusLabel[proposal.status]}</Text>;
+  if (latestKey !== seenKey) {
+    setSeenKey(latestKey);
+    if (!isAtEnd && !latestIsMine) setHasUnseen(true);
   }
 
-  if (proposal.proposalType === 'offer') {
-    return (
-      <Pressable style={styles.viewOfferButton} onPress={() => onViewOffer(proposal.id)}>
-        <Text style={styles.viewOfferButtonText}>{t('offer:viewOfferAction')}</Text>
-        <ChevronRight size={16} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
-      </Pressable>
-    );
-  }
+  const handleEndVisible = useCallback((visible: boolean) => {
+    setIsAtEnd(visible);
+    if (visible) setHasUnseen(false);
+  }, []);
 
-  if (isMine) {
-    return <Text style={styles.offerStatus}>{offerStatusLabel[proposal.status]}</Text>;
-  }
-
-  return (
-    <View style={styles.offerActions}>
-      <Pressable style={styles.offerDecline} onPress={() => onRespond(proposal.id, false)}>
-        <Text style={styles.offerDeclineText}>{t('declineButton')}</Text>
-      </Pressable>
-      <Pressable style={styles.offerAccept} onPress={() => onRespond(proposal.id, true)}>
-        <Text style={styles.offerAcceptText}>{t('acceptButton')}</Text>
-      </Pressable>
-    </View>
-  );
+  return { hasUnseen, handleEndVisible };
 }
 
 export default function ChatScreen() {
   const router = useRouter();
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const scrollRef = useRef<ElementRef<typeof KeyboardChatScrollView>>(null);
+  const styles = useThemedStyles(makeStyles);
+  const listRef = useRef<FlatList<ChatRow>>(null);
   const { otherUserId } = useLocalSearchParams<{ otherUserId: string }>();
   const [draft, setDraft] = useState('');
   const [attachedPhotoUri, setAttachedPhotoUri] = useState<string | null>(null);
-  const { t } = useTranslation(['chat', 'offer']);
-  const offerStatusLabel = getOfferStatusLabel(t);
+  const [viewerPhotoUrl, setViewerPhotoUrl] = useState<string | null>(null);
+  const { t } = useTranslation(['chat', 'common']);
+  const chat = useChat(otherUserId);
+  const rows = useMemo(() => buildChatRows(chat.timeline, chat.currentUserId).reverse(), [chat.timeline, chat.currentUserId]);
+  const newMessages = useNewMessagesIndicator(rows[0]);
 
-  const {
-    timeline,
-    isLoading,
-    isError,
-    retry,
-    sendMessage,
-    isSending,
-    respondToProposal,
-    currentUserId,
-    hasMoreMessages,
-    isLoadingMoreMessages,
-    loadMoreMessages,
-  } = useChat(otherUserId);
-
-  const previousContentHeightRef = useRef(0);
-  const isLoadingOlderRef = useRef(false);
-
-  const handleContentSizeChange = (_width: number, height: number) => {
-    if (isLoadingOlderRef.current) {
-      const delta = height - previousContentHeightRef.current;
-      if (delta > 0) scrollRef.current?.scrollTo({ y: delta, animated: false });
-      isLoadingOlderRef.current = false;
-    } else {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }
-    previousContentHeightRef.current = height;
-  };
-
-  const handleLoadMoreMessages = () => {
-    isLoadingOlderRef.current = true;
-    loadMoreMessages();
-  };
+  useFocusEffect(
+    useCallback(() => {
+      setActiveChatUser(otherUserId);
+      return () => setActiveChatUser(null);
+    }, [otherUserId])
+  );
 
   const otherUserQuery = useQuery({
     queryKey: ['profile', otherUserId],
@@ -130,117 +68,134 @@ export default function ChatScreen() {
   });
 
   const otherUserName = otherUserQuery.data?.name || otherUserQuery.data?.username || t('defaultConversationName');
+  const otherUserAvatarUrl = otherUserQuery.data?.avatar_url;
 
-  const handlePressProfile = () => {
-    router.push({ pathname: '/profile/[id]', params: { id: otherUserId } });
-  };
+  const scrollToLatest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
 
-  const handleSend = async () => {
+  const handlePressProfile = () => router.push({ pathname: '/profile/[id]', params: { id: otherUserId } });
+
+  const handleOpenListing = (listingId: string) => router.push({ pathname: '/listing/[id]', params: { id: listingId } });
+
+  const handleViewOffer = (proposalId: string) => router.push({ pathname: '/offer/[id]', params: { id: proposalId } });
+
+  const handleSend = () => {
     const body = draft.trim();
-    const photoUri = attachedPhotoUri;
-    if (!body && !photoUri) return;
-
+    if (!body && !attachedPhotoUri) return;
+    chat.sendMessage({ body: body || null, photoUri: attachedPhotoUri });
     setDraft('');
     setAttachedPhotoUri(null);
-    try {
-      await sendMessage({ body: body || undefined, photoUri: photoUri || undefined });
-    } catch (err) {
-      setDraft(body);
-      setAttachedPhotoUri(photoUri);
-      Toast.error(err instanceof Error ? err.message : t('sendMessageError'));
-    }
+    scrollToLatest();
   };
 
   const handlePickPhoto = async () => {
     const photoUri = await pickPhoto(t('sendPhotoAction'));
-    if (!photoUri) return;
-    setAttachedPhotoUri(photoUri);
+    if (photoUri) setAttachedPhotoUri(photoUri);
+  };
+
+  const handlePressFailed = (messageId: string) => {
+    ActionSheet.show(t('failedMessageTitle'), [
+      { text: t('retrySendAction'), onPress: () => chat.retryMessage(messageId) },
+      { text: t('discardMessageAction'), style: 'destructive', onPress: () => chat.discardMessage(messageId) },
+      { text: t('common:cancel'), style: 'cancel' },
+    ]);
   };
 
   const handleRespond = async (proposalId: string, accept: boolean) => {
     try {
-      await respondToProposal({ proposalId, accept });
+      await chat.respondToProposal({ proposalId, accept });
     } catch (err) {
-      Toast.error(err instanceof Error ? err.message : t('respondOfferError'));
+      console.error(err);
+      Toast.error(t('respondOfferError'));
     }
   };
 
-  const handleViewOffer = (proposalId: string) => {
-    router.push({ pathname: '/offer/[id]', params: { id: proposalId } });
+  const handleLoadOlder = () => {
+    if (chat.hasMoreMessages && !chat.isLoadingMoreMessages) chat.loadMoreMessages();
   };
 
-  const renderProposalCard = (proposal: Proposal, isMine: boolean) => (
-    <Card style={styles.offerCard}>
-      <View style={styles.offerHeader}>
-        {proposal.offeredPlantPhotoUrl ? (
-          <Image source={{ uri: proposal.offeredPlantPhotoUrl }} style={styles.offerPlantImage} />
-        ) : (
-          <View style={[styles.offerPlantImage, styles.offerPlantImagePlaceholder]}>
-            <Leaf size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-          </View>
-        )}
-        <View style={styles.offerHeaderText}>
-          <Text style={styles.offerTitle}>{proposal.proposalType === 'interest' ? t('interestCardTitle') : t('offerCardTitle')}</Text>
-          <Text style={styles.offerSubtitle}>
-            {proposal.proposalType === 'interest'
-              ? proposal.listingTitle
-              : t('offerCardSubtitle', { plantName: proposal.offeredPlantName, listingTitle: proposal.listingTitle })}
-          </Text>
-        </View>
-      </View>
-
-      <ProposalCardActions
-        proposal={proposal}
-        isMine={isMine}
-        offerStatusLabel={offerStatusLabel}
-        onRespond={handleRespond}
-        onViewOffer={handleViewOffer}
-        colors={colors}
-        styles={styles}
-        t={t}
+  const renderScrollComponent = useCallback(
+    (props: ScrollViewProps) => (
+      <KeyboardChatScrollView
+        {...props}
+        inverted
+        keyboardLiftBehavior="always"
+        automaticallyAdjustContentInsets={false}
+        contentInsetAdjustmentBehavior="never"
+        onEndVisible={newMessages.handleEndVisible}
       />
-    </Card>
+    ),
+    [newMessages.handleEndVisible]
   );
 
-  const renderErrorState = () => (
-    <View style={styles.emptyContainer}>
-      <EmptyState icon={TriangleAlert} message={t('loadError')} />
-      <Pressable style={styles.retryButton} onPress={retry}>
-        <Text style={styles.retryButtonText}>{t('retryButton')}</Text>
-      </Pressable>
-    </View>
-  );
-
-  const renderTimelineItem = (item: ChatTimelineItem, isMine: boolean) => {
+  const renderRow = ({ item }: { item: ChatRow }) => {
+    if (item.kind === 'day') return <ChatDayDivider date={item.date} />;
     if (item.kind === 'proposal') {
-      return renderProposalCard(item.proposal, isMine);
+      return (
+        <ProposalEventCard
+          proposal={item.proposal}
+          isMine={item.isMine}
+          onRespond={handleRespond}
+          onViewOffer={handleViewOffer}
+          onOpenListing={handleOpenListing}
+        />
+      );
     }
-    const { message } = item;
     return (
-      <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-        {message.photoUrl ? (
-          <Image
-            source={{ uri: message.photoUrl }}
-            style={[styles.messagePhoto, message.body && styles.messagePhotoWithText]}
-            contentFit="cover"
-          />
-        ) : null}
-        {message.body ? <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.body}</Text> : null}
-      </View>
+      <MessageBubble
+        message={item.message}
+        delivery={item.delivery}
+        isMine={item.isMine}
+        startsGroup={item.startsGroup}
+        endsGroup={item.endsGroup}
+        onPressPhoto={setViewerPhotoUrl}
+        onPressFailed={handlePressFailed}
+      />
     );
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  const renderBody = () => {
+    if (chat.isLoading) return <ChatSkeleton />;
+    if (chat.isError) {
+      return (
+        <View style={styles.error}>
+          <EmptyState icon={TriangleAlert} message={t('loadError')} />
+          <OutlineButton label={t('retryButton')} icon={RefreshCw} onPress={chat.retry} />
+        </View>
+      );
+    }
+    if (rows.length === 0) {
+      return <ChatIntro name={otherUserName} avatarUrl={otherUserAvatarUrl} onPressProfile={handlePressProfile} />;
+    }
+    return (
+      <>
+        <FlatList
+          ref={listRef}
+          inverted
+          data={rows}
+          keyExtractor={(row) => row.key}
+          renderItem={renderRow}
+          renderScrollComponent={renderScrollComponent}
+          contentContainerStyle={styles.messages}
+          keyboardShouldPersistTaps="handled"
+          maintainVisibleContentPosition={{ minIndexForVisible: 0, autoscrollToTopThreshold: Metrics.size.hero }}
+          onEndReached={handleLoadOlder}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={chat.isLoadingMoreMessages ? <ActivityIndicator style={styles.loadingOlder} color={colors.leaf} /> : null}
+        />
+        {newMessages.hasUnseen ? (
+          <FloatingPill label={t('newMessages')} icon={ArrowDown} onPress={scrollToLatest} style={styles.newMessages} />
+        ) : null}
+      </>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
           headerTitle: () => (
-            <Pressable style={styles.headerTitle} onPress={handlePressProfile}>
-              <Avatar name={otherUserName} url={otherUserQuery.data?.avatar_url} size={32} />
+            <Pressable style={styles.headerTitle} onPress={handlePressProfile} accessibilityRole="button">
+              <Avatar name={otherUserName} url={otherUserAvatarUrl} size={Metrics.size.sm} />
               <Text style={styles.headerTitleText} numberOfLines={1}>
                 {otherUserName}
               </Text>
@@ -249,72 +204,17 @@ export default function ChatScreen() {
         }}
       />
 
-      {isError && renderErrorState()}
-      {!isError && timeline.length === 0 && (
-        <EmptyState icon={MessageCircle} message={t('emptyMessage')} style={styles.emptyContainer} />
-      )}
-      {!isError && timeline.length > 0 && (
-        <KeyboardChatScrollView
-          ref={scrollRef}
-          keyboardLiftBehavior="always"
-          style={styles.messagesScroll}
-          contentContainerStyle={styles.messages}
-          onContentSizeChange={handleContentSizeChange}
-        >
-          {hasMoreMessages && (
-            <Pressable style={styles.loadMoreButton} onPress={handleLoadMoreMessages} disabled={isLoadingMoreMessages}>
-              <Text style={styles.loadMoreButtonText}>
-                {isLoadingMoreMessages ? t('loadingEarlierMessages') : t('loadEarlierMessagesAction')}
-              </Text>
-            </Pressable>
-          )}
-          {timeline.map((item) => {
-            const senderId = item.kind === 'message' ? item.message.senderId : item.proposal.senderId;
-            const key = item.kind === 'message' ? item.message.id : item.proposal.id;
-            const isMine = senderId === currentUserId;
-            return (
-              <View key={key} style={[styles.messageRow, isMine && styles.messageRowMine]}>
-                {renderTimelineItem(item, isMine)}
-              </View>
-            );
-          })}
-        </KeyboardChatScrollView>
-      )}
+      <View style={styles.body}>{renderBody()}</View>
 
-      <KeyboardStickyView style={[styles.stickyContent, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
-        {attachedPhotoUri ? (
-          <View style={styles.attachmentPreviewRow}>
-            <View style={styles.attachmentPreviewWrapper}>
-              <Image source={{ uri: attachedPhotoUri }} style={styles.attachmentPreview} contentFit="cover" />
-              <Pressable style={styles.attachmentRemoveButton} onPress={() => setAttachedPhotoUri(null)} hitSlop={8}>
-                <X size={14} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.inputRow}>
-          <IconButton size={40} onPress={handlePickPhoto} disabled={isSending}>
-            <Camera size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          </IconButton>
-          <TextInput
-            style={styles.input}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={t('messagePlaceholder')}
-            placeholderTextColor={colors.mutedForeground}
-            multiline
-          />
-          <IconButton
-            size={40}
-            backgroundColor={colors.primary}
-            onPress={handleSend}
-            disabled={isSending || (!draft.trim() && !attachedPhotoUri)}
-          >
-            <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          </IconButton>
-        </View>
-      </KeyboardStickyView>
+      <ChatComposer
+        draft={draft}
+        onChangeDraft={setDraft}
+        attachedPhotoUri={attachedPhotoUri}
+        onPickPhoto={handlePickPhoto}
+        onRemovePhoto={() => setAttachedPhotoUri(null)}
+        onSend={handleSend}
+      />
+      <PhotoViewerModal photoUrl={viewerPhotoUrl} onClose={() => setViewerPhotoUrl(null)} />
     </View>
   );
 }
@@ -328,220 +228,33 @@ const makeStyles = (colors: ThemeColors) =>
     headerTitle: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexShrink: 1,
       gap: Metrics.spacing.sm,
     },
     headerTitleText: {
-      fontSize: 16,
-      fontWeight: '700',
+      ...Typography.heading,
       color: colors.foreground,
-      maxWidth: 180,
+      flexShrink: 1,
     },
-    emptyContainer: {
+    body: {
+      flex: 1,
+    },
+    error: {
       ...Metrics.layout.centeredContent,
       flex: 1,
       justifyContent: 'center',
-      padding: Metrics.spacing.xl,
       gap: Metrics.spacing.md,
-    },
-    retryButton: {
-      backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.md,
-      paddingVertical: Metrics.spacing.sm,
-      paddingHorizontal: Metrics.spacing.lg,
-    },
-    retryButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.primaryForeground,
-    },
-    messagesScroll: {
-      flex: 1,
+      padding: Metrics.spacing.xl,
     },
     messages: {
       ...Metrics.layout.centeredContent,
-      padding: Metrics.spacing.lg,
-      gap: Metrics.spacing.sm,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingVertical: Metrics.spacing.md,
     },
-    loadMoreButton: {
-      alignSelf: 'center',
-      paddingVertical: Metrics.spacing.sm,
-      paddingHorizontal: Metrics.spacing.md,
+    loadingOlder: {
+      paddingVertical: Metrics.spacing.lg,
     },
-    loadMoreButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.primary,
-    },
-    messageRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: Metrics.spacing.xs,
-    },
-    messageRowMine: {
-      justifyContent: 'flex-end',
-    },
-    bubble: {
-      maxWidth: '75%',
-      borderRadius: Metrics.radius.lg,
-      paddingVertical: Metrics.spacing.sm,
-      paddingHorizontal: Metrics.spacing.md,
-    },
-    bubbleTheirs: {
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    bubbleMine: {
-      backgroundColor: colors.primary,
-    },
-    bubbleText: {
-      fontSize: 14,
-      lineHeight: 20,
-      color: colors.foreground,
-    },
-    bubbleTextMine: {
-      color: colors.primaryForeground,
-    },
-    messagePhoto: {
-      width: 200,
-      height: 200,
-      borderRadius: Metrics.radius.lg,
-      backgroundColor: colors.muted,
-    },
-    messagePhotoWithText: {
-      marginBottom: Metrics.spacing.sm,
-    },
-    offerCard: {
-      flex: 1,
-      gap: Metrics.spacing.sm,
-    },
-    offerHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.sm,
-    },
-    offerPlantImage: {
-      width: 40,
-      height: 40,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    offerPlantImagePlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    offerHeaderText: {
-      flex: 1,
-    },
-    offerTitle: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: colors.leaf,
-    },
-    offerSubtitle: {
-      fontSize: 13,
-      color: colors.foreground,
-      marginTop: 2,
-    },
-    offerActions: {
-      flexDirection: 'row',
-      gap: Metrics.spacing.sm,
-    },
-    offerDecline: {
-      flex: 1,
-      borderWidth: 1.5,
-      borderColor: colors.destructive,
-      borderRadius: Metrics.radius.md,
-      paddingVertical: Metrics.spacing.sm,
-      alignItems: 'center',
-    },
-    offerDeclineText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.destructive,
-    },
-    offerAccept: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.md,
-      paddingVertical: Metrics.spacing.sm,
-      alignItems: 'center',
-    },
-    offerAcceptText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.primaryForeground,
-    },
-    offerStatus: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.mutedForeground,
-    },
-    viewOfferButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-      borderWidth: 1.5,
-      borderColor: colors.primary,
-      borderRadius: Metrics.radius.md,
-      paddingVertical: Metrics.spacing.sm,
-    },
-    viewOfferButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: colors.primary,
-    },
-    stickyContent: {
-      backgroundColor: colors.background,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    inputRow: {
-      ...Metrics.layout.centeredContent,
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: Metrics.spacing.sm,
-      padding: Metrics.spacing.md,
-    },
-    attachmentPreviewRow: {
-      ...Metrics.layout.centeredContent,
-      paddingTop: Metrics.spacing.md,
-      paddingHorizontal: Metrics.spacing.md,
-    },
-    attachmentPreviewWrapper: {
-      position: 'relative',
-      width: 72,
-      height: 72,
-    },
-    attachmentPreview: {
-      width: 72,
-      height: 72,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    attachmentRemoveButton: {
-      position: 'absolute',
-      top: -6,
-      right: -6,
-      width: 22,
-      height: 22,
-      borderRadius: Metrics.radius.full,
-      backgroundColor: colors.foreground,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    input: {
-      flex: 1,
-      minHeight: 40,
-      maxHeight: 100,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: Metrics.radius.lg,
-      paddingHorizontal: Metrics.spacing.md,
-      paddingVertical: Metrics.spacing.sm,
-      fontSize: 14,
-      color: colors.foreground,
-      backgroundColor: colors.card,
+    newMessages: {
+      top: Metrics.spacing.sm,
     },
   });

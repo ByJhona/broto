@@ -1,3 +1,4 @@
+import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import type { PlantGroup } from '@/types';
 
@@ -63,11 +64,13 @@ export async function createPlantGroup(name: string): Promise<PlantGroup> {
 }
 
 export async function renamePlantGroup(id: string, name: string): Promise<void> {
-  const { error } = await supabase.from('plant_groups').update({ name }).eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plant_groups').update({ name }, { count: 'exact' }).eq('id', id)
+  );
 }
 
 export async function deletePlantGroup(id: string): Promise<void> {
-  const { error } = await supabase.from('plant_groups').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plant_groups').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', id)
+  );
 }

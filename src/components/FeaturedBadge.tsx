@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Sparkles from 'lucide-react-native/icons/sparkles';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type FeaturedBadgeProps = {
@@ -11,20 +10,20 @@ type FeaturedBadgeProps = {
 
 export function FeaturedBadge({ style, compact }: Readonly<FeaturedBadgeProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
 
   if (compact) {
     return (
       <View style={[styles.badge, styles.badgeCompact, style]}>
-        <Sparkles size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
       </View>
     );
   }
 
   return (
     <View style={[styles.badge, style]}>
-      <Sparkles size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+      <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
       <Text style={styles.text}>{t('featuredBadge')}</Text>
     </View>
   );
@@ -35,18 +34,17 @@ const makeStyles = (colors: ThemeColors) =>
     badge: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: Metrics.chip.sm.gap,
       backgroundColor: colors.primary,
       borderRadius: Metrics.radius.full,
-      paddingVertical: 4,
-      paddingHorizontal: Metrics.spacing.sm,
+      paddingVertical: Metrics.chip.sm.paddingVertical,
+      paddingHorizontal: Metrics.chip.sm.paddingHorizontal,
     },
     badgeCompact: {
-      padding: 4,
+      padding: Metrics.spacing.xs,
     },
     text: {
-      fontSize: 11,
-      fontWeight: '700',
+      ...Typography.captionStrong,
       color: colors.white,
     },
   });

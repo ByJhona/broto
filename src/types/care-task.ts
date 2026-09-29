@@ -26,3 +26,8 @@ export type CareTask = {
   done: boolean;
   lastCompletedOccurrence: string | null;
 };
+
+export type CareStreak = {
+  current: number;
+  longest: number;
+};

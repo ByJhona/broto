@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import WifiOff from 'lucide-react-native/icons/wifi-off';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type OfflineBannerProps = {
@@ -10,7 +9,7 @@ type OfflineBannerProps = {
 
 export function OfflineBanner({ message }: Readonly<OfflineBannerProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
   const resolvedMessage = message ?? t('offlineDataMessage');
   return (
@@ -35,7 +34,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     text: {
       flex: 1,
-      fontSize: 13,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
     },
   });

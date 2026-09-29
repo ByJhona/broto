@@ -15,6 +15,12 @@ EXATAMENTE igual ao nome de cada item acima (sem maiúscula, sem espaço,
 sem sufixo automático). É assim que o app encontra o preço e que o
 webhook do RevenueCat sabe quantos créditos liberar quando alguém compra.
 
+ANTES DE TUDO: o plano mensal "Broto+" já existe na loja com preço de
+R$ 9,90. Ele foi redefinido pra R$ 14,90 — vá em Play Console >
+Assinaturas > premium > editar preço, e atualize pra R$ 14,90 antes de
+seguir os passos abaixo (o anual e os pacotes de crédito já estão
+calculados em cima desse novo valor).
+
 
 1. PLAY CONSOLE — criar os produtos
 ------------------------------------
@@ -30,9 +36,10 @@ a) Assinatura "Broto+ Anual"
    - Product ID: premium_annual
    - Nome: Broto+ Anual
    - Período de cobrança: 1 ano
-   - Preço sugerido: R$ 149,90/ano (equivale a ~R$ 12,49/mês, uns 37%
-     mais barato que o mensal atual de R$ 9,90 — ajuste se quiser outro
-     valor, isso não trava nada no código)
+   - Preço sugerido: R$ 119,90/ano (equivale a ~R$ 9,99/mês, uns 33%
+     mais barato que pagar o mensal de R$ 14,90 os 12 meses do ano
+     [R$ 178,80] — ajuste se quiser outro valor, isso não trava nada
+     no código)
    - Ative o produto.
 
 b) Pacotes de crédito (Broto, Verde, Floresta, Jardim)

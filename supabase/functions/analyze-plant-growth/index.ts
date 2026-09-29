@@ -8,7 +8,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const GROWTH_CHECK_CREDIT_COST = 2;
 const GROWTH_CHECK_CREDIT_REASON = 'growth_check';
 
 const OBSERVATIONS_JSON_SCHEMA = {
@@ -68,16 +67,6 @@ Deno.serve(async (req) => {
   }
   const { userClient, user } = auth;
 
-  const { data: subscription } = await supabaseAdmin
-    .from('subscriptions')
-    .select('plan_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (!subscription || subscription.plan_id !== 'premium') {
-    return new Response('Recurso exclusivo do plano Premium', { status: 403 });
-  }
-
   let body: { plantId?: string; photoUrl?: string };
   try {
     body = await req.json();
@@ -102,7 +91,7 @@ Deno.serve(async (req) => {
     return new Response('Plant not found', { status: 404 });
   }
 
-  if (!(await hasEnoughCredits(supabaseAdmin, user.id, GROWTH_CHECK_CREDIT_COST))) {
+  if (!(await hasEnoughCredits(supabaseAdmin, user.id, GROWTH_CHECK_CREDIT_REASON))) {
     return insufficientCreditsResponse();
   }
 

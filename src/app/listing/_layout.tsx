@@ -7,8 +7,8 @@ export default function ListingLayout() {
   const { t } = useTranslation('listing');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="new" options={{ title: t('newListingScreenTitle') }} />
-      <Stack.Screen name="[id]" options={{ title: t('listingDetailScreenTitle') }} />
+      <Stack.Screen name="new" options={{ headerShown: false, title: t('newListingScreenTitle') }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false, title: t('listingDetailScreenTitle') }} />
     </Stack>
   );
 }

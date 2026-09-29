@@ -9,7 +9,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const MAX_HISTORY_MESSAGES = 20;
-const CHAT_QUESTION_CREDIT_COST = 1;
 const CHAT_QUESTION_CREDIT_REASON = 'chat_question';
 
 type ChatMessageRow = {
@@ -19,22 +18,50 @@ type ChatMessageRow = {
   created_at: string;
 };
 
-function buildPlantSystemPrompt(plant: {
+type PlantContext = {
   name: string;
   species: string | null;
   common_name: string | null;
   watering_days: number | null;
-  sun_level: string | null;
-}, speciesInfo: { description: string; watering_description: string; care_level: string } | null): string {
+};
+
+type SpeciesContext = {
+  description: string;
+  care_level: string;
+  sun_level: string;
+  light_tip: string;
+  watering_tip: string;
+  humidity_tip: string;
+  soil_tip: string;
+  fertilizing_tip: string;
+  toxic_to_pets: boolean;
+  toxic_to_humans: boolean;
+};
+
+const SPECIES_CONTEXT_SELECT =
+  'description, care_level, sun_level, light_tip, watering_tip, humidity_tip, soil_tip, fertilizing_tip, toxic_to_pets, toxic_to_humans';
+
+function speciesFacts(speciesInfo: SpeciesContext | null): string[] {
+  if (!speciesInfo) return [];
+  return [
+    `Sobre a espécie: ${speciesInfo.description}`,
+    `Nível de cuidado: ${speciesInfo.care_level}`,
+    `Luz: ${speciesInfo.sun_level}. ${speciesInfo.light_tip}`,
+    `Rega: ${speciesInfo.watering_tip}`,
+    `Umidade: ${speciesInfo.humidity_tip}`,
+    `Substrato: ${speciesInfo.soil_tip}`,
+    `Adubação: ${speciesInfo.fertilizing_tip}`,
+    `Tóxica para pets: ${speciesInfo.toxic_to_pets ? 'sim' : 'não'}. Tóxica para pessoas: ${speciesInfo.toxic_to_humans ? 'sim' : 'não'}`,
+  ];
+}
+
+function buildPlantSystemPrompt(plant: PlantContext, speciesInfo: SpeciesContext | null): string {
   const facts = [
     `Nome dado pelo usuário: ${plant.name}`,
     plant.species ? `Espécie: ${plant.species}` : null,
     plant.common_name ? `Nome popular: ${plant.common_name}` : null,
-    plant.watering_days ? `Rega a cada ${plant.watering_days} dias` : null,
-    plant.sun_level ? `Necessidade de luz: ${plant.sun_level}` : null,
-    speciesInfo?.description ? `Sobre a espécie: ${speciesInfo.description}` : null,
-    speciesInfo?.watering_description ? `Como regar: ${speciesInfo.watering_description}` : null,
-    speciesInfo?.care_level ? `Nível de cuidado: ${speciesInfo.care_level}` : null,
+    plant.watering_days ? `O usuário rega a cada ${plant.watering_days} dias` : null,
+    ...speciesFacts(speciesInfo),
   ].filter(Boolean);
 
   return [
@@ -94,7 +121,7 @@ Deno.serve(async (req) => {
   if (plantId) {
     const { data: plant, error: plantError } = await supabaseAdmin
       .from('plants')
-      .select('name, species, common_name, watering_days, sun_level')
+      .select('name, species, common_name, watering_days')
       .eq('id', plantId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -106,7 +133,7 @@ Deno.serve(async (req) => {
     const { data: speciesInfo } = plant.species
       ? await supabaseAdmin
           .from('plant_species_info')
-          .select('description, watering_description, care_level')
+          .select(SPECIES_CONTEXT_SELECT)
           .eq('scientific_name', plant.species)
           .maybeSingle()
       : { data: null };
@@ -116,7 +143,7 @@ Deno.serve(async (req) => {
     systemPrompt = buildGeneralSystemPrompt();
   }
 
-  if (!(await hasEnoughCredits(supabaseAdmin, user.id, CHAT_QUESTION_CREDIT_COST))) {
+  if (!(await hasEnoughCredits(supabaseAdmin, user.id, CHAT_QUESTION_CREDIT_REASON))) {
     return insufficientCreditsResponse();
   }
 

@@ -7,8 +7,8 @@ export default function EventLayout() {
   const { t } = useTranslation('event');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="new" options={{ title: t('newEventTitle') }} />
-      <Stack.Screen name="[id]" options={{ title: t('eventDetailTitle') }} />
+      <Stack.Screen name="new" options={{ headerShown: false, title: t('newEventTitle') }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false, title: t('eventDetailTitle') }} />
     </Stack>
   );
 }

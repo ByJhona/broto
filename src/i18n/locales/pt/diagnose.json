@@ -12,5 +12,8 @@
   "notFoundMessage": "Não conseguimos identificar nenhuma planta nessa foto. Tente tirar de perto, com boa iluminação.",
   "issuesSectionTitle": "O que percebemos",
   "nextStepsSectionTitle": "Próximos passos",
-  "analyzePhotoError": "Não foi possível analisar a foto."
+  "analyzePhotoError": "Não foi possível analisar a foto.",
+  "severityLow": "Leve",
+  "severityMedium": "Moderado",
+  "severityHigh": "Grave"
 }

@@ -1,5 +1,8 @@
 {
   "earnedOnLabel": "Conquistado em {{date}}",
+  "notYetEarnedLabel": "Ainda não conquistado",
+  "catalogTitle": "Emblemas",
+  "seeAllBadges": "Ver todos",
   "noBadgesMessage": "Nenhum emblema ainda. Cadastre plantas no jardim pra desbloquear.",
   "newBadgeTitle": "Novo emblema desbloqueado!",
   "claim": "Resgatar",

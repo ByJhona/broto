@@ -1,12 +1,21 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
+import type { Notification } from '@/types';
 import { getCareTaskPlantId } from './careTasks';
 import { getNotificationById } from './notifications';
 import { getNotificationsModule } from './notificationsModule';
 
 type NotificationTapData = {
   careTaskId?: string;
+  chatUserId?: string;
   notificationId?: string;
 };
+
+export function notificationHref(notification: Notification): Href | null {
+  if (notification.postId) return { pathname: '/post/[id]', params: { id: notification.postId } };
+  if (notification.listingId) return { pathname: '/listing/[id]', params: { id: notification.listingId } };
+  if (notification.plantId) return { pathname: '/plant/[id]', params: { id: notification.plantId } };
+  return null;
+}
 
 async function navigateToCareTask(taskId: string): Promise<void> {
   const plantId = await getCareTaskPlantId(taskId);
@@ -24,19 +33,14 @@ async function handleNotificationTap(data: NotificationTapData): Promise<void> {
     return;
   }
 
+  if (data.chatUserId) {
+    router.push({ pathname: '/chat', params: { otherUserId: data.chatUserId } });
+    return;
+  }
+
   if (data.notificationId) {
     const notification = await getNotificationById(data.notificationId);
-    if (notification?.postId) {
-      router.push({ pathname: '/post/[id]', params: { id: notification.postId } });
-    } else if (notification?.type === 'listing_message' && notification.actorId) {
-      router.push({ pathname: '/chat', params: { otherUserId: notification.actorId } });
-    } else if (notification?.listingId) {
-      router.push({ pathname: '/listing/[id]', params: { id: notification.listingId } });
-    } else if (notification?.plantId) {
-      router.push(`/plant/${notification.plantId}`);
-    } else {
-      router.push('/(tabs)/community');
-    }
+    router.push((notification && notificationHref(notification)) ?? '/(tabs)/community');
   }
 }
 

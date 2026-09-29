@@ -1,59 +1,28 @@
 import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import ClipboardList from 'lucide-react-native/icons/clipboard-list';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Plus from 'lucide-react-native/icons/plus';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { DistancePill, EmptyState, FeaturedBadge, FilterChipRow, IconButton, ListRow, SearchField, SegmentedControl } from '@/components';
-import { getEventsByUserId, getListingsByUserId, isBoostActive } from '@/services';
-import { useAuth, useEvents, useListings, useUserLocation } from '@/hooks';
-import {
-  EVENT_COLOR,
-  EVENT_ICON,
-  formatDistanceTo,
-  formatEventDateTime,
-  listingTypeLabel,
-  LISTING_TYPE_COLORS,
-  LISTING_TYPE_ICONS,
-  listingTypes,
-} from '@/utils';
+import { EmptyState, FilterChipRow, IconButton, PageTitle, SearchField, SegmentedControl } from '@/components';
+import { EventRow } from '@/components/offers/EventRow';
+import { ListingRow } from '@/components/offers/ListingRow';
+import { DistanceTrailing } from '@/components/offers/RowTrailing';
+import { useEvents, useListings, usePullToRefresh, useUserLocation } from '@/hooks';
+import { EVENT_ICON, formatDistanceTo, listingTypes } from '@/utils';
 import type { ListingType, PlantEvent, PlantListing } from '@/types';
 
 type OffersSection = 'listings' | 'events';
 type TypeFilter = ListingType | null;
 type EventSortMode = 'proximos' | 'recentes';
-type Scope = 'all' | 'mine';
 
-function matchesQuery(listing: PlantListing, query: string): boolean {
+function matchesQuery(item: { title: string; description: string | null }, query: string): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
-  return listing.title.toLowerCase().includes(normalized) || (listing.description ?? '').toLowerCase().includes(normalized);
-}
-
-function matchesEventQuery(event: PlantEvent, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return true;
-  return event.title.toLowerCase().includes(normalized) || (event.description ?? '').toLowerCase().includes(normalized);
-}
-
-type RowTrailingProps = {
-  distanceLabel: string | null;
-  colors: ThemeColors;
-};
-
-function RowTrailing({ distanceLabel, colors }: Readonly<RowTrailingProps>) {
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  return (
-    <View style={styles.trailingColumn}>
-      <DistancePill label={distanceLabel} />
-      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-    </View>
-  );
+  return item.title.toLowerCase().includes(normalized) || (item.description ?? '').toLowerCase().includes(normalized);
 }
 
 function sortEvents(events: PlantEvent[], mode: EventSortMode): PlantEvent[] {
@@ -70,92 +39,38 @@ type SectionListProps = {
   bottomInset: number;
 };
 
-function usePullToRefresh(refresh: () => Promise<unknown>) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refresh();
-    setIsRefreshing(false);
-  };
-
-  return { isRefreshing, handleRefresh };
-}
-
-type ScopeFilterRowProps = {
-  scope: Scope;
-  onChangeScope: (scope: Scope) => void;
-  style: StyleProp<ViewStyle>;
-  t: (key: string) => string;
-};
-
-function ScopeFilterRow({ scope, onChangeScope, style, t }: Readonly<ScopeFilterRowProps>) {
-  const scopeOptions: { value: Scope; label: string }[] = [
-    { value: 'all', label: t('scopeAll') },
-    { value: 'mine', label: t('scopeMine') },
-  ];
-
-  return <FilterChipRow options={scopeOptions} value={scope} onChange={onChangeScope} style={style} />;
-}
-
-type ListingsListHeaderProps = {
-  scope: Scope;
-  onChangeScope: (scope: Scope) => void;
-  filter: TypeFilter;
-  onChangeFilter: (filter: TypeFilter) => void;
-  filterOptions: { value: TypeFilter; label: string }[];
-  styles: ReturnType<typeof makeStyles>;
-  t: (key: string) => string;
-};
-
-function ListingsListHeader({
-  scope,
-  onChangeScope,
-  filter,
-  onChangeFilter,
-  filterOptions,
-  styles,
-  t,
-}: Readonly<ListingsListHeaderProps>) {
-  return (
-    <View>
-      <ScopeFilterRow scope={scope} onChangeScope={onChangeScope} style={styles.filterRow} t={t} />
-      <FilterChipRow options={filterOptions} value={filter} onChange={onChangeFilter} style={styles.filterRow} />
-    </View>
-  );
-}
-
 function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('listing');
-  const { user } = useAuth();
   const { listings, refresh } = useListings();
   const userLocation = useUserLocation();
-  const [scope, setScope] = useState<Scope>('all');
   const [filter, setFilter] = useState<TypeFilter>(null);
   const [query, setQuery] = useState('');
-
-  const myListingsQuery = useQuery({
-    queryKey: ['plant-listings', 'mine', user?.id],
-    queryFn: () => getListingsByUserId(user!.id),
-    enabled: !!user && scope === 'mine',
-  });
-
-  const { isRefreshing, handleRefresh } = usePullToRefresh(scope === 'mine' ? myListingsQuery.refetch : refresh);
+  const { isRefreshing, handleRefresh } = usePullToRefresh(refresh);
 
   const filterOptions: { value: TypeFilter; label: string }[] = [
     { value: null, label: t('filterAll') },
     ...listingTypes().map(({ value, label }) => ({ value, label })),
   ];
 
-  const filteredListings = useMemo(() => {
-    const sourceListings = scope === 'mine' ? (myListingsQuery.data ?? []) : listings;
-    return sourceListings
-      .filter((listing) => (filter ? listing.listingType === filter : true))
-      .filter((listing) => matchesQuery(listing, query));
-  }, [scope, myListingsQuery.data, listings, filter, query]);
+  const filteredListings = useMemo(
+    () =>
+      listings
+        .filter((listing) => (filter ? listing.listingType === filter : true))
+        .filter((listing) => matchesQuery(listing, query)),
+    [listings, filter, query]
+  );
+
+  const renderListing = ({ item }: { item: PlantListing }) => (
+    <ListingRow
+      listing={item}
+      subtitle={item.ownerName ?? undefined}
+      trailing={<DistanceTrailing distanceLabel={formatDistanceTo(userLocation, item.latitude, item.longitude)} />}
+      onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
+    />
+  );
 
   return (
     <>
@@ -171,55 +86,10 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
         }
         ListHeaderComponent={
-          <ListingsListHeader
-            scope={scope}
-            onChangeScope={setScope}
-            filter={filter}
-            onChangeFilter={setFilter}
-            filterOptions={filterOptions}
-            styles={styles}
-            t={t}
-          />
+          <FilterChipRow options={filterOptions} value={filter} onChange={setFilter} style={styles.filterRow} />
         }
-        ListEmptyComponent={
-          <EmptyState icon={Leaf} message={t(scope === 'mine' ? 'noOwnListingsFound' : 'noListingsFound')} style={styles.empty} />
-        }
-        renderItem={({ item }) => {
-          const Icon = LISTING_TYPE_ICONS[item.listingType];
-          const color = LISTING_TYPE_COLORS[item.listingType];
-          const label = listingTypeLabel(item.listingType);
-          const coverPhotoUrl = item.photoUrls[0] ?? null;
-          const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
-
-          return (
-            <ListRow
-              variant="card"
-              style={styles.row}
-              leading={
-                <View style={styles.thumbWrapper}>
-                  {coverPhotoUrl ? (
-                    <Image source={{ uri: coverPhotoUrl }} style={styles.thumb} contentFit="cover" />
-                  ) : (
-                    <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: color }]}>
-                      <Icon size={20} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-                    </View>
-                  )}
-                  {isBoostActive(item.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
-                </View>
-              }
-              title={item.title}
-              titleTrailing={
-                <View style={[styles.typeBadge, { backgroundColor: color }]}>
-                  <Icon size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-                  <Text style={styles.typeBadgeText}>{label}</Text>
-                </View>
-              }
-              subtitle={item.ownerName ?? undefined}
-              trailing={<RowTrailing distanceLabel={distanceLabel} colors={colors} />}
-              onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id } })}
-            />
-          );
-        }}
+        ListEmptyComponent={<EmptyState icon={Leaf} message={t('noListingsFound')} style={styles.empty} />}
+        renderItem={renderListing}
       />
     </>
   );
@@ -228,33 +98,31 @@ function ListingsList({ bottomInset }: Readonly<SectionListProps>) {
 function EventsList({ bottomInset }: Readonly<SectionListProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('event');
-  const { user } = useAuth();
   const { events, refresh } = useEvents();
   const userLocation = useUserLocation();
-  const [scope, setScope] = useState<Scope>('all');
   const [sortMode, setSortMode] = useState<EventSortMode>('proximos');
   const [query, setQuery] = useState('');
-  const EventIcon = EVENT_ICON;
-
-  const myEventsQuery = useQuery({
-    queryKey: ['events', 'by-user', user?.id, user?.id],
-    queryFn: () => getEventsByUserId(user!.id, user!.id),
-    enabled: !!user && scope === 'mine',
-  });
-
-  const { isRefreshing, handleRefresh } = usePullToRefresh(scope === 'mine' ? myEventsQuery.refetch : refresh);
+  const { isRefreshing, handleRefresh } = usePullToRefresh(refresh);
 
   const sortOptions: { value: EventSortMode; label: string }[] = [
     { value: 'proximos', label: t('sortNearest') },
     { value: 'recentes', label: t('sortRecent') },
   ];
 
-  const sortedEvents = useMemo(() => {
-    const sourceEvents = scope === 'mine' ? (myEventsQuery.data ?? []) : events;
-    return sortEvents(sourceEvents.filter((event) => matchesEventQuery(event, query)), sortMode);
-  }, [scope, myEventsQuery.data, events, sortMode, query]);
+  const sortedEvents = useMemo(
+    () => sortEvents(events.filter((event) => matchesQuery(event, query)), sortMode),
+    [events, sortMode, query]
+  );
+
+  const renderEvent = ({ item }: { item: PlantEvent }) => (
+    <EventRow
+      event={item}
+      trailing={<DistanceTrailing distanceLabel={formatDistanceTo(userLocation, item.latitude, item.longitude)} />}
+      onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
+    />
+  );
 
   return (
     <>
@@ -265,45 +133,15 @@ function EventsList({ bottomInset }: Readonly<SectionListProps>) {
         contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset }]}
         data={sortedEvents}
         keyExtractor={(event) => event.id}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
         }
         ListHeaderComponent={
-          <View>
-            <ScopeFilterRow scope={scope} onChangeScope={setScope} style={styles.filterRow} t={t} />
-            <FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />
-          </View>
+          <FilterChipRow options={sortOptions} value={sortMode} onChange={setSortMode} style={styles.filterRow} />
         }
-        ListEmptyComponent={
-          <EmptyState icon={EVENT_ICON} message={t(scope === 'mine' ? 'noOwnEventsFound' : 'noEventsNearby')} style={styles.empty} />
-        }
-        renderItem={({ item }) => {
-          const attendeesLabel = t('attendeesShort', { count: item.attendeeCount });
-          const distanceLabel = formatDistanceTo(userLocation, item.latitude, item.longitude);
-          const subtitle = [formatEventDateTime(item.eventDate), attendeesLabel].filter(Boolean).join(' · ');
-          return (
-            <ListRow
-              variant="card"
-              style={styles.row}
-              leading={
-                <View style={styles.thumbWrapper}>
-                  {item.photoUrl ? (
-                    <Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />
-                  ) : (
-                    <View style={[styles.thumb, styles.thumbPlaceholder]}>
-                      <EventIcon size={20} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-                    </View>
-                  )}
-                  {isBoostActive(item.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
-                </View>
-              }
-              title={item.title}
-              subtitle={subtitle}
-              trailing={<RowTrailing distanceLabel={distanceLabel} colors={colors} />}
-              onPress={() => router.push({ pathname: '/event/[id]', params: { id: item.id } })}
-            />
-          );
-        }}
+        ListEmptyComponent={<EmptyState icon={EVENT_ICON} message={t('noEventsNearby')} style={styles.empty} />}
+        renderItem={renderEvent}
       />
     </>
   );
@@ -313,9 +151,10 @@ export default function OffersScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['listing', 'event']);
   const [section, setSection] = useState<OffersSection>('listings');
+  const isListings = section === 'listings';
 
   const sectionOptions: { value: OffersSection; label: string }[] = [
     { value: 'listings', label: t('listing:offersTabTitle') },
@@ -327,20 +166,33 @@ export default function OffersScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.lg }]}>
-        <Text style={styles.title}>{section === 'listings' ? t('listing:offersTabTitle') : t('event:eventsListTitle')}</Text>
-        <Text style={styles.subtitle}>{section === 'listings' ? t('listing:offersTabSubtitle') : t('event:eventsTabSubtitle')}</Text>
+        <View style={styles.titleRow}>
+          <PageTitle size="headline" style={styles.title}>{isListings ? t('listing:offersTabTitle') : t('event:eventsListTitle')}</PageTitle>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('listing:myOffersTitle')}
+            style={({ pressed }) => [styles.mineButton, pressed && styles.mineButtonPressed]}
+            onPress={() => router.push('/my-offers')}
+            hitSlop={8}
+          >
+            <ClipboardList size={Metrics.chip.md.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <Text style={styles.mineButtonText}>{t('listing:myOffersButton')}</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.subtitle}>{isListings ? t('listing:offersTabSubtitle') : t('event:eventsTabSubtitle')}</Text>
       </View>
 
       <SegmentedControl options={sectionOptions} value={section} onChange={setSection} style={styles.segmented} />
 
-      {section === 'listings' ? <ListingsList bottomInset={bottomInset} /> : <EventsList bottomInset={bottomInset} />}
+      {isListings ? <ListingsList bottomInset={bottomInset} /> : <EventsList bottomInset={bottomInset} />}
 
       <IconButton
-        size={52}
+        accessibilityLabel={isListings ? t('common:a11yCreateListing') : t('common:a11yCreateEvent')}
+        size={Metrics.size.xl}
         backgroundColor={colors.primary}
         elevated
         style={[styles.createButton, { bottom: insets.bottom + Metrics.spacing.lg }]}
-        onPress={() => router.push(section === 'listings' ? '/listing/new' : '/event/new')}
+        onPress={() => router.push(isListings ? '/listing/new' : '/event/new')}
       >
         <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
       </IconButton>
@@ -358,13 +210,35 @@ const makeStyles = (colors: ThemeColors) =>
       ...Metrics.layout.centeredContent,
       paddingHorizontal: Metrics.spacing.lg,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Metrics.spacing.md,
+    },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      flex: 1,
+      ...Typography.headline,
       color: colors.foreground,
     },
+    mineButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Metrics.chip.md.gap,
+      paddingVertical: Metrics.chip.md.paddingVertical,
+      paddingHorizontal: Metrics.chip.md.paddingHorizontal,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: `${colors.leaf}14`,
+    },
+    mineButtonPressed: {
+      opacity: 0.7,
+    },
+    mineButtonText: {
+      ...Typography.label,
+      color: colors.leaf,
+    },
     subtitle: {
-      fontSize: 14,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
       marginTop: Metrics.spacing.xs,
     },
@@ -383,49 +257,11 @@ const makeStyles = (colors: ThemeColors) =>
     filterRow: {
       marginBottom: Metrics.spacing.md,
     },
-    row: {
-      marginBottom: Metrics.spacing.sm,
-    },
-    thumb: {
-      width: 56,
-      height: 56,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    thumbPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    thumbWrapper: {
-      position: 'relative',
-    },
-    thumbBadge: {
-      position: 'absolute',
-      bottom: -4,
-      right: -4,
-    },
-    typeBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: 2,
-      paddingHorizontal: 6,
-    },
-    typeBadgeText: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: colors.white,
-    },
     empty: {
       marginTop: Metrics.spacing.xl,
     },
     createButton: {
       position: 'absolute',
       right: Metrics.spacing.lg,
-    },
-    trailingColumn: {
-      alignItems: 'flex-end',
-      gap: 4,
     },
   });

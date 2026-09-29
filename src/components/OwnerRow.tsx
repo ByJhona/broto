@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors } from '@/theme';
 import { Avatar } from './Avatar';
 import { ListRow } from './ListRow';
 
@@ -10,33 +9,29 @@ type OwnerRowProps = {
   ownerName: string | null;
   ownerAvatarUrl: string | null;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function OwnerRow({ eyebrow, ownerName, ownerAvatarUrl, onPress }: Readonly<OwnerRowProps>) {
+export function OwnerRow({ eyebrow, ownerName, ownerAvatarUrl, onPress, style }: Readonly<OwnerRowProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   if (!ownerName) return null;
 
   return (
-    <>
-      <ListRow
-        leading={<Avatar name={ownerName} url={ownerAvatarUrl} size={48} />}
-        eyebrow={eyebrow}
-        title={ownerName}
-        trailing={<ChevronRight size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
-        onPress={onPress}
-      />
-      <View style={styles.divider} />
-    </>
+    <ListRow
+      variant="card"
+      style={[styles.row, style]}
+      leading={<Avatar name={ownerName} url={ownerAvatarUrl} size={Metrics.size.lg} />}
+      eyebrow={eyebrow}
+      title={ownerName}
+      trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+      onPress={onPress}
+    />
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    divider: {
-      height: 1,
-      backgroundColor: colors.border,
-      marginVertical: Metrics.spacing.md,
-    },
-  });
+const styles = StyleSheet.create({
+  row: {
+    marginBottom: Metrics.spacing.xl,
+  },
+});

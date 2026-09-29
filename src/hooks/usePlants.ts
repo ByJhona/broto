@@ -30,9 +30,9 @@ export function usePlants() {
         photoUrl: plant.photoUrls[0] ?? null,
         groupId: plant.groupId,
         wateringDays: plant.wateringDays,
-        sunLevel: plant.sunLevel,
       };
-      queryClient.setQueryData<PlantSummary[]>(queryKey, (current = []) => [...current, summary]);
+      queryClient.setQueryData<PlantSummary[]>(queryKey, (current = []) => [summary, ...current]);
+      queryClient.setQueryData(['plant', plant.id], plant);
     },
   });
 

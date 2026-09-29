@@ -1,113 +1,97 @@
-import { useMemo } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Gift from 'lucide-react-native/icons/gift';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EVENT_COLOR, EVENT_ICON } from '@/utils';
+import type { ListingType } from '@/types';
+import { EVENT_COLOR, EVENT_ICON, listingTypes } from '@/utils';
+import { BottomSheet } from './BottomSheet';
+import { CardGroup } from './CardGroup';
+import { IconBadge } from './IconBadge';
+import { ListRow } from './ListRow';
 
 type CreateChoiceSheetProps = {
   visible: boolean;
-  onCreateListing: () => void;
+  onCreateListing: (listingType: ListingType) => void;
   onCreateEvent: () => void;
   onClose: () => void;
 };
 
 export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onClose }: Readonly<CreateChoiceSheetProps>) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { t } = useTranslation(['home', 'common']);
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation(['home', 'listingTypes', 'common']);
+  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
   const EventIcon = EVENT_ICON;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}>
-          <Text style={styles.title}>{t('createChoiceTitle')}</Text>
+    <BottomSheet visible={visible} onClose={onClose}>
+      <Text style={styles.title}>{t('createChoiceTitle')}</Text>
 
-          <Pressable style={styles.row} onPress={onCreateListing}>
-            <View style={[styles.iconBadge, { backgroundColor: colors.primary }]}>
-              <Gift size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-            </View>
-            <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>{t('newListingTitle')}</Text>
-              <Text style={styles.rowSubtitle}>{t('newListingSubtitle')}</Text>
-            </View>
-          </Pressable>
+      <Text style={styles.sectionLabel}>{t('newListingTitle')}</Text>
+      <CardGroup style={styles.group}>
+        {listingTypes().map(({ value, label, icon: Icon, color }) => (
+          <ListRow
+            key={value}
+            style={styles.row}
+            leading={
+              <IconBadge backgroundColor={color}>
+                <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              </IconBadge>
+            }
+            title={label}
+            subtitle={t(`listingTypes:hint_${value}`)}
+            trailing={chevron}
+            onPress={() => onCreateListing(value)}
+          />
+        ))}
+      </CardGroup>
 
-          <Pressable style={styles.row} onPress={onCreateEvent}>
-            <View style={[styles.iconBadge, { backgroundColor: EVENT_COLOR }]}>
-              <EventIcon size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-            </View>
-            <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>{t('newEventTitle')}</Text>
-              <Text style={styles.rowSubtitle}>{t('newEventSubtitle')}</Text>
-            </View>
-          </Pressable>
+      <CardGroup style={styles.group}>
+        <ListRow
+          style={styles.row}
+          leading={
+            <IconBadge backgroundColor={EVENT_COLOR}>
+              <EventIcon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+            </IconBadge>
+          }
+          title={t('newEventTitle')}
+          subtitle={t('newEventSubtitle')}
+          trailing={chevron}
+          onPress={onCreateEvent}
+        />
+      </CardGroup>
 
-          <Pressable style={styles.cancel} onPress={onClose}>
-            <Text style={styles.cancelText}>{t('common:cancel')}</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
+      <Pressable style={styles.cancel} onPress={onClose} accessibilityRole="button">
+        <Text style={styles.cancelText}>{t('common:cancel')}</Text>
+      </Pressable>
+    </BottomSheet>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: Overlays.scrim,
-    },
-    sheet: {
-      backgroundColor: colors.background,
-      borderTopLeftRadius: Metrics.radius.lg,
-      borderTopRightRadius: Metrics.radius.lg,
-      padding: Metrics.spacing.lg,
-    },
     title: {
-      fontSize: 17,
-      fontWeight: '700',
+      ...Typography.title,
       color: colors.foreground,
       marginBottom: Metrics.spacing.md,
     },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.md,
-      paddingVertical: Metrics.spacing.sm,
-    },
-    iconBadge: {
-      width: 44,
-      height: 44,
-      borderRadius: Metrics.radius.full,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    rowText: {
-      flex: 1,
-    },
-    rowTitle: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: colors.foreground,
-    },
-    rowSubtitle: {
-      fontSize: 13,
+    sectionLabel: {
+      ...Typography.captionLabel,
       color: colors.mutedForeground,
-      marginTop: 2,
+      marginBottom: Metrics.spacing.sm,
+    },
+    group: {
+      marginBottom: Metrics.spacing.md,
+    },
+    row: {
+      paddingVertical: Metrics.spacing.sm,
     },
     cancel: {
       alignItems: 'center',
-      paddingVertical: Metrics.spacing.md,
-      marginTop: Metrics.spacing.xs,
+      paddingVertical: Metrics.spacing.sm,
     },
     cancelText: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
   });

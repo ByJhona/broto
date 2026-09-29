@@ -1,14 +1,12 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 type FormErrorProps = {
   children: string | null;
 };
 
 export function FormError({ children }: Readonly<FormErrorProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   if (!children) return null;
 
@@ -19,7 +17,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     error: {
       color: colors.destructive,
-      fontSize: 13,
+      ...Typography.bodySmall,
       marginBottom: Metrics.spacing.md,
     },
   });

@@ -1,141 +1,44 @@
-import { memo, useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Image } from 'expo-image';
+import { memo } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
-import Droplet from 'lucide-react-native/icons/droplet';
+import BellOff from 'lucide-react-native/icons/bell-off';
 import Leaf from 'lucide-react-native/icons/leaf';
-import Sun from 'lucide-react-native/icons/sun';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
-import { sunLevelLabel } from '@/utils';
-import { InfoChip } from './InfoChip';
-import { SkeletonBlock } from './Skeleton';
+import { CATEGORY_ICONS } from '@/utils';
+import { plantCareLabel, type PlantCareStatus } from './garden/careSchedule';
+import { type MetaTone } from './MetaRow';
+import { PhotoCard, PhotoCardSkeleton } from './PhotoCard';
+
+function careTone(care: PlantCareStatus | null): MetaTone {
+  if (care && care.daysUntil < 0) return 'alert';
+  if (care?.daysUntil === 0) return 'leaf';
+  return 'muted';
+}
 
 type PlantCardProps = {
   plant: PlantSummary;
-  readOnly?: boolean;
+  care: PlantCareStatus | null;
   style?: StyleProp<ViewStyle>;
 };
 
-export const PlantCard = memo(function PlantCard({ plant, readOnly = false, style }: Readonly<PlantCardProps>) {
+export const PlantCard = memo(function PlantCard({ plant, care, style }: Readonly<PlantCardProps>) {
   const router = useRouter();
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const hasTags = plant.sunLevel != null || plant.wateringDays != null;
-
-  const content = (
-    <>
-      <View style={styles.photo}>
-        {plant.photoUrl ? (
-          <Image
-            source={{ uri: plant.photoUrl }}
-            style={styles.photoImage}
-            contentFit="cover"
-            recyclingKey={plant.id}
-            cachePolicy="memory-disk"
-          />
-        ) : (
-          <Leaf size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-        )}
-      </View>
-
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
-          {plant.name}
-        </Text>
-        {plant.commonName || plant.species ? (
-          <Text style={styles.species} numberOfLines={1}>
-            {plant.commonName ?? plant.species}
-          </Text>
-        ) : null}
-
-        {hasTags ? (
-          <View style={styles.tagRow}>
-            {plant.wateringDays ? <InfoChip size="sm" icon={Droplet} value={`${plant.wateringDays}d`} /> : null}
-            {plant.sunLevel ? <InfoChip size="sm" icon={Sun} value={sunLevelLabel(plant.sunLevel)} /> : null}
-          </View>
-        ) : null}
-      </View>
-    </>
-  );
-
-  if (readOnly) {
-    return <View style={[styles.card, style]}>{content}</View>;
-  }
+  const { t } = useTranslation('garden');
+  const careLabel = plantCareLabel(care, t);
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.card, style, pressed && styles.cardPressed]}
+    <PhotoCard
+      title={plant.name}
+      photoUrl={plant.photoUrl}
+      placeholderIcon={Leaf}
+      meta={{ icon: care ? CATEGORY_ICONS[care.category] : BellOff, label: careLabel, tone: careTone(care) }}
       onPress={() => router.push(`/plant/${plant.id}`)}
-    >
-      {content}
-    </Pressable>
+      accessibilityLabel={`${plant.name}. ${careLabel}`}
+      recyclingKey={plant.id}
+      style={style}
+    />
   );
 });
 
-export function PlantCardSkeleton({ style }: Readonly<{ style?: StyleProp<ViewStyle> }>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  return (
-    <View style={[styles.card, style]}>
-      <View style={styles.photo} />
-      <View style={styles.info}>
-        <SkeletonBlock width="70%" height={16} />
-        <SkeletonBlock width="50%" height={12} style={styles.skeletonGap} />
-        <View style={[styles.tagRow, styles.skeletonGap]}>
-          <SkeletonBlock width={50} height={22} radius={Metrics.radius.full} />
-          <SkeletonBlock width={70} height={22} radius={Metrics.radius.full} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  cardPressed: {
-    opacity: 0.8,
-  },
-  photo: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  info: {
-    padding: Metrics.spacing.md,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  species: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    color: colors.mutedForeground,
-    marginTop: 1,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: Metrics.spacing.sm,
-  },
-  skeletonGap: {
-    marginTop: Metrics.spacing.sm,
-  },
-  });
+export const PlantCardSkeleton = PhotoCardSkeleton;

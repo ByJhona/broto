@@ -1,12 +1,11 @@
-import { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Check from 'lucide-react-native/icons/check';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
+import { BottomSheet } from './BottomSheet';
 
 type GroupPlantPickerModalProps = {
   visible: boolean;
@@ -24,71 +23,55 @@ export function GroupPlantPickerModal({
   onClose,
 }: Readonly<GroupPlantPickerModalProps>) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('group');
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}>
-          <Text style={styles.title}>{t('pickerTitle')}</Text>
-          {plants.length === 0 ? (
-            <Text style={styles.description}>{t('noPlantsRegistered')}</Text>
-          ) : (
-            <ScrollView>
-              {plants.map((plant) => {
-                const selected = selectedIds.has(plant.id);
-                return (
-                  <Pressable key={plant.id} style={styles.row} onPress={() => onToggle(plant)}>
-                    <View style={styles.avatar}>
-                      {plant.photoUrl ? (
-                        <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
-                      ) : (
-                        <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-                      )}
-                    </View>
-                    <Text style={styles.rowText}>{plant.name}</Text>
-                    <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                      {selected ? <Check size={14} color={colors.primaryForeground} strokeWidth={2.5} /> : null}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          )}
-          <Pressable style={styles.done} onPress={onClose}>
-            <Text style={styles.doneText}>{t('done')}</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
+    <BottomSheet visible={visible} onClose={onClose} sheetStyle={styles.sheet}>
+      <Text style={styles.title}>{t('pickerTitle')}</Text>
+      {plants.length === 0 ? (
+        <Text style={styles.description}>{t('noPlantsRegistered')}</Text>
+      ) : (
+        <ScrollView>
+          {plants.map((plant) => {
+            const selected = selectedIds.has(plant.id);
+            return (
+              <Pressable key={plant.id} style={styles.row} onPress={() => onToggle(plant)}>
+                <View style={styles.avatar}>
+                  {plant.photoUrl ? (
+                    <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
+                  ) : (
+                    <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  )}
+                </View>
+                <Text style={styles.rowText}>{plant.name}</Text>
+                <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+                  {selected ? <Check size={Metrics.icon.xs} color={colors.primaryForeground} strokeWidth={2.5} /> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
+      <Pressable style={styles.done} onPress={onClose}>
+        <Text style={styles.doneText}>{t('done')}</Text>
+      </Pressable>
+    </BottomSheet>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      backgroundColor: Overlays.scrim,
-    },
     sheet: {
       maxHeight: '70%',
-      backgroundColor: colors.background,
-      borderTopLeftRadius: Metrics.radius.lg,
-      borderTopRightRadius: Metrics.radius.lg,
-      padding: Metrics.spacing.lg,
     },
     title: {
-      fontSize: 17,
-      fontWeight: '700',
+      ...Typography.title,
       color: colors.foreground,
       marginBottom: Metrics.spacing.md,
     },
     description: {
-      fontSize: 15,
-      lineHeight: 21,
+      ...Typography.body,
       color: colors.foreground,
     },
     row: {
@@ -100,8 +83,8 @@ const makeStyles = (colors: ThemeColors) =>
       borderBottomColor: colors.border,
     },
     avatar: {
-      width: 44,
-      height: 44,
+      width: Metrics.size.lg,
+      height: Metrics.size.lg,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.muted,
       justifyContent: 'center',
@@ -114,13 +97,12 @@ const makeStyles = (colors: ThemeColors) =>
     },
     rowText: {
       flex: 1,
-      fontSize: 15,
-      fontWeight: '600',
+      ...Typography.headingMedium,
       color: colors.foreground,
     },
     checkbox: {
-      width: 24,
-      height: 24,
+      width: Metrics.size.xs,
+      height: Metrics.size.xs,
       borderRadius: Metrics.radius.full,
       borderWidth: 2,
       borderColor: colors.border,
@@ -136,8 +118,7 @@ const makeStyles = (colors: ThemeColors) =>
       paddingVertical: Metrics.spacing.md,
     },
     doneText: {
-      fontSize: 14,
-      fontWeight: '700',
+      ...Typography.labelStrong,
       color: colors.primary,
     },
   });

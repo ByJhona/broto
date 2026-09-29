@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import type { LucideIcon } from 'lucide-react-native';
 
 type InfoChipProps = {
@@ -12,13 +11,13 @@ type InfoChipProps = {
 
 export function InfoChip({ value, icon: Icon, size = 'md', tintColor }: Readonly<InfoChipProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const color = tintColor ?? colors.leaf;
   const isCompact = size === 'sm';
 
   return (
     <View style={[styles.chip, isCompact && [styles.chipCompact, { backgroundColor: `${color}14` }]]}>
-      <Icon size={isCompact ? 13 : 16} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={isCompact ? Metrics.chip.sm.iconSize : Metrics.chip.md.iconSize} color={color} strokeWidth={Metrics.icon.strokeWidth} />
       <Text
         style={[styles.chipText, isCompact && [styles.chipTextCompact, { color }]]}
         numberOfLines={1}
@@ -35,24 +34,23 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       flexShrink: 1,
-      gap: Metrics.spacing.xs,
+      gap: Metrics.chip.md.gap,
       backgroundColor: colors.muted,
       borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
-      paddingHorizontal: Metrics.spacing.md,
+      paddingVertical: Metrics.chip.md.paddingVertical,
+      paddingHorizontal: Metrics.chip.md.paddingHorizontal,
     },
     chipCompact: {
-      gap: 4,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      gap: Metrics.chip.sm.gap,
+      paddingVertical: Metrics.chip.sm.paddingVertical,
+      paddingHorizontal: Metrics.chip.sm.paddingHorizontal,
     },
     chipText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.foreground,
     },
     chipTextCompact: {
       flexShrink: 1,
-      fontSize: 11,
+      ...Typography.caption,
     },
   });

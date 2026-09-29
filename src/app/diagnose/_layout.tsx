@@ -8,7 +8,7 @@ export default function DiagnoseLayout() {
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="index" options={{ title: t('historyTitle') }} />
-      <Stack.Screen name="result" options={{ title: t('resultTitle') }} />
+      <Stack.Screen name="result" options={{ headerShown: false, title: t('resultTitle') }} />
     </Stack>
   );
 }

@@ -1,13 +1,18 @@
-import { useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Clock from 'lucide-react-native/icons/clock';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Card, FormError, FormField, PhotoGrid, ScreenContent, SectionTitle, ShareToCommunityToggle, SubmitButton } from '@/components';
-import { EVENT_COLOR, EVENT_ICON, pickPhoto } from '@/utils';
+import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
+import { CardGroup, FloatingScreenControls, InfoSection, PhotoBadge } from '@/components';
+import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
+import { ComposeTitleBlock } from '@/components/compose/ComposeTitleBlock';
+import { PickerRow } from '@/components/compose/PickerRow';
+import { ShareToCommunityGroup } from '@/components/compose/ShareToCommunityGroup';
+import { DraftPhotoGallery } from '@/components/DraftPhotoGallery';
+import { EVENT_COLOR, EVENT_ICON, formatEventDateTime, formatLongDate, formatTime, pickPhoto } from '@/utils';
 import { useTranslation } from '@/i18n';
 
 const MAX_EVENT_PHOTOS = 1;
@@ -23,10 +28,8 @@ function defaultEventDate(): Date {
 
 export default function NewEventScreen() {
   const router = useRouter();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const EventIcon = EVENT_ICON;
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('event');
 
   const [title, setTitle] = useState('');
@@ -103,81 +106,71 @@ export default function NewEventScreen() {
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={Metrics.spacing.lg}
-    >
-      <ScreenContent>
-        <Card style={styles.section}>
-          <SectionTitle>{t('optionalPhotoLabel')}</SectionTitle>
-          <PhotoGrid photoUrls={imageUris} onAdd={handleAddPhoto} onRemove={handleRemovePhoto} max={MAX_EVENT_PHOTOS} />
-        </Card>
-
-        <FormField label={t('titleLabel')} value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} />
-
-        <FormField
-          label={t('descriptionLabel')}
-          value={description}
-          onChangeText={setDescription}
-          placeholder={t('descriptionPlaceholder')}
-          multiline
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + COMPOSE_FOOTER_CLEARANCE }}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={COMPOSE_FOOTER_CLEARANCE}
+      >
+        <DraftPhotoGallery
+          photoUris={imageUris}
+          max={MAX_EVENT_PHOTOS}
+          hint={t('photoHint')}
+          placeholderIcon={EVENT_ICON}
+          placeholderColor={EVENT_COLOR}
+          overlay={<PhotoBadge icon={EVENT_ICON} label={formatEventDateTime(eventDate.toISOString())} color={EVENT_COLOR} />}
+          onAdd={handleAddPhoto}
+          onRemove={handleRemovePhoto}
         />
 
-        <View style={styles.field}>
-          <Text style={styles.label}>{t('whenLabel')}</Text>
-          <View style={styles.dateTimeRow}>
-            <Pressable style={styles.dateTimeButton} onPress={() => openPicker('date')}>
-              <EventIcon size={18} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-              <Text style={styles.dateTimeButtonText}>
-                {eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
-              </Text>
-            </Pressable>
-            <Pressable style={styles.dateTimeButton} onPress={() => openPicker('time')}>
-              <Clock size={18} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-              <Text style={styles.dateTimeButtonText}>
-                {`${String(eventDate.getHours()).padStart(2, '0')}:${String(eventDate.getMinutes()).padStart(2, '0')}`}
-              </Text>
-            </Pressable>
-          </View>
-
-          {Platform.OS === 'ios' && iosPickerMode ? (
-            <DateTimePicker
-              value={eventDate}
-              mode={iosPickerMode}
-              display="spinner"
-              minimumDate={iosPickerMode === 'date' ? new Date() : undefined}
-              onValueChange={(_event, date) => {
-                setIosPickerMode(null);
-                if (date) applyDatePart(iosPickerMode, date);
-              }}
-              onDismiss={() => setIosPickerMode(null)}
-            />
-          ) : null}
-        </View>
-
-        <ShareToCommunityToggle
-          value={shareToCommunity}
-          onValueChange={setShareToCommunity}
-          description={t('shareToCommunityDescription')}
-        />
-
-        {shareToCommunity ? (
-          <FormField
-            label={t('communityCommentLabel')}
-            value={communityCaption}
-            onChangeText={setCommunityCaption}
-            placeholder={t('communityCommentPlaceholder', { title: title || t('untitledEventFallback') })}
-            multiline
+        <View style={styles.content}>
+          <ComposeTitleBlock
+            title={title}
+            onChangeTitle={setTitle}
+            titleLabel={t('titleLabel')}
+            titlePlaceholder={t('titlePlaceholder')}
+            description={description}
+            onChangeDescription={setDescription}
+            descriptionLabel={t('descriptionLabel')}
+            descriptionPlaceholder={t('descriptionPlaceholder')}
           />
-        ) : null}
 
-        <FormError>{error}</FormError>
+          <InfoSection title={t('whenLabel')}>
+            <CardGroup>
+              <PickerRow icon={EVENT_ICON} color={EVENT_COLOR} eyebrow={t('dateLabel')} value={formatLongDate(eventDate)} onPress={() => openPicker('date')} />
+              <PickerRow icon={Clock} color={EVENT_COLOR} eyebrow={t('timeLabel')} value={formatTime(eventDate)} onPress={() => openPicker('time')} />
+            </CardGroup>
 
-        <SubmitButton label={t('chooseLocationCta')} onPress={handleContinue} />
-      </ScreenContent>
-    </KeyboardAwareScrollView>
+            {Platform.OS === 'ios' && iosPickerMode ? (
+              <DateTimePicker
+                value={eventDate}
+                mode={iosPickerMode}
+                display="spinner"
+                minimumDate={iosPickerMode === 'date' ? new Date() : undefined}
+                onValueChange={(_event, date) => {
+                  setIosPickerMode(null);
+                  if (date) applyDatePart(iosPickerMode, date);
+                }}
+                onDismiss={() => setIosPickerMode(null)}
+              />
+            ) : null}
+          </InfoSection>
+
+          <ShareToCommunityGroup
+            value={shareToCommunity}
+            onValueChange={setShareToCommunity}
+            description={t('shareToCommunityDescription')}
+            caption={communityCaption}
+            onChangeCaption={setCommunityCaption}
+            captionLabel={t('communityCommentLabel')}
+            captionPlaceholder={t('communityCommentPlaceholder', { title: title || t('untitledEventFallback') })}
+          />
+        </View>
+      </KeyboardAwareScrollView>
+
+      <ComposeFooter label={t('chooseLocationCta')} onPress={handleContinue} error={error} />
+      <FloatingScreenControls />
+    </View>
   );
 }
 
@@ -187,36 +180,9 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    section: {
-      marginBottom: Metrics.spacing.lg,
-    },
-    field: {
-      marginBottom: Metrics.spacing.md,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.foreground,
-      marginBottom: Metrics.spacing.xs,
-    },
-    dateTimeRow: {
-      flexDirection: 'row',
-      gap: Metrics.spacing.sm,
-    },
-    dateTimeButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.sm,
-      borderWidth: 2,
-      borderColor: colors.border,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
-      paddingHorizontal: Metrics.spacing.md,
-      backgroundColor: colors.card,
-    },
-    dateTimeButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: colors.foreground,
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingTop: Metrics.spacing.lg,
     },
   });

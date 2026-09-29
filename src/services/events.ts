@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
+import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
@@ -135,10 +136,7 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
     .select(EVENT_SELECT)
     .single();
 
-  if (error) {
-    if (error.message === 'event_limit_reached') throw new Error(i18n.t('event:limitReachedMessage'));
-    throw error;
-  }
+  if (error) throw error;
 
   const row = event as unknown as EventRow;
 
@@ -158,13 +156,15 @@ export async function createEvent(input: CreateEventInput): Promise<PlantEvent> 
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-  const { error } = await supabase.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('events').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', id)
+  );
 }
 
 export async function cancelEvent(id: string): Promise<void> {
-  const { error } = await supabase.from('events').update({ status: EVENT_STATUS.CANCELLED }).eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('events').update({ status: EVENT_STATUS.CANCELLED }, { count: 'exact' }).eq('id', id)
+  );
 }
 
 export async function confirmAttendance(eventId: string): Promise<void> {
@@ -173,8 +173,9 @@ export async function confirmAttendance(eventId: string): Promise<void> {
 }
 
 export async function cancelAttendance(eventId: string, userId: string): Promise<void> {
-  const { error } = await supabase.from('event_attendees').delete().eq('event_id', eventId).eq('user_id', userId);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('event_attendees').delete({ count: 'exact' }).eq('event_id', eventId).eq('user_id', userId)
+  );
 }
 
 const EVENTS_QUERY_PREFIX = ['events'] as const;

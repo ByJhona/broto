@@ -1,20 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import Droplet from 'lucide-react-native/icons/droplet';
 import Leaf from 'lucide-react-native/icons/leaf';
-import MapPin from 'lucide-react-native/icons/map-pin';
-import PawPrint from 'lucide-react-native/icons/paw-print';
-import SignalHigh from 'lucide-react-native/icons/signal-high';
-import SignalLow from 'lucide-react-native/icons/signal-low';
-import SignalMedium from 'lucide-react-native/icons/signal-medium';
-import Sun from 'lucide-react-native/icons/sun';
-import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Card, EmptyState, InfoChip, LoadingScreen, OwnerRow, PlantHero, ScreenContent, SpeciesInfoSection } from '@/components';
+import { EmptyState, FloatingScreenControls, LoadingScreen, OwnerRow, PageTitle, PhotoPager, ScreenContent } from '@/components';
+import { SpeciesSections } from '@/components/species/SpeciesSections';
+import { useSpeciesInfo } from '@/components/species/useSpeciesInfo';
 import { useAuth } from '@/hooks';
 import {
   applyProposalStatusEverywhere,
@@ -23,25 +17,11 @@ import {
   respondToProposal,
   type OfferedPlantDetail,
 } from '@/services';
-import { LISTING_STATUS, OFFER_STATUS, type OfferStatus, type Plant } from '@/types';
-import { sunLevelLabel, Toast } from '@/utils';
+import { LISTING_STATUS, OFFER_STATUS, type OfferStatus } from '@/types';
+import { Toast } from '@/utils';
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
 
-const ACTIONS_BAR_HEIGHT = 76;
-const PLANT_HERO_HEIGHT = 340;
-
-const CARE_LEVEL_LABEL_KEY: Record<NonNullable<Plant['careLevel']>, string> = {
-  easy: 'plant:careLevelEasy',
-  moderate: 'plant:careLevelModerate',
-  hard: 'plant:careLevelHard',
-};
-
-const CARE_LEVEL_ICON: Record<NonNullable<Plant['careLevel']>, LucideIcon> = {
-  easy: SignalLow,
-  moderate: SignalMedium,
-  hard: SignalHigh,
-};
 
 const STATUS_LABEL_KEY = {
   pending: 'listing:proposalStatusPending',
@@ -49,43 +29,23 @@ const STATUS_LABEL_KEY = {
   declined: 'listing:proposalStatusDeclined',
 } as const;
 
-type StatTile = { key: string; icon: LucideIcon; value: string };
-
-function buildCareStats(plant: OfferedPlantDetail, t: TranslateFn): StatTile[] {
-  const stats: StatTile[] = [];
-  if (plant.wateringDays != null) {
-    stats.push({ key: 'watering', icon: Droplet, value: t('plant:wateringEveryDays', { days: plant.wateringDays }) });
-  }
-  if (plant.sunLevel != null) {
-    stats.push({ key: 'light', icon: Sun, value: sunLevelLabel(plant.sunLevel) });
-  }
-  if (plant.origin) stats.push({ key: 'origin', icon: MapPin, value: plant.origin });
-  if (plant.careLevel) {
-    stats.push({ key: 'careLevel', icon: CARE_LEVEL_ICON[plant.careLevel], value: t(CARE_LEVEL_LABEL_KEY[plant.careLevel]) });
-  }
-  if (plant.toxicToPets != null) {
-    stats.push({ key: 'petSafety', icon: PawPrint, value: t(plant.toxicToPets ? 'plant:notSafeForPets' : 'plant:safeForPets') });
-  }
-  return stats;
-}
-
 type OfferedPlantHeroProps = {
   plant: OfferedPlantDetail;
   styles: Styles;
-  colors: ThemeColors;
 };
 
-function OfferedPlantHero({ plant, styles, colors }: Readonly<OfferedPlantHeroProps>) {
-  const photoUrl = plant.photoUrls[0];
-  if (!photoUrl) {
-    return (
-      <View style={[styles.photo, styles.photoPlaceholder]}>
-        <Leaf size={40} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+function OfferedPlantHero({ plant, styles }: Readonly<OfferedPlantHeroProps>) {
+  const showCommonName = !!plant.commonName && plant.commonName !== plant.name;
+  return (
+    <>
+      <PhotoPager photoUrls={plant.photoUrls} placeholderIcon={Leaf} fullWidth recyclingKey={plant.id} />
+      <View style={styles.titleBlock}>
+        <PageTitle>{plant.name}</PageTitle>
+        {showCommonName ? <Text style={styles.commonName}>{plant.commonName}</Text> : null}
+        {plant.species ? <Text style={styles.species}>{plant.species}</Text> : null}
       </View>
-    );
-  }
-
-  return <PlantHero photoUrl={photoUrl} name={plant.name} species={plant.commonName ?? plant.species} />;
+    </>
+  );
 }
 
 type OfferStatusLabelProps = {
@@ -128,9 +88,8 @@ type Styles = ReturnType<typeof makeStyles>;
 export default function OfferDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['offer', 'plant', 'listing', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -143,6 +102,8 @@ export default function OfferDetailScreen() {
   });
 
   const proposal = proposalQuery.data;
+  const offeredPlant = proposal?.offeredPlant ?? null;
+  const speciesQuery = useSpeciesInfo(offeredPlant?.species ?? null, offeredPlant?.commonName ?? null);
 
   const handleRespond = async (accept: boolean) => {
     if (!proposal) return;
@@ -168,20 +129,24 @@ export default function OfferDetailScreen() {
   };
 
   if (proposalQuery.isLoading) {
-    return <LoadingScreen />;
+    return (
+      <View style={styles.root}>
+        <LoadingScreen />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   if (!proposal || !proposal.offeredPlant) {
     return (
       <View style={styles.centered}>
-        <Stack.Screen options={{ title: '' }} />
         <EmptyState icon={Leaf} message={t('offer:notFoundMessage')} />
+        <FloatingScreenControls />
       </View>
     );
   }
 
   const plant = proposal.offeredPlant;
-  const careStats = buildCareStats(plant, t);
   const senderName = proposal.senderName ?? t('common:someone');
   const isPending = proposal.status === OFFER_STATUS.PENDING;
   const canRespond = isPending && user?.id === proposal.recipientId;
@@ -194,47 +159,23 @@ export default function OfferDetailScreen() {
     <View style={styles.root}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: (canRespond ? ACTIONS_BAR_HEIGHT + insets.bottom : 0) + Metrics.spacing.xl }}
+        contentContainerStyle={{ paddingBottom: (canRespond ? Metrics.size.xxl + insets.bottom : 0) + Metrics.spacing.xl }}
       >
-        <Stack.Screen options={{ title: t('offer:screenTitle') }} />
-
-        <OfferedPlantHero plant={plant} styles={styles} colors={colors} />
+        <OfferedPlantHero plant={plant} styles={styles} />
 
         <ScreenContent style={styles.content}>
-          <Card>
+          <View>
             <OwnerRow
               eyebrow={t('listing:offeredBy')}
               ownerName={senderName}
               ownerAvatarUrl={proposal.senderAvatarUrl}
               onPress={handlePressSender}
+              style={styles.ownerRow}
             />
             {proposal.listingTitle ? <Text style={styles.context}>{t('offer:wantsToTradeFor', { listingTitle: proposal.listingTitle })}</Text> : null}
-          </Card>
+          </View>
 
-          {careStats.length > 0 ? (
-            <Card>
-              <View style={styles.statsRow}>
-                {careStats.map((stat) => (
-                  <InfoChip key={stat.key} icon={stat.icon} value={stat.value} />
-                ))}
-              </View>
-            </Card>
-          ) : null}
-
-          {plant.description ? (
-            <SpeciesInfoSection
-              info={{
-                description: plant.description,
-                wateringDescription: plant.wateringDescription,
-                toxicToPets: plant.toxicToPets ?? false,
-                toxicToPetsNotes: plant.toxicToPetsNotes,
-                toxicToHumans: plant.toxicToHumans ?? false,
-                toxicToHumansNotes: plant.toxicToHumansNotes,
-                funFacts: plant.funFacts ?? [],
-                commonProblems: plant.commonProblems ?? [],
-              }}
-            />
-          ) : null}
+          {plant.species ? <SpeciesSections query={speciesQuery} /> : null}
 
           {canRespond ? null : <OfferStatusLabel status={proposal.status} styles={styles} t={t} />}
         </ScreenContent>
@@ -243,6 +184,7 @@ export default function OfferDetailScreen() {
       {canRespond ? (
         <OfferActionsBar isResponding={isResponding} onRespond={handleRespond} bottomInset={insets.bottom} styles={styles} t={t} />
       ) : null}
+      <FloatingScreenControls />
     </View>
   );
 }
@@ -267,22 +209,32 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.background,
       padding: Metrics.spacing.xl,
     },
-    photo: {
-      height: PLANT_HERO_HEIGHT,
-      backgroundColor: colors.muted,
+    titleBlock: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingTop: Metrics.spacing.lg,
     },
-    photoPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    context: {
-      fontSize: 13,
+    title: {
+      ...Typography.display,
       color: colors.foreground,
     },
-    statsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Metrics.spacing.sm,
+    commonName: {
+      ...Typography.body,
+      color: colors.foreground,
+      marginTop: Metrics.spacing.xs,
+    },
+    species: {
+      ...Typography.body,
+      fontStyle: 'italic',
+      color: colors.mutedForeground,
+      marginTop: Metrics.spacing.xs,
+    },
+    ownerRow: {
+      marginBottom: Metrics.spacing.sm,
+    },
+    context: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
     },
     actions: {
       position: 'absolute',
@@ -300,30 +252,27 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       borderWidth: 1.5,
       borderColor: colors.destructive,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.md,
       alignItems: 'center',
     },
     declineButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
+      ...Typography.headingMedium,
       color: colors.destructive,
     },
     acceptButton: {
       flex: 1,
       backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.md,
       alignItems: 'center',
     },
     acceptButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
+      ...Typography.headingMedium,
       color: colors.primaryForeground,
     },
     statusLabel: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
       textAlign: 'center',
     },

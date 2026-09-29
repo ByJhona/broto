@@ -1,3 +1,8 @@
+export type SunLevel = 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun';
+export type CareLevel = 'easy' | 'moderate' | 'hard';
+export type HumidityLevel = 'low' | 'medium' | 'high';
+export type GrowthRate = 'slow' | 'medium' | 'fast';
+
 export type Plant = {
   id: string;
   createdAt: string;
@@ -8,17 +13,6 @@ export type Plant = {
   groupId: string | null;
   groupName: string | null;
   wateringDays: number | null;
-  sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
-  origin: string | null;
-  description: string | null;
-  wateringDescription: string | null;
-  careLevel: 'easy' | 'moderate' | 'hard' | null;
-  toxicToPets: boolean | null;
-  toxicToPetsNotes: string | null;
-  toxicToHumans: boolean | null;
-  toxicToHumansNotes: string | null;
-  funFacts: string[] | null;
-  commonProblems: PlantCommonProblem[] | null;
 };
 
 export type PlantSummary = {
@@ -30,7 +24,6 @@ export type PlantSummary = {
   photoUrl: string | null;
   groupId: string | null;
   wateringDays: number | null;
-  sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun' | null;
 };
 
 export type PlantCandidate = {
@@ -43,8 +36,9 @@ export type PlantCandidate = {
 };
 
 export type PlantCommonProblem = {
-  issue: string;
-  likelyCause: string;
+  symptom: string;
+  cause: string;
+  solution: string;
 };
 
 export type PlantReferencePhoto = {
@@ -54,36 +48,37 @@ export type PlantReferencePhoto = {
 
 export type PlantSpeciesInfo = {
   scientificName: string;
+  commonNames: string[];
+  family: string | null;
+  plantType: string;
+  origin: string | null;
   description: string;
-  wateringDescription: string;
+  careLevel: CareLevel;
+  growthRate: GrowthRate;
+  matureSize: string;
+  sunLevel: SunLevel;
+  lightTip: string;
   wateringDaysMin: number;
   wateringDaysMax: number;
-  sunLevel: 'shade' | 'partial_shade' | 'medium' | 'bright_indirect' | 'full_sun';
-  careLevel: 'easy' | 'moderate' | 'hard';
+  wateringTip: string;
+  humidityLevel: HumidityLevel;
+  humidityTip: string;
+  temperatureMinC: number;
+  temperatureMaxC: number;
+  soilTip: string;
+  fertilizingTip: string;
+  propagationMethods: string[];
   toxicToPets: boolean;
   toxicToPetsNotes: string | null;
   toxicToHumans: boolean;
   toxicToHumansNotes: string | null;
-  funFacts: string[];
   commonProblems: PlantCommonProblem[];
-  origin: string | null;
+  funFacts: string[];
   referencePhotos: PlantReferencePhoto[];
-  commonNames: string[];
 };
 
 export type PlantSpeciesSearchResult = PlantSpeciesInfo & {
   id: string;
-};
-
-export type SpeciesInfoDisplay = {
-  description: string;
-  wateringDescription: string | null;
-  toxicToPets: boolean;
-  toxicToPetsNotes: string | null;
-  toxicToHumans: boolean;
-  toxicToHumansNotes: string | null;
-  funFacts: string[];
-  commonProblems: PlantCommonProblem[];
 };
 
 export type PlantGrowthCheckin = {

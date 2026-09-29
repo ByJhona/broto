@@ -1,12 +1,11 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import type { EventAttendee } from '@/services';
 import { useTranslation } from '@/i18n';
 import { Avatar } from './Avatar';
-import { Card } from './Card';
+import { CardGroup } from './CardGroup';
+import { InfoSection } from './InfoSection';
 import { ListRow } from './ListRow';
-import { SectionTitle } from './SectionTitle';
 
 type EventAttendeesSectionProps = {
   attendees: EventAttendee[] | undefined;
@@ -14,44 +13,38 @@ type EventAttendeesSectionProps = {
 };
 
 export function EventAttendeesSection({ attendees, onPressAttendee }: Readonly<EventAttendeesSectionProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['event', 'common']);
   const someone = t('common:someone');
 
   return (
-    <Card style={styles.section}>
-      <SectionTitle>{t('confirmedSectionTitle')}</SectionTitle>
+    <InfoSection title={t('confirmedSectionTitle')}>
       {attendees?.length ? (
-        attendees.map((attendee) => (
-          <ListRow
-            key={attendee.userId}
-            style={styles.row}
-            leading={<Avatar name={attendee.name ?? someone} url={attendee.avatarUrl} size={32} />}
-            title={attendee.name ?? someone}
-            onPress={() => onPressAttendee(attendee.userId)}
-          />
-        ))
+        <CardGroup>
+          {attendees.map((attendee) => (
+            <ListRow
+              key={attendee.userId}
+              style={styles.row}
+              leading={<Avatar name={attendee.name ?? someone} url={attendee.avatarUrl} size={Metrics.size.sm} />}
+              title={attendee.name ?? someone}
+              onPress={() => onPressAttendee(attendee.userId)}
+            />
+          ))}
+        </CardGroup>
       ) : (
-        <Text style={styles.description}>{t('noAttendeesYet')}</Text>
+        <Text style={styles.emptyText}>{t('noAttendeesYet')}</Text>
       )}
-    </Card>
+    </InfoSection>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    section: {
-      marginBottom: Metrics.spacing.lg,
-    },
-    description: {
-      fontSize: 15,
-      lineHeight: 21,
-      color: colors.foreground,
-    },
     row: {
       paddingVertical: Metrics.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+    },
+    emptyText: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
     },
   });

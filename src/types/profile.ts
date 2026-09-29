@@ -1,18 +1,3 @@
-import type { LucideIcon } from 'lucide-react-native';
-
-export type Plan = {
-  id: string;
-  name: string;
-  description: string;
-  price?: string;
-};
-
-export type SettingsItem = {
-  icon: LucideIcon;
-  label: string;
-  onPress: () => void;
-};
-
 export type UserProfile = {
   id: string;
   name: string;

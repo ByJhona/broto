@@ -9,7 +9,13 @@ export const COMMUNITY_POST_TYPE = {
 export type CommunityPostType = (typeof COMMUNITY_POST_TYPE)[keyof typeof COMMUNITY_POST_TYPE];
 
 export const OFFER_FEED_FILTER = 'oferta' as const;
-export type CommunityFeedFilter = CommunityPostType | typeof OFFER_FEED_FILTER;
+export const FOLLOWING_FEED_FILTER = 'seguindo' as const;
+export type CommunityContentFilter = CommunityPostType | typeof OFFER_FEED_FILTER;
+export type CommunityFeedFilter = CommunityContentFilter | typeof FOLLOWING_FEED_FILTER;
+
+export const CONTENT_REPORT_REASONS = ['spam', 'inappropriate', 'scam', 'other'] as const;
+export type ContentReportReason = (typeof CONTENT_REPORT_REASONS)[number];
+export type ContentReportTarget = { type: 'post' | 'comment'; id: string };
 
 export type CommunityComment = {
   id: string;

@@ -6,51 +6,26 @@ import { useAuth } from './useAuth';
 import {
   getCommunityPosts,
   getFeaturedPosts,
-  getPostById,
-  createPost,
   toggleLike,
-  addComment,
   deletePost,
-  deleteComment,
   getFollowingIds,
   applyPostUpdateEverywhere,
+  refetchPostFeeds,
   removePostEverywhere,
-  removeCommentFromAllFeeds,
   subscribeToNewPosts,
   boostContent,
   BOOST_DURATION_HOURS,
   InsufficientCreditsError,
-  type CommunityPostsQueryData,
-  type NewPostEvent,
+  communityFeedQueryKey,
+  interleaveFeaturedPosts,
+  postMatchesFeed,
 } from '@/services';
-import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType } from '@/types';
+import { FOLLOWING_FEED_FILTER, type CommunityFeedFilter } from '@/types';
 import { Alert, Toast } from '@/utils';
 import { useCreditCosts } from './useCreditCosts';
 
-export type FeedScope = 'todos' | 'seguindo';
-
 const POSTS_STALE_TIME = 30_000;
 const FOLLOWING_IDS_STALE_TIME = 5 * 60_000;
-
-type PostsQueryData = CommunityPostsQueryData;
-
-function replaceFirstPagePost(old: PostsQueryData | undefined, post: CommunityPost): PostsQueryData | undefined {
-  if (!old) return old;
-  const [firstPage, ...restPages] = old.pages;
-  return { ...old, pages: [{ ...firstPage, posts: [post, ...firstPage.posts] }, ...restPages] };
-}
-
-function eventMatchesFeed(
-  event: NewPostEvent,
-  scope: FeedScope,
-  filter: CommunityFeedFilter | null,
-  followedAuthorIds: string[] | null
-): boolean {
-  if (scope === 'seguindo') return !!followedAuthorIds?.includes(event.authorId);
-  if (!filter) return true;
-  if (filter === OFFER_FEED_FILTER) return event.hasListing;
-  return event.postType === filter;
-}
 
 export function useCommunityFeed() {
   const router = useRouter();
@@ -59,13 +34,13 @@ export function useCommunityFeed() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
-  const [scope, setScope] = useState<FeedScope>('todos');
   const [newPostsCount, setNewPostsCount] = useState(0);
+  const isFollowingFeed = filter === FOLLOWING_FEED_FILTER;
 
   const followingIdsQuery = useQuery({
     queryKey: ['following-ids', user?.id],
     queryFn: () => getFollowingIds(user!.id),
-    enabled: !!user?.id && scope === 'seguindo',
+    enabled: !!user?.id && isFollowingFeed,
     staleTime: FOLLOWING_IDS_STALE_TIME,
   });
 
@@ -77,37 +52,44 @@ export function useCommunityFeed() {
     enabled: !!user?.id,
   });
 
-  const queryKey = useMemo(() => ['community-posts', scope, filter, user?.id] as const, [scope, filter, user?.id]);
+  const queryKey = useMemo(() => communityFeedQueryKey(filter, user?.id), [filter, user?.id]);
 
   const postsQuery = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) =>
-      getCommunityPosts(user!.id, pageParam, filter, scope === 'seguindo' ? followedAuthorIds : null),
+      getCommunityPosts(
+        user!.id,
+        pageParam,
+        filter === FOLLOWING_FEED_FILTER ? null : filter,
+        isFollowingFeed ? followedAuthorIds : null
+      ),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: !!user?.id && (scope === 'todos' || followedAuthorIds !== null),
+    enabled: !!user?.id && (!isFollowingFeed || followedAuthorIds !== null),
     staleTime: POSTS_STALE_TIME,
   });
 
-  const posts = useMemo(() => postsQuery.data?.pages.flatMap((page) => page.posts) ?? [], [postsQuery.data]);
-  const isInitialLoading =
-    posts.length === 0 && (postsQuery.isFetching || (scope === 'seguindo' && followingIdsQuery.isFetching));
+  const isFeedComplete = postsQuery.isSuccess && !postsQuery.hasNextPage;
+
+  const posts = useMemo(() => {
+    const regular = postsQuery.data?.pages.flatMap((page) => page.posts) ?? [];
+    const featured = (featuredPostsQuery.data ?? []).filter((post) => postMatchesFeed(post, filter, followedAuthorIds));
+    return interleaveFeaturedPosts(regular, featured, isFeedComplete);
+  }, [postsQuery.data, featuredPostsQuery.data, filter, followedAuthorIds, isFeedComplete]);
+
+  const isInitialLoading = !postsQuery.data && (postsQuery.isFetching || (isFollowingFeed && followingIdsQuery.isFetching));
+  const followsNobody = isFollowingFeed && followedAuthorIds?.length === 0;
 
   useEffect(() => {
     if (!user?.id) return;
 
     const unsubscribe = subscribeToNewPosts((event) => {
       if (event.authorId === user.id) return;
-      if (eventMatchesFeed(event, scope, filter, followedAuthorIds)) setNewPostsCount((count) => count + 1);
+      if (postMatchesFeed(event, filter, followedAuthorIds)) setNewPostsCount((count) => count + 1);
     });
 
     return unsubscribe;
-  }, [user?.id, scope, filter, followedAuthorIds]);
-
-  const handleSetScope = (nextScope: FeedScope) => {
-    setNewPostsCount(0);
-    setScope(nextScope);
-  };
+  }, [user?.id, filter, followedAuthorIds]);
 
   const handleSetFilter = (nextFilter: CommunityFeedFilter | null) => {
     setNewPostsCount(0);
@@ -121,7 +103,7 @@ export function useCommunityFeed() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await postsQuery.refetch();
+    await Promise.all([postsQuery.refetch(), featuredPostsQuery.refetch()]);
     setRefreshing(false);
   };
 
@@ -134,11 +116,9 @@ export function useCommunityFeed() {
   const handleToggleLike = useCallback(
     async (postId: string) => {
       if (!user?.id) return;
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const post = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
+      const post = posts.find((p) => p.id === postId);
       if (!post) return;
 
-      const wasLiked = post.liked;
       applyPostUpdateEverywhere(queryClient, postId, (p) => ({
         ...p,
         liked: !p.liked,
@@ -146,49 +126,13 @@ export function useCommunityFeed() {
       }));
 
       try {
-        await toggleLike(postId, user.id, wasLiked);
+        await toggleLike(postId, user.id, post.liked);
       } catch {
         applyPostUpdateEverywhere(queryClient, postId, () => post);
       }
     },
-    [user, queryClient, queryKey]
+    [user, queryClient, posts]
   );
-
-  const handleAddComment = useCallback(
-    async (postId: string, text: string, photoUri?: string) => {
-      if (!user?.id) return;
-      try {
-        await addComment(postId, user.id, text, photoUri);
-        const updated = await getPostById(postId, user.id);
-        if (updated) applyPostUpdateEverywhere(queryClient, postId, () => updated);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    [user, queryClient]
-  );
-
-  const postMatchesCurrentFeed = (newPost: CommunityPost) => {
-    if (scope !== 'todos') return false;
-    if (!filter) return true;
-    if (filter === OFFER_FEED_FILTER) return !!newPost.listingId;
-    return newPost.postType === filter;
-  };
-
-  const handleCreatePost = async (text: string, imageUris: string[], postType: CommunityPostType | null) => {
-    if (!user?.id) return;
-    try {
-      const newPostId = await createPost(user.id, text, imageUris, postType);
-      const newPost = await getPostById(newPostId, user.id);
-      if (newPost && postMatchesCurrentFeed(newPost)) {
-        queryClient.setQueryData<PostsQueryData>(queryKey, (old) => replaceFirstPagePost(old, newPost));
-      }
-    } catch (err) {
-      console.error(err);
-      Toast.error(i18n.t('community:createPostError'));
-      throw err;
-    }
-  };
 
   const handlePressAuthor = useCallback(
     (authorId: string) => router.push({ pathname: '/profile/[id]', params: { id: authorId } }),
@@ -207,20 +151,15 @@ export function useCommunityFeed() {
 
   const handleDeletePost = useCallback(
     async (postId: string) => {
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const previousPost = cached?.pages.flatMap((page) => page.posts).find((p) => p.id === postId);
       removePostEverywhere(queryClient, postId);
       try {
         await deletePost(postId);
       } catch {
-        if (previousPost) {
-          queryClient.setQueryData<PostsQueryData>(queryKey, (old) => replaceFirstPagePost(old, previousPost));
-        }
-        queryClient.invalidateQueries({ queryKey: ['featured-posts'] });
+        refetchPostFeeds(queryClient);
         Toast.error(i18n.t('community:deletePostError'));
       }
     },
-    [queryClient, queryKey]
+    [queryClient]
   );
 
   const handleBoostPost = useCallback(
@@ -244,46 +183,24 @@ export function useCommunityFeed() {
     [queryClient, router, creditCosts]
   );
 
-  const handleDeleteComment = useCallback(
-    async (commentId: string) => {
-      const cached = queryClient.getQueryData<PostsQueryData>(queryKey);
-      const previousPost = cached?.pages
-        .flatMap((page) => page.posts)
-        .find((post) => post.comments.some((comment) => comment.id === commentId));
-      removeCommentFromAllFeeds(queryClient, commentId);
-      try {
-        await deleteComment(commentId);
-      } catch {
-        if (previousPost) applyPostUpdateEverywhere(queryClient, previousPost.id, () => previousPost);
-        Toast.error(i18n.t('community:deleteCommentError'));
-      }
-    },
-    [queryClient, queryKey]
-  );
-
   return {
     user,
     posts,
-    featuredPosts: featuredPostsQuery.data ?? [],
     isInitialLoading,
+    followsNobody,
     refreshing,
     postsQuery,
     filter,
     setFilter: handleSetFilter,
-    scope,
-    setScope: handleSetScope,
     newPostsCount,
     handleShowNewPosts,
     handleRefresh,
     handleLoadMore,
     handleToggleLike,
-    handleAddComment,
-    handleCreatePost,
     handlePressAuthor,
     handlePressListing,
     handlePressEvent,
     handleDeletePost,
-    handleDeleteComment,
     handleBoostPost,
   };
 }

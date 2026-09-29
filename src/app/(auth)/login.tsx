@@ -1,60 +1,20 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { AuthDivider, AuthFooterLink, AuthLayout, FormError, FormField, GoogleSignInButton, SubmitButton } from '@/components';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Mail from 'lucide-react-native/icons/mail';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { useAuth, useNetworkStatus } from '@/hooks';
-import { authErrorMessage, Toast } from '@/utils';
+import { AuthFooterLink, AuthLayout, GoogleSignInButton } from '@/components';
+import { EmailLoginForm } from '@/components/auth/EmailLoginForm';
+import { useGoogleSignIn } from '@/components/auth/useGoogleSignIn';
+import { useNetworkStatus } from '@/hooks';
 
 export default function LoginScreen() {
-  const router = useRouter();
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('auth');
-  const { signIn, signInWithGoogle } = useAuth();
   const { isOffline } = useNetworkStatus();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
-
-  const goToApp = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
-
-  const handleSubmit = async () => {
-    setError(null);
-
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setError(t('fillEmailAndPassword'));
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await signIn(trimmedEmail, password);
-      goToApp();
-    } catch (err) {
-      setError(authErrorMessage(err, t('signInError')));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleSubmitting(true);
-    try {
-      const result = await signInWithGoogle();
-      if (result) goToApp();
-    } catch (err) {
-      Toast.error(authErrorMessage(err, t('googleSignInError')));
-    } finally {
-      setIsGoogleSubmitting(false);
-    }
-  };
+  const { isGoogleSubmitting, handleGoogleSignIn } = useGoogleSignIn();
+  const [isEmailFormOpen, setIsEmailFormOpen] = useState(false);
 
   return (
     <AuthLayout
@@ -62,41 +22,53 @@ export default function LoginScreen() {
       subtitle={t('loginSubtitle')}
       isOffline={isOffline}
       offlineMessage={t('loginOfflineMessage')}
+      showMosaic
     >
-      <FormField
-        label={t('emailLabel')}
-        value={email}
-        onChangeText={setEmail}
-        placeholder={t('emailPlaceholder')}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoComplete="email"
-      />
-      <FormField
-        label={t('passwordLabel')}
-        value={password}
-        onChangeText={setPassword}
-        placeholder={t('passwordPlaceholder')}
-        secureTextEntry
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="password"
-      />
-
-      <FormError>{error}</FormError>
-
-      <SubmitButton label={t('loginCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline || isGoogleSubmitting} />
-
-      <AuthDivider label={t('or')} />
-
       <GoogleSignInButton
         label={t('continueWithGoogle')}
         onPress={handleGoogleSignIn}
         loading={isGoogleSubmitting}
-        disabled={isOffline || isSubmitting}
+        disabled={isOffline}
       />
+
+      {isEmailFormOpen ? (
+        <View style={styles.emailForm}>
+          <EmailLoginForm disabled={isOffline || isGoogleSubmitting} />
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.emailButton, pressed && styles.pressed]}
+          onPress={() => setIsEmailFormOpen(true)}
+        >
+          <Mail size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Text style={styles.emailButtonText}>{t('continueWithEmail')}</Text>
+        </Pressable>
+      )}
 
       <AuthFooterLink href="/(auth)/signup" label={t('noAccountSignupLink')} />
     </AuthLayout>
   );
 }
+
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    emailButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Metrics.spacing.sm,
+      paddingVertical: Metrics.spacing.md,
+      marginTop: Metrics.spacing.sm,
+    },
+    pressed: {
+      opacity: 0.7,
+    },
+    emailButtonText: {
+      ...Typography.headingMedium,
+      color: colors.foreground,
+    },
+    emailForm: {
+      marginTop: Metrics.spacing.lg,
+    },
+  });

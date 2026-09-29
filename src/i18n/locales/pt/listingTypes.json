@@ -10,5 +10,9 @@
   "status_completed": "Concluída",
   "status_cancelled": "Cancelada",
   "notice_completed": "Essa oferta já foi concluída.",
-  "notice_cancelled": "Essa oferta foi cancelada."
+  "notice_cancelled": "Essa oferta foi cancelada.",
+  "hint_donation": "De graça para quem quiser",
+  "hint_exchange": "Por outra planta",
+  "hint_discard": "Precisa de um novo lar logo",
+  "hint_sale": "Pelo preço que você definir"
 }

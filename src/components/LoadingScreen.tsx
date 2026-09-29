@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View, type ActivityIndicatorProps } from 'react-native';
-import { useColors, type ThemeColors } from '@/theme';
+import { useColors, type ThemeColors, useThemedStyles } from '@/theme';
 
 type LoadingScreenProps = {
   size?: ActivityIndicatorProps['size'];
@@ -8,7 +7,7 @@ type LoadingScreenProps = {
 
 export function LoadingScreen({ size }: Readonly<LoadingScreenProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.container}>
       <ActivityIndicator color={colors.primary} size={size} />

@@ -1,6 +1,6 @@
-import { useMemo, type PropsWithChildren } from 'react';
+import { type PropsWithChildren } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
 
 type CardProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
@@ -10,8 +10,7 @@ type CardProps = PropsWithChildren<{
 }>;
 
 export function Card({ children, style, onPress, onLongPress, disabled }: Readonly<CardProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   if (onPress || onLongPress) {
     return (

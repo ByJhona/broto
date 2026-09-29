@@ -1,10 +1,11 @@
 import Svg, { Path } from 'react-native-svg';
+import { Metrics } from '@/theme';
 
 type GoogleIconProps = {
   size?: number;
 };
 
-export function GoogleIcon({ size = 20 }: Readonly<GoogleIconProps>) {
+export function GoogleIcon({ size = Metrics.icon.small }: Readonly<GoogleIconProps>) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
       <Path

@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { GoogleIcon } from './GoogleIcon';
 
 type GoogleSignInButtonProps = {
@@ -12,7 +11,7 @@ type GoogleSignInButtonProps = {
 
 export function GoogleSignInButton({ label, onPress, loading = false, disabled = false }: Readonly<GoogleSignInButtonProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const isDisabled = loading || disabled;
 
   return (
@@ -39,7 +38,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.card,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.md,
       marginTop: Metrics.spacing.sm,
     },
@@ -48,7 +47,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     text: {
       color: colors.foreground,
-      fontWeight: '600',
-      fontSize: 16,
+      ...Typography.headingMedium,
     },
   });

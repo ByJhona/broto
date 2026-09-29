@@ -1,12 +1,8 @@
 {
   "resultTitle": "Identificação",
   "referencePhotosCaption": "Fotos: Wikimedia Commons",
-  "noReferencePhotosMessage": "Nenhuma foto de referência encontrada pra essa espécie.",
-  "suggestedCareTitle": "Cuidados sugeridos",
-  "wateringEvery": "Regar a cada {{days}} dias",
-  "identificationSectionTitle": "Identificação",
-  "confidencePercent": "{{percent}}% de confiança",
-  "otherPossibilitiesTitle": "Não é essa? Outras possibilidades",
+  "confidencePercent": "{{percent}}%",
+  "otherPossibilitiesTitle": "Pode ser também",
   "notFoundMessage": "Não conseguimos identificar nenhuma planta nessa foto. Tente outra imagem, de perto da folha ou da flor.",
   "addToGardenCta": "Adicionar ao meu jardim",
   "nicknameModalTitle": "Como você quer chamar essa planta?",
@@ -15,5 +11,13 @@
   "saveToGardenCta": "Salvar no meu jardim",
   "loginRequiredMessage": "Você precisa de uma conta pra salvar plantas no seu jardim.",
   "missingNicknameError": "Dá um apelido pra sua planta.",
-  "saveError": "Não foi possível salvar a planta. Tente novamente."
+  "saveError": "Não foi possível salvar a planta. Tente novamente.",
+  "yourPhotoLabel": "Sua foto",
+  "confidenceHigh": "Muito provável",
+  "confidenceMedium": "Provável",
+  "confidenceLow": "Pouco provável",
+  "lowConfidenceMessage": "A IA não tem certeza dessa identificação. Compare com as fotos da espécie e com as outras possibilidades, ou tire outra foto mais de perto da folha.",
+  "retakePhotoCta": "Tirar outra foto",
+  "compareTitle": "Compare com a espécie",
+  "noneOfTheseCta": "Não é nenhuma dessas? Tirar outra foto"
 }

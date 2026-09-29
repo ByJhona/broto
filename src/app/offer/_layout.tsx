@@ -5,7 +5,7 @@ export default function OfferLayout() {
   const screenOptions = useThemedStackScreenOptions();
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="[id]" options={{ title: '' }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

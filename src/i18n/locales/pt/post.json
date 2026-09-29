@@ -1,6 +1,10 @@
 {
   "postTitle": "Publicação",
+  "newPostTitle": "Nova publicação",
+  "postTypeLabel": "Sobre o que é? (opcional)",
+  "postTextLabel": "Texto",
   "postNotFoundMessage": "Publicação não encontrada.",
   "deletePostError": "Não foi possível excluir a publicação.",
-  "deleteCommentError": "Não foi possível excluir o recado."
+  "deleteCommentError": "Não foi possível excluir o recado.",
+  "postingTo": "Publicando na Comunidade"
 }

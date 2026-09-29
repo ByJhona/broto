@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 type ListRowProps = {
   leading?: ReactNode;
@@ -32,8 +31,7 @@ export function ListRow({
   selected = false,
   style,
 }: Readonly<ListRowProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   const content = (
     <View style={[styles.row, variant === 'card' && styles.rowCard, selected && styles.rowSelected]}>
@@ -87,10 +85,8 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
     },
     eyebrow: {
-      fontSize: 12,
-      fontWeight: '600',
+      ...Typography.captionLabel,
       color: colors.leaf,
-      textTransform: 'uppercase',
     },
     titleLine: {
       flexDirection: 'row',
@@ -100,13 +96,12 @@ const makeStyles = (colors: ThemeColors) =>
     },
     title: {
       flex: 1,
-      fontSize: 15,
-      fontWeight: '700',
+      ...Typography.heading,
       color: colors.foreground,
     },
     subtitle: {
-      fontSize: 13,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
-      marginTop: 2,
+      marginTop: Metrics.spacing.xs,
     },
   });

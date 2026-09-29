@@ -8,7 +8,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const IDENTIFICATION_CREDIT_COST = 2;
 const IDENTIFICATION_CREDIT_REASON = 'identification';
 
 const IDENTIFICATION_JSON_SCHEMA = {
@@ -122,7 +121,7 @@ Deno.serve(async (req) => {
     return new Response('Missing photoUrl', { status: 400 });
   }
 
-  if (!(await hasEnoughCredits(supabaseAdmin, user.id, IDENTIFICATION_CREDIT_COST))) {
+  if (!(await hasEnoughCredits(supabaseAdmin, user.id, IDENTIFICATION_CREDIT_REASON))) {
     return insufficientCreditsResponse();
   }
 

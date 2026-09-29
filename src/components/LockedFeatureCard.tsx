@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Lock from 'lucide-react-native/icons/lock';
 import Sparkles from 'lucide-react-native/icons/sparkles';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type LockedFeatureCardProps = {
@@ -14,7 +13,7 @@ type LockedFeatureCardProps = {
 export function LockedFeatureCard({ message, ctaLabel }: Readonly<LockedFeatureCardProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
   const resolvedCtaLabel = ctaLabel ?? t('unlockWithPremium');
 
@@ -25,7 +24,7 @@ export function LockedFeatureCard({ message, ctaLabel }: Readonly<LockedFeatureC
       </View>
       <Text style={styles.text}>{message}</Text>
       <Pressable style={styles.button} onPress={() => router.push('/profile/plans')}>
-        <Sparkles size={14} color={colors.primaryForeground} strokeWidth={2} />
+        <Sparkles size={Metrics.icon.xs} color={colors.primaryForeground} strokeWidth={2} />
         <Text style={styles.buttonText}>{resolvedCtaLabel}</Text>
       </Pressable>
     </View>
@@ -42,23 +41,22 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.sm,
     },
     icon: {
-      width: 44,
-      height: 44,
+      width: Metrics.size.lg,
+      height: Metrics.size.lg,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.card,
       justifyContent: 'center',
       alignItems: 'center',
     },
     text: {
-      fontSize: 13,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
       textAlign: 'center',
-      lineHeight: 18,
     },
     button: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: Metrics.spacing.sm,
       backgroundColor: colors.primary,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
@@ -66,8 +64,7 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: Metrics.spacing.xs,
     },
     buttonText: {
-      fontSize: 13,
-      fontWeight: '700',
+      ...Typography.labelStrong,
       color: colors.primaryForeground,
     },
   });

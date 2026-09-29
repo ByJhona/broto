@@ -4,7 +4,7 @@ import type { DiagnosisHealthStatus } from '@/types';
 export function healthStatusColor(colors: ThemeColors): Record<DiagnosisHealthStatus, string> {
   return {
     healthy: colors.leaf,
-    attention: colors.secondary,
+    attention: colors.primary,
     urgent: colors.destructive,
   };
 }

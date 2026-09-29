@@ -1,0 +1,70 @@
+import { StyleSheet, View } from 'react-native';
+import { Metrics } from '@/theme';
+import { useTranslation } from '@/i18n';
+import type { EarnedBadge, FollowCounts, UserProfile, XpProgress } from '@/types';
+import { SegmentedControl } from '../SegmentedControl';
+import { ProfileActions } from './ProfileActions';
+import { ProfileBadgesRow } from './ProfileBadgesRow';
+import { ProfileIdentity } from './ProfileIdentity';
+import { ProfileStats } from './ProfileStats';
+import { PROFILE_TAB, type ProfileTab } from './profileTabs';
+
+type ProfileHeaderProps = {
+  name: string;
+  profile: UserProfile | null;
+  isOwnProfile: boolean;
+  following: boolean;
+  counts: FollowCounts;
+  xp: XpProgress;
+  badges: EarnedBadge[];
+  tab: ProfileTab;
+  onChangeTab: (tab: ProfileTab) => void;
+  onToggleFollow: () => void;
+  onPressMessage: () => void;
+  onEditProfile: () => void;
+};
+
+export function ProfileHeader({
+  name,
+  profile,
+  isOwnProfile,
+  following,
+  counts,
+  xp,
+  badges,
+  tab,
+  onChangeTab,
+  onToggleFollow,
+  onPressMessage,
+  onEditProfile,
+}: Readonly<ProfileHeaderProps>) {
+  const { t } = useTranslation('profile');
+  const tabOptions = [
+    { value: PROFILE_TAB.POSTS, label: t('postsTab') },
+    { value: PROFILE_TAB.LISTINGS, label: t('listings') },
+    { value: PROFILE_TAB.EVENTS, label: t('events') },
+  ];
+
+  return (
+    <View style={styles.header}>
+      <ProfileIdentity name={name} profile={profile} />
+      <ProfileStats counts={counts} xp={xp} />
+      <ProfileActions
+        isOwnProfile={isOwnProfile}
+        following={following}
+        onToggleFollow={onToggleFollow}
+        onPressMessage={onPressMessage}
+        onEditProfile={onEditProfile}
+      />
+      <ProfileBadgesRow badges={badges} isOwnProfile={isOwnProfile} />
+      <SegmentedControl options={tabOptions} value={tab} onChange={onChangeTab} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    gap: Metrics.spacing.lg,
+    marginBottom: Metrics.spacing.md,
+  },
+});

@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import X from 'lucide-react-native/icons/x';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type PhotoViewerModalProps = {
   photoUrl: string | null;
@@ -11,12 +11,13 @@ type PhotoViewerModalProps = {
 
 export function PhotoViewerModal({ photoUrl, onClose }: Readonly<PhotoViewerModalProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation();
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <Modal visible={!!photoUrl} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.close} onPress={onClose}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:close')} style={styles.close} onPress={onClose}>
           <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
         {photoUrl ? <Image source={{ uri: photoUrl }} style={styles.image} contentFit="contain" /> : null}
@@ -35,7 +36,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     close: {
       position: 'absolute',
-      top: 60,
+      top: Metrics.spacing.xl * 2,
       right: Metrics.spacing.lg,
       zIndex: 1,
     },

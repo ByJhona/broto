@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Camera from 'lucide-react-native/icons/camera';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar, LoadingScreen, ScreenContent } from '@/components';
 import { useAuth } from '@/hooks';
@@ -17,7 +17,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('profile');
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -127,10 +127,10 @@ export default function EditProfileScreen() {
             <Avatar 
               name={name || user?.email || 'User'} 
               url={localAvatarUri || avatarUrl} 
-              size={100} 
+              size={Metrics.size.hero} 
             />
             <View style={styles.cameraBadge}>
-              <Camera size={20} color={colors.white} />
+              <Camera size={Metrics.icon.small} color={colors.white} />
             </View>
           </Pressable>
           <Text style={styles.avatarHint}>{t('changePhotoHint')}</Text>
@@ -199,24 +199,23 @@ const makeStyles = (colors: ThemeColors) =>
     bottom: 0,
     right: 0,
     backgroundColor: colors.primary,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: Metrics.size.md,
+    height: Metrics.size.md,
+    borderRadius: Metrics.radius.full,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
     borderColor: colors.background,
   },
   avatarHint: {
-    fontSize: 14,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
   },
   inputGroup: {
     gap: Metrics.spacing.sm,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...Typography.label,
     color: colors.foreground,
   },
   input: {
@@ -226,11 +225,11 @@ const makeStyles = (colors: ThemeColors) =>
     borderRadius: Metrics.radius.md,
     paddingHorizontal: Metrics.spacing.md,
     paddingVertical: Metrics.spacing.md,
-    fontSize: 16,
+    ...Typography.input,
     color: colors.foreground,
   },
   hint: {
-    fontSize: 12,
+    ...Typography.caption,
     color: colors.mutedForeground,
   },
   saveButton: {
@@ -245,8 +244,7 @@ const makeStyles = (colors: ThemeColors) =>
     opacity: 0.7,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...Typography.heading,
     color: colors.white,
   },
   });

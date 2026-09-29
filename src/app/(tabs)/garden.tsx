@@ -1,78 +1,82 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Leaf from 'lucide-react-native/icons/leaf';
 import Plus from 'lucide-react-native/icons/plus';
 import { useRouter } from 'expo-router';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import {
-  CreateGroupModal,
-  EmptyState,
-  GardenRemindersSection,
-  IconButton,
-  OfflineBanner,
-  PlantCard,
-  PlantCardSkeleton,
-  PlantGroupsSection,
-} from '@/components';
-import { useCareTasks, useNetworkStatus, usePlantGroups, usePlants } from '@/hooks';
-import type { PlantSummary } from '@/types';
+import { CareStreakBadge, CreateGroupModal, IconButton, OfflineBanner, PageTitle, PlantCard, PlantCardSkeleton } from '@/components';
+import { GRID_COLUMNS, GRID_GAP, GRID_PADDING, useGridCardWidth } from '@/components/gridLayout';
+import { nextCareByPlant } from '@/components/garden/careSchedule';
+import { GardenEmptyState } from '@/components/garden/GardenEmptyState';
+import { GroupManagerModals } from '@/components/garden/GroupManagerModals';
+import { ALL_PLANTS, GroupFilterRow } from '@/components/garden/GroupFilterRow';
+import { PlantsSectionHeader } from '@/components/garden/PlantsSectionHeader';
+import { TodayCareSection } from '@/components/garden/TodayCareSection';
+import { useGroupActions } from '@/components/garden/useGroupActions';
+import { useCareTasks, useNetworkStatus, usePlantGroups, usePlants, usePullToRefresh } from '@/hooks';
+import type { PlantGroup, PlantSummary } from '@/types';
+import { today } from '@/utils';
 
-const SKELETON_PLACEHOLDERS = [0, 1];
-
-type UngroupedEmptyText = {
-  title: string;
-  message: string;
-};
-
-function ungroupedEmptyText(hasAnyPlants: boolean, t: (key: string) => string): UngroupedEmptyText {
-  if (hasAnyPlants) {
-    return {
-      title: t('allOrganizedTitle'),
-      message: t('allOrganizedMessage'),
-    };
-  }
-  return {
-    title: t('noPlantsYetTitle'),
-    message: t('noPlantsYetMessage'),
-  };
-}
+const SKELETON_PLACEHOLDERS = [0, 1, 2, 3];
 
 export default function GardenScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('garden');
-  const { plants, isLoading, refresh } = usePlants();
-  const { tasks, toggleTask, deleteTask } = useCareTasks();
-  const { groups, removeGroup } = usePlantGroups();
+  const { plants, isLoading, refresh: refreshPlants } = usePlants();
+  const { tasks, toggleTask, deleteTask, refresh: refreshTasks } = useCareTasks();
+  const { groups, refresh: refreshGroups } = usePlantGroups();
   const { isOffline } = useNetworkStatus();
-  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+  const cardWidth = useGridCardWidth();
+  const [selectedGroupId, setSelectedGroupId] = useState(ALL_PLANTS);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
-  const showSkeleton = isLoading && plants.length === 0;
-  const ungroupedPlants = plants.filter((plant) => plant.groupId == null);
-  const emptyText = ungroupedEmptyText(plants.length > 0, t);
+  const { isRefreshing, handleRefresh } = usePullToRefresh(() =>
+    Promise.all([refreshPlants(), refreshTasks(), refreshGroups()])
+  );
 
-  const handlePullRefresh = async () => {
-    setIsPullRefreshing(true);
-    await refresh();
-    setIsPullRefreshing(false);
+  const activeGroup = groups.find((group) => group.id === selectedGroupId) ?? null;
+  const groupActions = useGroupActions(activeGroup);
+  const visiblePlants = activeGroup ? plants.filter((plant) => plant.groupId === activeGroup.id) : plants;
+  const hasPlantTools = plants.length > 0 || groups.length > 0;
+  const showSkeleton = isLoading && plants.length === 0;
+
+  const careByPlant = useMemo(() => nextCareByPlant(tasks, today()), [tasks]);
+  const cardStyle = useMemo(() => ({ width: cardWidth }), [cardWidth]);
+  const renderPlantCard = useCallback(
+    ({ item }: { item: PlantSummary }) => <PlantCard plant={item} care={careByPlant.get(item.id) ?? null} style={cardStyle} />,
+    [careByPlant, cardStyle]
+  );
+
+  const handleGroupCreated = (group: PlantGroup) => {
+    setIsCreateGroupOpen(false);
+    setSelectedGroupId(group.id);
   };
 
-  const renderPlantCard = useCallback(({ item }: { item: PlantSummary }) => <PlantCard plant={item} />, []);
-  const gardenListHeader = (
+  const listHeader = (
     <>
-      <PlantGroupsSection groups={groups} onCreateGroup={() => setIsCreateGroupOpen(true)} onDeleteGroup={removeGroup} />
-      <GardenRemindersSection tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
+      <TodayCareSection tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
+      {hasPlantTools ? (
+        <>
+          <GroupFilterRow
+            groups={groups}
+            value={activeGroup?.id ?? ALL_PLANTS}
+            onChange={setSelectedGroupId}
+            onCreateGroup={() => setIsCreateGroupOpen(true)}
+          />
+          <PlantsSectionHeader count={visiblePlants.length} onEditGroup={activeGroup ? groupActions.openActions : null} />
+        </>
+      ) : null}
     </>
   );
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.lg }]}>
-        <Text style={styles.title}>{t('title')}</Text>
+        <PageTitle size="headline" style={styles.title}>{t('title')}</PageTitle>
+        <CareStreakBadge />
       </View>
 
       {isOffline ? (
@@ -83,30 +87,37 @@ export default function GardenScreen() {
 
       {showSkeleton ? (
         <FlatList
+          key="skeleton"
           contentContainerStyle={styles.list}
+          columnWrapperStyle={styles.column}
+          numColumns={GRID_COLUMNS}
           data={SKELETON_PLACEHOLDERS}
           keyExtractor={(item) => `skeleton-${item}`}
-          renderItem={() => <PlantCardSkeleton />}
-          ListHeaderComponent={gardenListHeader}
+          renderItem={() => <PlantCardSkeleton style={cardStyle} />}
+          ListHeaderComponent={listHeader}
         />
       ) : (
         <FlatList
+          key="plants"
           contentContainerStyle={styles.list}
-          data={ungroupedPlants}
+          columnWrapperStyle={styles.column}
+          numColumns={GRID_COLUMNS}
+          data={visiblePlants}
           keyExtractor={(item) => item.id}
           renderItem={renderPlantCard}
           refreshControl={
-            <RefreshControl refreshing={isPullRefreshing} onRefresh={handlePullRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
           }
-          ListHeaderComponent={gardenListHeader}
+          ListHeaderComponent={listHeader}
           ListEmptyComponent={
-            <EmptyState icon={Leaf} title={emptyText.title} message={emptyText.message} style={styles.empty} />
+            <GardenEmptyState isGroupSelected={activeGroup !== null} onAddPlantsToGroup={groupActions.openPicker} />
           }
         />
       )}
 
       <IconButton
-        size={52}
+        accessibilityLabel={t('addPlantTitle')}
+        size={Metrics.size.xl}
         backgroundColor={colors.primary}
         elevated
         style={[styles.createButton, { bottom: insets.bottom + Metrics.spacing.lg }]}
@@ -118,8 +129,9 @@ export default function GardenScreen() {
       <CreateGroupModal
         visible={isCreateGroupOpen}
         onClose={() => setIsCreateGroupOpen(false)}
-        onCreated={() => setIsCreateGroupOpen(false)}
+        onCreated={handleGroupCreated}
       />
+      <GroupManagerModals actions={groupActions} plants={plants} groupId={activeGroup?.id ?? null} />
     </View>
   );
 }
@@ -132,33 +144,36 @@ const makeStyles = (colors: ThemeColors) =>
     },
     header: {
       ...Metrics.layout.centeredContent,
-      paddingHorizontal: Metrics.spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Metrics.spacing.md,
+      paddingHorizontal: GRID_PADDING,
       marginBottom: Metrics.spacing.md,
     },
     banner: {
       ...Metrics.layout.centeredContent,
-      paddingHorizontal: Metrics.spacing.lg,
+      paddingHorizontal: GRID_PADDING,
       marginBottom: Metrics.spacing.md,
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      flexShrink: 1,
+      ...Typography.headline,
       color: colors.foreground,
-    },
-    empty: {
-      ...Metrics.layout.centeredContent,
-      flex: 1,
-      justifyContent: 'center',
-      paddingHorizontal: Metrics.spacing.xl,
     },
     list: {
       ...Metrics.layout.centeredContent,
       flexGrow: 1,
-      padding: Metrics.spacing.lg,
-      gap: Metrics.spacing.md,
+      paddingHorizontal: GRID_PADDING,
+      paddingTop: Metrics.spacing.sm,
+      paddingBottom: Metrics.size.xl + Metrics.spacing.lg * 2,
+      gap: GRID_GAP,
+    },
+    column: {
+      gap: GRID_GAP,
     },
     createButton: {
       position: 'absolute',
-      right: Metrics.spacing.lg,
+      right: GRID_PADDING,
     },
   });

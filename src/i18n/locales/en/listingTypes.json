@@ -10,5 +10,9 @@
   "status_completed": "Completed",
   "status_cancelled": "Cancelled",
   "notice_completed": "This listing has already been completed.",
-  "notice_cancelled": "This listing was cancelled."
+  "notice_cancelled": "This listing was cancelled.",
+  "hint_donation": "Free for whoever wants it",
+  "hint_exchange": "For another plant",
+  "hint_discard": "Needs a new home soon",
+  "hint_sale": "For a price you set"
 }

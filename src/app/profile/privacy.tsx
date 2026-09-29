@@ -1,15 +1,13 @@
-import { useMemo } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type Section = { title: string; body: string };
 
 export default function PrivacyScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('privacy');
 
   const sections: Section[] = [
@@ -64,13 +62,12 @@ const makeStyles = (colors: ThemeColors) =>
       padding: Metrics.spacing.lg,
     },
     lastUpdated: {
-      fontSize: 13,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
       marginBottom: Metrics.spacing.md,
     },
     intro: {
-      fontSize: 15,
-      lineHeight: 22,
+      ...Typography.body,
       color: colors.foreground,
       marginBottom: Metrics.spacing.lg,
     },
@@ -78,19 +75,16 @@ const makeStyles = (colors: ThemeColors) =>
       marginBottom: Metrics.spacing.lg,
     },
     sectionTitle: {
-      fontSize: 16,
-      fontWeight: '700',
+      ...Typography.heading,
       color: colors.foreground,
       marginBottom: Metrics.spacing.xs,
     },
     sectionBody: {
-      fontSize: 14,
-      lineHeight: 21,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
     },
     contactEmail: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.leaf,
       marginTop: Metrics.spacing.xs,
     },

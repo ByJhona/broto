@@ -1,33 +1,66 @@
-import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import type { LucideIcon } from 'lucide-react-native';
+import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 export type FilterChipOption<T> = {
   value: T;
   label: string;
+  icon?: LucideIcon;
+  color?: string;
 };
 
 type FilterChipRowProps<T> = {
   options: FilterChipOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  trailing?: ReactNode;
+  floating?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function FilterChipRow<T>({ options, value, onChange, style }: Readonly<FilterChipRowProps<T>>) {
+export function FilterChipRow<T>({ options, value, onChange, trailing, floating = false, style }: Readonly<FilterChipRowProps<T>>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
+  const activeColor = floating ? colors.leafForeground : colors.leaf;
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.row, style]}>
       {options.map((option) => {
         const selected = option.value === value;
+        const Icon = option.icon;
         return (
-          <Pressable key={option.label} style={[styles.chip, selected && styles.chipActive]} onPress={() => onChange(option.value)}>
-            <Text style={[styles.chipText, selected && styles.chipTextActive]}>{option.label}</Text>
+          <Pressable
+            key={String(option.value)}
+            style={[
+              styles.chip,
+              floating && styles.chipFloating,
+              selected && (floating ? styles.chipFloatingActive : styles.chipActive),
+            ]}
+            onPress={() => onChange(option.value)}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+          >
+            {Icon ? (
+              <Icon
+                size={Metrics.chip.md.iconSize}
+                color={selected ? activeColor : (option.color ?? colors.mutedForeground)}
+                strokeWidth={Metrics.icon.strokeWidth}
+              />
+            ) : null}
+            <Text
+              style={[
+                styles.chipText,
+                floating && styles.chipTextFloating,
+                selected && (floating ? styles.chipTextFloatingActive : styles.chipTextActive),
+              ]}
+            >
+              {option.label}
+            </Text>
           </Pressable>
         );
       })}
+      {trailing}
     </ScrollView>
   );
 }
@@ -36,23 +69,39 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     row: {
       flexDirection: 'row',
-      gap: 6,
+      gap: Metrics.spacing.sm,
     },
     chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Metrics.chip.md.gap,
       backgroundColor: colors.muted,
       borderRadius: Metrics.radius.full,
-      paddingVertical: 6,
-      paddingHorizontal: Metrics.spacing.md,
+      paddingVertical: Metrics.chip.md.paddingVertical,
+      paddingHorizontal: Metrics.chip.md.paddingHorizontal,
     },
     chipActive: {
       backgroundColor: colors.leafForeground,
     },
+    chipFloating: {
+      backgroundColor: colors.card,
+      ...Elevation.low,
+      shadowColor: colors.black,
+    },
+    chipFloatingActive: {
+      backgroundColor: colors.leaf,
+    },
     chipText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
     chipTextActive: {
       color: colors.leaf,
+    },
+    chipTextFloating: {
+      color: colors.foreground,
+    },
+    chipTextFloatingActive: {
+      color: colors.leafForeground,
     },
   });

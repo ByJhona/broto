@@ -1,298 +1,144 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Dna from 'lucide-react-native/icons/dna';
-import Droplet from 'lucide-react-native/icons/droplet';
+import Camera from 'lucide-react-native/icons/camera';
 import Leaf from 'lucide-react-native/icons/leaf';
-import Percent from 'lucide-react-native/icons/percent';
-import Sun from 'lucide-react-native/icons/sun';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import {
-  EmptyState,
-  InfoChip,
-  NewBadgeModal,
-  PromptModal,
-  ScreenContent,
-  SectionTitle,
-  SpeciesInfoSection,
-  SpeciesInfoSkeleton,
-  SpeciesPhotoHero,
-  SubmitButton,
-} from '@/components';
-import { useAuth, usePlants } from '@/hooks';
-import { checkNewlyEarnedBadge, getPlantSpeciesInfo } from '@/services';
-import type { Badge, PlantCandidate, PlantSpeciesInfo } from '@/types';
-import { requireLogin, sunLevelLabel, type SunLevel } from '@/utils';
+import { Metrics, Overlays, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-
-const SUBMIT_BAR_HEIGHT = 96;
+import { EmptyState, NewBadgeModal, OutlineButton, PhotoBadge, PhotoPager, PromptModal, SubmitButton } from '@/components';
+import { CandidateAlternatives } from '@/components/identify/CandidateAlternatives';
+import { CandidateHeader } from '@/components/identify/CandidateHeader';
+import { ReferencePhotosStrip } from '@/components/identify/ReferencePhotosStrip';
+import { useAddIdentifiedPlant } from '@/components/identify/useAddIdentifiedPlant';
+import { FloatingScreenControls } from '@/components/FloatingScreenControls';
+import { SpeciesSections } from '@/components/species/SpeciesSections';
+import { useSpeciesInfo } from '@/components/species/useSpeciesInfo';
+import type { PlantCandidate } from '@/types';
 
 function parseCandidates(raw: string | string[] | undefined): PlantCandidate[] {
   if (!raw || Array.isArray(raw)) return [];
   try {
-    return JSON.parse(raw) as PlantCandidate[];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as PlantCandidate[]) : [];
   } catch {
     return [];
   }
 }
 
-export default function IdentifyResultScreen() {
+function useRetakePhoto() {
   const router = useRouter();
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { session, user } = useAuth();
-  const { addPlant } = usePlants();
-  const { t } = useTranslation('identify');
-  const params = useLocalSearchParams<{ candidates: string }>();
-  const candidates = useMemo(() => parseCandidates(params.candidates), [params.candidates]);
+  return () => router.replace({ pathname: '/identify/capture', params: { mode: 'identify' } });
+}
 
+function NoCandidates() {
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation('identify');
+  const retake = useRetakePhoto();
+
+  return (
+    <View style={[styles.container, styles.empty]}>
+      <EmptyState icon={Leaf} message={t('notFoundMessage')} />
+      <OutlineButton label={t('retakePhotoCta')} icon={Camera} onPress={retake} style={styles.emptyAction} />
+      <FloatingScreenControls />
+    </View>
+  );
+}
+
+export default function IdentifyResultScreen() {
+  const insets = useSafeAreaInsets();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation('identify');
+  const params = useLocalSearchParams<{ candidates: string; source?: string }>();
+  const candidates = useMemo(() => parseCandidates(params.candidates), [params.candidates]);
+  const isFromPhoto = params.source !== 'catalog';
+  const scrollRef = useRef<ScrollView>(null);
+  const retake = useRetakePhoto();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = candidates[selectedIndex];
+  const speciesQuery = useSpeciesInfo(selected?.scientificName ?? null, selected?.commonName ?? null);
+  const adding = useAddIdentifiedPlant(selected, speciesQuery.data ?? null);
 
-  const [name, setName] = useState(selected ? selected.commonName ?? selected.scientificName : '');
-  const [wateringDays, setWateringDays] = useState('3');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNicknameModalOpen, setIsNicknameModalOpen] = useState(false);
-  const [speciesInfo, setSpeciesInfo] = useState<PlantSpeciesInfo | null>(null);
-  const [lightLevel, setLightLevel] = useState<SunLevel | null>(null);
-  const [newBadge, setNewBadge] = useState<Badge | null>(null);
-  const [addedPlantId, setAddedPlantId] = useState<string | null>(null);
-
-  const isSpeciesInfoStale = !selected || speciesInfo?.scientificName !== selected.scientificName;
-
-  const applyCareInfo = (info: PlantSpeciesInfo | null) => {
-    setSpeciesInfo(info);
-    setLightLevel(info?.sunLevel ?? null);
-    if (info) {
-      setWateringDays(String(Math.round((info.wateringDaysMin + info.wateringDaysMax) / 2)));
-    }
-  };
-
-  useEffect(() => {
-    if (!selected) return;
-
-    let isCancelled = false;
-
-    getPlantSpeciesInfo(selected.scientificName, selected.commonName).then((info) => {
-      if (!isCancelled) {
-        applyCareInfo(info);
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [selected]);
+  if (!selected) return <NoCandidates />;
 
   const handleSelect = (index: number) => {
     setSelectedIndex(index);
-    const candidate = candidates[index];
-    setName(candidate.commonName ?? candidate.scientificName);
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
   };
-
-  const handleOpenNicknameModal = () => {
-    if (!requireLogin(router, !!session, t('loginRequiredMessage'))) {
-      return;
-    }
-    setError(null);
-    setIsNicknameModalOpen(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!name.trim()) {
-      setError(t('missingNicknameError'));
-      return;
-    }
-
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      const earnedBadge = user?.id ? await checkNewlyEarnedBadge(user.id, selected.scientificName) : null;
-
-      const plant = await addPlant({
-        name: name.trim(),
-        species: selected.scientificName,
-        commonName: selected.commonName,
-        wateringDays: wateringDays.trim() ? Number(wateringDays) : null,
-        photoUrl: speciesInfo?.referencePhotos[0]?.url ?? null,
-        sunLevel: lightLevel,
-        origin: speciesInfo?.origin ?? null,
-        description: speciesInfo?.description ?? null,
-        wateringDescription: speciesInfo?.wateringDescription ?? null,
-        careLevel: speciesInfo?.careLevel ?? null,
-        toxicToPets: speciesInfo?.toxicToPets ?? null,
-        toxicToPetsNotes: speciesInfo?.toxicToPetsNotes ?? null,
-        toxicToHumans: speciesInfo?.toxicToHumans ?? null,
-        toxicToHumansNotes: speciesInfo?.toxicToHumansNotes ?? null,
-        funFacts: speciesInfo?.funFacts ?? null,
-        commonProblems: speciesInfo?.commonProblems ?? null,
-      });
-
-      if (earnedBadge) {
-        setIsNicknameModalOpen(false);
-        setAddedPlantId(plant.id);
-        setNewBadge(earnedBadge);
-      } else {
-        router.replace(`/plant/${plant.id}`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('saveError'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleClaimBadge = () => {
-    setNewBadge(null);
-    router.replace(user?.id ? `/profile/${user.id}` : `/plant/${addedPlantId}`);
-  };
-
-  const handleCloseBadgeModal = () => {
-    setNewBadge(null);
-    router.replace(`/plant/${addedPlantId}`);
-  };
-
-  if (!selected) {
-    return (
-      <View style={styles.emptyContainer}>
-        <EmptyState icon={Leaf} message={t('notFoundMessage')} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      <KeyboardAwareScrollView
-        contentContainerStyle={{ paddingBottom: SUBMIT_BAR_HEIGHT + insets.bottom }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <SpeciesPhotoHero
-          photos={speciesInfo?.referencePhotos ?? []}
-          isLoading={isSpeciesInfoStale}
-          name={selected.commonName ?? selected.scientificName}
-          species={selected.scientificName}
+      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: Metrics.size.hero + insets.bottom }}>
+        <PhotoPager
+          photoUrls={selected.imageUrl ? [selected.imageUrl] : []}
+          placeholderIcon={Leaf}
+          fullWidth
+          overlay={<PhotoBadge label={isFromPhoto ? t('yourPhotoLabel') : t('referencePhotosCaption')} color={Overlays.scrimMedium} />}
         />
+        <View style={styles.content}>
+          <CandidateHeader
+            candidate={selected}
+            plantType={speciesQuery.data?.plantType ?? null}
+            showConfidence={isFromPhoto}
+            onRetake={retake}
+          />
+          <ReferencePhotosStrip query={speciesQuery} />
+          <CandidateAlternatives
+            candidates={candidates}
+            selectedIndex={selectedIndex}
+            onSelect={handleSelect}
+            onRetake={isFromPhoto ? retake : null}
+          />
+          <SpeciesSections query={speciesQuery} />
+        </View>
+      </ScrollView>
 
-        <ScreenContent>
-          <View style={styles.section}>
-            <SectionTitle>{t('suggestedCareTitle')}</SectionTitle>
-            <View style={styles.chipRow}>
-              <InfoChip icon={Droplet} value={t('wateringEvery', { days: wateringDays || '—' })} />
-              {lightLevel ? <InfoChip icon={Sun} value={sunLevelLabel(lightLevel)} /> : null}
-            </View>
-          </View>
+      <FloatingScreenControls />
 
-          <View style={styles.section}>
-            <SectionTitle>{t('identificationSectionTitle')}</SectionTitle>
-            <View style={styles.chipRow}>
-              <InfoChip icon={Percent} value={t('confidencePercent', { percent: Math.round(selected.score * 100) })} />
-              {selected.family ? <InfoChip icon={Leaf} value={selected.family} /> : null}
-              {selected.genus ? <InfoChip icon={Dna} value={selected.genus} /> : null}
-            </View>
-          </View>
-
-          {candidates.length > 1 ? (
-            <View style={styles.section}>
-              <SectionTitle>{t('otherPossibilitiesTitle')}</SectionTitle>
-              {candidates.map((candidate, index) =>
-                index === selectedIndex ? null : (
-                  <Pressable
-                    key={candidate.scientificName}
-                    style={styles.alternateRow}
-                    onPress={() => handleSelect(index)}
-                  >
-                    <Text style={styles.alternateName}>{candidate.commonName ?? candidate.scientificName}</Text>
-                    <Text style={styles.alternateScore}>{Math.round(candidate.score * 100)}%</Text>
-                  </Pressable>
-                )
-              )}
-            </View>
-          ) : null}
-
-          {!isSpeciesInfoStale && speciesInfo ? (
-            <SpeciesInfoSection info={speciesInfo} />
-          ) : (
-            <SpeciesInfoSkeleton />
-          )}
-        </ScreenContent>
-      </KeyboardAwareScrollView>
-
-      <View style={[styles.floatingButton, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
-        <SubmitButton label={t('addToGardenCta')} onPress={handleOpenNicknameModal} />
+      <View style={[styles.submitBar, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
+        <SubmitButton label={t('addToGardenCta')} onPress={adding.open} />
       </View>
 
       <PromptModal
-        visible={isNicknameModalOpen}
+        {...adding.promptProps}
         title={t('nicknameModalTitle')}
         label={t('nicknameLabel')}
-        value={name}
-        onChangeText={setName}
         placeholder={t('nicknamePlaceholder')}
-        error={error}
         submitLabel={t('saveToGardenCta')}
-        isSubmitting={isSubmitting}
-        onSubmit={handleSubmit}
-        onCancel={() => setIsNicknameModalOpen(false)}
       />
-
-      <NewBadgeModal badge={newBadge} onClaim={handleClaimBadge} onClose={handleCloseBadgeModal} />
+      <NewBadgeModal {...adding.badgeProps} />
     </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Metrics.spacing.xl,
-    backgroundColor: colors.background,
-  },
-  section: {
-    marginBottom: Metrics.spacing.lg,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Metrics.spacing.sm,
-  },
-  alternateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: Metrics.spacing.sm,
-    paddingHorizontal: Metrics.spacing.md,
-    marginBottom: Metrics.spacing.xs,
-  },
-  alternateName: {
-    fontSize: 14,
-    color: colors.foreground,
-  },
-  alternateScore: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-  },
-  floatingButton: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: Metrics.spacing.lg,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    empty: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: Metrics.spacing.xl,
+    },
+    emptyAction: {
+      marginTop: Metrics.spacing.lg,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingTop: Metrics.spacing.lg,
+    },
+    submitBar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingTop: Metrics.spacing.sm,
+      backgroundColor: colors.background,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
   });

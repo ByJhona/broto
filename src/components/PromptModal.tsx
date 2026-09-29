@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { BottomSheet } from './BottomSheet';
 import { FormError } from './FormError';
 import { FormField } from './FormField';
 import { SubmitButton } from './SubmitButton';
@@ -34,52 +33,30 @@ export function PromptModal({
   onSubmit,
   onCancel,
 }: Readonly<PromptModalProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
 
+  const handleClose = () => {
+    if (!isSubmitting) onCancel();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <KeyboardAwareScrollView
-        style={styles.backdrop}
-        contentContainerStyle={styles.backdropContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.card}>
-          <Text style={styles.title}>{title}</Text>
-          <FormField label={label} value={value} onChangeText={onChangeText} placeholder={placeholder} autoFocus />
-          <FormError>{error ?? null}</FormError>
-          <SubmitButton label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
-          <Pressable style={styles.cancel} onPress={onCancel} disabled={isSubmitting}>
-            <Text style={styles.cancelText}>{t('cancel')}</Text>
-          </Pressable>
-        </View>
-      </KeyboardAwareScrollView>
-    </Modal>
+    <BottomSheet visible={visible} onClose={handleClose}>
+      <Text style={styles.title}>{title}</Text>
+      <FormField label={label} value={value} onChangeText={onChangeText} placeholder={placeholder} autoFocus />
+      <FormError>{error ?? null}</FormError>
+      <SubmitButton label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
+      <Pressable style={styles.cancel} onPress={handleClose} disabled={isSubmitting}>
+        <Text style={styles.cancelText}>{t('cancel')}</Text>
+      </Pressable>
+    </BottomSheet>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor: Overlays.scrim,
-    },
-    backdropContent: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: Metrics.spacing.lg,
-    },
-    card: {
-      width: '100%',
-      backgroundColor: colors.background,
-      borderRadius: Metrics.radius.lg,
-      padding: Metrics.spacing.lg,
-    },
     title: {
-      fontSize: 17,
-      fontWeight: '700',
+      ...Typography.title,
       color: colors.foreground,
       marginBottom: Metrics.spacing.md,
     },
@@ -89,8 +66,7 @@ const makeStyles = (colors: ThemeColors) =>
       padding: Metrics.spacing.sm,
     },
     cancelText: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
   });

@@ -387,6 +387,12 @@ verify_jwt = false
 # Vault, not a Supabase user JWT.
 verify_jwt = false
 
+[functions.send-chat-message-push]
+# Called by the on_chat_message_created_push trigger (see the
+# chat_message_push migration) with a custom Authorization secret from
+# Vault, not a Supabase user JWT.
+verify_jwt = false
+
 [functions.check-push-receipts]
 # Called by pg_cron (see the care_reminders_cron_and_receipts migration)
 # with a custom Authorization secret from Vault, not a Supabase user JWT.

@@ -1,38 +1,56 @@
-import { useMemo } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
-import Bell from 'lucide-react-native/icons/bell';
+import { useRouter } from 'expo-router';
 import BellOff from 'lucide-react-native/icons/bell-off';
-import Droplet from 'lucide-react-native/icons/droplet';
-import Heart from 'lucide-react-native/icons/heart';
-import MessageCircle from 'lucide-react-native/icons/message-circle';
-import Sprout from 'lucide-react-native/icons/sprout';
-import Trash2 from 'lucide-react-native/icons/trash-2';
-import X from 'lucide-react-native/icons/x';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Card, EmptyState, IconBadge, LoadingScreen } from '@/components';
+import { CardGroup, EmptyState, FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock } from '@/components';
+import { NotificationRow } from '@/components/notifications/NotificationRow';
 import { useNotifications } from '@/hooks';
-import { confirm, notificationCopy } from '@/utils';
-import type { NotificationType } from '@/types';
+import { notificationHref } from '@/services';
+import type { Notification } from '@/types';
+import {
+  ActionSheet,
+  confirm,
+  groupNotificationsBySection,
+  NOTIFICATION_SECTION,
+  type NotificationSection,
+  type NotificationSectionKey,
+} from '@/utils';
 
-const TYPE_ICONS: Partial<Record<NotificationType, typeof Heart>> = {
-  like: Heart,
-  comment: MessageCircle,
-  system: Bell,
-  listing_interest: Sprout,
-  care_setup_reminder: Droplet,
-  care_reminder: Droplet,
+const SECTION_TITLE_KEYS: Record<NotificationSectionKey, string> = {
+  [NOTIFICATION_SECTION.TODAY]: 'notifications:sectionToday',
+  [NOTIFICATION_SECTION.THIS_WEEK]: 'notifications:sectionThisWeek',
+  [NOTIFICATION_SECTION.EARLIER]: 'notifications:sectionEarlier',
 };
+
+const SKELETON_ROWS = ['a', 'b', 'c', 'd'];
+
+function NotificationsSkeleton() {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <CardGroup>
+      {SKELETON_ROWS.map((key) => (
+        <View key={key} style={styles.skeletonRow}>
+          <SkeletonBlock width={Metrics.size.lg} height={Metrics.size.lg} radius={Metrics.radius.full} />
+          <View style={styles.skeletonText}>
+            <SkeletonBlock width="80%" />
+            <SkeletonBlock width="30%" height={Metrics.fontSize.caption} />
+          </View>
+        </View>
+      ))}
+    </CardGroup>
+  );
+}
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { t } = useTranslation('profile');
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation(['profile', 'notifications', 'common']);
   const { notifications, isLoading, deleteOne, clearAll } = useNotifications();
+  const sections = groupNotificationsBySection(notifications);
+  const hasNotifications = notifications.length > 0;
 
   const handleClearAll = async () => {
     const confirmed = await confirm(t('clearNotificationsTitle'), t('clearNotificationsMessage'), {
@@ -42,104 +60,114 @@ export default function NotificationsScreen() {
     if (confirmed) clearAll();
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  const handleOpenActions = () => {
+    ActionSheet.show(t('notificationsTitle'), [
+      { text: t('clearAll'), style: 'destructive', onPress: handleClearAll },
+      { text: t('common:cancel'), style: 'cancel' },
+    ]);
+  };
 
-  if (notifications.length === 0) {
-    return (
-      <EmptyState
-        icon={BellOff}
-        title={t('noNotificationsTitle')}
-        message={t('noNotificationsMessage')}
-        style={styles.centered}
-      />
+  const handleDelete = (notification: Notification) => {
+    ActionSheet.show(t('notifications:deleteAction'), [
+      { text: t('common:delete'), style: 'destructive', onPress: () => deleteOne(notification.id) },
+      { text: t('common:cancel'), style: 'cancel' },
+    ]);
+  };
+
+  const handleOpen = (notification: Notification) => {
+    const href = notificationHref(notification);
+    return href ? () => router.push(href) : undefined;
+  };
+
+  const header = (
+    <View style={styles.header}>
+      <PageTitle>{t('notificationsTitle')}</PageTitle>
+      {hasNotifications ? (
+        <Text style={styles.subtitle}>{t('notifications:countSubtitle', { count: notifications.length })}</Text>
+      ) : null}
+    </View>
+  );
+
+  const renderSection = ({ item }: { item: NotificationSection }) => (
+    <InfoSection title={t(SECTION_TITLE_KEYS[item.key])}>
+      <CardGroup>
+        {item.notifications.map((notification) => (
+          <NotificationRow
+            key={notification.id}
+            notification={notification}
+            onPress={handleOpen(notification)}
+            onDelete={() => handleDelete(notification)}
+          />
+        ))}
+      </CardGroup>
+    </InfoSection>
+  );
+
+  const renderEmpty = () =>
+    isLoading ? (
+      <NotificationsSkeleton />
+    ) : (
+      <EmptyState icon={BellOff} title={t('noNotificationsTitle')} message={t('noNotificationsMessage')} style={styles.empty} />
     );
-  }
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Pressable onPress={handleClearAll} hitSlop={8}>
-              <Trash2 size={Metrics.icon.normal} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
-          ),
-        }}
-      />
+    <View style={styles.container}>
       <FlatList
-        style={styles.container}
-        contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const Icon = TYPE_ICONS[item.type] ?? Bell;
-          const { title, message } = notificationCopy(item);
-          const handlePress = () => {
-            if (item.postId) {
-              router.push({ pathname: '/post/[id]', params: { id: item.postId } });
-            } else if (item.listingId) {
-              router.push({ pathname: '/listing/[id]', params: { id: item.listingId } });
-            } else if (item.plantId) {
-              router.push(`/plant/${item.plantId}`);
-            }
-          };
-          const isPressable = !!item.postId || !!item.listingId || !!item.plantId;
-          return (
-            <Card style={styles.item} disabled={!isPressable} onPress={handlePress}>
-              <IconBadge size={32}>
-                <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-              </IconBadge>
-              <View style={styles.itemBody}>
-                <Text style={styles.itemTitle}>{title}</Text>
-                <Text style={styles.itemMessage}>{message}</Text>
-              </View>
-              <Pressable onPress={() => deleteOne(item.id)} hitSlop={8}>
-                <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-              </Pressable>
-            </Card>
-          );
-        }}
+        data={sections}
+        keyExtractor={(section) => section.key}
+        renderItem={renderSection}
+        ListHeaderComponent={header}
+        ListEmptyComponent={renderEmpty()}
+        ListFooterComponent={hasNotifications ? <Text style={styles.hint}>{t('notifications:longPressHint')}</Text> : null}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingBottom: insets.bottom + Metrics.spacing.xl,
+          },
+        ]}
       />
-    </>
+      <FloatingScreenControls onOpenActions={hasNotifications ? handleOpenActions : undefined} />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    ...Metrics.layout.centeredContent,
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Metrics.spacing.xl,
-    backgroundColor: colors.background,
-  },
-  list: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-    gap: Metrics.spacing.sm,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Metrics.spacing.sm,
-  },
-  itemBody: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  itemMessage: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginTop: 2,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      flexGrow: 1,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    header: {
+      gap: Metrics.spacing.xs,
+      marginBottom: Metrics.spacing.xl,
+    },
+    subtitle: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
+    },
+    empty: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    hint: {
+      ...Typography.caption,
+      color: colors.mutedForeground,
+      textAlign: 'center',
+    },
+    skeletonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Metrics.spacing.md,
+      paddingVertical: Metrics.spacing.md,
+    },
+    skeletonText: {
+      flex: 1,
+      gap: Metrics.spacing.sm,
+    },
   });

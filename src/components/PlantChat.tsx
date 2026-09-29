@@ -1,18 +1,63 @@
-import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconBadge } from './IconBadge';
-import { useCreditCosts, useCreditsGate } from '@/hooks';
+import { useCreditCosts, useCreditsGate, useReduceMotion } from '@/hooks';
 import { askPlantQuestion, InsufficientCreditsError, type PlantChatMessage } from '@/services';
 import { Alert, Toast } from '@/utils';
 
 const MAX_VISIBLE_MESSAGES = 50;
-const CHAT_BOX_MAX_HEIGHT = 320;
+const TYPING_DOT_KEYS = ['first', 'second', 'third'] as const;
+const TYPING_DOT_IDLE_OPACITY = 0.35;
+const TYPING_DOT_STEP_MS = 320;
+const TYPING_DOT_STAGGER_MS = 160;
+
+function useTypingDots(reduceMotion: boolean) {
+  const [dots] = useState(() => TYPING_DOT_KEYS.map(() => new Animated.Value(TYPING_DOT_IDLE_OPACITY)));
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const pulse = (dot: Animated.Value) =>
+      Animated.sequence([
+        Animated.timing(dot, { toValue: 1, duration: TYPING_DOT_STEP_MS, useNativeDriver: true }),
+        Animated.timing(dot, { toValue: TYPING_DOT_IDLE_OPACITY, duration: TYPING_DOT_STEP_MS, useNativeDriver: true }),
+      ]);
+    const animation = Animated.loop(Animated.stagger(TYPING_DOT_STAGGER_MS, dots.map(pulse)));
+    animation.start();
+    return () => animation.stop();
+  }, [dots, reduceMotion]);
+
+  return dots;
+}
+
+type TypingBubbleProps = {
+  label: string;
+  colors: ThemeColors;
+  styles: ReturnType<typeof makeStyles>;
+};
+
+function TypingBubble({ label, colors, styles }: Readonly<TypingBubbleProps>) {
+  const reduceMotion = useReduceMotion();
+  const dots = useTypingDots(reduceMotion);
+
+  return (
+    <View style={styles.messageRow} accessible accessibilityLabel={label} accessibilityLiveRegion="polite">
+      <IconBadge size={Metrics.size.sm} backgroundColor={colors.leafForeground}>
+        <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      </IconBadge>
+      <View style={[styles.bubble, styles.bubbleAssistant, styles.typingBubble]}>
+        {TYPING_DOT_KEYS.map((key, index) => (
+          <Animated.View key={key} style={[styles.typingDot, { opacity: dots[index] }]} />
+        ))}
+      </View>
+    </View>
+  );
+}
 
 type PlantChatCopy = {
   unlockText: string;
@@ -35,23 +80,35 @@ function plantChatCopy(plantId: string | null, t: (key: string) => string): Plan
   };
 }
 
+type PlantChatVariant = 'embedded' | 'screen';
+
 type PlantChatProps = {
   plantId?: string | null;
+  variant?: PlantChatVariant;
 };
 
-export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
+function chatLayoutStyles(styles: ReturnType<typeof makeStyles>, variant: PlantChatVariant) {
+  if (variant === 'screen') {
+    return { root: styles.screenRoot, chatBox: [styles.chatBox, styles.fill], scroll: styles.fill };
+  }
+  return { root: undefined, chatBox: styles.chatBox, scroll: styles.messagesScroll };
+}
+
+export function PlantChat({ plantId = null, variant = 'embedded' }: Readonly<PlantChatProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('plant');
   const { canAffordCost, applyCreditBalance } = useCreditsGate();
   const scrollRef = useRef<ScrollView>(null);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(variant === 'screen');
+  const layout = chatLayoutStyles(styles, variant);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<PlantChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
   const copy = plantChatCopy(plantId, t);
+  const canSend = !isSending && draft.trim().length > 0;
 
   const handleUnlock = () => {
     setSessionId(null);
@@ -121,8 +178,8 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
   if (!isUnlocked) {
     return (
       <Pressable style={styles.unlockCard} onPress={handleUnlock}>
-        <IconBadge size={44} backgroundColor={colors.leafForeground}>
-          <MessageCircle size={20} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <IconBadge size={Metrics.size.lg} backgroundColor={colors.leafForeground}>
+          <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
         <Text style={styles.unlockText}>{copy.unlockText}</Text>
         <Text style={styles.unlockButtonText}>{t('chatUnlockButton')}</Text>
@@ -131,17 +188,19 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
   }
 
   return (
-    <View>
-      <View style={styles.chatBox}>
+    <View style={layout.root}>
+      <View style={layout.chatBox}>
         {messages.length === 0 ? (
           <Text style={styles.emptyText}>{copy.emptyText}</Text>
         ) : (
           <ScrollView
             ref={scrollRef}
-            style={styles.messagesScroll}
+            style={layout.scroll}
             contentContainerStyle={styles.messages}
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
-            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
+            persistentScrollbar
+            keyboardShouldPersistTaps="handled"
           >
             {messages.map((message) => (
               <View
@@ -149,8 +208,8 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
                 style={[styles.messageRow, message.role === 'user' && styles.messageRowUser]}
               >
                 {message.role === 'assistant' ? (
-                  <IconBadge size={28} backgroundColor={colors.leafForeground}>
-                    <Leaf size={14} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  <IconBadge size={Metrics.size.sm} backgroundColor={colors.leafForeground}>
+                    <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
                   </IconBadge>
                 ) : null}
                 <View style={[styles.bubble, message.role === 'user' ? styles.bubbleUser : styles.bubbleAssistant]}>
@@ -160,10 +219,9 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
                 </View>
               </View>
             ))}
+            {isSending ? <TypingBubble label={t('chatTypingLabel')} colors={colors} styles={styles} /> : null}
           </ScrollView>
         )}
-
-        {isSending ? <ActivityIndicator style={styles.loader} color={colors.leaf} /> : null}
       </View>
 
       <View style={styles.inputRow}>
@@ -176,7 +234,14 @@ export function PlantChat({ plantId = null }: Readonly<PlantChatProps>) {
           multiline
           editable={!isSending}
         />
-        <Pressable style={styles.sendButton} onPress={handleSend} disabled={isSending || !draft.trim()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common:a11ySend')}
+          accessibilityState={{ disabled: !canSend }}
+          style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
+          onPress={handleSend}
+          disabled={!canSend}
+        >
           <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       </View>
@@ -195,14 +260,12 @@ const makeStyles = (colors: ThemeColors) =>
     gap: Metrics.spacing.xs,
   },
   unlockText: {
-    fontSize: 13,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
     textAlign: 'center',
-    lineHeight: 18,
   },
   unlockButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...Typography.labelStrong,
     color: colors.primary,
     marginTop: Metrics.spacing.xs,
   },
@@ -211,19 +274,22 @@ const makeStyles = (colors: ThemeColors) =>
     borderRadius: Metrics.radius.md,
     padding: Metrics.spacing.sm,
     marginBottom: Metrics.spacing.md,
-    minHeight: 64,
+    minHeight: Metrics.size.xxl,
     justifyContent: 'center',
   },
-  loader: {
-    marginVertical: Metrics.spacing.sm,
-  },
   emptyText: {
-    fontSize: 13,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
     textAlign: 'center',
   },
+  screenRoot: {
+    flex: 1,
+  },
+  fill: {
+    flex: 1,
+  },
   messagesScroll: {
-    maxHeight: CHAT_BOX_MAX_HEIGHT,
+    maxHeight: Metrics.layout.chatBoxMaxHeight,
   },
   messages: {
     gap: Metrics.spacing.sm,
@@ -250,9 +316,20 @@ const makeStyles = (colors: ThemeColors) =>
   bubbleUser: {
     backgroundColor: colors.primary,
   },
+  typingBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Metrics.spacing.xs,
+    paddingVertical: Metrics.spacing.md,
+  },
+  typingDot: {
+    width: Metrics.size.dot,
+    height: Metrics.size.dot,
+    borderRadius: Metrics.radius.full,
+    backgroundColor: colors.mutedForeground,
+  },
   bubbleText: {
-    fontSize: 14,
-    lineHeight: 20,
+    ...Typography.bodySmall,
     color: colors.foreground,
   },
   bubbleTextUser: {
@@ -268,27 +345,30 @@ const makeStyles = (colors: ThemeColors) =>
   },
   input: {
     flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
+    minHeight: Metrics.size.md,
+    maxHeight: Metrics.size.hero,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: Metrics.radius.lg,
     paddingHorizontal: Metrics.spacing.md,
     paddingVertical: Metrics.spacing.sm,
-    fontSize: 14,
+    ...Typography.inputSmall,
     color: colors.foreground,
     backgroundColor: colors.card,
   },
   sendButton: {
-    width: 40,
-    height: 40,
+    width: Metrics.size.md,
+    height: Metrics.size.md,
     borderRadius: Metrics.radius.full,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
   costHint: {
-    fontSize: 11,
+    ...Typography.caption,
     color: colors.mutedForeground,
     marginTop: Metrics.spacing.xs,
   },

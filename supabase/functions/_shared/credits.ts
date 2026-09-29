@@ -3,7 +3,7 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 export async function hasEnoughCredits(
   supabaseAdmin: SupabaseClient,
   userId: string,
-  cost: number
+  creditReason: string
 ): Promise<boolean> {
   const { data: subscription } = await supabaseAdmin
     .from('subscriptions')
@@ -22,8 +22,16 @@ export async function hasEnoughCredits(
   if (planError || !plan) return false;
   if (plan.monthly_credits == null) return true;
 
+  const { data: creditCost } = await supabaseAdmin
+    .from('credit_costs')
+    .select('cost')
+    .eq('reason', creditReason)
+    .maybeSingle();
+
+  if (!creditCost) return false;
+
   const { data: balance } = await supabaseAdmin.rpc('get_credit_balance', { target_user_id: userId });
-  return (balance ?? 0) >= cost;
+  return (balance ?? 0) >= creditCost.cost;
 }
 
 export function insufficientCreditsResponse(): Response {

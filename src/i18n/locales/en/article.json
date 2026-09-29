@@ -1,0 +1,7 @@
+{
+  "sectionTitle": "Worth reading",
+  "readingTime": "{{count}} min read",
+  "tipLabel": "Tip",
+  "notFoundTitle": "Article not found",
+  "notFoundMessage": "It may have been taken down. Go back and pick another read."
+}

@@ -61,3 +61,8 @@ export function useAppTheme(): ThemeContextValue {
 export function useColors(): ThemeColors {
   return useAppTheme().colors;
 }
+
+export function useThemedStyles<T>(makeStyles: (colors: ThemeColors) => T): T {
+  const colors = useColors();
+  return useMemo(() => makeStyles(colors), [makeStyles, colors]);
+}

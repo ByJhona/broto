@@ -1,5 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { recordPushTickets, sendExpoPushNotifications } from '../_shared/expoPush.ts';
+import { sendPushToUser } from '../_shared/expoPush.ts';
 import { resolveLocale, type Locale } from '../_shared/locale.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -20,7 +20,6 @@ const NOTIFICATION_COPY: Record<Locale, Record<string, (ctx: NotificationCopyCon
       title: 'Interesse na sua oferta',
       message: `${actorName} se interessou pela planta que você ofereceu!`,
     }),
-    listing_message: ({ actorName }) => ({ title: 'Nova mensagem', message: `${actorName} te enviou uma mensagem.` }),
     care_setup_reminder: ({ plantName }) => ({
       title: 'Configure um lembrete de cuidado',
       message: plantName
@@ -35,7 +34,6 @@ const NOTIFICATION_COPY: Record<Locale, Record<string, (ctx: NotificationCopyCon
       title: 'Interest in your listing',
       message: `${actorName} is interested in the plant you offered!`,
     }),
-    listing_message: ({ actorName }) => ({ title: 'New message', message: `${actorName} sent you a message.` }),
     care_setup_reminder: ({ plantName }) => ({
       title: 'Set up a care reminder',
       message: plantName
@@ -98,33 +96,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ sent: 0 }), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  const { data: tokenRows } = await supabaseAdmin
-    .from('push_tokens')
-    .select('token')
-    .eq('user_id', notification.user_id);
+  const sent = await sendPushToUser(supabaseAdmin, notification.user_id, { title, body: message, data: { notificationId } });
 
-  const tokens = ((tokenRows ?? []) as { token: string }[]).map((row) => row.token);
-  if (tokens.length === 0) {
-    return new Response(JSON.stringify({ sent: 0 }), { headers: { 'Content-Type': 'application/json' } });
-  }
-
-  const messages = tokens.map((token) => ({
-    id: token,
-    to: token,
-    title,
-    body: message,
-    data: { notificationId },
-  }));
-
-  const { deliveredIds: deliveredTokens, staleTokens, tickets } = await sendExpoPushNotifications(messages);
-
-  if (staleTokens.length > 0) {
-    await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);
-  }
-
-  await recordPushTickets(supabaseAdmin, tickets);
-
-  return new Response(JSON.stringify({ sent: deliveredTokens.length }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return new Response(JSON.stringify({ sent }), { headers: { 'Content-Type': 'application/json' } });
 });

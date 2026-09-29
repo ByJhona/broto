@@ -1,4 +1,4 @@
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -7,13 +7,12 @@ import Users from 'lucide-react-native/icons/users';
 import Store from 'lucide-react-native/icons/store';
 import Leaf from 'lucide-react-native/icons/leaf';
 import Scan from 'lucide-react-native/icons/scan';
-import { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function TabLayout() {
   const colors = useColors();
   const { t } = useTranslation('tabs');
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   return (
     <Tabs
       screenOptions={{
@@ -64,7 +63,7 @@ export default function TabLayout() {
               style={[props.style, styles.customButtonContainer]}
             >
               <View style={styles.highlightButton}>
-                <Scan size={34} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                <Scan size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
               </View>
             </TouchableOpacity>
           ),
@@ -99,28 +98,25 @@ export default function TabLayout() {
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
   customButtonContainer: {
-    top: -10,
+    top: -Metrics.spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
   highlightButton: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: Metrics.size.xxl,
+    height: Metrics.size.xxl,
+    borderRadius: Metrics.radius.full,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Elevation.high,
   },
   activeTabIcon: {
     backgroundColor: colors.tabIconSelected + '24',
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    borderRadius: 24,
+    paddingHorizontal: Metrics.spacing.lg,
+    paddingVertical: Metrics.spacing.sm,
+    borderRadius: Metrics.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },

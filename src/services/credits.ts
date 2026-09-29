@@ -7,8 +7,6 @@ export type CreditsState = {
   monthlyCredits: number | null;
   balance: number | null;
   creditRenewalPeriod: 'weekly' | 'monthly';
-  maxActiveListings: number | null;
-  maxEventsPerMonth: number | null;
   maxListingPhotos: number | null;
 };
 
@@ -30,18 +28,16 @@ type CreditsRow = {
   monthly_credits: number | null;
   balance: number | null;
   credit_renewal_period: 'weekly' | 'monthly';
-  max_active_listings: number | null;
-  max_events_per_month: number | null;
   max_listing_photos: number | null;
 };
 
 export async function getCredits(): Promise<CreditsState | null> {
   const { data, error } = await supabase.rpc('get_my_credits').maybeSingle<CreditsRow>();
 
-  if (error || !data) {
-    console.warn('Não foi possível buscar os créditos:', error);
-    return null;
+  if (error) {
+    throw error;
   }
+  if (!data) return null;
 
   return {
     planId: data.plan_id,
@@ -49,8 +45,6 @@ export async function getCredits(): Promise<CreditsState | null> {
     monthlyCredits: data.monthly_credits,
     balance: data.balance,
     creditRenewalPeriod: data.credit_renewal_period,
-    maxActiveListings: data.max_active_listings,
-    maxEventsPerMonth: data.max_events_per_month,
     maxListingPhotos: data.max_listing_photos,
   };
 }
@@ -98,6 +92,8 @@ export type PlanCatalogItem = {
   name: string;
   description: string;
   monthlyCredits: number | null;
+  creditRenewalPeriod: 'weekly' | 'monthly';
+  maxListingPhotos: number | null;
   revenuecatEntitlementId: string | null;
 };
 
@@ -119,6 +115,8 @@ export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
       name: string;
       description: string;
       monthly_credits: number | null;
+      credit_renewal_period: 'weekly' | 'monthly';
+      max_listing_photos: number | null;
       revenuecat_entitlement_id: string | null;
     }[]
   ).map((row) => ({
@@ -126,6 +124,8 @@ export async function getPlanCatalog(): Promise<PlanCatalogItem[]> {
     name: row.name,
     description: row.description,
     monthlyCredits: row.monthly_credits,
+    creditRenewalPeriod: row.credit_renewal_period,
+    maxListingPhotos: row.max_listing_photos,
     revenuecatEntitlementId: row.revenuecat_entitlement_id,
   }));
 }

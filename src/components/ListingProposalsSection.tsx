@@ -1,15 +1,13 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { OFFER_STATUS, type OfferStatus } from '@/types';
 import { Avatar } from './Avatar';
-import { Card } from './Card';
 import { ListRow } from './ListRow';
-import { SectionTitle } from './SectionTitle';
+import { InfoSection } from './InfoSection';
 
 export type ListingProposal = {
   id: string;
@@ -31,9 +29,9 @@ const STATUS_LABEL_KEY: Record<OfferStatus, string> = {
 };
 
 const STATUS_COLOR: Record<OfferStatus, string> = {
-  pending: '#F59E0B',
-  accepted: '#22C55E',
-  declined: '#D03D37',
+  pending: '#B45309',
+  accepted: '#15803D',
+  declined: '#BF3832',
 };
 
 type ListingProposalsSectionProps = {
@@ -60,7 +58,7 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
             <Image source={{ uri: proposal.offeredPlantPhotoUrl }} style={styles.offeredPlantThumb} />
           ) : (
             <View style={[styles.offeredPlantThumb, styles.offeredPlantThumbPlaceholder]}>
-              <Leaf size={16} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
             </View>
           )}
           <Text style={styles.offeredPlantName}>{proposal.offeredPlantName}</Text>
@@ -69,7 +67,7 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
       {proposal.onViewOffer ? (
         <Pressable style={styles.viewOfferButton} onPress={proposal.onViewOffer}>
           <Text style={styles.viewOfferButtonText}>{t('offer:viewOfferAction')}</Text>
-          <ChevronRight size={16} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronRight size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       ) : null}
     </>
@@ -104,17 +102,16 @@ export function ListingProposalsSection({
   onOpenChat,
 }: Readonly<ListingProposalsSectionProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['listing', 'offer', 'common']);
 
   return (
-    <Card style={styles.section}>
-      <SectionTitle>{title}</SectionTitle>
+    <InfoSection title={title}>
       {proposals?.length ? (
         proposals.map((proposal) => (
           <View key={proposal.id} style={styles.proposal}>
             <ListRow
-              leading={<Avatar name={proposal.name ?? t('common:someone')} url={proposal.avatarUrl} size={40} />}
+              leading={<Avatar name={proposal.name ?? t('common:someone')} url={proposal.avatarUrl} size={Metrics.size.md} />}
               title={proposal.name ?? t('common:someone')}
               trailing={
                 <View style={[styles.statusPill, { backgroundColor: STATUS_COLOR[proposal.status] }]}>
@@ -133,40 +130,38 @@ export function ListingProposalsSection({
       ) : (
         <Text style={styles.emptyText}>{emptyMessage}</Text>
       )}
-    </Card>
+    </InfoSection>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    section: {
-      marginBottom: Metrics.spacing.lg,
-    },
     emptyText: {
-      fontSize: 15,
-      lineHeight: 21,
-      color: colors.foreground,
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
     },
     proposal: {
-      paddingVertical: Metrics.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      backgroundColor: colors.card,
+      borderRadius: Metrics.radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: Metrics.spacing.md,
+      marginBottom: Metrics.spacing.sm,
     },
     statusPill: {
       borderRadius: Metrics.radius.full,
-      paddingVertical: 4,
-      paddingHorizontal: Metrics.spacing.sm,
+      paddingVertical: Metrics.chip.sm.paddingVertical,
+      paddingHorizontal: Metrics.chip.sm.paddingHorizontal,
     },
     statusPillText: {
-      fontSize: 11,
-      fontWeight: '700',
+      ...Typography.captionStrong,
       color: colors.white,
     },
     offeredPlant: {
       marginTop: Metrics.spacing.sm,
     },
     offeredPlantLabel: {
-      fontSize: 12,
+      ...Typography.caption,
       color: colors.mutedForeground,
       marginBottom: Metrics.spacing.xs,
     },
@@ -176,8 +171,8 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.sm,
     },
     offeredPlantThumb: {
-      width: 36,
-      height: 36,
+      width: Metrics.size.md,
+      height: Metrics.size.md,
       borderRadius: Metrics.radius.sm,
       backgroundColor: colors.muted,
     },
@@ -186,24 +181,22 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     offeredPlantName: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.foreground,
     },
     viewOfferButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 2,
+      gap: Metrics.spacing.xs,
       marginTop: Metrics.spacing.sm,
       borderWidth: 1.5,
       borderColor: colors.primary,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
     },
     viewOfferButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.primary,
     },
     actions: {
@@ -215,25 +208,23 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       borderWidth: 1.5,
       borderColor: colors.destructive,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
       alignItems: 'center',
     },
     declineButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.destructive,
     },
     acceptButton: {
       flex: 1,
       backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.md,
+      borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
       alignItems: 'center',
     },
     acceptButtonText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.primaryForeground,
     },
   });

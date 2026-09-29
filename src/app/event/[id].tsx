@@ -1,28 +1,13 @@
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
+import { useLocalSearchParams } from 'expo-router';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Users from 'lucide-react-native/icons/users';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import {
-  Card,
-  EmptyState,
-  EventAttendeesSection,
-  FeaturedBadge,
-  LoadingScreen,
-  OwnerRow,
-  PlantHero,
-  PromptModal,
-  ScreenContent,
-  SectionTitle,
-  StatusNotice,
-  SubmitButton,
-} from '@/components';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { EmptyState, EventAttendeesSection, FeaturedBadge, FloatingScreenControls, InfoSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice, SubmitButton } from '@/components';
 import { useEventDetail } from '@/hooks';
 import { isBoostActive } from '@/services';
-import { Alert, closeAlertButton, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
+import { ActionSheet, closeAlertButton, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
 import type { PlantEvent } from '@/types';
 import { useTranslation } from '@/i18n';
 
@@ -59,117 +44,78 @@ function formatAttendeeCountText(t: Translate, count: number): string {
   return t('attendeesConfirmed', { count });
 }
 
-function buildEventHeaderOptions(
-  isOwner: boolean,
-  isActing: boolean,
-  colors: ThemeColors,
-  onOpenActions: () => void
-) {
-  if (!isOwner) return undefined;
-  return {
-    headerRight: () => (
-      <Pressable onPress={onOpenActions} disabled={isActing} hitSlop={8}>
-        <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-      </Pressable>
-    ),
-  };
-}
-
 type Styles = ReturnType<typeof makeStyles>;
 
 type EventHeroProps = {
-  photoUrl: string | null;
-  title: string;
-  eventDate: string;
-  featured: boolean;
+  event: PlantEvent;
   styles: Styles;
 };
 
-function EventHero({ photoUrl, title, eventDate, featured, styles }: Readonly<EventHeroProps>) {
-  if (photoUrl) {
-    return (
-      <PlantHero photoUrl={photoUrl} name={title} species={formatEventDateTime(eventDate)}>
-        {featured ? <FeaturedBadge style={styles.featuredBadgeFloating} /> : null}
-      </PlantHero>
-    );
-  }
-
+function EventHero({ event, styles }: Readonly<EventHeroProps>) {
+  const dateLabel = formatEventDateTime(event.eventDate);
   return (
     <>
-      <View style={styles.heroPlaceholder}>
-        <EVENT_ICON size={Metrics.icon.xl} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        {featured ? <FeaturedBadge style={styles.featuredBadgeFloating} /> : null}
-      </View>
-      <View style={styles.plainHeader}>
-        <Text style={styles.plainHeaderName}>{title}</Text>
-        <Text style={styles.plainHeaderDate}>{formatEventDateTime(eventDate)}</Text>
+      <PhotoPager
+        photoUrls={event.photoUrl ? [event.photoUrl] : []}
+        placeholderIcon={EVENT_ICON}
+        placeholderColor={EVENT_COLOR}
+        fullWidth
+        recyclingKey={event.id}
+        overlay={
+          <>
+            <PhotoBadge icon={EVENT_ICON} label={dateLabel} color={EVENT_COLOR} />
+            {isBoostActive(event.boostedUntil) ? <FeaturedBadge /> : null}
+          </>
+        }
+      />
+      <View style={styles.titleBlock}>
+        <PageTitle>{event.title}</PageTitle>
+        <Text style={styles.date}>{dateLabel}</Text>
       </View>
     </>
   );
 }
 
-type EventMetaCardProps = {
+type EventFactsProps = {
   event: PlantEvent;
   isAddressLoading: boolean;
   address: string | null | undefined;
-  onPressOwner: () => void;
   styles: Styles;
 };
 
-function EventMetaCard({ event, isAddressLoading, address, onPressOwner, styles }: Readonly<EventMetaCardProps>) {
+function EventFacts({ event, isAddressLoading, address, styles }: Readonly<EventFactsProps>) {
   const { t } = useTranslation('event');
   return (
-    <Card style={styles.section}>
-      <OwnerRow
-        eyebrow={t('organizedByEyebrow')}
-        ownerName={event.ownerName}
-        ownerAvatarUrl={event.ownerAvatarUrl}
-        onPress={onPressOwner}
-      />
-
-      <View style={styles.locationRow}>
-        <MapPin size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.locationText}>{formatAddressText(t, isAddressLoading, address)}</Text>
-      </View>
-
-      <View style={styles.locationRow}>
-        <Users size={16} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.locationText}>{formatAttendeeCountText(t, event.attendeeCount)}</Text>
-      </View>
-    </Card>
-  );
-}
-
-type EventDescriptionCardProps = {
-  description: string | null;
-  styles: Styles;
-};
-
-function EventDescriptionCard({ description, styles }: Readonly<EventDescriptionCardProps>) {
-  const { t } = useTranslation('event');
-  if (!description) return null;
-  return (
-    <Card style={styles.section}>
-      <SectionTitle>{t('descriptionSectionTitle')}</SectionTitle>
-      <Text style={styles.description}>{description}</Text>
-    </Card>
+    <View style={styles.facts}>
+      <MetaRow icon={MapPin} iconColor={EVENT_COLOR} label={formatAddressText(t, isAddressLoading, address)} numberOfLines={2} />
+      <MetaRow icon={Users} iconColor={EVENT_COLOR} label={formatAttendeeCountText(t, event.attendeeCount)} />
+    </View>
   );
 }
 
 export default function EventDetailScreen() {
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useEventDetail(id);
   const { t } = useTranslation(['event', 'common']);
 
   if (detail.isLoading) {
-    return <LoadingScreen />;
+    return (
+      <View style={styles.container}>
+        <LoadingScreen />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   if (!detail.event) {
-    return <EmptyState icon={EVENT_ICON} title={t('eventNotFoundTitle')} message={t('eventNotFoundMessage')} />;
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <EmptyState icon={EVENT_ICON} title={t('eventNotFoundTitle')} message={t('eventNotFoundMessage')} />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   const { event } = detail;
@@ -181,59 +127,64 @@ export default function EventDetailScreen() {
       onBoost: detail.handleBoost,
       onDelete: detail.handleDelete,
     });
-    Alert.alert(t('editEventActionsTitle'), undefined, buttons);
+    ActionSheet.show(t('editEventActionsTitle'), buttons);
   };
 
   const statusNotice = eventStatusNotice(t, detail.isCancelled, detail.isPast);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
-      <Stack.Screen options={buildEventHeaderOptions(detail.isOwner, detail.isActing, colors, handleOpenActions)} />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
+        <EventHero event={event} styles={styles} />
 
-      <EventHero
-        photoUrl={event.photoUrl}
-        title={event.title}
-        eventDate={event.eventDate}
-        featured={isBoostActive(event.boostedUntil)}
-        styles={styles}
-      />
-
-      <ScreenContent>
-        <EventMetaCard
-          event={event}
-          isAddressLoading={detail.addressQuery.isLoading}
-          address={detail.addressQuery.data}
-          onPressOwner={detail.handlePressOwner}
-          styles={styles}
-        />
-
-        <StatusNotice text={statusNotice?.text ?? null} muted={statusNotice?.muted} />
-
-        <EventDescriptionCard description={event.description} styles={styles} />
-
-        <EventAttendeesSection attendees={detail.attendeesQuery.data} onPressAttendee={detail.handlePressAttendee} />
-
-        {detail.canRsvp ? (
-          <SubmitButton
-            label={event.isAttending ? t('cancelAttendance') : t('confirmAttendance')}
-            onPress={detail.handleToggleAttendance}
-            loading={detail.isActing}
+        <ScreenContent style={styles.content}>
+          <EventFacts
+            event={event}
+            isAddressLoading={detail.addressQuery.isLoading}
+            address={detail.addressQuery.data}
+            styles={styles}
           />
-        ) : null}
-      </ScreenContent>
 
-      <PromptModal
-        visible={detail.isShareModalOpen}
-        title={t('shareToCommunity')}
-        label={t('shareCommentLabel')}
-        value={detail.shareCaption}
-        onChangeText={detail.setShareCaption}
-        submitLabel={t('shareSubmitLabel')}
-        isSubmitting={detail.isSharing}
-        onSubmit={detail.handleSubmitShare}
-        onCancel={detail.closeShareModal}
-      />
-    </ScrollView>
+          <StatusNotice text={statusNotice?.text ?? null} muted={statusNotice?.muted} />
+
+          <OwnerRow
+            eyebrow={t('organizedByEyebrow')}
+            ownerName={event.ownerName}
+            ownerAvatarUrl={event.ownerAvatarUrl}
+            onPress={detail.handlePressOwner}
+          />
+
+          {event.description ? (
+            <InfoSection title={t('descriptionSectionTitle')}>
+              <Text style={styles.description}>{event.description}</Text>
+            </InfoSection>
+          ) : null}
+
+          <EventAttendeesSection attendees={detail.attendeesQuery.data} onPressAttendee={detail.handlePressAttendee} />
+
+          {detail.canRsvp ? (
+            <SubmitButton
+              label={event.isAttending ? t('cancelAttendance') : t('confirmAttendance')}
+              onPress={detail.handleToggleAttendance}
+              loading={detail.isActing}
+            />
+          ) : null}
+        </ScreenContent>
+
+        <PromptModal
+          visible={detail.isShareModalOpen}
+          title={t('shareToCommunity')}
+          label={t('shareCommentLabel')}
+          value={detail.shareCaption}
+          onChangeText={detail.setShareCaption}
+          submitLabel={t('shareSubmitLabel')}
+          isSubmitting={detail.isSharing}
+          onSubmit={detail.handleSubmitShare}
+          onCancel={detail.closeShareModal}
+        />
+      </ScrollView>
+      <FloatingScreenControls onOpenActions={detail.isOwner ? handleOpenActions : undefined} isBusy={detail.isActing} />
+    </View>
   );
 }
 
@@ -243,52 +194,33 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    heroPlaceholder: {
-      position: 'relative',
-      width: '100%',
-      height: 260,
-      backgroundColor: colors.muted,
+    centered: {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    featuredBadgeFloating: {
-      position: 'absolute',
-      top: Metrics.spacing.md,
-      right: Metrics.spacing.md,
-    },
-    plainHeader: {
-      alignItems: 'center',
+    titleBlock: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
       paddingTop: Metrics.spacing.lg,
     },
-    plainHeaderName: {
-      fontSize: 24,
-      fontWeight: 'bold',
+    title: {
+      ...Typography.display,
       color: colors.foreground,
-      textAlign: 'center',
     },
-    plainHeaderDate: {
-      fontSize: 14,
-      fontWeight: '600',
+    date: {
+      ...Typography.headingMedium,
       color: EVENT_COLOR,
-      marginTop: 2,
+      marginTop: Metrics.spacing.xs,
     },
-    section: {
-      marginBottom: Metrics.spacing.lg,
+    content: {
+      paddingTop: Metrics.spacing.sm,
     },
     description: {
-      fontSize: 15,
-      lineHeight: 21,
+      ...Typography.body,
       color: colors.foreground,
     },
-    locationRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.xs,
-      marginTop: Metrics.spacing.sm,
-    },
-    locationText: {
-      flex: 1,
-      fontSize: 15,
-      color: colors.foreground,
+    facts: {
+      gap: Metrics.spacing.sm,
+      marginBottom: Metrics.spacing.lg,
     },
   });

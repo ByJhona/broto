@@ -1,6 +1,5 @@
 import Purchases from 'react-native-purchases';
 import { Linking, Platform } from 'react-native';
-import { i18n } from '@/i18n';
 
 const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
@@ -70,11 +69,10 @@ export async function restorePurchases() {
   return Purchases.restorePurchases();
 }
 
-export async function manageSubscriptions() {
+export async function openSubscriptionManagement(): Promise<boolean> {
   const customerInfo = await Purchases.getCustomerInfo();
-  if (!customerInfo.managementURL) {
-    throw new Error(i18n.t('credits:noActiveSubscription'));
-  }
+  if (!customerInfo.managementURL) return false;
 
   await Linking.openURL(customerInfo.managementURL);
+  return true;
 }

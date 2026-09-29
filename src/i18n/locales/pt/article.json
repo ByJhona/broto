@@ -1,0 +1,7 @@
+{
+  "sectionTitle": "Para ler",
+  "readingTime": "{{count}} min de leitura",
+  "tipLabel": "Dica",
+  "notFoundTitle": "Matéria não encontrada",
+  "notFoundMessage": "Ela pode ter saído do ar. Volte e escolha outra leitura."
+}

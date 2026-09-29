@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
+import * as Haptics from 'expo-haptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createCareTask, deleteCareTask, getCareTasks, toggleCareTask, type CreateCareTaskInput } from '@/services';
 import type { CareTask } from '@/types';
 import { useAuth } from './useAuth';
+import { celebrateXpLevelUp } from './useXp';
 
 export function useCareTasks() {
   const { user } = useAuth();
@@ -32,6 +34,11 @@ export function useCareTasks() {
     onError: (_error, _variables, context) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
     },
+    onSuccess: (_data, { done }) => {
+      if (!done || !user?.id) return;
+      queryClient.invalidateQueries({ queryKey: ['care-streak', user.id] });
+      celebrateXpLevelUp(queryClient, user.id);
+    },
   });
 
   const createMutation = useMutation({
@@ -60,6 +67,7 @@ export function useCareTasks() {
     (id: string) => {
       const task = tasks.find((item) => item.id === id);
       if (!task) return;
+      if (!task.done) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       toggleMutation.mutate({ task, done: !task.done });
     },
     [tasks, toggleMutation]

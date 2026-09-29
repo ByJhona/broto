@@ -15,6 +15,13 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+export const MESSAGE_DELIVERY = {
+  SENDING: 'sending',
+  FAILED: 'failed',
+} as const;
+
+export type MessageDelivery = (typeof MESSAGE_DELIVERY)[keyof typeof MESSAGE_DELIVERY];
+
 export type ChatConversation = {
   otherUserId: string;
   otherUserName: string;

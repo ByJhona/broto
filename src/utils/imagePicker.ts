@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { i18n } from '@/i18n';
-import { Alert } from './alert';
+import { ActionSheet } from './actionSheet';
 
 async function launchPicker(source: 'camera' | 'gallery'): Promise<string | null> {
   const permission =
@@ -19,7 +19,7 @@ async function launchPicker(source: 'camera' | 'gallery'): Promise<string | null
 
 export function pickPhoto(title?: string): Promise<string | null> {
   return new Promise((resolve) => {
-    Alert.alert(title ?? i18n.t('common:addPhoto'), undefined, [
+    ActionSheet.show(title ?? i18n.t('common:addPhoto'), [
       { text: i18n.t('common:takePhoto'), onPress: () => resolve(launchPicker('camera')) },
       { text: i18n.t('common:chooseFromGallery'), onPress: () => resolve(launchPicker('gallery')) },
       { text: i18n.t('common:cancel'), style: 'cancel', onPress: () => resolve(null) },

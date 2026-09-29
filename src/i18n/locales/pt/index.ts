@@ -1,3 +1,4 @@
+import article from './article.json';
 import common from './common.json';
 import tabs from './tabs.json';
 import nav from './nav.json';
@@ -15,6 +16,7 @@ import profile from './profile.json';
 import credits from './credits.json';
 import garden from './garden.json';
 import plant from './plant.json';
+import species from './species.json';
 import group from './group.json';
 import event from './event.json';
 import listing from './listing.json';
@@ -33,6 +35,7 @@ import photo from './photo.json';
 import privacy from './privacy.json';
 
 export default {
+  article,
   common,
   tabs,
   nav,
@@ -50,6 +53,7 @@ export default {
   credits,
   garden,
   plant,
+  species,
   group,
   event,
   listing,

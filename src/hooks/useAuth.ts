@@ -7,7 +7,7 @@ export function useAuth() {
 
   const signIn = useCallback((email: string, password: string) => signInWithEmail(email, password), []);
   const signUp = useCallback(
-    (name: string, username: string, email: string, password: string) => signUpWithEmail(name, username, email, password),
+    (name: string, email: string, password: string) => signUpWithEmail(name, email, password),
     []
   );
   const signInGoogle = useCallback(() => signInWithGoogle(), []);

@@ -1,3 +1,4 @@
+import { ensureWriteApplied } from './writeGuard';
 import { supabase } from './supabase';
 import type { FollowCounts } from '@/types';
 
@@ -18,8 +19,9 @@ export async function followUser(followerId: string, followingId: string): Promi
 }
 
 export async function unfollowUser(followerId: string, followingId: string): Promise<void> {
-  const { error } = await supabase.from('follows').delete().match({ follower_id: followerId, following_id: followingId });
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('follows').delete({ count: 'exact' }).match({ follower_id: followerId, following_id: followingId })
+  );
 }
 
 export async function getFollowCounts(userId: string): Promise<FollowCounts> {

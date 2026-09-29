@@ -1,109 +1,59 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import type { StyleProp, ViewStyle } from 'react-native';
+import MapPin from 'lucide-react-native/icons/map-pin';
 import Users from 'lucide-react-native/icons/users';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { EVENT_COLOR, EVENT_ICON, formatEventDateTime } from '@/utils';
-import { EVENT_STATUS, type PlantEvent } from '@/types';
+import { Overlays } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { StatusBadge } from './StatusBadge';
+import { isBoostActive } from '@/services';
+import { EVENT_STATUS, type PlantEvent } from '@/types';
+import { EVENT_COLOR, EVENT_ICON, formatEventDateTime } from '@/utils';
+import { FeaturedBadge } from './FeaturedBadge';
+import { PhotoBadge, PhotoCard, type PhotoCardMeta } from './PhotoCard';
 
-const EVENT_CARD_WIDTH = 220;
+type Translate = (key: string, options?: Record<string, unknown>) => string;
 
-function eventStatusLabel(
-  t: (key: string, options?: Record<string, unknown>) => string,
-  event: PlantEvent,
-  isPast: boolean
-): string | null {
+function eventStatusLabel(event: PlantEvent, t: Translate): string | null {
   if (event.status === EVENT_STATUS.CANCELLED) return t('statusCancelled');
-  if (isPast) return t('statusEnded');
+  if (new Date(event.eventDate).getTime() < Date.now()) return t('statusEnded');
+  return null;
+}
+
+function eventMeta(event: PlantEvent, distanceLabel: string | null, t: Translate): PhotoCardMeta {
+  if (distanceLabel) return { icon: MapPin, label: distanceLabel };
+  return { icon: Users, label: t('attendeesShort', { count: event.attendeeCount }) };
+}
+
+function EventCorner({ event, t }: Readonly<{ event: PlantEvent; t: Translate }>) {
+  const statusLabel = eventStatusLabel(event, t);
+  if (statusLabel) return <PhotoBadge label={statusLabel} color={Overlays.scrim} />;
+  if (isBoostActive(event.boostedUntil)) return <FeaturedBadge compact />;
   return null;
 }
 
 type EventCardProps = {
   event: PlantEvent;
-  distanceLabel?: string | null;
+  distanceLabel: string | null;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function EventCard({ event, distanceLabel, onPress }: Readonly<EventCardProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+export function EventCard({ event, distanceLabel, onPress, style }: Readonly<EventCardProps>) {
   const { t } = useTranslation('event');
-  const Icon = EVENT_ICON;
-  const attendeesLabel = t('attendeesShort', { count: event.attendeeCount });
-  const metaLine = [attendeesLabel, distanceLabel].filter(Boolean).join(' · ');
-  // eslint-disable-next-line react-hooks/purity -- reading the wall clock to check if the event date already passed
-  const isPast = new Date(event.eventDate).getTime() < Date.now();
-  const statusLabel = eventStatusLabel(t, event, isPast);
+  const dateLabel = formatEventDateTime(event.eventDate);
+  const meta = eventMeta(event, distanceLabel, t);
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      {event.photoUrl ? (
-        <Image source={{ uri: event.photoUrl }} style={styles.photo} contentFit="cover" />
-      ) : (
-        <View style={[styles.photo, styles.photoPlaceholder]}>
-          <Icon size={28} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
-        </View>
-      )}
-
-      {statusLabel ? <StatusBadge label={statusLabel} /> : null}
-
-      <View style={styles.body}>
-        <Text style={styles.date}>{formatEventDateTime(event.eventDate)}</Text>
-        <Text style={styles.title} numberOfLines={2}>
-          {event.title}
-        </Text>
-        <View style={styles.metaRow}>
-          <Users size={12} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.metaText}>{metaLine}</Text>
-        </View>
-      </View>
-    </Pressable>
+    <PhotoCard
+      title={event.title}
+      photoUrl={event.photoUrl}
+      placeholderIcon={EVENT_ICON}
+      placeholderColor={EVENT_COLOR}
+      topLeft={<PhotoBadge icon={EVENT_ICON} label={dateLabel} color={EVENT_COLOR} />}
+      topRight={<EventCorner event={event} t={t} />}
+      meta={meta}
+      onPress={onPress}
+      accessibilityLabel={[event.title, dateLabel, meta.label].join('. ')}
+      recyclingKey={event.id}
+      style={style}
+    />
   );
 }
-
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    card: {
-      width: EVENT_CARD_WIDTH,
-      backgroundColor: colors.card,
-      borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
-      overflow: 'hidden',
-    },
-    photo: {
-      width: '100%',
-      height: 100,
-      backgroundColor: colors.muted,
-    },
-    photoPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    body: {
-      padding: Metrics.spacing.sm,
-      gap: 2,
-    },
-    date: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: EVENT_COLOR,
-    },
-    title: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.foreground,
-    },
-    metaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      marginTop: 2,
-    },
-    metaText: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-  });

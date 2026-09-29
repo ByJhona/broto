@@ -1,10 +1,10 @@
 import type { PropsWithChildren } from 'react';
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { useColors, type ThemeColors } from '@/theme';
+import { Metrics, Elevation, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 
 type IconButtonProps = PropsWithChildren<{
   onPress: () => void;
+  accessibilityLabel: string;
   size?: number;
   backgroundColor?: string;
   elevated?: boolean;
@@ -15,14 +15,15 @@ type IconButtonProps = PropsWithChildren<{
 export function IconButton({
   children,
   onPress,
-  size = 40,
+  accessibilityLabel,
+  size = Metrics.size.md,
   backgroundColor,
   elevated = false,
   disabled = false,
   style,
 }: Readonly<IconButtonProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const resolvedBackgroundColor = backgroundColor ?? colors.card;
 
   return (
@@ -35,6 +36,9 @@ export function IconButton({
       ]}
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled }}
     >
       {children}
     </Pressable>
@@ -48,10 +52,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     elevated: {
-      elevation: 4,
+      ...Elevation.medium,
       shadowColor: colors.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
     },
   });

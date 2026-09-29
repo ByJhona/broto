@@ -1,15 +1,16 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
+import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { storagePathFromPublicUrl, uniquePhotoFilename } from './storagePath';
-import type { Plant, PlantCommonProblem, PlantSummary } from '@/types';
+import type { Plant, PlantSummary } from '@/types';
 import { patchInList, removeFromList } from '@/utils/queryListCache';
 
 export const MAX_PLANT_PHOTOS = 5;
 
-const PLANT_SUMMARY_SELECT = 'id, created_at, name, species, common_name, photo_urls, group_id, watering_days, sun_level';
+const PLANT_SUMMARY_SELECT = 'id, created_at, name, species, common_name, photo_urls, group_id, watering_days';
 
 type PlantSummaryRow = {
   id: string;
@@ -20,7 +21,6 @@ type PlantSummaryRow = {
   photo_urls: string[];
   group_id: string | null;
   watering_days: number | null;
-  sun_level: Plant['sunLevel'];
 };
 
 function mapPlantSummaryRow(row: PlantSummaryRow): PlantSummary {
@@ -33,7 +33,6 @@ function mapPlantSummaryRow(row: PlantSummaryRow): PlantSummary {
     photoUrl: row.photo_urls[0] ?? null,
     groupId: row.group_id,
     wateringDays: row.watering_days,
-    sunLevel: row.sun_level,
   };
 }
 
@@ -45,17 +44,6 @@ type PlantRow = {
   common_name: string | null;
   photo_urls: string[];
   watering_days: number | null;
-  sun_level: Plant['sunLevel'];
-  origin: string | null;
-  description: string | null;
-  watering_description: string | null;
-  care_level: Plant['careLevel'];
-  toxic_to_pets: boolean | null;
-  toxic_to_pets_notes: string | null;
-  toxic_to_humans: boolean | null;
-  toxic_to_humans_notes: string | null;
-  fun_facts: string[] | null;
-  common_problems: PlantCommonProblem[] | null;
   group_id: string | null;
   group: { name: string } | null;
 };
@@ -71,17 +59,6 @@ function mapPlantRow(row: PlantRow): Plant {
     commonName: row.common_name,
     photoUrls: row.photo_urls,
     wateringDays: row.watering_days,
-    sunLevel: row.sun_level,
-    origin: row.origin,
-    description: row.description,
-    wateringDescription: row.watering_description,
-    careLevel: row.care_level,
-    toxicToPets: row.toxic_to_pets,
-    toxicToPetsNotes: row.toxic_to_pets_notes,
-    toxicToHumans: row.toxic_to_humans,
-    toxicToHumansNotes: row.toxic_to_humans_notes,
-    funFacts: row.fun_facts,
-    commonProblems: row.common_problems,
     groupId: row.group_id,
     groupName: row.group?.name ?? null,
   };
@@ -103,22 +80,10 @@ export async function getPlants(): Promise<PlantSummary[]> {
   return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
 }
 
-export async function getPlantsByGroupId(groupId: string): Promise<PlantSummary[]> {
-  const { data, error } = await supabase
-    .from('plants')
-    .select(PLANT_SUMMARY_SELECT)
-    .eq('group_id', groupId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data as PlantSummaryRow[]).map(mapPlantSummaryRow);
-}
-
 export async function setPlantGroup(plantId: string, groupId: string | null): Promise<void> {
-  const { error } = await supabase.from('plants').update({ group_id: groupId }).eq('id', plantId);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plants').update({ group_id: groupId }, { count: 'exact' }).eq('id', plantId)
+  );
 }
 
 export async function getPlant(id: string): Promise<Plant | null> {
@@ -155,8 +120,9 @@ async function uploadPlantPhoto(plantId: string, localUri: string): Promise<stri
 }
 
 export async function deletePlant(plantId: string): Promise<void> {
-  const { error } = await supabase.from('plants').update({ deleted_at: new Date().toISOString() }).eq('id', plantId);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plants').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', plantId)
+  );
 }
 
 export async function addPlantPhoto(plantId: string, localUri: string): Promise<Plant> {
@@ -203,8 +169,9 @@ export async function removePlantPhoto(plantId: string, photoUrl: string): Promi
 }
 
 export async function updatePlantName(plantId: string, name: string): Promise<void> {
-  const { error } = await supabase.from('plants').update({ name }).eq('id', plantId);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plants').update({ name }, { count: 'exact' }).eq('id', plantId)
+  );
 }
 
 const PLANTS_QUERY_PREFIX = ['plants'] as const;
@@ -228,17 +195,6 @@ export type CreatePlantInput = {
   wateringDays?: number | null;
   photoUri?: string | null;
   photoUrl?: string | null;
-  sunLevel?: Plant['sunLevel'];
-  origin?: string | null;
-  description?: string | null;
-  wateringDescription?: string | null;
-  careLevel?: Plant['careLevel'];
-  toxicToPets?: boolean | null;
-  toxicToPetsNotes?: string | null;
-  toxicToHumans?: boolean | null;
-  toxicToHumansNotes?: string | null;
-  funFacts?: string[] | null;
-  commonProblems?: PlantCommonProblem[] | null;
 };
 
 export async function createPlant(input: CreatePlantInput): Promise<Plant> {
@@ -248,18 +204,7 @@ export async function createPlant(input: CreatePlantInput): Promise<Plant> {
       name: input.name,
       species: input.species ?? null,
       common_name: input.commonName ?? null,
-      sun_level: input.sunLevel ?? null,
-      origin: input.origin ?? null,
       watering_days: input.wateringDays ?? null,
-      description: input.description ?? null,
-      watering_description: input.wateringDescription ?? null,
-      care_level: input.careLevel ?? null,
-      toxic_to_pets: input.toxicToPets ?? null,
-      toxic_to_pets_notes: input.toxicToPetsNotes ?? null,
-      toxic_to_humans: input.toxicToHumans ?? null,
-      toxic_to_humans_notes: input.toxicToHumansNotes ?? null,
-      fun_facts: input.funFacts ?? null,
-      common_problems: input.commonProblems ?? null,
     })
     .select()
     .single();

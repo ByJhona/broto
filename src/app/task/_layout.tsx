@@ -7,7 +7,7 @@ export default function TaskLayout() {
   const { t } = useTranslation('task');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="new" options={{ title: t('newReminderTitle') }} />
+      <Stack.Screen name="new" options={{ headerShown: false, title: t('newReminderTitle') }} />
     </Stack>
   );
 }

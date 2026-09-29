@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Search from 'lucide-react-native/icons/search';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar, EmptyState, ListRow, SearchField } from '@/components';
 import { useAuth } from '@/hooks';
@@ -16,7 +16,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('search');
   const { user } = useAuth();
   const [query, setQuery] = useState('');
@@ -58,7 +58,7 @@ export default function SearchScreen() {
         renderItem={({ item }) => (
           <ListRow
             style={styles.resultRow}
-            leading={<Avatar name={item.name || item.username} url={item.avatar_url} size={44} />}
+            leading={<Avatar name={item.name || item.username} url={item.avatar_url} size={Metrics.size.lg} />}
             title={item.name || item.username}
             subtitle={`@${item.username}`}
             onPress={() => router.push({ pathname: '/profile/[id]', params: { id: item.id } })}

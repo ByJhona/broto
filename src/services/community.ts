@@ -1,10 +1,21 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { i18n } from '@/i18n';
+import { ensureWriteApplied } from './writeGuard';
 import { supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
-import { OFFER_FEED_FILTER, type CommunityFeedFilter, type CommunityPost, type CommunityPostType, type ListingStatus, type ListingType } from '@/types';
+import { feedAcceptsNewPost } from './communityFeed';
+import { formatTimeAgo } from '@/utils/date';
+import {
+  OFFER_FEED_FILTER,
+  type CommunityContentFilter,
+  type CommunityPost,
+  type CommunityPostType,
+  type ContentReportReason,
+  type ContentReportTarget,
+  type ListingStatus,
+  type ListingType,
+} from '@/types';
 
 const PAGE_SIZE = 10;
 export const MAX_POST_PHOTOS = 5;
@@ -28,26 +39,6 @@ export type CommunityFeedPage = {
   posts: CommunityPost[];
   nextCursor: string | null;
 };
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) return i18n.t('community:justNow');
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return i18n.t('community:minutesAgo', { count: diffInMinutes });
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return i18n.t('community:hoursAgo', { count: diffInHours });
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays === 1) return i18n.t('community:yesterday');
-  if (diffInDays < 7) return i18n.t('community:daysAgo', { count: diffInDays });
-
-  return date.toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'pt-BR');
-}
 
 type PostRow = {
   id: string;
@@ -104,7 +95,7 @@ function formatPost(row: PostRow): CommunityPost {
     authorUsername: row.profiles?.username ?? null,
     authorAvatarUrl: row.profiles?.avatar_url,
     postType: row.post_type,
-    createdAt: formatRelativeTime(row.created_at),
+    createdAt: formatTimeAgo(row.created_at),
     imageUrls: row.image_urls,
     caption: row.caption,
     listingId: row.listing_id,
@@ -138,7 +129,7 @@ function formatPost(row: PostRow): CommunityPost {
         authorId: comment.user_id,
         text: comment.text,
         photoUrl: comment.photo_url,
-        createdAt: formatRelativeTime(comment.created_at),
+        createdAt: formatTimeAgo(comment.created_at),
         authorName: comment.profiles?.name || comment.profiles?.username || 'Jardineiro',
         authorAvatarUrl: comment.profiles?.avatar_url,
       })),
@@ -148,7 +139,7 @@ function formatPost(row: PostRow): CommunityPost {
 export async function getCommunityPosts(
   userId: string,
   cursor: string | null = null,
-  filter: CommunityFeedFilter | null = null,
+  filter: CommunityContentFilter | null = null,
   authorIds: string[] | null = null
 ): Promise<CommunityFeedPage> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -303,15 +294,21 @@ export async function addComment(postId: string, userId: string, text: string | 
 }
 
 export async function deletePost(postId: string): Promise<void> {
-  const { error } = await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', postId);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('posts').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', postId)
+  );
 }
 
 export async function deleteComment(commentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('post_comments')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', commentId);
+  ensureWriteApplied(
+    await supabase.from('post_comments').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', commentId)
+  );
+}
+
+export async function reportContent(target: ContentReportTarget, reason: ContentReportReason): Promise<void> {
+  const column = target.type === 'post' ? 'post_id' : 'comment_id';
+  const { error } = await supabase.from('content_reports').insert({ [column]: target.id, reason });
+  if (error?.code === '23505') return;
   if (error) throw error;
 }
 
@@ -338,6 +335,17 @@ export function updatePostInAllFeeds(
   });
 }
 
+export function addPostToFeeds(queryClient: QueryClient, post: CommunityPost) {
+  queryClient.setQueriesData<CommunityPostsQueryData>(
+    { queryKey: COMMUNITY_POSTS_QUERY_PREFIX, predicate: (query) => feedAcceptsNewPost(query.queryKey, post) },
+    (old) => {
+      if (!old) return old;
+      const [firstPage, ...restPages] = old.pages;
+      return { ...old, pages: [{ ...firstPage, posts: [post, ...firstPage.posts] }, ...restPages] };
+    }
+  );
+}
+
 export function removePostFromAllFeeds(queryClient: QueryClient, postId: string) {
   queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
     if (!old) return old;
@@ -356,9 +364,16 @@ export function removePostFromFeaturedPosts(queryClient: QueryClient, postId: st
   );
 }
 
+function updatePostInFeaturedPosts(queryClient: QueryClient, postId: string, updater: (post: CommunityPost) => CommunityPost) {
+  queryClient.setQueriesData<CommunityPost[]>({ queryKey: FEATURED_POSTS_QUERY_PREFIX }, (old) =>
+    old?.map((post) => (post.id === postId ? updater(post) : post))
+  );
+}
+
 export function applyPostUpdateEverywhere(queryClient: QueryClient, postId: string, updater: (post: CommunityPost) => CommunityPost) {
   queryClient.setQueryData<CommunityPost>(['post', postId], (current) => (current ? updater(current) : current));
   updatePostInAllFeeds(queryClient, postId, updater);
+  updatePostInFeaturedPosts(queryClient, postId, updater);
 }
 
 export function removePostEverywhere(queryClient: QueryClient, postId: string) {
@@ -366,28 +381,16 @@ export function removePostEverywhere(queryClient: QueryClient, postId: string) {
   removePostFromFeaturedPosts(queryClient, postId);
 }
 
-function withoutComment(post: CommunityPost, commentId: string): CommunityPost {
-  return { ...post, comments: post.comments.filter((comment) => comment.id !== commentId) };
-}
-
-export function removeCommentFromAllFeeds(queryClient: QueryClient, commentId: string) {
-  queryClient.setQueriesData<CommunityPostsQueryData>({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX }, (old) => {
-    if (!old) return old;
-    return {
-      ...old,
-      pages: old.pages.map((page) => ({
-        ...page,
-        posts: page.posts.map((post) => withoutComment(post, commentId)),
-      })),
-    };
-  });
+export function refetchPostFeeds(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: COMMUNITY_POSTS_QUERY_PREFIX });
+  queryClient.invalidateQueries({ queryKey: FEATURED_POSTS_QUERY_PREFIX });
 }
 
 export type NewPostEvent = {
   postId: string;
   authorId: string;
   postType: CommunityPostType | null;
-  hasListing: boolean;
+  listingId: string | null;
 };
 
 type PostInsertPayload = {
@@ -404,7 +407,7 @@ export function subscribeToNewPosts(onNewPost: (event: NewPostEvent) => void): (
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload) => {
       const row = payload.new as PostInsertPayload;
       if (row.deleted_at) return;
-      onNewPost({ postId: row.id, authorId: row.user_id, postType: row.post_type, hasListing: !!row.listing_id });
+      onNewPost({ postId: row.id, authorId: row.user_id, postType: row.post_type, listingId: row.listing_id });
     })
     .subscribe();
 

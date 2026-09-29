@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,10 +10,10 @@ import ArrowLeft from 'lucide-react-native/icons/arrow-left';
 import ImageIcon from 'lucide-react-native/icons/image';
 import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { OfflineBanner } from '@/components';
 import { useAuth, useCreditCosts, useCreditsGate, useNetworkStatus } from '@/hooks';
-import { diagnosePlant, identifyPlant, InsufficientCreditsError } from '@/services';
+import { diagnosePlant, getPlantSpeciesInfo, identifyPlant, InsufficientCreditsError, plantSpeciesInfoQueryKey } from '@/services';
 import type { PlantDiagnosis } from '@/types';
 import { Alert, requireLogin, Toast } from '@/utils';
 import { useTranslation } from '@/i18n';
@@ -48,7 +48,7 @@ type ModeToggleProps = {
 
 function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('photo');
   return (
     <View style={styles.toggle}>
@@ -56,14 +56,14 @@ function ModeToggle({ mode, onChange }: Readonly<ModeToggleProps>) {
         style={[styles.toggleOption, mode === 'identify' && styles.toggleOptionActive]}
         onPress={() => onChange('identify')}
       >
-        <Scan size={15} color={mode === 'identify' ? colors.leaf : colors.white} strokeWidth={2} />
+        <Scan size={Metrics.icon.small} color={mode === 'identify' ? colors.leaf : colors.white} strokeWidth={2} />
         <Text style={[styles.toggleText, mode === 'identify' && styles.toggleTextActive]}>{t('toggleIdentify')}</Text>
       </Pressable>
       <Pressable
         style={[styles.toggleOption, mode === 'diagnose' && styles.toggleOptionActive]}
         onPress={() => onChange('diagnose')}
       >
-        <Stethoscope size={15} color={mode === 'diagnose' ? colors.leaf : colors.white} strokeWidth={2} />
+        <Stethoscope size={Metrics.icon.small} color={mode === 'diagnose' ? colors.leaf : colors.white} strokeWidth={2} />
         <Text style={[styles.toggleText, mode === 'diagnose' && styles.toggleTextActive]}>{t('toggleDiagnose')}</Text>
       </Pressable>
     </View>
@@ -74,7 +74,7 @@ export default function CaptureScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const params = useLocalSearchParams<{ mode?: string }>();
   const cameraRef = useRef<CameraView>(null);
   const isFocused = useIsFocused();
@@ -130,6 +130,15 @@ export default function CaptureScreen() {
   const processIdentify = async (photoUri: string) => {
     const { candidates, newCreditBalance } = await identifyPlant(photoUri);
     applyCreditBalance(newCreditBalance);
+
+    const topCandidate = candidates[0];
+    if (topCandidate) {
+      queryClient.prefetchQuery({
+        queryKey: plantSpeciesInfoQueryKey(topCandidate.scientificName),
+        queryFn: () => getPlantSpeciesInfo(topCandidate.scientificName, topCandidate.commonName),
+      });
+    }
+
     navigateIfFocused({ pathname: '/identify/result', params: { candidates: JSON.stringify(candidates) } });
   };
 
@@ -196,7 +205,7 @@ export default function CaptureScreen() {
   };
 
   const backButton = (
-    <Pressable style={[styles.backButton, { top: insets.top + Metrics.spacing.sm }]} onPress={() => router.back()} hitSlop={8}>
+    <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yBack')} style={[styles.backButton, { top: insets.top + Metrics.spacing.sm }]} onPress={() => router.back()} hitSlop={8}>
       <ArrowLeft size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
     </Pressable>
   );
@@ -252,11 +261,11 @@ export default function CaptureScreen() {
       </View>
 
       <View style={styles.controls}>
-        <Pressable style={styles.galleryButton} onPress={handlePickFromGallery} disabled={isOffline}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:chooseFromGallery')} style={styles.galleryButton} onPress={handlePickFromGallery} disabled={isOffline}>
           <ImageIcon size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
 
-        <Pressable style={styles.captureButton} onPress={handleCapture} disabled={isOffline}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:takePhoto')} style={styles.captureButton} onPress={handleCapture} disabled={isOffline}>
           <View style={styles.captureButtonInner} />
         </Pressable>
 
@@ -284,23 +293,22 @@ const makeStyles = (colors: ThemeColors) =>
     padding: Metrics.spacing.lg,
   },
   loadingAnimation: {
-    width: 220,
-    height: 220,
+    width: Metrics.media.lg,
+    height: Metrics.media.lg,
   },
   loadingText: {
-    fontSize: 15,
+    ...Typography.body,
     color: colors.mutedForeground,
     marginTop: Metrics.spacing.md,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    ...Typography.title,
     color: colors.foreground,
     textAlign: 'center',
     marginTop: Metrics.spacing.lg,
   },
   subtitle: {
-    fontSize: 14,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
@@ -314,21 +322,19 @@ const makeStyles = (colors: ThemeColors) =>
   },
   permissionButtonText: {
     color: colors.primaryForeground,
-    fontWeight: '600',
-    fontSize: 16,
+    ...Typography.headingMedium,
   },
   galleryLink: {
     color: colors.primary,
-    fontWeight: '600',
-    fontSize: 14,
+    ...Typography.label,
     marginTop: Metrics.spacing.lg,
   },
   backButton: {
     position: 'absolute',
     left: Metrics.spacing.lg,
     zIndex: 1,
-    width: 40,
-    height: 40,
+    width: Metrics.size.md,
+    height: Metrics.size.md,
     borderRadius: Metrics.radius.full,
     backgroundColor: Overlays.scrimLight,
     justifyContent: 'center',
@@ -336,21 +342,20 @@ const makeStyles = (colors: ThemeColors) =>
   },
   overlayTop: {
     position: 'absolute',
-    top: 60,
+    top: Metrics.spacing.xl * 2,
     left: 0,
     right: 0,
     alignItems: 'center',
     paddingHorizontal: Metrics.spacing.lg,
   },
   overlayTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...Typography.title,
     color: colors.white,
     textAlign: 'center',
     marginTop: Metrics.spacing.md,
   },
   overlaySubtitle: {
-    fontSize: 13,
+    ...Typography.bodySmall,
     color: colors.white,
     opacity: 0.85,
     textAlign: 'center',
@@ -364,23 +369,22 @@ const makeStyles = (colors: ThemeColors) =>
     flexDirection: 'row',
     backgroundColor: Overlays.scrimLight,
     borderRadius: Metrics.radius.full,
-    padding: 4,
-    gap: 4,
+    padding: Metrics.spacing.xs,
+    gap: Metrics.spacing.xs,
   },
   toggleOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    gap: Metrics.spacing.sm,
+    paddingVertical: Metrics.spacing.sm,
+    paddingHorizontal: Metrics.spacing.md,
     borderRadius: Metrics.radius.full,
   },
   toggleOptionActive: {
     backgroundColor: colors.white,
   },
   toggleText: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...Typography.label,
     color: colors.white,
   },
   toggleTextActive: {
@@ -388,7 +392,7 @@ const makeStyles = (colors: ThemeColors) =>
   },
   controls: {
     position: 'absolute',
-    bottom: 40,
+    bottom: Metrics.spacing.xl + Metrics.spacing.sm,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -397,16 +401,16 @@ const makeStyles = (colors: ThemeColors) =>
     paddingHorizontal: Metrics.spacing.xl,
   },
   galleryButton: {
-    width: 48,
-    height: 48,
+    width: Metrics.size.lg,
+    height: Metrics.size.lg,
     borderRadius: Metrics.radius.full,
     backgroundColor: Overlays.whiteTint,
     justifyContent: 'center',
     alignItems: 'center',
   },
   captureButton: {
-    width: 76,
-    height: 76,
+    width: Metrics.size.xxl,
+    height: Metrics.size.xxl,
     borderRadius: Metrics.radius.full,
     borderWidth: 4,
     borderColor: colors.white,
@@ -414,13 +418,13 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
   },
   captureButtonInner: {
-    width: 60,
-    height: 60,
+    width: Metrics.size.xl,
+    height: Metrics.size.xl,
     borderRadius: Metrics.radius.full,
     backgroundColor: colors.white,
   },
   controlsSpacer: {
-    width: 48,
-    height: 48,
+    width: Metrics.size.lg,
+    height: Metrics.size.lg,
   },
   });

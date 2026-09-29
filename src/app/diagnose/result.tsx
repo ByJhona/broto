@@ -1,22 +1,27 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import AlertTriangle from 'lucide-react-native/icons/triangle-alert';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Sparkles from 'lucide-react-native/icons/sparkles';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Card, EmptyState, SectionTitle } from '@/components';
-import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis } from '@/types';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { CardGroup, EmptyState, FloatingScreenControls, InfoSection, PageTitle, PhotoBadge, PhotoPager } from '@/components';
+import type { DiagnosisHealthStatus, DiagnosisSeverity, PlantDiagnosis, PlantDiagnosisIssue } from '@/types';
 import { useTranslation } from '@/i18n';
-import { healthStatusColor } from '@/utils';
+import { formatShortDate, healthStatusColor } from '@/utils';
 
-function getHealthStatusMeta(
-  colors: ThemeColors,
-  t: (key: string, options?: Record<string, unknown>) => string
-): Record<DiagnosisHealthStatus, { label: string; color: string; icon: LucideIcon }> {
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+type StatusMeta = { label: string; color: string; icon: LucideIcon };
+
+const SEVERITY_LABEL_KEYS: Record<DiagnosisSeverity, string> = {
+  low: 'severityLow',
+  medium: 'severityMedium',
+  high: 'severityHigh',
+};
+
+function getHealthStatusMeta(colors: ThemeColors, t: Translate): Record<DiagnosisHealthStatus, StatusMeta> {
   const color = healthStatusColor(colors);
   return {
     healthy: { label: t('healthyStatusLabel'), color: color.healthy, icon: CheckCircle2 },
@@ -25,12 +30,10 @@ function getHealthStatusMeta(
   };
 }
 
-function getSeverityColor(colors: ThemeColors): Record<DiagnosisSeverity, string> {
-  return {
-    low: colors.leaf,
-    medium: colors.secondary,
-    high: colors.destructive,
-  };
+function severityColor(severity: DiagnosisSeverity, colors: ThemeColors): string {
+  if (severity === 'high') return colors.destructive;
+  if (severity === 'medium') return colors.primary;
+  return colors.leaf;
 }
 
 function parseDiagnosis(raw: string | string[] | undefined): PlantDiagnosis | null {
@@ -42,146 +45,186 @@ function parseDiagnosis(raw: string | string[] | undefined): PlantDiagnosis | nu
   }
 }
 
+type IssueRowProps = {
+  issue: PlantDiagnosisIssue;
+};
+
+function IssueRow({ issue }: Readonly<IssueRowProps>) {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation('diagnose');
+  const tone = severityColor(issue.severity, colors);
+
+  return (
+    <View style={styles.issue}>
+      <View style={styles.issueHeader}>
+        <Text style={styles.issueTitle}>{issue.title}</Text>
+        <View style={[styles.severity, { backgroundColor: `${tone}1A` }]}>
+          <Text style={[styles.severityText, { color: tone }]}>{t(SEVERITY_LABEL_KEYS[issue.severity])}</Text>
+        </View>
+      </View>
+      <Text style={styles.issueDescription}>{issue.description}</Text>
+    </View>
+  );
+}
+
+function NextSteps({ actions }: Readonly<{ actions: string[] }>) {
+  const styles = useThemedStyles(makeStyles);
+  const steps = actions.map((action, index) => ({ action, number: index + 1 }));
+
+  return (
+    <View style={styles.steps}>
+      {steps.map(({ action, number }) => (
+        <View key={action} style={styles.step}>
+          <View style={styles.stepNumber}>
+            <Text style={styles.stepNumberText}>{number}</Text>
+          </View>
+          <Text style={styles.stepText}>{action}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function DiagnosisResultScreen() {
   const params = useLocalSearchParams<{ diagnosis: string }>();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('diagnose');
   const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors, t), [colors, t]);
-  const severityColor = useMemo(() => getSeverityColor(colors), [colors]);
   const diagnosis = parseDiagnosis(params.diagnosis);
 
   if (!diagnosis) {
-    return <EmptyState icon={Sparkles} message={t('notFoundMessage')} style={styles.emptyContainer} />;
+    return (
+      <View style={[styles.container, styles.empty]}>
+        <EmptyState icon={Sparkles} message={t('notFoundMessage')} />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   const meta = healthStatusMeta[diagnosis.healthStatus];
-  const StatusIcon = meta.icon;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <Image source={{ uri: diagnosis.photoUrl }} style={styles.photo} contentFit="cover" />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
+        <PhotoPager
+          photoUrls={[diagnosis.photoUrl]}
+          placeholderIcon={Sparkles}
+          fullWidth
+          recyclingKey={diagnosis.id}
+          overlay={<PhotoBadge icon={meta.icon} label={meta.label} color={meta.color} />}
+        />
 
-      <View style={[styles.statusBadge, { backgroundColor: `${meta.color}1A`, borderColor: meta.color }]}>
-        <StatusIcon size={Metrics.icon.normal} color={meta.color} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={[styles.statusLabel, { color: meta.color }]}>{meta.label}</Text>
-      </View>
+        <View style={styles.content}>
+          <Text style={styles.date}>{formatShortDate(diagnosis.createdAt)}</Text>
+          <PageTitle style={styles.title}>{meta.label}</PageTitle>
+          <Text style={styles.summary}>{diagnosis.summary}</Text>
 
-      <Text style={styles.summary}>{diagnosis.summary}</Text>
+          {diagnosis.issues.length > 0 ? (
+            <InfoSection title={t('issuesSectionTitle')}>
+              <CardGroup>
+                {diagnosis.issues.map((issue) => (
+                  <IssueRow key={issue.title} issue={issue} />
+                ))}
+              </CardGroup>
+            </InfoSection>
+          ) : null}
 
-      {diagnosis.issues.length > 0 ? (
-        <View style={styles.section}>
-          <SectionTitle>{t('issuesSectionTitle')}</SectionTitle>
-          {diagnosis.issues.map((issue) => (
-            <Card key={issue.title} style={styles.issueCard}>
-              <View style={styles.issueHeader}>
-                <View style={[styles.severityDot, { backgroundColor: severityColor[issue.severity] }]} />
-                <Text style={styles.issueTitle}>{issue.title}</Text>
-              </View>
-              <Text style={styles.issueDescription}>{issue.description}</Text>
-            </Card>
-          ))}
+          {diagnosis.recommendedActions.length > 0 ? (
+            <InfoSection title={t('nextStepsSectionTitle')}>
+              <NextSteps actions={diagnosis.recommendedActions} />
+            </InfoSection>
+          ) : null}
         </View>
-      ) : null}
+      </ScrollView>
 
-      <View style={styles.section}>
-        <SectionTitle>{t('nextStepsSectionTitle')}</SectionTitle>
-        {diagnosis.recommendedActions.map((action) => (
-          <View key={action} style={styles.actionRow}>
-            <CheckCircle2 size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.actionText}>{action}</Text>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+      <FloatingScreenControls />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-  },
-  emptyContainer: {
-    ...Metrics.layout.centeredContent,
-    flex: 1,
-    justifyContent: 'center',
-    padding: Metrics.spacing.xl,
-    backgroundColor: colors.background,
-  },
-  photo: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: Metrics.radius.lg,
-    backgroundColor: colors.muted,
-    marginBottom: Metrics.spacing.md,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-    borderWidth: 1,
-    borderRadius: Metrics.radius.lg,
-    padding: Metrics.spacing.md,
-  },
-  statusLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  summary: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.foreground,
-    marginTop: Metrics.spacing.md,
-  },
-  section: {
-    marginTop: Metrics.spacing.lg,
-  },
-  issueCard: {
-    marginBottom: Metrics.spacing.sm,
-  },
-  issueHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-  },
-  severityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Metrics.radius.full,
-  },
-  issueTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.foreground,
-  },
-  issueDescription: {
-    fontSize: 13,
-    color: colors.mutedForeground,
-    marginTop: Metrics.spacing.xs,
-    paddingLeft: 8 + Metrics.spacing.sm,
-    lineHeight: 19,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Metrics.spacing.sm,
-    marginBottom: Metrics.spacing.sm,
-  },
-  actionText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.foreground,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    empty: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: Metrics.spacing.xl,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingTop: Metrics.spacing.lg,
+    },
+    date: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
+    },
+    title: {
+      ...Typography.display,
+      color: colors.foreground,
+      marginTop: Metrics.spacing.xs,
+    },
+    summary: {
+      ...Typography.body,
+      color: colors.foreground,
+      marginTop: Metrics.spacing.sm,
+      marginBottom: Metrics.spacing.xl,
+    },
+    issue: {
+      paddingVertical: Metrics.spacing.md,
+      gap: Metrics.spacing.xs,
+    },
+    issueHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Metrics.spacing.sm,
+    },
+    issueTitle: {
+      flex: 1,
+      ...Typography.heading,
+      color: colors.foreground,
+    },
+    severity: {
+      borderRadius: Metrics.radius.full,
+      paddingVertical: Metrics.chip.sm.paddingVertical,
+      paddingHorizontal: Metrics.chip.sm.paddingHorizontal,
+    },
+    severityText: {
+      ...Typography.captionStrong,
+    },
+    issueDescription: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
+    },
+    steps: {
+      gap: Metrics.spacing.md,
+    },
+    step: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: Metrics.spacing.md,
+    },
+    stepNumber: {
+      width: Metrics.size.xs,
+      height: Metrics.size.xs,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: colors.leaf,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepNumberText: {
+      ...Typography.labelStrong,
+      color: colors.leafForeground,
+    },
+    stepText: {
+      flex: 1,
+      ...Typography.body,
+      color: colors.foreground,
+    },
   });

@@ -1,103 +1,50 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { listingStatusLabel, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel } from '@/utils';
+import type { StyleProp, ViewStyle } from 'react-native';
+import MapPin from 'lucide-react-native/icons/map-pin';
+import User from 'lucide-react-native/icons/user';
+import { Overlays } from '@/theme';
+import { isBoostActive } from '@/services';
 import { LISTING_STATUS, type PlantListing } from '@/types';
-import { StatusBadge } from './StatusBadge';
+import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingBadgeLabel, listingStatusLabel } from '@/utils';
+import { FeaturedBadge } from './FeaturedBadge';
+import { PhotoBadge, PhotoCard, type PhotoCardMeta } from './PhotoCard';
 
-const LISTING_CARD_WIDTH = 220;
+function listingMeta(listing: PlantListing, distanceLabel: string | null): PhotoCardMeta | null {
+  if (distanceLabel) return { icon: MapPin, label: distanceLabel };
+  if (listing.ownerName) return { icon: User, label: listing.ownerName };
+  return null;
+}
+
+function ListingCorner({ listing }: Readonly<{ listing: PlantListing }>) {
+  const statusLabel = listing.status === LISTING_STATUS.AVAILABLE ? null : listingStatusLabel(listing.status);
+  if (statusLabel) return <PhotoBadge label={statusLabel} color={Overlays.scrim} />;
+  if (isBoostActive(listing.boostedUntil)) return <FeaturedBadge compact />;
+  return null;
+}
 
 type ListingCardProps = {
   listing: PlantListing;
-  distanceLabel?: string | null;
+  distanceLabel: string | null;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function ListingCard({ listing, distanceLabel, onPress }: Readonly<ListingCardProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const Icon = LISTING_TYPE_ICONS[listing.listingType];
-  const color = LISTING_TYPE_COLORS[listing.listingType];
-  const label = listingBadgeLabel(listing.listingType, listing.priceCents);
-  const coverPhotoUrl = listing.photoUrls[0] ?? null;
-  const metaLine = [listing.ownerName, distanceLabel].filter(Boolean).join(' · ');
-  const statusLabel = listing.status === LISTING_STATUS.AVAILABLE ? null : listingStatusLabel(listing.status);
+export function ListingCard({ listing, distanceLabel, onPress, style }: Readonly<ListingCardProps>) {
+  const typeLabel = listingBadgeLabel(listing.listingType, listing.priceCents);
+  const meta = listingMeta(listing, distanceLabel);
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      {coverPhotoUrl ? (
-        <Image source={{ uri: coverPhotoUrl }} style={styles.photo} contentFit="cover" />
-      ) : (
-        <View style={[styles.photo, styles.photoPlaceholder]}>
-          <Icon size={28} color={color} strokeWidth={Metrics.icon.strokeWidth} />
-        </View>
-      )}
-
-      {statusLabel ? <StatusBadge label={statusLabel} /> : null}
-
-      <View style={styles.body}>
-        <View style={[styles.badge, { backgroundColor: color }]}>
-          <Icon size={11} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.badgeText}>{label}</Text>
-        </View>
-        <Text style={styles.title} numberOfLines={2}>
-          {listing.title}
-        </Text>
-        {metaLine ? (
-          <Text style={styles.owner} numberOfLines={1}>
-            {metaLine}
-          </Text>
-        ) : null}
-      </View>
-    </Pressable>
+    <PhotoCard
+      title={listing.title}
+      photoUrl={listing.photoUrls[0] ?? null}
+      placeholderIcon={LISTING_TYPE_ICONS[listing.listingType]}
+      placeholderColor={LISTING_TYPE_COLORS[listing.listingType]}
+      topLeft={<PhotoBadge icon={LISTING_TYPE_ICONS[listing.listingType]} label={typeLabel} color={LISTING_TYPE_COLORS[listing.listingType]} />}
+      topRight={<ListingCorner listing={listing} />}
+      meta={meta}
+      onPress={onPress}
+      accessibilityLabel={[listing.title, typeLabel, meta?.label].filter(Boolean).join('. ')}
+      recyclingKey={listing.id}
+      style={style}
+    />
   );
 }
-
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    card: {
-      width: LISTING_CARD_WIDTH,
-      backgroundColor: colors.card,
-      borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
-      overflow: 'hidden',
-    },
-    photo: {
-      width: '100%',
-      height: 100,
-      backgroundColor: colors.muted,
-    },
-    photoPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    body: {
-      padding: Metrics.spacing.sm,
-      gap: 4,
-    },
-    badge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'flex-start',
-      gap: 4,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: 2,
-      paddingHorizontal: 6,
-    },
-    badgeText: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: colors.white,
-    },
-    title: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.foreground,
-    },
-    owner: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-  });

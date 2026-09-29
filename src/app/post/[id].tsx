@@ -1,13 +1,12 @@
-import { useMemo } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MessageSquare from 'lucide-react-native/icons/message-square';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { CommunityPostCard, EmptyState, LoadingScreen } from '@/components';
-import { useAuth } from '@/hooks';
+import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
+import { CommunityPostCard, EmptyState, FloatingScreenControls, PostCardSkeleton } from '@/components';
+import { celebrateXpLevelUp, useAuth } from '@/hooks';
 import {
   addComment,
   applyPostUpdateEverywhere,
@@ -29,7 +28,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation('post');
@@ -74,6 +73,7 @@ export default function PostDetailScreen() {
       if (updated) {
         applyPostUpdateEverywhere(queryClient, postId, () => updated);
       }
+      await celebrateXpLevelUp(queryClient, user.id);
     } catch (error) {
       console.error(error);
     }
@@ -115,58 +115,72 @@ export default function PostDetailScreen() {
     router.push({ pathname: '/event/[id]', params: { id: eventId } });
   };
 
+  const contentInsets = {
+    paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+    paddingBottom: insets.bottom + Metrics.spacing.lg,
+  };
+
   if (isLoading) {
-    return <LoadingScreen />;
+    return (
+      <View style={[styles.container, styles.content, contentInsets]}>
+        <PostCardSkeleton />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   if (!post) {
     return (
       <View style={styles.centered}>
         <EmptyState icon={MessageSquare} message={t('postNotFoundMessage')} />
+        <FloatingScreenControls />
       </View>
     );
   }
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={Metrics.spacing.lg}
-      refreshControl={
-        <RefreshControl refreshing={postQuery.isRefetching} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
-      }
-    >
-      <CommunityPostCard
-        post={post}
-        currentUserId={user?.id}
-        onToggleLike={handleToggleLike}
-        onAddComment={handleAddComment}
-        onDelete={handleDelete}
-        onDeleteComment={handleDeleteComment}
-        onPressAuthor={handlePressAuthor}
-        onPressListing={handlePressListing}
-        onPressEvent={handlePressEvent}
-      />
-    </KeyboardAwareScrollView>
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[styles.content, contentInsets]}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={Metrics.spacing.lg}
+        refreshControl={
+          <RefreshControl refreshing={postQuery.isRefetching} onRefresh={handleRefresh} tintColor={colors.leaf} colors={[colors.leaf]} />
+        }
+      >
+        <CommunityPostCard
+          post={post}
+          variant="detail"
+          currentUserId={user?.id}
+          onToggleLike={handleToggleLike}
+          onAddComment={handleAddComment}
+          onDelete={handleDelete}
+          onDeleteComment={handleDeleteComment}
+          onPressAuthor={handlePressAuthor}
+          onPressListing={handlePressListing}
+          onPressEvent={handlePressEvent}
+        />
+      </KeyboardAwareScrollView>
+      <FloatingScreenControls />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-  },
-  centered: {
-    ...Metrics.layout.centeredContent,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    centered: {
+      ...Metrics.layout.centeredContent,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
   });

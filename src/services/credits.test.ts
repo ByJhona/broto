@@ -7,8 +7,6 @@ function makeCredits(overrides: Partial<CreditsState> = {}): CreditsState {
     monthlyCredits: 40,
     balance: 10,
     creditRenewalPeriod: 'weekly',
-    maxActiveListings: null,
-    maxEventsPerMonth: null,
     maxListingPhotos: null,
     ...overrides,
   };

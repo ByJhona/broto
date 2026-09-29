@@ -1,33 +1,35 @@
-import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import X from 'lucide-react-native/icons/x';
-import { Metrics, Overlays, useColors, type ThemeColors } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { formatShortDate } from '@/utils';
-import type { EarnedBadge } from '@/types';
+import type { Badge } from '@/types';
 import { BadgeCard } from './BadgeCard';
 
 type BadgeDetailModalProps = {
-  badge: EarnedBadge | null;
+  badge: Badge | null;
+  grantedAt?: string | null;
   onClose: () => void;
 };
 
-export function BadgeDetailModal({ badge, onClose }: Readonly<BadgeDetailModalProps>) {
+export function BadgeDetailModal({ badge, grantedAt = null, onClose }: Readonly<BadgeDetailModalProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('badge');
 
   return (
     <Modal visible={!!badge} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Pressable style={styles.close} onPress={onClose} hitSlop={8}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common:close')} style={styles.close} onPress={onClose} hitSlop={8}>
             <X size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
           </Pressable>
           {badge ? (
             <>
-              <BadgeCard badge={badge} />
-              <Text style={styles.earnedOn}>{t('earnedOnLabel', { date: formatShortDate(badge.grantedAt) })}</Text>
+              <BadgeCard badge={badge} locked={!grantedAt} />
+              <Text style={styles.earnedOn}>
+                {grantedAt ? t('earnedOnLabel', { date: formatShortDate(grantedAt) }) : t('notYetEarnedLabel')}
+              </Text>
             </>
           ) : null}
         </View>
@@ -59,7 +61,7 @@ const makeStyles = (colors: ThemeColors) =>
       right: Metrics.spacing.md,
     },
     earnedOn: {
-      fontSize: 12,
+      ...Typography.caption,
       color: colors.mutedForeground,
       marginTop: Metrics.spacing.md,
     },

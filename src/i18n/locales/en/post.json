@@ -1,6 +1,10 @@
 {
   "postTitle": "Post",
+  "newPostTitle": "New post",
+  "postTypeLabel": "What is it about? (optional)",
+  "postTextLabel": "Text",
   "postNotFoundMessage": "Post not found.",
   "deletePostError": "Could not delete the post.",
-  "deleteCommentError": "Could not delete the comment."
+  "deleteCommentError": "Could not delete the comment.",
+  "postingTo": "Posting to Community"
 }

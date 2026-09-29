@@ -13,7 +13,17 @@
   "publishListingHere": "Publish listing here",
   "createChoiceTitle": "What do you want to create?",
   "newListingTitle": "New listing",
-  "newListingSubtitle": "Give away, trade, or discard a plant",
   "newEventTitle": "New event",
-  "newEventSubtitle": "Mark a fair, swap, or plant meetup"
+  "newEventSubtitle": "Mark a fair, swap, or plant meetup",
+  "filterAll": "All",
+  "filterEvents": "Events",
+  "eventBadge": "Event",
+  "viewListing": "View listing",
+  "viewEvent": "View event",
+  "nearbyYou_one": "1 listing or event near you",
+  "nearbyYou_other": "{{count}} listings and events near you",
+  "nearbyArea_one": "1 listing or event in this area",
+  "nearbyArea_other": "{{count}} listings and events in this area",
+  "nearbyYouTitle": "Near you",
+  "nearbyAreaTitle": "In this area"
 }

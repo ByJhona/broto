@@ -1,9 +1,10 @@
-import { useMemo, type PropsWithChildren } from 'react';
+import { type PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link, type Href } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { BadgeMosaic } from './auth/BadgeMosaic';
 import { BrotoLogo } from './BrotoLogo';
 import { OfflineBanner } from './OfflineBanner';
 
@@ -12,12 +13,19 @@ type AuthLayoutProps = PropsWithChildren<{
   subtitle: string;
   isOffline: boolean;
   offlineMessage: string;
+  showMosaic?: boolean;
 }>;
 
-export function AuthLayout({ title, subtitle, isOffline, offlineMessage, children }: Readonly<AuthLayoutProps>) {
-  const colors = useColors();
+export function AuthLayout({
+  title,
+  subtitle,
+  isOffline,
+  offlineMessage,
+  showMosaic = false,
+  children,
+}: Readonly<AuthLayoutProps>) {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   return (
     <KeyboardAwareScrollView
       style={styles.container}
@@ -25,11 +33,15 @@ export function AuthLayout({ title, subtitle, isOffline, offlineMessage, childre
       keyboardShouldPersistTaps="handled"
       bottomOffset={Metrics.spacing.lg}
     >
+      {showMosaic ? <BadgeMosaic /> : null}
+
       <View style={styles.logo}>
-        <BrotoLogo size={64} />
+        <BrotoLogo size={showMosaic ? 40 : 64} />
       </View>
 
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        {title}
+      </Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
 
       {isOffline ? (
@@ -49,8 +61,7 @@ type AuthFooterLinkProps = {
 };
 
 export function AuthFooterLink({ href, label }: Readonly<AuthFooterLinkProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   return (
     <Link href={href} style={styles.link}>
       <Text style={styles.linkText}>{label}</Text>
@@ -75,13 +86,12 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    ...Typography.display,
     color: colors.foreground,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
     textAlign: 'center',
     marginTop: Metrics.spacing.xs,
@@ -97,7 +107,6 @@ const makeStyles = (colors: ThemeColors) =>
   },
   linkText: {
     color: colors.primary,
-    fontWeight: '600',
-    fontSize: 14,
+    ...Typography.label,
   },
   });

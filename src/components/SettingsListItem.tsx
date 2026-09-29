@@ -1,58 +1,45 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import type { SettingsItem } from '@/types';
+import { Metrics, useColors } from '@/theme';
+import { IconBadge } from './IconBadge';
+import { ListRow } from './ListRow';
 
-type SettingsListItemProps = SettingsItem & {
-  isLast?: boolean;
+type SettingsListItemProps = {
+  icon: LucideIcon;
+  label: string;
+  subtitle?: string;
+  destructive?: boolean;
+  onPress: () => void;
 };
 
-export function SettingsListItem({ icon: Icon, label, onPress, isLast }: Readonly<SettingsListItemProps>) {
+export function SettingsListItem({ icon: Icon, label, subtitle, destructive = false, onPress }: Readonly<SettingsListItemProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const tint = destructive ? colors.destructive : colors.leaf;
+
   return (
-    <Pressable
+    <ListRow
+      leading={
+        <IconBadge backgroundColor={`${tint}1F`}>
+          <Icon size={Metrics.icon.small} color={tint} strokeWidth={Metrics.icon.strokeWidth} />
+        </IconBadge>
+      }
+      title={label}
+      titleColor={destructive ? colors.destructive : undefined}
+      subtitle={subtitle}
+      trailing={
+        destructive ? undefined : (
+          <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        )
+      }
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.item,
-        isLast && styles.itemLast,
-        pressed && styles.itemPressed,
-      ]}
-    >
-      <View style={styles.left}>
-        <Icon size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-        <Text style={styles.label}>{label}</Text>
-      </View>
-      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-    </Pressable>
+      style={styles.row}
+    />
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-  item: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+const styles = StyleSheet.create({
+  row: {
     paddingVertical: Metrics.spacing.md,
-    paddingHorizontal: Metrics.spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
   },
-  itemLast: {
-    borderBottomWidth: 0,
-  },
-  itemPressed: {
-    backgroundColor: colors.muted,
-  },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-  },
-  label: {
-    fontSize: 15,
-    color: colors.foreground,
-  },
-  });
+});

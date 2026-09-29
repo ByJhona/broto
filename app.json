@@ -2,7 +2,7 @@
   "expo": {
     "name": "Broto",
     "slug": "broto",
-    "version": "1.0.33",
+    "version": "1.0.42",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -19,7 +19,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 41,
+      "versionCode": 50,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
@@ -65,7 +65,46 @@
         }
       ],
       "@react-native-google-signin/google-signin",
-      "expo-localization"
+      "expo-localization",
+      "expo-maps",
+      "expo-calendar",
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Figtree",
+                "fontDefinitions": [
+                  { "path": "./node_modules/@expo-google-fonts/figtree/400Regular/Figtree_400Regular.ttf", "weight": 400 },
+                  { "path": "./node_modules/@expo-google-fonts/figtree/500Medium/Figtree_500Medium.ttf", "weight": 500 },
+                  { "path": "./node_modules/@expo-google-fonts/figtree/600SemiBold/Figtree_600SemiBold.ttf", "weight": 600 },
+                  { "path": "./node_modules/@expo-google-fonts/figtree/700Bold/Figtree_700Bold.ttf", "weight": 700 }
+                ]
+              },
+              {
+                "fontFamily": "Bricolage Grotesque",
+                "fontDefinitions": [
+                  { "path": "./node_modules/@expo-google-fonts/bricolage-grotesque/500Medium/BricolageGrotesque_500Medium.ttf", "weight": 500 },
+                  { "path": "./node_modules/@expo-google-fonts/bricolage-grotesque/600SemiBold/BricolageGrotesque_600SemiBold.ttf", "weight": 600 },
+                  { "path": "./node_modules/@expo-google-fonts/bricolage-grotesque/700Bold/BricolageGrotesque_700Bold.ttf", "weight": 700 }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": [
+              "./node_modules/@expo-google-fonts/figtree/400Regular/Figtree_400Regular.ttf",
+              "./node_modules/@expo-google-fonts/figtree/500Medium/Figtree_500Medium.ttf",
+              "./node_modules/@expo-google-fonts/figtree/600SemiBold/Figtree_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/figtree/700Bold/Figtree_700Bold.ttf",
+              "./node_modules/@expo-google-fonts/bricolage-grotesque/500Medium/BricolageGrotesque_500Medium.ttf",
+              "./node_modules/@expo-google-fonts/bricolage-grotesque/600SemiBold/BricolageGrotesque_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/bricolage-grotesque/700Bold/BricolageGrotesque_700Bold.ttf"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,18 +1,38 @@
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
+import * as Linking from 'expo-linking';
 import { i18n } from '@/i18n';
 import { supabase } from './supabase';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
-export async function signUpWithEmail(name: string, username: string, email: string, password: string) {
+const RECOVERY_LINK_PATH = 'reset-password';
+
+export async function signUpWithEmail(name: string, email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: name, username } },
+    options: { data: { full_name: name } },
   });
 
   if (error) throw error;
   return data;
+}
+
+export async function requestPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: Linking.createURL(RECOVERY_LINK_PATH),
+  });
+  if (error) throw error;
+}
+
+export async function exchangeRecoveryCode(code: string) {
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
 }
 
 export async function signInWithEmail(email: string, password: string) {

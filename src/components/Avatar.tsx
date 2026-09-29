@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View, type ImageStyle, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
-import { useColors, type ThemeColors } from '@/theme';
+import { Metrics, Fonts, type ThemeColors, useThemedStyles } from '@/theme';
 
 type AvatarProps = {
   name: string;
@@ -10,9 +9,8 @@ type AvatarProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function Avatar({ name, url, size = 52, style }: Readonly<AvatarProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+export function Avatar({ name, url, size = Metrics.size.xl, style }: Readonly<AvatarProps>) {
+  const styles = useThemedStyles(makeStyles);
   const initial = name.trim().charAt(0).toUpperCase() || '?';
 
   if (url) {
@@ -41,6 +39,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     initial: {
       color: colors.secondaryForeground,
+      fontFamily: Fonts.display,
       fontWeight: '700',
     },
   });

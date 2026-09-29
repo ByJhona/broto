@@ -7,6 +7,7 @@ function makeProposal(overrides: Partial<Proposal> = {}): Proposal {
     id: '1',
     listingId: 'listing-1',
     listingTitle: 'Costela-de-adão',
+    listingPhotoUrl: 'https://example.com/listing.jpg',
     senderId: 'sender-1',
     recipientId: 'recipient-1',
     proposalType: 'offer',

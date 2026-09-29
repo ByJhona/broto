@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import Leaf from 'lucide-react-native/icons/leaf';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 
@@ -14,7 +13,7 @@ type PlantPickerRowProps = {
 
 export function PlantPickerRow({ plants, selectedId, onSelect }: Readonly<PlantPickerRowProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('plant');
 
   return (
@@ -54,11 +53,11 @@ const makeStyles = (colors: ThemeColors) =>
     },
     option: {
       alignItems: 'center',
-      width: 64,
+      width: Metrics.size.xxl,
     },
     avatar: {
-      width: 56,
-      height: 56,
+      width: Metrics.size.xl,
+      height: Metrics.size.xl,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.muted,
       justifyContent: 'center',
@@ -75,13 +74,12 @@ const makeStyles = (colors: ThemeColors) =>
       height: '100%',
     },
     avatarEmptyText: {
-      fontSize: 10,
-      fontWeight: '600',
+      ...Typography.captionLabel,
       color: colors.mutedForeground,
       textAlign: 'center',
     },
     optionText: {
-      fontSize: 12,
+      ...Typography.caption,
       color: colors.foreground,
       marginTop: Metrics.spacing.xs,
       textAlign: 'center',

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,16 +7,19 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Clock from 'lucide-react-native/icons/clock';
 import Leaf from 'lucide-react-native/icons/leaf';
-import Minus from 'lucide-react-native/icons/minus';
-import Plus from 'lucide-react-native/icons/plus';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { FormError, FormField, PillSelector, PlantPickerRow, SubmitButton } from '@/components';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { CardGroup, FloatingScreenControls, InfoSection, ListRow, PillSelector, PlantPickerRow } from '@/components';
+import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
+import { ComposeTitleBlock } from '@/components/compose/ComposeTitleBlock';
+import { PickerRow } from '@/components/compose/PickerRow';
+import { RecurrenceStepperRow, RecurrenceToggleRow } from '@/components/task/RecurrenceRows';
 import { useCareTasks, usePlants } from '@/hooks';
-import { useTaskCategories } from '@/utils';
-import { TASK_CATEGORY, type TaskCategory } from '@/types';
+import { formatTime, useTaskCategories } from '@/utils';
+import { TASK_CATEGORY, type PlantSummary, type TaskCategory } from '@/types';
 import { useTranslation } from '@/i18n';
 
-type RecurrenceMode = 'once' | 'repeat';
+const DEFAULT_RECURRENCE_DAYS = 3;
+const DEFAULT_REMINDER_HOUR = 9;
 
 function dateForTime(hour: number, minute: number): Date {
   const date = new Date();
@@ -24,64 +27,76 @@ function dateForTime(hour: number, minute: number): Date {
   return date;
 }
 
-const DEFAULT_RECURRENCE_DAYS = 3;
-const MIN_RECURRENCE_DAYS = 1;
-const MAX_RECURRENCE_DAYS = 365;
+function LockedPlantRow({ plant }: Readonly<{ plant: PlantSummary }>) {
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
+
+  return (
+    <CardGroup>
+      <ListRow
+        style={styles.plantRow}
+        leading={
+          <View style={styles.plantThumb}>
+            {plant.photoUrl ? (
+              <Image source={{ uri: plant.photoUrl }} style={styles.plantThumbImage} contentFit="cover" />
+            ) : (
+              <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            )}
+          </View>
+        }
+        title={plant.name}
+      />
+    </CardGroup>
+  );
+}
 
 export default function NewTaskScreen() {
   const router = useRouter();
-  const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const colors = useColors();
+  const styles = useThemedStyles(makeStyles);
   const params = useLocalSearchParams<{ plantId?: string }>();
   const { createTask } = useCareTasks();
   const { plants } = usePlants();
   const taskCategories = useTaskCategories();
   const { t } = useTranslation('task');
-
-  const RECURRENCE_OPTIONS: { value: RecurrenceMode; label: string }[] = [
-    { value: 'once', label: t('onceOption') },
-    { value: 'repeat', label: t('repeatOption') },
-  ];
-
   const isPlantLocked = !!params.plantId;
 
   const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
   const [plantId, setPlantId] = useState<string | null>(params.plantId ?? null);
   const [category, setCategory] = useState<TaskCategory>(TASK_CATEGORY.WATERING);
   const [recurrenceDays, setRecurrenceDays] = useState<number | null>(DEFAULT_RECURRENCE_DAYS);
   const [hasEditedRecurrence, setHasEditedRecurrence] = useState(false);
   const [lastSuggestedRecurrenceDays, setLastSuggestedRecurrenceDays] = useState<number | null>(null);
-  const [reminderHour, setReminderHour] = useState(9);
-  const [reminderMinute, setReminderMinute] = useState(0);
+  const [reminderTime, setReminderTime] = useState(() => dateForTime(DEFAULT_REMINDER_HOUR, 0));
   const [isIosTimePickerOpen, setIsIosTimePickerOpen] = useState(false);
-  const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedPlant = plants.find((plant) => plant.id === plantId) ?? null;
-
   const suggestedRecurrenceDays = selectedPlant?.wateringDays ?? null;
   if (suggestedRecurrenceDays !== lastSuggestedRecurrenceDays) {
     setLastSuggestedRecurrenceDays(suggestedRecurrenceDays);
     if (!hasEditedRecurrence && suggestedRecurrenceDays) setRecurrenceDays(suggestedRecurrenceDays);
   }
+  const showRecommendedHint = recurrenceDays !== null && !!suggestedRecurrenceDays && recurrenceDays !== suggestedRecurrenceDays;
 
   const setRecurrence = (value: number | null) => {
     setRecurrenceDays(value);
     setHasEditedRecurrence(true);
   };
 
+  const handleToggleRepeat = (repeat: boolean) =>
+    setRecurrence(repeat ? (recurrenceDays ?? suggestedRecurrenceDays ?? DEFAULT_RECURRENCE_DAYS) : null);
+
   const openTimePicker = () => {
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
-        value: dateForTime(reminderHour, reminderMinute),
+        value: reminderTime,
         mode: 'time',
         is24Hour: true,
-        onValueChange: (_event, date) => {
-          setReminderHour(date.getHours());
-          setReminderMinute(date.getMinutes());
-        },
+        onValueChange: (_event, date) => setReminderTime(date),
       });
       return;
     }
@@ -105,226 +120,116 @@ export default function NewTaskScreen() {
         category,
         notes: notes.trim() || null,
         recurrenceDays,
-        reminderHour,
-        reminderMinute,
+        reminderHour: reminderTime.getHours(),
+        reminderMinute: reminderTime.getMinutes(),
       });
       router.back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('createError'));
+      console.error(err);
+      setError(t('createError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={Metrics.spacing.lg}
-    >
-      <FormField label={t('titleLabel')} value={title} onChangeText={setTitle} placeholder={t('titlePlaceholder')} />
-
-      {isPlantLocked && selectedPlant && (
-        <View style={styles.field}>
-          <Text style={styles.label}>{t('plantLabel')}</Text>
-          <View style={styles.lockedPlant}>
-            <View style={styles.plantAvatar}>
-              {selectedPlant.photoUrl ? (
-                <Image source={{ uri: selectedPlant.photoUrl }} style={styles.plantAvatarImage} contentFit="cover" />
-              ) : (
-                <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-              )}
-            </View>
-            <Text style={styles.lockedPlantName}>{selectedPlant.name}</Text>
-          </View>
-        </View>
-      )}
-
-      {!isPlantLocked && plants.length > 0 && (
-        <View style={styles.field}>
-          <Text style={styles.label}>{t('plantOptionalLabel')}</Text>
-          <PlantPickerRow plants={plants} selectedId={plantId} onSelect={setPlantId} />
-        </View>
-      )}
-
-      <View style={styles.field}>
-        <Text style={styles.label}>{t('categoryLabel')}</Text>
-        <PillSelector
-          options={taskCategories.map(({ value, label }) => ({ value, label }))}
-          value={category}
-          onChange={setCategory}
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.label}>{t('repeatLabel')}</Text>
-        <PillSelector
-          options={RECURRENCE_OPTIONS}
-          value={recurrenceDays === null ? 'once' : 'repeat'}
-          onChange={(mode) =>
-            setRecurrence(mode === 'once' ? null : (recurrenceDays ?? selectedPlant?.wateringDays ?? DEFAULT_RECURRENCE_DAYS))
-          }
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top + Metrics.size.md + Metrics.spacing.lg,
+            paddingBottom: insets.bottom + COMPOSE_FOOTER_CLEARANCE,
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={COMPOSE_FOOTER_CLEARANCE}
+      >
+        <ComposeTitleBlock
+          title={title}
+          onChangeTitle={setTitle}
+          titleLabel={t('titleLabel')}
+          titlePlaceholder={t('titlePlaceholder')}
+          description={notes}
+          onChangeDescription={setNotes}
+          descriptionLabel={t('notesLabel')}
+          descriptionPlaceholder={t('notesPlaceholder')}
         />
 
-        {recurrenceDays !== null && (
-          <View style={styles.stepperRow}>
-            <Pressable
-              style={styles.stepperButton}
-              onPress={() => setRecurrence(Math.max(MIN_RECURRENCE_DAYS, recurrenceDays - 1))}
-              hitSlop={8}
-            >
-              <Minus size={16} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
-            <Text style={styles.stepperValue}>{t('daysCount', { count: recurrenceDays })}</Text>
-            <Pressable
-              style={styles.stepperButton}
-              onPress={() => setRecurrence(Math.min(MAX_RECURRENCE_DAYS, recurrenceDays + 1))}
-              hitSlop={8}
-            >
-              <Plus size={16} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-            </Pressable>
-          </View>
-        )}
+        {isPlantLocked && selectedPlant ? (
+          <InfoSection title={t('plantLabel')}>
+            <LockedPlantRow plant={selectedPlant} />
+          </InfoSection>
+        ) : null}
 
-        {recurrenceDays !== null && selectedPlant?.wateringDays && recurrenceDays !== selectedPlant.wateringDays && (
-          <Text style={styles.hint}>{t('recommendedHint', { days: selectedPlant.wateringDays })}</Text>
-        )}
-      </View>
+        {!isPlantLocked && plants.length > 0 ? (
+          <InfoSection title={t('plantOptionalLabel')}>
+            <PlantPickerRow plants={plants} selectedId={plantId} onSelect={setPlantId} />
+          </InfoSection>
+        ) : null}
 
-      <View style={styles.field}>
-        <Text style={styles.label}>{t('reminderTimeLabel')}</Text>
-        <Pressable style={styles.timeButton} onPress={openTimePicker}>
-          <Clock size={18} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-          <Text style={styles.timeButtonText}>
-            {`${String(reminderHour).padStart(2, '0')}:${String(reminderMinute).padStart(2, '0')}`}
-          </Text>
-        </Pressable>
+        <InfoSection title={t('categoryLabel')}>
+          <PillSelector options={taskCategories.map(({ value, label }) => ({ value, label }))} value={category} onChange={setCategory} />
+        </InfoSection>
 
-        {Platform.OS === 'ios' && isIosTimePickerOpen && (
-          <DateTimePicker
-            value={dateForTime(reminderHour, reminderMinute)}
-            mode="time"
-            is24Hour
-            display="spinner"
-            onValueChange={(_event, date) => {
-              setIsIosTimePickerOpen(false);
-              setReminderHour(date.getHours());
-              setReminderMinute(date.getMinutes());
-            }}
-            onDismiss={() => setIsIosTimePickerOpen(false)}
-          />
-        )}
-      </View>
+        <InfoSection title={t('whenLabel')}>
+          <CardGroup>
+            <PickerRow icon={Clock} color={colors.leaf} eyebrow={t('reminderTimeLabel')} value={formatTime(reminderTime)} onPress={openTimePicker} />
+            <RecurrenceToggleRow recurrenceDays={recurrenceDays} onToggleRepeat={handleToggleRepeat} />
+            {recurrenceDays === null ? null : <RecurrenceStepperRow recurrenceDays={recurrenceDays} onChangeDays={setRecurrence} />}
+          </CardGroup>
+          {showRecommendedHint ? <Text style={styles.hint}>{t('recommendedHint', { days: suggestedRecurrenceDays })}</Text> : null}
+          {Platform.OS === 'ios' && isIosTimePickerOpen ? (
+            <DateTimePicker
+              value={reminderTime}
+              mode="time"
+              is24Hour
+              display="spinner"
+              onValueChange={(_event, date) => {
+                setIsIosTimePickerOpen(false);
+                setReminderTime(date);
+              }}
+              onDismiss={() => setIsIosTimePickerOpen(false)}
+            />
+          ) : null}
+        </InfoSection>
+      </KeyboardAwareScrollView>
 
-      <FormField
-        label={t('notesLabel')}
-        value={notes}
-        onChangeText={setNotes}
-        placeholder={t('notesPlaceholder')}
-        multiline
-      />
-
-      <FormError>{error}</FormError>
-
-      <SubmitButton label={t('createCta')} onPress={handleSubmit} loading={isSubmitting} />
-    </KeyboardAwareScrollView>
+      <ComposeFooter label={t('createCta')} onPress={handleSubmit} loading={isSubmitting} error={error} />
+      <FloatingScreenControls />
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    padding: Metrics.spacing.lg,
-  },
-  field: {
-    marginBottom: Metrics.spacing.md,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.foreground,
-    marginBottom: Metrics.spacing.xs,
-  },
-  lockedPlant: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: Metrics.radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: Metrics.spacing.sm,
-    paddingHorizontal: Metrics.spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  lockedPlantName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.foreground,
-    paddingRight: Metrics.spacing.md,
-  },
-  plantAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  plantAvatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  timeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: Metrics.spacing.sm,
-    borderWidth: 2,
-    borderColor: colors.border,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: Metrics.spacing.sm,
-    paddingHorizontal: Metrics.spacing.md,
-    backgroundColor: colors.card,
-  },
-  timeButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.foreground,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Metrics.spacing.md,
-    marginTop: Metrics.spacing.sm,
-  },
-  stepperButton: {
-    width: 36,
-    height: 36,
-    borderRadius: Metrics.radius.full,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepperValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.foreground,
-    minWidth: 72,
-    textAlign: 'center',
-  },
-  hint: {
-    fontSize: 12,
-    color: colors.mutedForeground,
-    marginTop: Metrics.spacing.xs,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      paddingHorizontal: Metrics.spacing.lg,
+    },
+    plantRow: {
+      paddingVertical: Metrics.spacing.sm,
+    },
+    plantThumb: {
+      width: Metrics.size.lg,
+      height: Metrics.size.lg,
+      borderRadius: Metrics.radius.md,
+      backgroundColor: colors.muted,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    plantThumbImage: {
+      width: '100%',
+      height: '100%',
+    },
+    hint: {
+      ...Typography.caption,
+      color: colors.mutedForeground,
+      marginTop: Metrics.spacing.sm,
+    },
   });

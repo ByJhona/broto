@@ -1,20 +1,23 @@
 {
   "newReminderTitle": "New reminder",
   "onceOption": "Just once",
-  "repeatOption": "Repeat",
   "titleLabel": "Title",
   "titlePlaceholder": "Water the Samba",
   "plantLabel": "Plant",
   "plantOptionalLabel": "Plant (optional)",
   "categoryLabel": "Category",
-  "repeatLabel": "Repeat?",
+  "repeatLabel": "Repeat",
   "daysCount_one": "1 day",
   "daysCount_other": "{{count}} days",
   "recommendedHint": "Recommended for this plant: every {{days}} days",
-  "reminderTimeLabel": "What time should the reminder show up?",
+  "reminderTimeLabel": "Reminder time",
   "notesLabel": "Notes (optional)",
   "notesPlaceholder": "Water the soil well, without soaking it",
   "missingTitleError": "Give the reminder a title.",
   "createError": "Could not create the reminder. Try again.",
-  "createCta": "Create reminder"
+  "createCta": "Create reminder",
+  "whenLabel": "When",
+  "intervalLabel": "Interval",
+  "everyDays_one": "Every day",
+  "everyDays_other": "Every {{count}} days"
 }

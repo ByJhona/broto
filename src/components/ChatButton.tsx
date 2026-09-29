@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type ChatButtonProps = {
@@ -14,7 +13,7 @@ type ChatButtonProps = {
 export function ChatButton({ hasUnread = false, size = Metrics.icon.normal, style }: Readonly<ChatButtonProps>) {
   const router = useRouter();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('chat');
 
   return (
@@ -39,10 +38,10 @@ const makeStyles = (colors: ThemeColors) =>
     },
     badge: {
       position: 'absolute',
-      top: -2,
-      right: -2,
-      width: 10,
-      height: 10,
+      top: -Metrics.spacing.xs,
+      right: -Metrics.spacing.xs,
+      width: Metrics.size.dot,
+      height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.destructive,
       borderWidth: 1.5,

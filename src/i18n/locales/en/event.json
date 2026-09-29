@@ -4,7 +4,6 @@
   "eventsTabSubtitle": "Fairs, swaps, and meetups near you",
   "eventsSearchPlaceholder": "Search for an event...",
   "eventDetailTitle": "Event",
-  "limitReachedMessage": "You've reached the free plan's monthly event limit. Subscribe to Broto+ to create without limits.",
   "shareToCommunity": "Share to Community",
   "cancelEventAction": "Cancel event",
   "boostEventAction": "Boost event",
@@ -33,10 +32,7 @@
   "sortNearest": "Closest",
   "sortRecent": "Most recent",
   "noEventsNearby": "No events nearby yet.",
-  "scopeAll": "All",
-  "scopeMine": "Mine",
   "noOwnEventsFound": "You haven't organized any events yet.",
-  "optionalPhotoLabel": "Photo (optional)",
   "titleLabel": "Title",
   "titlePlaceholder": "Plant swap meetup at the park",
   "descriptionLabel": "Description (optional)",
@@ -62,5 +58,10 @@
   "cancelError": "Couldn't cancel the event.",
   "rsvpUpdateError": "Couldn't update your attendance.",
   "shareSuccess": "Event shared to Community!",
-  "shareError": "Couldn't share to Community."
+  "shareError": "Couldn't share to Community.",
+  "manageOpenEvents": "Upcoming",
+  "manageClosedEvents": "Ended and cancelled",
+  "photoHint": "One photo of the place or a past event",
+  "dateLabel": "Date",
+  "timeLabel": "Time"
 }

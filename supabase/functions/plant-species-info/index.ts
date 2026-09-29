@@ -7,89 +7,110 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const PLANT_INFO_JSON_SCHEMA = {
-  name: 'plant_species_info',
-  strict: true,
-  schema: {
-    type: 'object',
-    properties: {
-      description: { type: 'string', description: 'Descrição curta da espécie, em português, 2-3 frases.' },
-      wateringDescription: { type: 'string', description: 'Dica prática de como regar essa planta, em português.' },
-      wateringDaysMin: { type: 'integer' },
-      wateringDaysMax: { type: 'integer' },
-      sunLevel: {
-        type: 'string',
-        enum: ['shade', 'partial_shade', 'medium', 'bright_indirect', 'full_sun'],
-      },
-      careLevel: { type: 'string', enum: ['easy', 'moderate', 'hard'] },
-      toxicToPets: { type: 'boolean' },
-      toxicToPetsNotes: { type: ['string', 'null'] },
-      toxicToHumans: { type: 'boolean' },
-      toxicToHumansNotes: { type: ['string', 'null'] },
-      funFacts: {
-        type: 'array',
-        items: { type: 'string' },
-        minItems: 2,
-        maxItems: 4,
-      },
-      commonProblems: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            issue: { type: 'string' },
-            likelyCause: { type: 'string' },
-          },
-          required: ['issue', 'likelyCause'],
-          additionalProperties: false,
-        },
-        minItems: 2,
-        maxItems: 4,
-      },
-      origin: { type: ['string', 'null'] },
-      commonNames: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Nomes populares da planta em português do Brasil, do mais usado ao menos usado.',
-        minItems: 1,
-        maxItems: 4,
-      },
-    },
-    required: [
-      'description',
-      'wateringDescription',
-      'wateringDaysMin',
-      'wateringDaysMax',
-      'sunLevel',
-      'careLevel',
-      'toxicToPets',
-      'toxicToPetsNotes',
-      'toxicToHumans',
-      'toxicToHumansNotes',
-      'funFacts',
-      'commonProblems',
-      'origin',
-      'commonNames',
-    ],
-    additionalProperties: false,
-  },
+const CONTENT_VERSION = 2;
+
+const shortText = (description: string) => ({ type: 'string', description });
+const nullableText = (description: string) => ({ type: ['string', 'null'], description });
+
+function objectSchema(properties: Record<string, unknown>) {
+  return { type: 'object', properties, required: Object.keys(properties), additionalProperties: false };
+}
+
+const textList = (description: string, minItems: number, maxItems: number) => ({
+  type: 'array',
+  items: { type: 'string' },
+  description,
+  minItems,
+  maxItems,
+});
+
+const identityProperties = {
+  commonNames: textList('Nomes populares no Brasil, do mais usado ao menos usado.', 1, 4),
+  family: nullableText('Família botânica, ex: "Araceae".'),
+  plantType: shortText('Tipo da planta em 2 a 4 palavras, ex: "Trepadeira tropical", "Suculenta", "Arbusto florífero".'),
+  origin: nullableText('Região de origem em poucas palavras, ex: "Florestas tropicais do Sudeste Asiático".'),
+  description: shortText('2 a 3 frases para quem está começando: o que é essa planta e o que a torna especial.'),
+  funFacts: textList('Curiosidades interessantes sobre a planta, 1 frase cada.', 2, 3),
 };
 
-type OpenAiPlantInfo = {
+const careProperties = {
+  careLevel: { type: 'string', enum: ['easy', 'moderate', 'hard'] },
+  growthRate: { type: 'string', enum: ['slow', 'medium', 'fast'] },
+  matureSize: shortText('Porte adulto dentro de casa, curto, ex: "Até 2 m com tutor".'),
+  sunLevel: { type: 'string', enum: ['shade', 'partial_shade', 'medium', 'bright_indirect', 'full_sun'] },
+  lightTip: shortText('Onde colocar dentro de casa, 1 a 2 frases práticas.'),
+  wateringDaysMin: { type: 'integer', description: 'Menor intervalo típico entre regas, em dias, dentro de casa no Brasil.' },
+  wateringDaysMax: { type: 'integer', description: 'Maior intervalo típico entre regas, em dias, dentro de casa no Brasil.' },
+  wateringTip: shortText('Como saber a hora de regar e como regar, 1 a 2 frases concretas (ex: tocar os 2 cm de cima do substrato).'),
+  humidityLevel: { type: 'string', enum: ['low', 'medium', 'high'] },
+  humidityTip: shortText('Como lidar com a umidade do ar, 1 frase.'),
+  temperatureMinC: { type: 'integer', description: 'Temperatura mínima confortável em °C.' },
+  temperatureMaxC: { type: 'integer', description: 'Temperatura máxima confortável em °C.' },
+  soilTip: shortText('Substrato ideal com a mistura sugerida, 1 frase.'),
+  fertilizingTip: shortText('Quando e com o que adubar, 1 frase.'),
+};
+
+const safetyProperties = {
+  toxicToPets: { type: 'boolean', description: 'true se for tóxica para cães ou gatos. Na dúvida, considere tóxica.' },
+  toxicToPetsNotes: nullableText('O que acontece e o que fazer se o pet ingerir, 1 frase. null se não for tóxica.'),
+  toxicToHumans: { type: 'boolean', description: 'true se for tóxica para pessoas. Na dúvida, considere tóxica.' },
+  toxicToHumansNotes: nullableText('O que acontece e o cuidado necessário, 1 frase. null se não for tóxica.'),
+  commonProblems: {
+    type: 'array',
+    items: objectSchema({
+      symptom: shortText('O que a pessoa vê na planta, ex: "Folhas amarelando".'),
+      cause: shortText('Causa mais provável, curta.'),
+      solution: shortText('O que fazer, 1 frase prática.'),
+    }),
+    minItems: 2,
+    maxItems: 4,
+  },
+  propagationMethods: textList(
+    'Formas de fazer mudas em casa, cada uma com o passo principal, ex: "Estaca com um nó, enraizada na água". Lista vazia se não for viável em casa.',
+    0,
+    3
+  ),
+};
+
+type ProfilePart = {
+  name: string;
+  request: string;
+  properties: Record<string, unknown>;
+};
+
+const PROFILE_PARTS: ProfilePart[] = [
+  { name: 'plant_identity', request: 'Preencha a identificação e a descrição dessa planta.', properties: identityProperties },
+  { name: 'plant_care', request: 'Preencha os cuidados dessa planta dentro de casa.', properties: careProperties },
+  { name: 'plant_safety', request: 'Preencha a toxicidade, os problemas comuns e as formas de fazer mudas dessa planta.', properties: safetyProperties },
+];
+
+type OpenAiPlantProfile = {
+  commonNames: string[];
+  family: string | null;
+  plantType: string;
+  origin: string | null;
   description: string;
-  wateringDescription: string;
+  careLevel: string;
+  growthRate: string;
+  matureSize: string;
+  sunLevel: string;
+  lightTip: string;
   wateringDaysMin: number;
   wateringDaysMax: number;
-  sunLevel: string;
-  careLevel: string;
+  wateringTip: string;
+  humidityLevel: string;
+  humidityTip: string;
+  temperatureMinC: number;
+  temperatureMaxC: number;
+  soilTip: string;
+  fertilizingTip: string;
+  propagationMethods: string[];
   toxicToPets: boolean;
   toxicToPetsNotes: string | null;
   toxicToHumans: boolean;
   toxicToHumansNotes: string | null;
+  commonProblems: { symptom: string; cause: string; solution: string }[];
   funFacts: string[];
-  commonProblems: { issue: string; likelyCause: string }[];
-  origin: string | null;
-  commonNames: string[];
 };
 
 type ReferencePhoto = { url: string; sourceUrl: string };
@@ -107,6 +128,8 @@ type CommonsSearchResponse = {
 };
 
 const REFERENCE_PHOTOS_LIMIT = 6;
+const WATERING_DAYS_RANGE = { min: 1, max: 60 };
+const TEMPERATURE_RANGE = { min: -10, max: 45 };
 
 async function fetchReferencePhotos(scientificName: string): Promise<ReferencePhoto[]> {
   const params = new URLSearchParams({
@@ -141,23 +164,84 @@ async function fetchReferencePhotos(scientificName: string): Promise<ReferencePh
   }
 }
 
-async function fetchFromOpenAi(scientificName: string, commonName: string | null): Promise<OpenAiPlantInfo> {
+const SYSTEM_PROMPT = [
+  'Você é um especialista em botânica e jardinagem doméstica escrevendo a ficha de cuidados de uma planta para um app brasileiro.',
+  'O público vai de quem nunca cuidou de uma planta até colecionadores. Escreva em português do Brasil, com frases curtas, concretas e sem jargão; quando usar um termo técnico, explique.',
+  'Considere a planta cultivada dentro de casa ou em varanda, no clima do Brasil.',
+  'Os dados precisam ser realistas para a espécie. Em toxicidade, seja conservador: na dúvida, considere tóxica.',
+  'Não use markdown nem emojis.',
+].join(' ');
+
+async function fetchProfilePart(part: ProfilePart, speciesLabel: string): Promise<Record<string, unknown>> {
   const content = await callOpenAI({
     messages: [
-      {
-        role: 'system',
-        content:
-          'Você é um especialista em botânica e jardinagem doméstica. Responda sempre em português do Brasil, com dados realistas para a espécie perguntada.',
-      },
-      {
-        role: 'user',
-        content: `Espécie: ${scientificName}${commonName ? ` (nome popular: ${commonName})` : ''}. Preencha os dados de cuidado, toxicidade, curiosidades, problemas comuns e nomes populares dessa planta.`,
-      },
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: `Espécie: ${speciesLabel}. ${part.request}` },
     ],
-    response_format: { type: 'json_schema', json_schema: PLANT_INFO_JSON_SCHEMA },
+    response_format: {
+      type: 'json_schema',
+      json_schema: { name: part.name, strict: true, schema: objectSchema(part.properties) },
+    },
   });
 
-  return JSON.parse(content) as OpenAiPlantInfo;
+  return JSON.parse(content) as Record<string, unknown>;
+}
+
+async function fetchFromOpenAi(scientificName: string, commonName: string | null): Promise<OpenAiPlantProfile> {
+  const speciesLabel = commonName ? `${scientificName} (nome popular: ${commonName})` : scientificName;
+  const parts = await Promise.all(PROFILE_PARTS.map((part) => fetchProfilePart(part, speciesLabel)));
+  return Object.assign({}, ...parts) as OpenAiPlantProfile;
+}
+
+function clamp(value: number, range: { min: number; max: number }): number {
+  return Math.min(range.max, Math.max(range.min, Math.round(value)));
+}
+
+function orderedPair(first: number, second: number, range: { min: number; max: number }): [number, number] {
+  const a = clamp(first, range);
+  const b = clamp(second, range);
+  return a <= b ? [a, b] : [b, a];
+}
+
+function toRow(scientificName: string, profile: OpenAiPlantProfile, referencePhotos: ReferencePhoto[]) {
+  const [wateringDaysMin, wateringDaysMax] = orderedPair(profile.wateringDaysMin, profile.wateringDaysMax, WATERING_DAYS_RANGE);
+  const [temperatureMinC, temperatureMaxC] = orderedPair(profile.temperatureMinC, profile.temperatureMaxC, TEMPERATURE_RANGE);
+
+  return {
+    scientific_name: scientificName,
+    common_names: profile.commonNames,
+    family: profile.family,
+    plant_type: profile.plantType,
+    origin: profile.origin,
+    description: profile.description,
+    care_level: profile.careLevel,
+    growth_rate: profile.growthRate,
+    mature_size: profile.matureSize,
+    sun_level: profile.sunLevel,
+    light_tip: profile.lightTip,
+    watering_days_min: wateringDaysMin,
+    watering_days_max: wateringDaysMax,
+    watering_tip: profile.wateringTip,
+    humidity_level: profile.humidityLevel,
+    humidity_tip: profile.humidityTip,
+    temperature_min_c: temperatureMinC,
+    temperature_max_c: temperatureMaxC,
+    soil_tip: profile.soilTip,
+    fertilizing_tip: profile.fertilizingTip,
+    propagation_methods: profile.propagationMethods,
+    toxic_to_pets: profile.toxicToPets,
+    toxic_to_pets_notes: profile.toxicToPets ? profile.toxicToPetsNotes : null,
+    toxic_to_humans: profile.toxicToHumans,
+    toxic_to_humans_notes: profile.toxicToHumans ? profile.toxicToHumansNotes : null,
+    common_problems: profile.commonProblems,
+    fun_facts: profile.funFacts,
+    reference_photos: referencePhotos,
+    content_version: CONTENT_VERSION,
+  };
+}
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
 }
 
 Deno.serve(async (req) => {
@@ -186,74 +270,33 @@ Deno.serve(async (req) => {
     .from('plant_species_info')
     .select('*')
     .eq('scientific_name', scientificName)
+    .gte('content_version', CONTENT_VERSION)
     .maybeSingle();
 
-  if (cached) {
-    return new Response(JSON.stringify(cached), { headers: { 'Content-Type': 'application/json' } });
-  }
+  if (cached) return jsonResponse(cached);
 
-  let info: OpenAiPlantInfo;
-  let referencePhotos: ReferencePhoto[];
+  let row: ReturnType<typeof toRow>;
   try {
-    [info, referencePhotos] = await Promise.all([
+    const [profile, referencePhotos] = await Promise.all([
       fetchFromOpenAi(scientificName, body.commonName ?? null),
       fetchReferencePhotos(scientificName),
     ]);
+    row = toRow(scientificName, profile, referencePhotos);
   } catch (error) {
     console.error('Erro consultando a OpenAI:', error);
     return new Response('Não foi possível buscar informações da planta', { status: 502 });
   }
 
-  const { data: inserted, error: insertError } = await supabaseAdmin
+  const { data: saved, error: saveError } = await supabaseAdmin
     .from('plant_species_info')
-    .upsert(
-      {
-        scientific_name: scientificName,
-        description: info.description,
-        watering_description: info.wateringDescription,
-        watering_days_min: info.wateringDaysMin,
-        watering_days_max: info.wateringDaysMax,
-        sun_level: info.sunLevel,
-        care_level: info.careLevel,
-        toxic_to_pets: info.toxicToPets,
-        toxic_to_pets_notes: info.toxicToPetsNotes,
-        toxic_to_humans: info.toxicToHumans,
-        toxic_to_humans_notes: info.toxicToHumansNotes,
-        fun_facts: info.funFacts,
-        common_problems: info.commonProblems,
-        origin: info.origin,
-        reference_photos: referencePhotos,
-        common_names: info.commonNames,
-      },
-      { onConflict: 'scientific_name' }
-    )
+    .upsert(row, { onConflict: 'scientific_name' })
     .select()
     .single();
 
-  if (insertError) {
-    console.error('Erro salvando plant_species_info:', insertError);
-    return new Response(
-      JSON.stringify({
-        scientific_name: scientificName,
-        description: info.description,
-        watering_description: info.wateringDescription,
-        watering_days_min: info.wateringDaysMin,
-        watering_days_max: info.wateringDaysMax,
-        sun_level: info.sunLevel,
-        care_level: info.careLevel,
-        toxic_to_pets: info.toxicToPets,
-        toxic_to_pets_notes: info.toxicToPetsNotes,
-        toxic_to_humans: info.toxicToHumans,
-        toxic_to_humans_notes: info.toxicToHumansNotes,
-        fun_facts: info.funFacts,
-        common_problems: info.commonProblems,
-        origin: info.origin,
-        reference_photos: referencePhotos,
-        common_names: info.commonNames,
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+  if (saveError) {
+    console.error('Erro salvando plant_species_info:', saveError);
+    return jsonResponse(row);
   }
 
-  return new Response(JSON.stringify(inserted), { headers: { 'Content-Type': 'application/json' } });
+  return jsonResponse(saved);
 });

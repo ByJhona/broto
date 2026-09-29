@@ -4,11 +4,8 @@
   "offersTabTitle": "Ofertas",
   "offersTabSubtitle": "Doe, troque ou venda plantas perto de você",
   "offersSearchPlaceholder": "Buscar por planta...",
-
   "titleRequired": "Dá um título pra oferta.",
   "priceRequired": "Informa o preço da planta.",
-  "limitReachedMessage": "Você atingiu o limite de anúncios ativos do plano gratuito. Assine o Broto+ para publicar sem limite.",
-  "photosSectionTitle": "Fotos",
   "listingTypeSectionTitle": "Tipo de oferta",
   "priceLabel": "Preço",
   "yourPlantsSectionTitle": "Alguma das suas plantas? (opcional)",
@@ -20,13 +17,9 @@
   "communityCommentLabel": "Comentário na Comunidade (opcional)",
   "yourPlantFallback": "sua planta",
   "chooseLocationCta": "Escolher local no mapa",
-
   "filterAll": "Tudo",
   "noListingsFound": "Nenhuma oferta encontrada.",
-  "scopeAll": "Todas",
-  "scopeMine": "Minhas",
   "noOwnListingsFound": "Você ainda não tem nenhuma oferta.",
-
   "markCompletedAction": "Marcar como concluída",
   "reactivateListingAction": "Reativar oferta",
   "boostListingAction": "Impulsionar oferta",
@@ -36,62 +29,54 @@
   "boostCreditsMessage": "Impulsionar uma oferta custa {{cost}} créditos. Quer ver os planos?",
   "shareToCommunityAction": "Compartilhar na Comunidade",
   "deleteListingAction": "Excluir oferta",
-
   "editListingTitle": "Editar oferta",
-
   "notFoundTitle": "Oferta não encontrada",
   "notFoundMessage": "Essa oferta pode ter sido removida.",
-
   "interestSentSuccess": "Interesse enviado! O dono vai ser avisado.",
   "interestSentError": "Não foi possível enviar seu interesse.",
   "interestUpdateError": "Não foi possível atualizar o interesse.",
   "offerUpdateError": "Não foi possível atualizar a proposta.",
   "exchangeProposeError": "Não foi possível propor a troca.",
-
   "markCompletedConfirmTitle": "Marcar como concluída",
   "markCompletedConfirmMessage": "Use isso quando a troca ou doação já foi concretizada. A oferta sai da lista de disponíveis e não pode ser reativada depois — pra oferecer de novo, você precisa criar uma nova oferta.",
   "markCompletedConfirmLabel": "Concluir",
   "listingUpdateError": "Não foi possível atualizar a oferta.",
   "listingReactivatedSuccess": "Oferta reativada.",
-
   "deleteConfirmTitle": "Excluir oferta",
   "deleteConfirmMessage": "Isso remove a oferta do mapa. Não dá pra desfazer.",
   "deleteConfirmLabel": "Excluir",
   "listingDeleteError": "Não foi possível excluir a oferta.",
-
   "shareModalTitle": "Compartilhar na Comunidade",
   "shareModalLabel": "Comentário",
   "shareModalSubmit": "Compartilhar",
   "shareSuccess": "Oferta compartilhada na Comunidade!",
   "shareError": "Não foi possível compartilhar na Comunidade.",
-
   "offeredBy": "Oferecido por",
   "fetchingAddress": "Buscando endereço...",
   "approximateLocation": "Local aproximado no mapa",
   "descriptionSectionTitle": "Descrição",
-
   "exchangeProposalsTitle": "Propostas de troca",
   "interestedPeopleTitle": "Pessoas interessadas",
   "noExchangeProposals": "Ninguém propôs uma troca ainda.",
   "noInterestedPeople": "Ninguém demonstrou interesse ainda.",
   "offeredPlantLabel": "Oferece em troca:",
-
   "interestSentLabel": "Interesse enviado",
   "wantToBuyLabel": "Quero comprar",
   "haveInterestLabel": "Tenho interesse",
   "openChatLabel": "Abrir conversa",
   "proposeExchangeLabel": "Propor troca",
-
   "proposalStatusPending": "Pendente",
   "proposalStatusAccepted": "Aceita",
   "proposalStatusDeclined": "Recusada",
   "declineAction": "Recusar",
   "acceptAction": "Aceitar",
-
   "exchangePlantPickerTitle": "Qual planta você quer oferecer?",
   "noPlantsRegistered": "Você ainda não tem plantas cadastradas.",
-
   "priceFieldPlaceholder": "R$ 0,00",
-
-  "shareToCommunityTitle": "Publicar na Comunidade"
+  "shareToCommunityTitle": "Publicar na Comunidade",
+  "myOffersButton": "Minhas",
+  "myOffersTitle": "Minhas ofertas e eventos",
+  "manageOpenListings": "Ativas",
+  "manageClosedListings": "Concluídas e canceladas",
+  "photoHint": "Até {{max}} fotos da planta que você vai oferecer"
 }

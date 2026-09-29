@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { File } from 'expo-file-system';
 import { i18n } from '@/i18n';
+import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import { PHOTO_UPLOAD_MAX_WIDTH, resizeImageForUpload } from './imageResize';
 import { uniquePhotoFilename } from './storagePath';
@@ -137,10 +138,7 @@ export async function createListing(input: CreateListingInput): Promise<PlantLis
     .select(PLANT_LISTING_SELECT)
     .single();
 
-  if (error) {
-    if (error.message === 'listing_limit_reached') throw new Error(i18n.t('listing:limitReachedMessage'));
-    throw error;
-  }
+  if (error) throw error;
 
   const row = listing as unknown as PlantListingRow;
   const photoUris = input.photoUris ?? [];
@@ -162,16 +160,15 @@ export async function createListing(input: CreateListingInput): Promise<PlantLis
 }
 
 export async function updateListingStatus(id: string, status: ListingStatus): Promise<void> {
-  const { error } = await supabase.from('plant_listings').update({ status }).eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plant_listings').update({ status }, { count: 'exact' }).eq('id', id)
+  );
 }
 
 export async function deleteListing(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('plant_listings')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) throw error;
+  ensureWriteApplied(
+    await supabase.from('plant_listings').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', id)
+  );
 }
 
 const PLANT_LISTINGS_QUERY_PREFIX = ['plant-listings'] as const;

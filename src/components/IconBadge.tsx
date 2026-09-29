@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { useColors } from '@/theme';
+import { Metrics, useColors } from '@/theme';
 
 type IconBadgeProps = PropsWithChildren<{
   size?: number;
@@ -8,7 +8,7 @@ type IconBadgeProps = PropsWithChildren<{
   style?: StyleProp<ViewStyle>;
 }>;
 
-export function IconBadge({ size = 40, backgroundColor, style, children }: Readonly<IconBadgeProps>) {
+export function IconBadge({ size = Metrics.size.md, backgroundColor, style, children }: Readonly<IconBadgeProps>) {
   const colors = useColors();
   const resolvedBackgroundColor = backgroundColor ?? colors.muted;
 

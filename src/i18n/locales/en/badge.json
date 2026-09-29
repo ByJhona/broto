@@ -1,5 +1,8 @@
 {
   "earnedOnLabel": "Earned on {{date}}",
+  "notYetEarnedLabel": "Not yet earned",
+  "catalogTitle": "Badges",
+  "seeAllBadges": "See all",
   "noBadgesMessage": "No badges yet. Add plants to your garden to unlock some.",
   "newBadgeTitle": "New badge unlocked!",
   "claim": "Claim",

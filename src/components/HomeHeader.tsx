@@ -1,23 +1,23 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { useMemo } from 'react';
+import { View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useAuth, useConversations, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getProfile } from '@/services';
 import { ChatButton } from './ChatButton';
-import { CreditsCard } from './CreditsCard';
+import { CreditsBar } from './CreditsBar';
 import { NotificationBell } from './NotificationBell';
 import { ProfileIcon } from './ProfileIcon';
 
-const HEADER_RADIUS = 40;
+type HomeHeaderProps = {
+  onLayout?: (event: LayoutChangeEvent) => void;
+};
 
-export function HomeHeader() {
+export function HomeHeader({ onLayout }: Readonly<HomeHeaderProps>) {
   const insets = useSafeAreaInsets();
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('profile');
   const { hasUnread } = useNotifications();
   const { hasUnread: hasUnreadMessages } = useConversations();
@@ -33,9 +33,9 @@ export function HomeHeader() {
     profile?.name?.split(' ')[0] ?? user?.user_metadata?.full_name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? t('defaultGardenerName');
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.md }]}>
+    <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.md }]} onLayout={onLayout}>
       <View style={styles.headerTop}>
-        <Text style={styles.greeting}>
+        <Text style={styles.greeting} numberOfLines={1}>
           {getGreeting()}, {firstName}
         </Text>
         <View style={styles.headerActions}>
@@ -45,7 +45,7 @@ export function HomeHeader() {
         </View>
       </View>
 
-      <CreditsCard />
+      <CreditsBar />
     </View>
   );
 }
@@ -58,8 +58,8 @@ const makeStyles = (colors: ThemeColors) =>
       left: 0,
       right: 0,
       backgroundColor: colors.leaf,
-      borderBottomLeftRadius: HEADER_RADIUS,
-      borderBottomRightRadius: HEADER_RADIUS,
+      borderBottomLeftRadius: Metrics.radius.xl,
+      borderBottomRightRadius: Metrics.radius.xl,
       paddingHorizontal: Metrics.spacing.lg,
       paddingBottom: Metrics.spacing.lg,
       zIndex: 1,
@@ -69,6 +69,7 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      gap: Metrics.spacing.md,
       marginBottom: Metrics.spacing.md,
     },
     headerActions: {
@@ -77,8 +78,9 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.md,
     },
     greeting: {
-      fontSize: 20,
-      fontWeight: '600',
+      flex: 1,
+      ...Typography.label,
       color: colors.leafForeground,
+      opacity: 0.85,
     },
   });

@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 type StatusNoticeProps = {
   text: string | null;
@@ -8,8 +7,7 @@ type StatusNoticeProps = {
 };
 
 export function StatusNotice({ text, muted = false }: Readonly<StatusNoticeProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   if (!text) return null;
   return <Text style={muted ? styles.noticeMuted : styles.notice}>{text}</Text>;
@@ -18,14 +16,12 @@ export function StatusNotice({ text, muted = false }: Readonly<StatusNoticeProps
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     notice: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.destructive,
       marginBottom: Metrics.spacing.lg,
     },
     noticeMuted: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
       marginBottom: Metrics.spacing.lg,
     },

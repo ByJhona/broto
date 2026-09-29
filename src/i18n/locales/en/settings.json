@@ -5,9 +5,7 @@
   "creditsPerMonth": "{{count}} credits per month",
   "freePlanName": "Free Plan",
   "myPlan": "My plan",
-  "seeAvailablePlans": "See available plans",
   "manageSubscription": "Manage subscription",
-  "manageSubscriptionFallback": "Try managing your subscription directly from the app store.",
   "appearance": "Appearance",
   "themeLight": "Light",
   "themeDark": "Dark",
@@ -16,5 +14,15 @@
   "settings": "Settings",
   "editProfile": "Edit profile",
   "privacyAndSecurity": "Privacy and security",
-  "signOut": "Sign out"
+  "signOut": "Sign out",
+  "help": "Help",
+  "support": "Support",
+  "signOutConfirmTitle": "Sign out?",
+  "signOutConfirmMessage": "You'll need to sign in again to use Broto.",
+  "appVersion": "Broto · version {{version}}",
+  "deleteAccount": "Delete account",
+  "deleteAccountTitle": "Delete your account",
+  "deleteAccountMessage": "Deleting your account and all of your data is handled by our support team. Send us an email and we'll take care of it.",
+  "deleteAccountContact": "Send email",
+  "deleteAccountEmailSubject": "Account deletion request"
 }

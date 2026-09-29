@@ -1,12 +1,8 @@
 {
   "resultTitle": "Identification",
   "referencePhotosCaption": "Photos: Wikimedia Commons",
-  "noReferencePhotosMessage": "No reference photos found for this species.",
-  "suggestedCareTitle": "Suggested care",
-  "wateringEvery": "Water every {{days}} days",
-  "identificationSectionTitle": "Identification",
-  "confidencePercent": "{{percent}}% confidence",
-  "otherPossibilitiesTitle": "Not this one? Other possibilities",
+  "confidencePercent": "{{percent}}%",
+  "otherPossibilitiesTitle": "It could also be",
   "notFoundMessage": "We couldn't identify any plant in this photo. Try another image, close to the leaf or flower.",
   "addToGardenCta": "Add to my garden",
   "nicknameModalTitle": "What do you want to call this plant?",
@@ -15,5 +11,13 @@
   "saveToGardenCta": "Save to my garden",
   "loginRequiredMessage": "You need an account to save plants to your garden.",
   "missingNicknameError": "Give your plant a nickname.",
-  "saveError": "Could not save the plant. Try again."
+  "saveError": "Could not save the plant. Try again.",
+  "yourPhotoLabel": "Your photo",
+  "confidenceHigh": "Very likely",
+  "confidenceMedium": "Likely",
+  "confidenceLow": "Unlikely",
+  "lowConfidenceMessage": "The AI isn't sure about this one. Compare it with the species photos and the other options, or take a closer photo of a leaf.",
+  "retakePhotoCta": "Take another photo",
+  "compareTitle": "Compare with the species",
+  "noneOfTheseCta": "None of these? Take another photo"
 }

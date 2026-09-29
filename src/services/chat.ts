@@ -89,7 +89,12 @@ async function uploadChatPhoto(userId: string, localUri: string): Promise<string
   return data.publicUrl;
 }
 
-export async function sendChatMessage(input: { recipientId: string; body?: string | null; photoUri?: string | null }): Promise<ChatMessage> {
+export async function sendChatMessage(input: {
+  id: string;
+  recipientId: string;
+  body?: string | null;
+  photoUri?: string | null;
+}): Promise<ChatMessage> {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error(i18n.t('common:notAuthenticated'));
 
@@ -97,7 +102,7 @@ export async function sendChatMessage(input: { recipientId: string; body?: strin
 
   const { data, error } = await supabase
     .from('chat_messages')
-    .insert({ recipient_id: input.recipientId, body: input.body ?? null, photo_url: photoUrl })
+    .insert({ id: input.id, recipient_id: input.recipientId, body: input.body ?? null, photo_url: photoUrl })
     .select(CHAT_MESSAGE_SELECT)
     .single();
 

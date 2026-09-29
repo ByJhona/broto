@@ -13,7 +13,17 @@
   "publishListingHere": "Publicar oferta aqui",
   "createChoiceTitle": "O que você quer criar?",
   "newListingTitle": "Nova oferta",
-  "newListingSubtitle": "Doe, troque ou resgate uma planta",
   "newEventTitle": "Novo evento",
-  "newEventSubtitle": "Marque uma feira, troca ou encontro de plantas"
+  "newEventSubtitle": "Marque uma feira, troca ou encontro de plantas",
+  "filterAll": "Tudo",
+  "filterEvents": "Eventos",
+  "eventBadge": "Evento",
+  "viewListing": "Ver oferta",
+  "viewEvent": "Ver evento",
+  "nearbyYou_one": "1 oferta ou evento perto de você",
+  "nearbyYou_other": "{{count}} ofertas e eventos perto de você",
+  "nearbyArea_one": "1 oferta ou evento nesta área",
+  "nearbyArea_other": "{{count}} ofertas e eventos nesta área",
+  "nearbyYouTitle": "Perto de você",
+  "nearbyAreaTitle": "Nesta área"
 }

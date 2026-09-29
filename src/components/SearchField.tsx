@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Search from 'lucide-react-native/icons/search';
 import X from 'lucide-react-native/icons/x';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { useTranslation } from '@/i18n';
 
 type SearchFieldProps = {
   value: string;
@@ -22,11 +22,12 @@ export function SearchField({
   autoCorrect = false,
 }: Readonly<SearchFieldProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { t } = useTranslation();
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={styles.searchBar}>
-      <Search size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Search size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
       <TextInput
         style={styles.searchInput}
         value={value}
@@ -40,8 +41,8 @@ export function SearchField({
         textContentType="none"
       />
       {value.length > 0 ? (
-        <Pressable onPress={() => onChangeText('')} hitSlop={8}>
-          <X size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yClearSearch')} onPress={() => onChangeText('')} hitSlop={8}>
+          <X size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       ) : null}
     </View>
@@ -66,7 +67,7 @@ const makeStyles = (colors: ThemeColors) =>
     searchInput: {
       flex: 1,
       paddingVertical: Metrics.spacing.sm,
-      fontSize: 15,
+      ...Typography.input,
       color: colors.foreground,
     },
   });

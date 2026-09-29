@@ -1,29 +1,14 @@
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Location from 'expo-location';
-import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import {
-  Card,
-  EmptyState,
-  ExchangePlantPickerModal,
-  ListingActionFooter,
-  ListingPhotoGallery,
-  ListingProposalsSection,
-  LoadingScreen,
-  OwnerRow,
-  PromptModal,
-  ScreenContent,
-  SectionTitle,
-  StatusNotice,
-  type ListingProposal,
-} from '@/components';
+import { EmptyState, ExchangePlantPickerModal, FeaturedBadge, FloatingScreenControls, InfoSection, ListingActionFooter, ListingProposalsSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice, type ListingProposal } from '@/components';
 import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
 import {
   applyProposalStatusEverywhere,
@@ -42,6 +27,7 @@ import {
   type ListingProposalSummary,
 } from '@/services';
 import {
+  ActionSheet,
   Alert,
   closeAlertButton,
   confirm,
@@ -126,7 +112,7 @@ export default function ListingDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['listing', 'common']);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
@@ -177,11 +163,21 @@ export default function ListingDetailScreen() {
   });
 
   if (listingQuery.isLoading) {
-    return <LoadingScreen />;
+    return (
+      <View style={styles.container}>
+        <LoadingScreen />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   if (!listing) {
-    return <EmptyState icon={Leaf} title={t('notFoundTitle')} message={t('notFoundMessage')} />;
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <EmptyState icon={Leaf} title={t('notFoundTitle')} message={t('notFoundMessage')} />
+        <FloatingScreenControls />
+      </View>
+    );
   }
 
   const invalidateListingActivity = () => {
@@ -339,9 +335,8 @@ export default function ListingDetailScreen() {
   };
 
   const handleOpenActions = () => {
-    Alert.alert(
+    ActionSheet.show(
       t('editListingTitle'),
-      undefined,
       buildListingActionButtons(
         listing.status,
         {
@@ -359,36 +354,39 @@ export default function ListingDetailScreen() {
   const proposals = buildProposals(isExchange, proposalsQuery.data, handleRespondProposal, handleViewOffer);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}
-    >
-      <Stack.Screen
-        options={
-          isOwner
-            ? {
-                headerRight: () => (
-                  <Pressable onPress={handleOpenActions} disabled={isActing} hitSlop={8}>
-                    <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
-                  </Pressable>
-                ),
-              }
-            : undefined
-        }
-      />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + Metrics.spacing.xl }}>
+        <PhotoPager
+          photoUrls={listing.photoUrls}
+          placeholderIcon={LISTING_TYPE_ICONS[listing.listingType]}
+          placeholderColor={LISTING_TYPE_COLORS[listing.listingType]}
+          fullWidth
+          recyclingKey={listing.id}
+          overlay={
+            <>
+              <PhotoBadge
+                icon={LISTING_TYPE_ICONS[listing.listingType]}
+                label={listingTypeLabel(listing.listingType)}
+                color={LISTING_TYPE_COLORS[listing.listingType]}
+              />
+              {listing.priceCents == null ? null : <PhotoBadge label={formatPrice(listing.priceCents)} color={Overlays.scrim} />}
+              {isBoostActive(listing.boostedUntil) ? <FeaturedBadge /> : null}
+            </>
+          }
+        />
 
-      <ListingPhotoGallery
-        photoUrls={listing.photoUrls}
-        title={listing.title}
-        typeIcon={LISTING_TYPE_ICONS[listing.listingType]}
-        typeColor={LISTING_TYPE_COLORS[listing.listingType]}
-        typeLabel={listingTypeLabel(listing.listingType)}
-        priceLabel={listing.priceCents != null ? formatPrice(listing.priceCents) : null}
-        featured={isBoostActive(listing.boostedUntil)}
-      />
+        <ScreenContent>
+          <PageTitle>{listing.title}</PageTitle>
+          <MetaRow
+            icon={MapPin}
+            iconColor={colors.leaf}
+            label={addressQuery.isLoading ? t('fetchingAddress') : (addressQuery.data ?? t('approximateLocation'))}
+            numberOfLines={2}
+            style={styles.locationRow}
+          />
 
-      <ScreenContent>
-        <Card style={styles.section}>
+          <StatusNotice text={listingStatusNotice(listing.status) ?? null} />
+
           <OwnerRow
             eyebrow={t('offeredBy')}
             ownerName={listing.ownerName}
@@ -396,56 +394,47 @@ export default function ListingDetailScreen() {
             onPress={handlePressOwner}
           />
 
-          <View style={styles.locationRow}>
-            <MapPin size={16} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
-            <Text style={styles.locationText}>
-              {addressQuery.isLoading ? t('fetchingAddress') : (addressQuery.data ?? t('approximateLocation'))}
-            </Text>
-          </View>
-        </Card>
+          {listing.description ? (
+            <InfoSection title={t('descriptionSectionTitle')}>
+              <Text style={styles.description}>{listing.description}</Text>
+            </InfoSection>
+          ) : null}
 
-        <StatusNotice text={listingStatusNotice(listing.status) ?? null} />
+          <ListingProposalsBlock isOwner={isOwner} isExchange={isExchange} proposals={proposals} onOpenChat={handleOpenChat} />
 
-        {listing.description ? (
-          <Card style={styles.section}>
-            <SectionTitle>{t('descriptionSectionTitle')}</SectionTitle>
-            <Text style={styles.description}>{listing.description}</Text>
-          </Card>
-        ) : null}
+          <ListingActionFooter
+            isOwner={isOwner}
+            status={listing.status}
+            listingType={listing.listingType}
+            hasSentInterest={hasSentInterest}
+            isActing={isActing}
+            onPropose={() => setIsPlantPickerOpen(true)}
+            onInterest={handleInterest}
+            onOpenChat={() => handleOpenChat(listing.userId)}
+          />
+        </ScreenContent>
 
-        <ListingProposalsBlock isOwner={isOwner} isExchange={isExchange} proposals={proposals} onOpenChat={handleOpenChat} />
-
-        <ListingActionFooter
-          isOwner={isOwner}
-          status={listing.status}
-          listingType={listing.listingType}
-          hasSentInterest={hasSentInterest}
-          isActing={isActing}
-          onPropose={() => setIsPlantPickerOpen(true)}
-          onInterest={handleInterest}
-          onOpenChat={() => handleOpenChat(listing.userId)}
+        <ExchangePlantPickerModal
+          visible={isPlantPickerOpen}
+          plants={plants}
+          onSelect={handleProposeExchange}
+          onClose={() => setIsPlantPickerOpen(false)}
         />
-      </ScreenContent>
 
-      <ExchangePlantPickerModal
-        visible={isPlantPickerOpen}
-        plants={plants}
-        onSelect={handleProposeExchange}
-        onClose={() => setIsPlantPickerOpen(false)}
-      />
-
-      <PromptModal
-        visible={isShareModalOpen}
-        title={t('shareModalTitle')}
-        label={t('shareModalLabel')}
-        value={shareCaption}
-        onChangeText={setShareCaption}
-        submitLabel={t('shareModalSubmit')}
-        isSubmitting={isSharing}
-        onSubmit={handleSubmitShare}
-        onCancel={() => setIsShareModalOpen(false)}
-      />
-    </ScrollView>
+        <PromptModal
+          visible={isShareModalOpen}
+          title={t('shareModalTitle')}
+          label={t('shareModalLabel')}
+          value={shareCaption}
+          onChangeText={setShareCaption}
+          submitLabel={t('shareModalSubmit')}
+          isSubmitting={isSharing}
+          onSubmit={handleSubmitShare}
+          onCancel={() => setIsShareModalOpen(false)}
+        />
+      </ScrollView>
+      <FloatingScreenControls onOpenActions={isOwner ? handleOpenActions : undefined} isBusy={isActing} />
+    </View>
   );
 }
 
@@ -455,22 +444,20 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
       backgroundColor: colors.background,
     },
-    section: {
-      marginBottom: Metrics.spacing.lg,
+    centered: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    title: {
+      ...Typography.display,
+      color: colors.foreground,
     },
     description: {
-      fontSize: 15,
-      lineHeight: 21,
+      ...Typography.body,
       color: colors.foreground,
     },
     locationRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Metrics.spacing.xs,
-    },
-    locationText: {
-      flex: 1,
-      fontSize: 15,
-      color: colors.foreground,
+      marginTop: Metrics.spacing.sm,
+      marginBottom: Metrics.spacing.lg,
     },
   });

@@ -6,8 +6,8 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Sparkles from 'lucide-react-native/icons/sparkles';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
-import { Card, EmptyState, ListRow, SectionTitle, SkeletonBlock } from '@/components';
+import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
+import { Card, EmptyState, ListRow, SectionHeading, SkeletonBlock } from '@/components';
 import { useAuth } from '@/hooks';
 import { getDiagnosisHistory } from '@/services';
 import type { DiagnosisHealthStatus, PlantDiagnosis } from '@/types';
@@ -33,16 +33,15 @@ function formatDiagnosisDate(iso: string): string {
 }
 
 function DiagnosisHistorySkeleton() {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   return (
     <>
       {[0, 1].map((key) => (
         <Card key={key} style={styles.historyRow}>
-          <SkeletonBlock width={48} height={48} radius={Metrics.radius.md} />
+          <SkeletonBlock width={Metrics.size.lg} height={Metrics.size.lg} radius={Metrics.radius.md} />
           <View style={styles.historyTextBox}>
-            <SkeletonBlock width="60%" height={13} />
-            <SkeletonBlock width="40%" height={12} style={styles.skeletonGap} />
+            <SkeletonBlock width="60%" height={Metrics.fontSize.small} />
+            <SkeletonBlock width="40%" height={Metrics.fontSize.caption} style={styles.skeletonGap} />
           </View>
         </Card>
       ))}
@@ -54,7 +53,7 @@ export default function DiagnosisHistoryScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('diagnose');
   const healthStatusMeta = useMemo(() => getHealthStatusMeta(colors, t), [colors, t]);
   const { user } = useAuth();
@@ -78,7 +77,7 @@ export default function DiagnosisHistoryScreen() {
     >
       {showSkeleton && (
         <>
-          <SectionTitle>{t('historySectionTitle')}</SectionTitle>
+          <SectionHeading title={t('historySectionTitle')} />
           <DiagnosisHistorySkeleton />
         </>
       )}
@@ -87,7 +86,7 @@ export default function DiagnosisHistoryScreen() {
       )}
       {!showSkeleton && !isEmpty && (
         <>
-          <SectionTitle>{t('historySectionTitle')}</SectionTitle>
+          <SectionHeading title={t('historySectionTitle')} />
           {history.map((item) => {
             const meta = healthStatusMeta[item.healthStatus];
             return (
@@ -99,7 +98,7 @@ export default function DiagnosisHistoryScreen() {
                 title={meta.label}
                 titleColor={meta.color}
                 subtitle={formatDiagnosisDate(item.createdAt)}
-                trailing={<ChevronRight size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+                trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
                 onPress={() => openResult(item)}
               />
             );
@@ -130,8 +129,8 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.sm,
   },
   historyThumb: {
-    width: 48,
-    height: 48,
+    width: Metrics.size.lg,
+    height: Metrics.size.lg,
     borderRadius: Metrics.radius.md,
     backgroundColor: colors.muted,
   },

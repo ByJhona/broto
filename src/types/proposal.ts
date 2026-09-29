@@ -6,6 +6,7 @@ export type Proposal = {
   id: string;
   listingId: string;
   listingTitle: string | null;
+  listingPhotoUrl: string | null;
   senderId: string;
   recipientId: string;
   proposalType: ProposalType;

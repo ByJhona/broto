@@ -1,7 +1,10 @@
 import type { NotificationResponse } from 'expo-notifications';
 import { i18n } from '@/i18n';
 import { addDays, daysBetween, today } from '@/utils';
+import { recordCareTaskCompletion } from './careStreak';
+import { removeTaskFromDeviceCalendar, syncTaskToDeviceCalendar } from './deviceCalendar';
 import { getNotificationsModule } from './notificationsModule';
+import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import type { CareTask, TaskCategory } from '@/types';
 
@@ -86,12 +89,13 @@ export async function getCareTasks(): Promise<CareTask[]> {
 }
 
 export async function toggleCareTask(task: CareTask, done: boolean): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('care_tasks')
-    .update({ last_completed_occurrence: done ? task.dueDate : null })
+    .update({ last_completed_occurrence: done ? task.dueDate : null }, { count: 'exact' })
     .eq('id', task.id);
 
-  if (error) throw error;
+  ensureWriteApplied({ error, count });
+  if (done) await recordCareTaskCompletion();
 }
 
 export async function getCareTaskPlantId(id: string): Promise<string | null> {
@@ -111,11 +115,13 @@ export async function markCareTaskDoneById(id: string): Promise<void> {
   const taskRow = row as CareTaskRow;
   const dueDate = currentOccurrenceDate(taskRow, today());
 
-  const { error: updateError } = await supabase
+  const { error: updateError, count } = await supabase
     .from('care_tasks')
-    .update({ last_completed_occurrence: dueDate })
+    .update({ last_completed_occurrence: dueDate }, { count: 'exact' })
     .eq('id', id);
-  if (updateError) return;
+  if (updateError || !count) return;
+
+  await recordCareTaskCompletion();
 }
 
 export const CARE_TASK_CATEGORY = 'care-task';
@@ -179,10 +185,23 @@ export async function createCareTask(input: CreateCareTaskInput): Promise<CareTa
 
   if (error) throw error;
 
-  return toCareTask(row as CareTaskRow, startDate);
+  const task = toCareTask(row as CareTaskRow, startDate);
+
+  const deviceEventId = await syncTaskToDeviceCalendar(task);
+  if (deviceEventId) {
+    await supabase.from('care_tasks').update({ device_calendar_event_id: deviceEventId }).eq('id', task.id);
+  }
+
+  return task;
 }
 
 export async function deleteCareTask(id: string): Promise<void> {
-  const { error } = await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-  if (error) throw error;
+  const { data: existing } = await supabase.from('care_tasks').select('device_calendar_event_id').eq('id', id).maybeSingle();
+  if (existing?.device_calendar_event_id) {
+    await removeTaskFromDeviceCalendar(existing.device_calendar_event_id);
+  }
+
+  ensureWriteApplied(
+    await supabase.from('care_tasks').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', id)
+  );
 }

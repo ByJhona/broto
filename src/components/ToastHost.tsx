@@ -5,7 +5,7 @@ import AlertCircle from 'lucide-react-native/icons/circle-alert';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Info from 'lucide-react-native/icons/info';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { registerToastHandler, type ToastType } from '@/utils';
 
 function getToastMeta(colors: ThemeColors): Record<ToastType, { icon: LucideIcon; color: string }> {
@@ -22,7 +22,7 @@ const HIDDEN_OFFSET = -80;
 export function ToastHost() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const toastMeta = useMemo(() => getToastMeta(colors), [colors]);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [translateY] = useState(() => new Animated.Value(HIDDEN_OFFSET));
@@ -87,15 +87,11 @@ const makeStyles = (colors: ThemeColors) =>
     borderRadius: Metrics.radius.lg,
     padding: Metrics.spacing.md,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    ...Elevation.high,
   },
   message: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
+    ...Typography.label,
     color: colors.foreground,
   },
   });

@@ -1,13 +1,10 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { applySubscriptionState, resetToFreePlan } from '../_shared/revenuecat.ts';
+import { syncSubscriberFromRevenueCat } from '../_shared/revenuecat.ts';
 
 type RevenueCatEvent = {
   id: string;
   type: string;
   app_user_id: string;
-  product_id?: string;
-  expiration_at_ms?: number;
-  store?: string;
   transaction_id?: string;
 };
 
@@ -16,59 +13,22 @@ type WebhookBody = {
   event: RevenueCatEvent;
 };
 
-const SUBSCRIPTION_EVENTS = new Set(['INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE', 'UNCANCELLATION']);
+const SYNCABLE_EVENTS = new Set([
+  'INITIAL_PURCHASE',
+  'RENEWAL',
+  'PRODUCT_CHANGE',
+  'UNCANCELLATION',
+  'EXPIRATION',
+  'CANCELLATION',
+  'BILLING_ISSUE',
+  'NON_RENEWING_PURCHASE',
+]);
 
-const IMMEDIATE_GRANT_EVENTS = new Set(['INITIAL_PURCHASE', 'PRODUCT_CHANGE', 'UNCANCELLATION']);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const REVENUECAT_SECRET_API_KEY = Deno.env.get('REVENUECAT_SECRET_API_KEY')!;
 
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-);
-
-async function handleSubscriptionEvent(event: RevenueCatEvent) {
-  if (!event.product_id) return;
-
-  await applySubscriptionState(supabaseAdmin, {
-    userId: event.app_user_id,
-    productId: event.product_id,
-    expiresAtMs: event.expiration_at_ms ?? null,
-    grantCredits: IMMEDIATE_GRANT_EVENTS.has(event.type),
-    status: 'active',
-  });
-}
-
-async function handleExpirationEvent(event: RevenueCatEvent) {
-  await resetToFreePlan(supabaseAdmin, event.app_user_id);
-}
-
-async function handleCancellationEvent(event: RevenueCatEvent) {
-  await supabaseAdmin.from('subscriptions').update({ status: 'canceled' }).eq('user_id', event.app_user_id);
-}
-
-async function handleBillingIssueEvent(event: RevenueCatEvent) {
-  await supabaseAdmin.from('subscriptions').update({ status: 'past_due' }).eq('user_id', event.app_user_id);
-}
-
-async function handleNonRenewingPurchase(event: RevenueCatEvent) {
-  if (!event.product_id) return;
-
-  const { data: pack } = await supabaseAdmin
-    .from('credit_packs')
-    .select('credits')
-    .eq('id', event.product_id)
-    .maybeSingle();
-
-  if (!pack) {
-    console.warn('Nenhum pacote de créditos corresponde ao produto:', event.product_id);
-    return;
-  }
-
-  await supabaseAdmin.rpc('grant_credits', {
-    target_user_id: event.app_user_id,
-    credit_amount: pack.credits,
-    grant_reason: 'purchase',
-  });
-}
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -109,16 +69,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (SUBSCRIPTION_EVENTS.has(event.type)) {
-      await handleSubscriptionEvent(event);
-    } else if (event.type === 'EXPIRATION') {
-      await handleExpirationEvent(event);
-    } else if (event.type === 'CANCELLATION') {
-      await handleCancellationEvent(event);
-    } else if (event.type === 'BILLING_ISSUE') {
-      await handleBillingIssueEvent(event);
-    } else if (event.type === 'NON_RENEWING_PURCHASE') {
-      await handleNonRenewingPurchase(event);
+    if (SYNCABLE_EVENTS.has(event.type)) {
+      await syncSubscriberFromRevenueCat(supabaseAdmin, event.app_user_id, REVENUECAT_SECRET_API_KEY);
     }
   } catch (error) {
     console.error('Erro processando evento do RevenueCat:', error);

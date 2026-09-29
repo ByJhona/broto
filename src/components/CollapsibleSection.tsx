@@ -1,10 +1,10 @@
-import { useMemo, type PropsWithChildren, type ReactNode } from 'react';
+import { type PropsWithChildren, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import ChevronDown from 'lucide-react-native/icons/chevron-down';
 import ChevronUp from 'lucide-react-native/icons/chevron-up';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { SectionTitle } from './SectionTitle';
+import { SectionHeading } from './InfoSection';
 
 type CollapsibleSectionProps = PropsWithChildren<{
   title: string;
@@ -25,29 +25,31 @@ export function CollapsibleSection({
   children,
 }: Readonly<CollapsibleSectionProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
 
   return (
     <View style={[styles.section, style]}>
-      <View style={styles.header}>
-        <SectionTitle style={styles.titleRow}>{title}</SectionTitle>
-        <View style={styles.actions}>
-          {headerAction}
-          {onSeeMore ? (
-            <Pressable onPress={onSeeMore}>
-              <Text style={styles.seeMore}>{t('seeMore')}</Text>
+      <SectionHeading
+        title={title}
+        trailing={
+          <View style={styles.actions}>
+            {headerAction}
+            {onSeeMore ? (
+              <Pressable onPress={onSeeMore}>
+                <Text style={styles.seeMore}>{t('seeMore')}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable accessibilityRole="button" accessibilityLabel={isCollapsed ? t('common:a11yExpand') : t('common:a11yCollapse')} onPress={onToggleCollapsed} hitSlop={8}>
+              {isCollapsed ? (
+                <ChevronDown size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              ) : (
+                <ChevronUp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              )}
             </Pressable>
-          ) : null}
-          <Pressable onPress={onToggleCollapsed} hitSlop={8}>
-            {isCollapsed ? (
-              <ChevronDown size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-            ) : (
-              <ChevronUp size={18} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
-            )}
-          </Pressable>
-        </View>
-      </View>
+          </View>
+        }
+      />
 
       {!isCollapsed ? children : null}
     </View>
@@ -57,16 +59,7 @@ export function CollapsibleSection({
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     section: {
-      marginBottom: Metrics.spacing.lg,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Metrics.spacing.sm,
-    },
-    titleRow: {
-      marginBottom: 0,
+      marginBottom: Metrics.spacing.xl,
     },
     actions: {
       flexDirection: 'row',
@@ -74,8 +67,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.md,
     },
     seeMore: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.leaf,
     },
   });

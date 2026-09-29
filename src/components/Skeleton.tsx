@@ -9,7 +9,7 @@ type SkeletonBlockProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function SkeletonBlock({ width = '100%', height = 14, radius = Metrics.radius.sm, style }: Readonly<SkeletonBlockProps>) {
+export function SkeletonBlock({ width = '100%', height = Metrics.fontSize.small, radius = Metrics.radius.sm, style }: Readonly<SkeletonBlockProps>) {
   const colors = useColors();
   const [opacity] = useState(() => new Animated.Value(0.4));
 

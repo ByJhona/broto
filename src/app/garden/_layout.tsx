@@ -7,7 +7,7 @@ export default function GardenLayout() {
   const { t } = useTranslation('garden');
   return (
     <Stack screenOptions={screenOptions}>
-      <Stack.Screen name="add" options={{ title: t('addPlantTitle') }} />
+      <Stack.Screen name="add" options={{ headerShown: false, title: t('addPlantTitle') }} />
     </Stack>
   );
 }

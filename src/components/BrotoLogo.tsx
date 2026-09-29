@@ -1,11 +1,11 @@
 import Svg, { G, Path } from 'react-native-svg';
-import { useColors } from '@/theme';
+import { Metrics, useColors } from '@/theme';
 
 type BrotoLogoProps = {
   size?: number;
 };
 
-export function BrotoLogo({ size = 48 }: Readonly<BrotoLogoProps>) {
+export function BrotoLogo({ size = Metrics.size.lg }: Readonly<BrotoLogoProps>) {
   const colors = useColors();
   const height = (size * 2128) / 2016;
 

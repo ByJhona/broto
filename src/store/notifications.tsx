@@ -1,6 +1,6 @@
 import { useEffect, type PropsWithChildren } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getNotificationById, supabase } from '@/services';
+import { getNotificationById, isNotificationType, supabase } from '@/services';
 import { upsertInList } from '@/utils';
 import { useAuthContext } from './auth';
 import type { Notification } from '@/types';
@@ -24,6 +24,7 @@ export function NotificationsProvider({ children }: Readonly<PropsWithChildren>)
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
         async (payload) => {
+          if (!isNotificationType(payload.new.type)) return;
           const newNotif = await getNotificationById(payload.new.id);
           if (!newNotif) return;
           queryClient.setQueryData<Notification[]>(queryKey, (current = []) =>

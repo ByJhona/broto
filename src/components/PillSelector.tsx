@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 export type PillOption<T extends string> = {
   value: T;
@@ -12,13 +11,13 @@ export type PillOption<T extends string> = {
 
 type PillSelectorProps<T extends string> = {
   options: PillOption<T>[];
-  value: T;
+  value: T | null;
   onChange: (value: T) => void;
 };
 
 export function PillSelector<T extends string>({ options, value, onChange }: Readonly<PillSelectorProps<T>>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={styles.row}>
@@ -34,7 +33,7 @@ export function PillSelector<T extends string>({ options, value, onChange }: Rea
             onPress={() => onChange(option.value)}
           >
             {Icon ? (
-              <Icon size={14} color={selected ? selectedForeground : colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              <Icon size={Metrics.icon.xs} color={selected ? selectedForeground : colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
             ) : null}
             <Text style={[styles.pillText, selected && { color: selectedForeground }]}>{option.label}</Text>
           </Pressable>
@@ -54,17 +53,16 @@ const makeStyles = (colors: ThemeColors) =>
     pill: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: Metrics.spacing.sm,
       borderWidth: 2,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
-      paddingVertical: 8,
+      paddingVertical: Metrics.spacing.sm,
       paddingHorizontal: Metrics.spacing.md,
       backgroundColor: colors.card,
     },
     pillText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.foreground,
     },
   });

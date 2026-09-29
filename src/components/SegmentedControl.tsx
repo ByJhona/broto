@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Elevation, Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 export type SegmentedControlOption<T> = {
   value: T;
@@ -15,8 +14,7 @@ type SegmentedControlProps<T extends string> = {
 };
 
 export function SegmentedControl<T extends string>({ options, value, onChange, style }: Readonly<SegmentedControlProps<T>>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={[styles.track, style]}>
@@ -42,8 +40,8 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       backgroundColor: colors.muted,
       borderRadius: Metrics.radius.full,
-      padding: 4,
-      gap: 4,
+      padding: Metrics.spacing.xs,
+      gap: Metrics.spacing.xs,
     },
     segment: {
       flex: 1,
@@ -53,15 +51,11 @@ const makeStyles = (colors: ThemeColors) =>
     },
     segmentActive: {
       backgroundColor: colors.card,
-      elevation: 2,
+      ...Elevation.low,
       shadowColor: colors.foreground,
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 1 },
     },
     label: {
-      fontSize: 14,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
     labelActive: {

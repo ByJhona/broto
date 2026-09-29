@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import ListChecks from 'lucide-react-native/icons/list-checks';
 import Plus from 'lucide-react-native/icons/plus';
 import Trash2 from 'lucide-react-native/icons/trash-2';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 type MultiSelectHeaderActionsProps = {
@@ -26,7 +25,7 @@ export function MultiSelectHeaderActions({
   onConfirmDelete,
 }: Readonly<MultiSelectHeaderActionsProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
 
   if (isSelecting) {
@@ -56,7 +55,7 @@ export function MultiSelectHeaderActions({
         <ListChecks size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
       </Pressable>
       {onAdd ? (
-        <Pressable style={styles.iconButton} onPress={onAdd} hitSlop={8}>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yAdd')} style={styles.iconButton} onPress={onAdd} hitSlop={8}>
           <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
         </Pressable>
       ) : null}
@@ -75,9 +74,9 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 4,
-      width: 28,
-      height: 28,
+      gap: Metrics.spacing.xs,
+      width: Metrics.size.sm,
+      height: Metrics.size.sm,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.muted,
     },
@@ -86,13 +85,11 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: Metrics.spacing.sm,
     },
     deleteCount: {
-      fontSize: 12,
-      fontWeight: '700',
+      ...Typography.captionStrong,
       color: colors.destructive,
     },
     cancelText: {
-      fontSize: 13,
-      fontWeight: '600',
+      ...Typography.label,
       color: colors.mutedForeground,
     },
   });

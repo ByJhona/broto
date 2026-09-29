@@ -8,7 +8,7 @@ export default function IdentifyLayout() {
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="capture" options={{ headerShown: false }} />
-      <Stack.Screen name="result" options={{ title: t('resultTitle') }} />
+      <Stack.Screen name="result" options={{ headerShown: false, title: t('resultTitle') }} />
     </Stack>
   );
 }

@@ -1,20 +1,19 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import type { Badge } from '@/types';
 import { PixelBadge } from './PixelBadge';
 
 type BadgeCardProps = {
   badge: Badge;
+  locked?: boolean;
 };
 
-export function BadgeCard({ badge }: Readonly<BadgeCardProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+export function BadgeCard({ badge, locked = false }: Readonly<BadgeCardProps>) {
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={styles.container}>
-      <PixelBadge pixelArt={badge.pixelArt} size={120} />
+      <PixelBadge pixelArt={badge.pixelArt} size={Metrics.media.sm} locked={locked} />
       <Text style={styles.name}>{badge.name}</Text>
       <Text style={styles.description}>{badge.description}</Text>
     </View>
@@ -27,14 +26,13 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     name: {
-      fontSize: 18,
-      fontWeight: '700',
+      ...Typography.title,
       color: colors.foreground,
       marginTop: Metrics.spacing.md,
       textAlign: 'center',
     },
     description: {
-      fontSize: 14,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
       textAlign: 'center',
       marginTop: Metrics.spacing.xs,

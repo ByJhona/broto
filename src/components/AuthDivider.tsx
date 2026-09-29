@@ -1,14 +1,12 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
 type AuthDividerProps = {
   label: string;
 };
 
 export function AuthDivider({ label }: Readonly<AuthDividerProps>) {
-  const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
 
   return (
     <View style={styles.container}>
@@ -33,7 +31,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.border,
     },
     label: {
-      fontSize: 13,
+      ...Typography.bodySmall,
       color: colors.mutedForeground,
     },
   });

@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
@@ -6,7 +6,7 @@ import Circle from 'lucide-react-native/icons/circle';
 import Square from 'lucide-react-native/icons/square';
 import SquareCheck from 'lucide-react-native/icons/square-check';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { addDays, CATEGORY_ICONS, confirm, daysBetween, formatShortDate, today } from '@/utils';
 import { TASK_CATEGORY, type CareTask } from '@/types';
@@ -16,9 +16,9 @@ type CareTaskItemProps = {
   task: CareTask;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  isSelecting: boolean;
-  isSelected: boolean;
-  onToggleSelected: (id: string) => void;
+  isSelecting?: boolean;
+  isSelected?: boolean;
+  onToggleSelected?: (id: string) => void;
 };
 
 type Styles = ReturnType<typeof makeStyles>;
@@ -133,12 +133,12 @@ export const CareTaskItem = memo(function CareTaskItem({
   task,
   onToggle,
   onDelete,
-  isSelecting,
-  isSelected,
+  isSelecting = false,
+  isSelected = false,
   onToggleSelected,
 }: Readonly<CareTaskItemProps>) {
   const colors = useColors();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('garden');
   const Icon = CATEGORY_ICONS[task.category];
   const subtitle = subtitleFor(task, t);
@@ -146,7 +146,7 @@ export const CareTaskItem = memo(function CareTaskItem({
 
   const handlePress = () => {
     if (isSelecting) {
-      onToggleSelected(task.id);
+      onToggleSelected?.(task.id);
     } else {
       onToggle(task.id);
     }
@@ -211,18 +211,17 @@ const makeStyles = (colors: ThemeColors) =>
     flex: 1,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '600',
+    ...Typography.headingMedium,
     color: colors.foreground,
   },
   subtitle: {
-    fontSize: 13,
+    ...Typography.bodySmall,
     color: colors.mutedForeground,
-    marginTop: 2,
+    marginTop: Metrics.spacing.xs,
   },
   subtitleOverdue: {
+    ...Typography.label,
     color: colors.destructive,
-    fontWeight: '600',
   },
   textDone: {
     color: colors.mutedForeground,

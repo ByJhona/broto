@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import Square from 'lucide-react-native/icons/square';
 import SquareCheck from 'lucide-react-native/icons/square-check';
-import { Metrics, useColors, type ThemeColors } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar, EmptyState, ListRow, LoadingScreen, MultiSelectHeaderActions } from '@/components';
 import { useConversations, useMultiSelect } from '@/hooks';
@@ -22,8 +21,8 @@ type ConversationTrailingIconProps = {
 
 function ConversationTrailingIcon({ isSelecting, isSelected, hasUnread, colors, styles }: Readonly<ConversationTrailingIconProps>) {
   if (isSelecting) {
-    if (isSelected) return <SquareCheck size={22} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
-    return <Square size={22} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+    return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
   }
   if (hasUnread) return <View style={styles.unreadDot} />;
   return null;
@@ -46,7 +45,7 @@ export default function MessagesScreen() {
   const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('messages');
   const { conversations, isLoading, removeConversation, isLoadingMore, loadMore } = useConversations();
   const selection = useMultiSelect();
@@ -118,7 +117,7 @@ export default function MessagesScreen() {
             <ListRow
               variant="card"
               selected={isSelected}
-              leading={<Avatar name={item.otherUserName} url={item.otherUserAvatarUrl} size={48} />}
+              leading={<Avatar name={item.otherUserName} url={item.otherUserAvatarUrl} size={Metrics.size.lg} />}
               title={item.otherUserName}
               titleTrailing={<Text style={styles.date}>{formatShortDate(item.lastMessageAt)}</Text>}
               subtitle={item.lastMessagePreview}
@@ -164,12 +163,12 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.sm,
     },
     date: {
-      fontSize: 12,
+      ...Typography.caption,
       color: colors.mutedForeground,
     },
     unreadDot: {
-      width: 10,
-      height: 10,
+      width: Metrics.size.dot,
+      height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.destructive,
     },
