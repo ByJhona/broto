@@ -43,8 +43,8 @@ const makeStyles = (colors: ThemeColors) =>
       width: Metrics.size.dot,
       height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
-      backgroundColor: colors.destructive,
+      backgroundColor: colors.primary,
       borderWidth: 1.5,
-      borderColor: colors.leaf,
+      borderColor: colors.leafForeground,
     },
   });

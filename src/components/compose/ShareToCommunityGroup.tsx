@@ -46,7 +46,7 @@ export function ShareToCommunityGroup({
         <Switch
           value={value}
           onValueChange={onValueChange}
-          trackColor={{ false: colors.muted, true: colors.primary }}
+          trackColor={{ false: colors.muted, true: colors.leaf }}
           thumbColor={colors.white}
         />
       </Pressable>

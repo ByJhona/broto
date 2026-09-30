@@ -73,8 +73,8 @@ export default function HomeScreen() {
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('home');
   const params = useLocalSearchParams<PlacingParams>();
-  const { listings: allListings } = useListings();
-  const { events: allEvents } = useEvents();
+  const { listings: allListings, refresh: refreshListings } = useListings();
+  const { events: allEvents, refresh: refreshEvents } = useEvents();
   const [mapFilter, setMapFilter] = useState<MapFilter>(MAP_FILTER_ALL);
   const [headerHeight, setHeaderHeight] = useState(0);
   const { listings, events } = useMemo(
@@ -186,7 +186,7 @@ export default function HomeScreen() {
         />
       ) : (
         <>
-          <HomeHeader onLayout={handleHeaderLayout} />
+          <HomeHeader onLayout={handleHeaderLayout} onRefresh={() => Promise.all([refreshListings(), refreshEvents()])} />
           <View style={[styles.mapFilters, { top: headerHeight + Metrics.spacing.sm }]}>
             <FilterChipRow
               floating

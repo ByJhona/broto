@@ -43,7 +43,7 @@ export function CreditsBar() {
         onPress={handleAction}
         accessibilityRole="button"
       >
-        <ActionIcon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <ActionIcon size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
         <Text style={styles.actionText}>{isIdentify ? t('identifyAction') : t('seePlansAction')}</Text>
       </Pressable>
     </View>
@@ -82,7 +82,7 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: Metrics.spacing.xs,
-      backgroundColor: colors.leafForeground,
+      backgroundColor: colors.primary,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
       paddingHorizontal: Metrics.spacing.md,
@@ -92,6 +92,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     actionText: {
       ...Typography.labelStrong,
-      color: colors.leaf,
+      color: colors.primaryForeground,
     },
   });

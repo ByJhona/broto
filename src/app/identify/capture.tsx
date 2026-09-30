@@ -12,7 +12,7 @@ import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { OfflineBanner } from '@/components';
-import { useAuth, useCreditCosts, useCreditsGate, useNetworkStatus } from '@/hooks';
+import { celebrateXpLevelUp, useAuth, useCreditCosts, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { diagnosePlant, getPlantSpeciesInfo, identifyPlant, InsufficientCreditsError, plantSpeciesInfoQueryKey } from '@/services';
 import type { PlantDiagnosis } from '@/types';
 import { Alert, requireLogin, Toast } from '@/utils';
@@ -132,6 +132,7 @@ export default function CaptureScreen() {
     applyCreditBalance(newCreditBalance);
 
     const topCandidate = candidates[0];
+    if (topCandidate && user) celebrateXpLevelUp(queryClient, user.id);
     if (topCandidate) {
       queryClient.prefetchQuery({
         queryKey: plantSpeciesInfoQueryKey(topCandidate.scientificName),

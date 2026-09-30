@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createPlant, getPlants, type CreatePlantInput } from '@/services';
 import type { PlantSummary } from '@/types';
 import { useAuth } from './useAuth';
+import { celebrateXpLevelUp } from './useXp';
 
 export function usePlants() {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ export function usePlants() {
       };
       queryClient.setQueryData<PlantSummary[]>(queryKey, (current = []) => [summary, ...current]);
       queryClient.setQueryData(['plant', plant.id], plant);
+      if (user?.id) celebrateXpLevelUp(queryClient, user.id);
     },
   });
 

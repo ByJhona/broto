@@ -4,6 +4,7 @@ import { addDays, daysBetween, today } from '@/utils';
 import { recordCareTaskCompletion } from './careStreak';
 import { removeTaskFromDeviceCalendar, syncTaskToDeviceCalendar } from './deviceCalendar';
 import { getNotificationsModule } from './notificationsModule';
+import { queryClient } from './queryClient';
 import { ensureWriteApplied } from './writeGuard';
 import { getCurrentUserId, supabase } from './supabase';
 import type { CareTask, TaskCategory } from '@/types';
@@ -103,53 +104,74 @@ export async function getCareTaskPlantId(id: string): Promise<string | null> {
   return data?.plant_id ?? null;
 }
 
-export async function markCareTaskDoneById(id: string): Promise<void> {
+export async function markCareTaskDoneById(id: string, occurrence?: string): Promise<boolean> {
   const { data: row, error } = await supabase
     .from('care_tasks')
     .select(CARE_TASK_SELECT)
     .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
-  if (error || !row) return;
+  if (error || !row) {
+    if (error) console.error(error);
+    return false;
+  }
 
-  const taskRow = row as CareTaskRow;
-  const dueDate = currentOccurrenceDate(taskRow, today());
+  const dueDate = occurrence ?? currentOccurrenceDate(row as CareTaskRow, today());
 
   const { error: updateError, count } = await supabase
     .from('care_tasks')
     .update({ last_completed_occurrence: dueDate }, { count: 'exact' })
     .eq('id', id);
-  if (updateError || !count) return;
+  if (updateError || !count) {
+    if (updateError) console.error(updateError);
+    return false;
+  }
 
   await recordCareTaskCompletion();
+  return true;
 }
 
 export const CARE_TASK_CATEGORY = 'care-task';
 const MARK_DONE_ACTION = 'mark-done';
 export const REMINDERS_CHANNEL_ID = 'reminders';
 
+type CareReminderData = { careTaskId?: string; occurrence?: string };
+
 async function handleMarkDoneResponse(response: NotificationResponse): Promise<void> {
   if (response.actionIdentifier !== MARK_DONE_ACTION) return;
 
-  const data = response.notification.request.content.data as { careTaskId?: string } | undefined;
-  const careTaskId = data?.careTaskId;
-  if (!careTaskId) return;
+  const notifications = await getNotificationsModule();
+  notifications?.clearLastNotificationResponse();
 
-  await markCareTaskDoneById(careTaskId);
+  const data = response.notification.request.content.data as CareReminderData | undefined;
+  if (!data?.careTaskId) return;
+
+  const marked = await markCareTaskDoneById(data.careTaskId, data.occurrence);
+  if (!marked) return;
+
+  await notifications?.dismissNotificationAsync(response.notification.request.identifier);
+  queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+  queryClient.invalidateQueries({ queryKey: ['care-streak'] });
+}
+
+export async function registerCareReminderChannel(): Promise<void> {
+  const notifications = await getNotificationsModule();
+  if (!notifications) return;
+
+  await Promise.all([
+    notifications.setNotificationChannelAsync(REMINDERS_CHANNEL_ID, {
+      name: i18n.t('garden:remindersChannelName'),
+      importance: notifications.AndroidImportance.HIGH,
+    }),
+    notifications.setNotificationCategoryAsync(CARE_TASK_CATEGORY, [
+      { identifier: MARK_DONE_ACTION, buttonTitle: i18n.t('garden:reminderMarkDone'), options: { opensAppToForeground: false } },
+    ]),
+  ]);
 }
 
 export async function registerCareTaskNotificationHandlers(): Promise<void> {
   const notifications = await getNotificationsModule();
   if (!notifications) return;
-
-  notifications.setNotificationChannelAsync(REMINDERS_CHANNEL_ID, {
-    name: 'Lembretes de cuidado',
-    importance: notifications.AndroidImportance.HIGH,
-  });
-
-  notifications.setNotificationCategoryAsync(CARE_TASK_CATEGORY, [
-    { identifier: MARK_DONE_ACTION, buttonTitle: 'Marcar como feito', options: { opensAppToForeground: false } },
-  ]);
 
   notifications.addNotificationResponseReceivedListener(handleMarkDoneResponse);
 

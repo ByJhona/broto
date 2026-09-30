@@ -12,7 +12,7 @@ function getToastMeta(colors: ThemeColors): Record<ToastType, { icon: LucideIcon
   return {
     success: { icon: CheckCircle2, color: colors.leaf },
     error: { icon: AlertCircle, color: colors.destructive },
-    info: { icon: Info, color: colors.primary },
+    info: { icon: Info, color: colors.foreground },
   };
 }
 

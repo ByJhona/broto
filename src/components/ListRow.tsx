@@ -78,8 +78,8 @@ const makeStyles = (colors: ThemeColors) =>
       padding: Metrics.spacing.md,
     },
     rowSelected: {
-      borderColor: colors.primary,
-      backgroundColor: `${colors.primary}14`,
+      borderColor: colors.leaf,
+      backgroundColor: `${colors.leaf}14`,
     },
     body: {
       flex: 1,

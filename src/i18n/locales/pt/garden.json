@@ -49,5 +49,7 @@
   "plantCareNone": "Sem lembretes",
   "addPlantSubtitle": "Busque pelo nome popular ou científico.",
   "addPlantIdentifyHint": "Não sabe o nome? Aponte a câmera para a planta.",
-  "agendaSubtitle": "Todos os seus lembretes de cuidado."
+  "agendaSubtitle": "Todos os seus lembretes de cuidado.",
+  "remindersChannelName": "Lembretes de cuidado",
+  "reminderMarkDone": "Marcar como feito"
 }

@@ -37,7 +37,7 @@ export function RecurrenceToggleRow({ recurrenceDays, onToggleRepeat }: Readonly
         <Switch
           value={isRepeating}
           onValueChange={onToggleRepeat}
-          trackColor={{ false: colors.muted, true: colors.primary }}
+          trackColor={{ false: colors.muted, true: colors.leaf }}
           thumbColor={colors.white}
           accessibilityLabel={t('repeatLabel')}
         />

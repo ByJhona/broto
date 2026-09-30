@@ -57,7 +57,6 @@ function PackTile({ pack, offerings, isSelected, isBestValue, width, onSelect }:
         <IconBadge backgroundColor={isSelected ? colors.leaf : colors.muted}>
           <Icon size={Metrics.icon.small} color={isSelected ? colors.leafForeground : colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
         </IconBadge>
-        {isBestValue ? <InfoChip size="sm" icon={Sparkles} value={t('bestValue')} tintColor={colors.primary} /> : null}
       </View>
       <Text style={styles.credits}>{t('packCredits', { count: pack.credits })}</Text>
       <Text style={styles.name} numberOfLines={1}>
@@ -65,6 +64,11 @@ function PackTile({ pack, offerings, isSelected, isBestValue, width, onSelect }:
       </Text>
       <Text style={styles.price}>{pkg?.product.priceString ?? t('comingSoon')}</Text>
       {pkg ? <Text style={styles.unitPrice}>{t('pricePerCredit', { price: pricePerCredit(pkg, pack.credits) })}</Text> : null}
+      {isBestValue ? (
+        <View style={styles.badge}>
+          <InfoChip size="sm" icon={Sparkles} value={t('bestValue')} tintColor={colors.primary} />
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -127,9 +131,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     tileTop: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: Metrics.spacing.xs,
       marginBottom: Metrics.spacing.xs,
     },
     credits: {
@@ -148,5 +149,9 @@ const makeStyles = (colors: ThemeColors) =>
     unitPrice: {
       ...Typography.caption,
       color: colors.mutedForeground,
+    },
+    badge: {
+      flexDirection: 'row',
+      marginTop: Metrics.spacing.xs,
     },
   });

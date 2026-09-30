@@ -59,8 +59,18 @@ function subtitleFor(task: CareTask, t: TranslateFn): string {
   return [task.plantName, statusLabel(task, t), isAutomatic ? t('taskAutomatic') : null].filter(Boolean).join(' · ');
 }
 
-function cardStyle(styles: Styles, done: boolean, isSelected: boolean, pressed: boolean) {
-  return [styles.card, done && styles.cardDone, isSelected && styles.cardSelected, pressed && styles.cardPressed];
+function isDueNow(task: CareTask): boolean {
+  return !task.done && daysBetween(today(), task.dueDate) <= 0;
+}
+
+function cardStyle(styles: Styles, task: CareTask, isSelected: boolean, pressed: boolean) {
+  return [
+    styles.card,
+    task.done && styles.cardDone,
+    isDueNow(task) && styles.cardDue,
+    isSelected && styles.cardSelected,
+    pressed && styles.cardPressed,
+  ];
 }
 
 function titleStyle(styles: Styles, done: boolean) {
@@ -112,21 +122,22 @@ function CareTaskLeadingIcon({ task, Icon, colors, styles }: Readonly<CareTaskLe
 }
 
 type CareTaskTrailingIconProps = {
-  done: boolean;
+  task: CareTask;
   isSelecting: boolean;
   isSelected: boolean;
   colors: ThemeColors;
 };
 
-function CareTaskTrailingIcon({ done, isSelecting, isSelected, colors }: Readonly<CareTaskTrailingIconProps>) {
+function CareTaskTrailingIcon({ task, isSelecting, isSelected, colors }: Readonly<CareTaskTrailingIconProps>) {
   if (isSelecting) {
-    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />;
     return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
   }
-  if (done) {
-    return <CheckCircle2 size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+  if (task.done) {
+    return <CheckCircle2 size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />;
   }
-  return <Circle size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  const pendingColor = isDueNow(task) ? colors.primary : colors.mutedForeground;
+  return <Circle size={Metrics.icon.normal} color={pendingColor} strokeWidth={Metrics.icon.strokeWidth} />;
 }
 
 export const CareTaskItem = memo(function CareTaskItem({
@@ -161,7 +172,7 @@ export const CareTaskItem = memo(function CareTaskItem({
     <Pressable
       onPress={handlePress}
       onLongPress={handleLongPress}
-      style={({ pressed }) => cardStyle(styles, task.done, isSelected, pressed)}
+      style={({ pressed }) => cardStyle(styles, task, isSelected, pressed)}
     >
       <IconBadge backgroundColor={iconBackgroundColor(colors, task.done)} style={styles.iconOverflow}>
         <CareTaskLeadingIcon task={task} Icon={Icon} colors={colors} styles={styles} />
@@ -172,7 +183,7 @@ export const CareTaskItem = memo(function CareTaskItem({
         <Text style={subtitleStyle(styles, isOverdue)}>{subtitle}</Text>
       </View>
 
-      <CareTaskTrailingIcon done={task.done} isSelecting={isSelecting} isSelected={isSelected} colors={colors} />
+      <CareTaskTrailingIcon task={task} isSelecting={isSelecting} isSelected={isSelected} colors={colors} />
     </Pressable>
   );
 });
@@ -193,9 +204,12 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: colors.muted,
     borderColor: colors.muted,
   },
-  cardSelected: {
+  cardDue: {
     borderColor: colors.primary,
-    backgroundColor: `${colors.primary}14`,
+  },
+  cardSelected: {
+    borderColor: colors.leaf,
+    backgroundColor: `${colors.leaf}14`,
   },
   cardPressed: {
     opacity: 0.8,

@@ -67,7 +67,7 @@ const makeStyles = (colors: ThemeColors) =>
       overflow: 'hidden',
     },
     avatarSelected: {
-      borderColor: colors.primary,
+      borderColor: colors.leaf,
     },
     avatarImage: {
       width: '100%',

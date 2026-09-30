@@ -10,7 +10,7 @@ export function LoadingScreen({ size }: Readonly<LoadingScreenProps>) {
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.container}>
-      <ActivityIndicator color={colors.primary} size={size} />
+      <ActivityIndicator color={colors.leaf} size={size} />
     </View>
   );
 }

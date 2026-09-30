@@ -46,7 +46,7 @@ export function GroupPlantPickerModal({
                 </View>
                 <Text style={styles.rowText}>{plant.name}</Text>
                 <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                  {selected ? <Check size={Metrics.icon.xs} color={colors.primaryForeground} strokeWidth={2.5} /> : null}
+                  {selected ? <Check size={Metrics.icon.xs} color={colors.leafForeground} strokeWidth={2.5} /> : null}
                 </View>
               </Pressable>
             );
@@ -110,8 +110,8 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     checkboxSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.leaf,
+      borderColor: colors.leaf,
     },
     done: {
       alignItems: 'center',

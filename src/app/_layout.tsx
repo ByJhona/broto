@@ -5,7 +5,7 @@ import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
 import { i18n, LanguageProvider, useLanguage, useTranslation } from '@/i18n';
 import { checkForAppUpdate } from '@/services/appVersion';
-import { registerCareTaskNotificationHandlers } from '@/services/careTasks';
+import { registerCareReminderChannel, registerCareTaskNotificationHandlers } from '@/services/careTasks';
 import {
   CATALOG_STALE_TIME,
   CREDIT_COSTS_QUERY_KEY,
@@ -54,6 +54,10 @@ function RootNavigator() {
   }, []);
 
   useEffect(() => {
+    registerCareReminderChannel();
+  }, [language]);
+
+  useEffect(() => {
     if (isLoading) return;
     handleLaunchNotification();
   }, [isLoading]);
@@ -76,7 +80,7 @@ function RootNavigator() {
     return (
       <View style={styles.loading}>
         {statusBar}
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={colors.leaf} />
       </View>
     );
   }

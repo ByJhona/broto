@@ -49,5 +49,7 @@
   "plantCareNone": "No reminders",
   "addPlantSubtitle": "Search by common or scientific name.",
   "addPlantIdentifyHint": "Don't know the name? Point the camera at the plant.",
-  "agendaSubtitle": "All your care reminders."
+  "agendaSubtitle": "All your care reminders.",
+  "remindersChannelName": "Care reminders",
+  "reminderMarkDone": "Mark as done"
 }

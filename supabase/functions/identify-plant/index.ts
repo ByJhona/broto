@@ -156,6 +156,14 @@ Deno.serve(async (req) => {
       return new Response('Não foi possível descontar o crédito', { status: 500 });
     }
     newCreditBalance = balance;
+
+    const { error: xpError } = await supabaseAdmin.rpc('award_capped_xp', {
+      target_user_id: user.id,
+      xp_amount: 5,
+      xp_reason: 'plant_identified',
+      daily_cap: 3,
+    });
+    if (xpError) console.error('Erro concedendo XP da identificação:', xpError);
   }
 
   return new Response(JSON.stringify({ candidates, newCreditBalance }), {

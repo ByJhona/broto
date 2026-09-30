@@ -30,7 +30,7 @@ type ConversationTrailingIconProps = {
 
 function ConversationTrailingIcon({ isSelecting, isSelected, hasUnread, colors, styles }: Readonly<ConversationTrailingIconProps>) {
   if (isSelecting) {
-    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />;
+    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />;
     return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
   }
   if (hasUnread) return <View style={styles.unreadDot} />;
@@ -150,7 +150,7 @@ export default function MessagesScreen() {
         }}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
-        ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.loadingMore} color={colors.primary} /> : null}
+        ListFooterComponent={isLoadingMore ? <ActivityIndicator style={styles.loadingMore} color={colors.leaf} /> : null}
       />
       <FloatingScreenControls />
     </View>
