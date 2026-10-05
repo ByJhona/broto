@@ -1,7 +1,6 @@
 export const LISTING_TYPE = {
   DONATION: 'donation',
   EXCHANGE: 'exchange',
-  DISCARD: 'discard',
   SALE: 'sale',
 } as const;
 

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import Camera from 'lucide-react-native/icons/camera';
 import Coins from 'lucide-react-native/icons/coins';
 import Crown from 'lucide-react-native/icons/crown';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useCreditCosts, useCredits } from '@/hooks';
 import { creditsBalanceLabel, creditsNudge, CREDITS_NUDGE_ACTION } from '@/utils';
@@ -29,10 +29,12 @@ export function CreditsBar() {
     <View style={styles.bar}>
       <Pressable style={styles.balance} onPress={openPlans} accessibilityRole="button">
         <IconBadge size={Metrics.size.md} backgroundColor={`${colors.leafForeground}26`}>
-          <Coins size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Coins size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <View style={styles.text}>
-          <Text style={styles.title}>{creditsBalanceLabel(credits)}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {creditsBalanceLabel(credits)}
+          </Text>
           <Text style={styles.message} numberOfLines={1}>
             {nudge.message}
           </Text>
@@ -43,7 +45,7 @@ export function CreditsBar() {
         onPress={handleAction}
         accessibilityRole="button"
       >
-        <ActionIcon size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <ActionIcon size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
         <Text style={styles.actionText}>{isIdentify ? t('identifyAction') : t('seePlansAction')}</Text>
       </Pressable>
     </View>
@@ -55,7 +57,7 @@ const makeStyles = (colors: ThemeColors) =>
     bar: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Metrics.spacing.sm,
+      gap: Metrics.spacing.md,
       padding: Metrics.spacing.sm,
       borderRadius: Metrics.radius.lg,
       backgroundColor: `${colors.leafForeground}1A`,
@@ -76,19 +78,19 @@ const makeStyles = (colors: ThemeColors) =>
     message: {
       ...Typography.caption,
       color: colors.leafForeground,
-      opacity: 0.85,
+      opacity: Opacity.subtle,
     },
     action: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Metrics.spacing.xs,
-      backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
+      minHeight: Metrics.size.md,
       paddingHorizontal: Metrics.spacing.md,
+      borderRadius: Metrics.radius.full,
+      backgroundColor: colors.primary,
     },
     pressed: {
-      opacity: 0.8,
+      opacity: Opacity.pressed,
     },
     actionText: {
       ...Typography.labelStrong,

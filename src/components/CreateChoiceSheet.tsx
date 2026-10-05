@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
@@ -8,6 +8,7 @@ import { BottomSheet } from './BottomSheet';
 import { CardGroup } from './CardGroup';
 import { IconBadge } from './IconBadge';
 import { ListRow } from './ListRow';
+import { TextButton } from './TextButton';
 
 type CreateChoiceSheetProps = {
   visible: boolean;
@@ -20,7 +21,7 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation(['home', 'listingTypes', 'common']);
-  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />;
   const EventIcon = EVENT_ICON;
 
   return (
@@ -35,7 +36,7 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
             style={styles.row}
             leading={
               <IconBadge backgroundColor={color}>
-                <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
               </IconBadge>
             }
             title={label}
@@ -51,7 +52,7 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
           style={styles.row}
           leading={
             <IconBadge backgroundColor={EVENT_COLOR}>
-              <EventIcon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              <EventIcon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
             </IconBadge>
           }
           title={t('newEventTitle')}
@@ -61,9 +62,7 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
         />
       </CardGroup>
 
-      <Pressable style={styles.cancel} onPress={onClose} accessibilityRole="button">
-        <Text style={styles.cancelText}>{t('common:cancel')}</Text>
-      </Pressable>
+      <TextButton label={t('common:cancel')} onPress={onClose} />
     </BottomSheet>
   );
 }
@@ -85,13 +84,5 @@ const makeStyles = (colors: ThemeColors) =>
     },
     row: {
       paddingVertical: Metrics.spacing.sm,
-    },
-    cancel: {
-      alignItems: 'center',
-      paddingVertical: Metrics.spacing.sm,
-    },
-    cancelText: {
-      ...Typography.label,
-      color: colors.mutedForeground,
     },
   });

@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { BottomSheet } from './BottomSheet';
 import { FormError } from './FormError';
 import { FormField } from './FormField';
 import { SubmitButton } from './SubmitButton';
+import { TextButton } from './TextButton';
 
 type PromptModalProps = {
   visible: boolean;
@@ -46,9 +47,7 @@ export function PromptModal({
       <FormField label={label} value={value} onChangeText={onChangeText} placeholder={placeholder} autoFocus />
       <FormError>{error ?? null}</FormError>
       <SubmitButton label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
-      <Pressable style={styles.cancel} onPress={handleClose} disabled={isSubmitting}>
-        <Text style={styles.cancelText}>{t('cancel')}</Text>
-      </Pressable>
+      <TextButton label={t('cancel')} onPress={handleClose} disabled={isSubmitting} style={styles.cancel} />
     </BottomSheet>
   );
 }
@@ -61,12 +60,6 @@ const makeStyles = (colors: ThemeColors) =>
       marginBottom: Metrics.spacing.md,
     },
     cancel: {
-      alignItems: 'center',
       marginTop: Metrics.spacing.sm,
-      padding: Metrics.spacing.sm,
-    },
-    cancelText: {
-      ...Typography.label,
-      color: colors.mutedForeground,
     },
   });

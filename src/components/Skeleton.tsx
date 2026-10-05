@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Animated, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
-import { Metrics, useColors } from '@/theme';
+import { Metrics, useColors, Motion, Opacity } from '@/theme';
 
 type SkeletonBlockProps = {
   width?: DimensionValue;
@@ -11,13 +11,13 @@ type SkeletonBlockProps = {
 
 export function SkeletonBlock({ width = '100%', height = Metrics.fontSize.small, radius = Metrics.radius.sm, style }: Readonly<SkeletonBlockProps>) {
   const colors = useColors();
-  const [opacity] = useState(() => new Animated.Value(0.4));
+  const [opacity] = useState(() => new Animated.Value(Opacity.placeholder));
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: Motion.pulse, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: Opacity.placeholder, duration: Motion.pulse, useNativeDriver: true }),
       ])
     );
     loop.start();

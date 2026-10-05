@@ -72,7 +72,7 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch, onCreatePost, onC
           <Text style={styles.subtitle}>{t('subtitle')}</Text>
         </View>
         <IconButton accessibilityLabel={t('common:search')} style={styles.searchButton} onPress={onSearch}>
-          <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Search size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
       </View>
 
@@ -81,7 +81,7 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch, onCreatePost, onC
       </View>
 
       <View style={styles.filtersRow}>
-        <FilterChipRow options={getFeedFilters(t)} value={feed.filter} onChange={feed.setFilter} />
+        <FilterChipRow options={getFeedFilters(t)} selected={[feed.filter]} onChange={feed.setFilter} />
       </View>
     </View>
   );
@@ -240,7 +240,7 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: Metrics.spacing.xs,
     },
     searchButton: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
     },
     composer: {

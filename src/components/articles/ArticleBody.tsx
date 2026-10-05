@@ -114,7 +114,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     tip: {
       backgroundColor: `${colors.leaf}14`,
-      borderLeftWidth: 3,
+      borderLeftWidth: Metrics.borderWidth.xl,
       borderLeftColor: colors.leaf,
       borderRadius: Metrics.radius.md,
       padding: Metrics.spacing.md,

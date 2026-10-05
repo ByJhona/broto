@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Mail from 'lucide-react-native/icons/mail';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, Opacity, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { AuthFooterLink, AuthLayout, GoogleSignInButton } from '@/components';
 import { EmailLoginForm } from '@/components/auth/EmailLoginForm';
@@ -41,7 +41,7 @@ export default function LoginScreen() {
           style={({ pressed }) => [styles.emailButton, pressed && styles.pressed]}
           onPress={() => setIsEmailFormOpen(true)}
         >
-          <Mail size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Mail size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.emailButtonText}>{t('continueWithEmail')}</Text>
         </Pressable>
       )}
@@ -62,7 +62,7 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: Metrics.spacing.sm,
     },
     pressed: {
-      opacity: 0.7,
+      opacity: Opacity.pressed,
     },
     emailButtonText: {
       ...Typography.headingMedium,

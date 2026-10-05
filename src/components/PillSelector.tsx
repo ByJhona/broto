@@ -33,7 +33,7 @@ export function PillSelector<T extends string>({ options, value, onChange }: Rea
             onPress={() => onChange(option.value)}
           >
             {Icon ? (
-              <Icon size={Metrics.icon.xs} color={selected ? selectedForeground : colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+              <Icon size={Metrics.icon.xs} color={selected ? selectedForeground : colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
             ) : null}
             <Text style={[styles.pillText, selected && { color: selectedForeground }]}>{option.label}</Text>
           </Pressable>
@@ -54,7 +54,7 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: Metrics.spacing.sm,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,

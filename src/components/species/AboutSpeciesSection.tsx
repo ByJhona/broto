@@ -21,7 +21,7 @@ function FactLine({ icon: Icon, label, value }: Readonly<FactLineProps>) {
 
   return (
     <View style={styles.factLine}>
-      <Icon size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.factText}>
         <Text style={styles.factLabel}>{label} </Text>
         {value}
@@ -47,7 +47,7 @@ export function AboutSpeciesSection({ info }: Readonly<{ info: PlantSpeciesInfo 
       {info.funFacts.length > 0 ? (
         <View style={styles.funFacts}>
           <View style={styles.funFactsHeader}>
-            <Lightbulb size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <Lightbulb size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
             <Text style={styles.funFactsTitle}>{t('funFactsTitle')}</Text>
           </View>
           {info.funFacts.map((fact) => (

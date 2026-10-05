@@ -18,13 +18,13 @@ export function ActionCard({ icon: Icon, title, subtitle, onPress, styles, color
   return (
     <Pressable style={styles.actionCard} onPress={onPress}>
       <IconBadge size={Metrics.size.xl} backgroundColor={colors.leafForeground}>
-        <Icon size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Icon size={Metrics.icon.large} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
       <View style={styles.actionTextBox}>
         <Text style={styles.actionTitle}>{title}</Text>
         <Text style={styles.actionSubtitle}>{subtitle}</Text>
       </View>
-      <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      <ArrowRight size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
     </Pressable>
   );
 }

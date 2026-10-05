@@ -10,6 +10,7 @@ import Crown from 'lucide-react-native/icons/crown';
 import Gift from 'lucide-react-native/icons/gift';
 import LogOut from 'lucide-react-native/icons/log-out';
 import ShieldCheck from 'lucide-react-native/icons/shield-check';
+import TicketPercent from 'lucide-react-native/icons/ticket-percent';
 import UserX from 'lucide-react-native/icons/user-x';
 import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference, useThemedStyles, Typography } from '@/theme';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
@@ -124,7 +125,7 @@ export default function ProfileSettingsScreen() {
             eyebrow={t('editProfile')}
             title={name}
             subtitle={accountSubtitle}
-            trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+            trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />}
             onPress={() => router.push('/profile/edit')}
           />
         </CardGroup>
@@ -140,6 +141,7 @@ export default function ProfileSettingsScreen() {
             {isPaidPlan ? (
               <SettingsListItem icon={CreditCard} label={t('manageSubscription')} onPress={handleManageSubscription} />
             ) : null}
+            <SettingsListItem icon={TicketPercent} label={t('redeemCode')} onPress={() => router.push('/profile/redeem-code')} />
           </CardGroup>
         </InfoSection>
 

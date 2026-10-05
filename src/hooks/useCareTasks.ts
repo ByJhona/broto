@@ -1,7 +1,14 @@
 import { useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createCareTask, deleteCareTask, getCareTasks, toggleCareTask, type CreateCareTaskInput } from '@/services';
+import {
+  createCareTask,
+  deleteCareTask,
+  getCareTasks,
+  toggleCareTask,
+  UNCELEBRATED_BADGES_QUERY_KEY,
+  type CreateCareTaskInput,
+} from '@/services';
 import type { CareTask } from '@/types';
 import { useAuth } from './useAuth';
 import { celebrateXpLevelUp } from './useXp';
@@ -37,6 +44,7 @@ export function useCareTasks() {
     onSuccess: (_data, { done }) => {
       if (!done || !user?.id) return;
       queryClient.invalidateQueries({ queryKey: ['care-streak', user.id] });
+      queryClient.invalidateQueries({ queryKey: [UNCELEBRATED_BADGES_QUERY_KEY] });
       celebrateXpLevelUp(queryClient, user.id);
     },
   });

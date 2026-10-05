@@ -21,7 +21,7 @@ export function SettingsListItem({ icon: Icon, label, subtitle, destructive = fa
     <ListRow
       leading={
         <IconBadge backgroundColor={`${tint}1F`}>
-          <Icon size={Metrics.icon.small} color={tint} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.small} color={tint} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
       }
       title={label}
@@ -29,7 +29,7 @@ export function SettingsListItem({ icon: Icon, label, subtitle, destructive = fa
       subtitle={subtitle}
       trailing={
         destructive ? undefined : (
-          <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
         )
       }
       onPress={onPress}

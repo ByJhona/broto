@@ -123,7 +123,7 @@ export default function GardenScreen() {
         style={[styles.createButton, { bottom: insets.bottom + Metrics.spacing.lg }]}
         onPress={() => router.push('/garden/add')}
       >
-        <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       </IconButton>
 
       <CreateGroupModal

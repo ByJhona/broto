@@ -4,6 +4,7 @@ import Plus from 'lucide-react-native/icons/plus';
 import Trash2 from 'lucide-react-native/icons/trash-2';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { TextButton } from './TextButton';
 
 type MultiSelectHeaderActionsProps = {
   isSelecting: boolean;
@@ -32,17 +33,15 @@ export function MultiSelectHeaderActions({
     const hasSelection = selectedCount > 0;
     return (
       <View style={styles.row}>
-        <Pressable onPress={onCancelSelecting} hitSlop={8}>
-          <Text style={styles.cancelText}>{t('cancel')}</Text>
-        </Pressable>
+        <TextButton label={t('cancel')} onPress={onCancelSelecting} />
         <Pressable
           style={[styles.iconButton, hasSelection && styles.deleteButtonActive]}
           onPress={onConfirmDelete}
           disabled={!hasSelection}
-          hitSlop={8}
+          hitSlop={Metrics.hitSlop}
           accessibilityLabel={t('delete')}
         >
-          <Trash2 size={Metrics.icon.small} color={hasSelection ? colors.destructive : colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Trash2 size={Metrics.icon.small} color={hasSelection ? colors.destructive : colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
           {hasSelection ? <Text style={styles.deleteCount}>{selectedCount}</Text> : null}
         </Pressable>
       </View>
@@ -51,12 +50,12 @@ export function MultiSelectHeaderActions({
 
   return (
     <View style={styles.row}>
-      <Pressable style={styles.iconButton} onPress={onStartSelecting} hitSlop={8} accessibilityLabel={selectAccessibilityLabel}>
-        <ListChecks size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Pressable style={styles.iconButton} onPress={onStartSelecting} hitSlop={Metrics.hitSlop} accessibilityLabel={selectAccessibilityLabel}>
+        <ListChecks size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </Pressable>
       {onAdd ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yAdd')} style={styles.iconButton} onPress={onAdd} hitSlop={8}>
-          <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yAdd')} style={styles.iconButton} onPress={onAdd} hitSlop={Metrics.hitSlop}>
+          <Plus size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
       ) : null}
     </View>
@@ -87,9 +86,5 @@ const makeStyles = (colors: ThemeColors) =>
     deleteCount: {
       ...Typography.captionStrong,
       color: colors.destructive,
-    },
-    cancelText: {
-      ...Typography.label,
-      color: colors.mutedForeground,
     },
   });

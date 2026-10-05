@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
+import { UNCELEBRATED_BADGES_QUERY_KEY } from './badges';
 import { getHiddenBefore } from './chat';
 import { updateListingStatus } from './plantListings';
 import { supabase } from './supabase';
@@ -85,7 +86,7 @@ export async function sendInterestProposal(input: { recipientId: string; listing
   return mapProposalRow(data as unknown as ProposalRow);
 }
 
-export async function respondToProposal(proposalId: string, accept: boolean): Promise<Proposal> {
+export async function respondToProposal(proposalId: string, accept: boolean, closeListing = accept): Promise<Proposal> {
   const { data, error } = await supabase
     .from('plant_listing_proposals')
     .update({ status: accept ? OFFER_STATUS.ACCEPTED : OFFER_STATUS.DECLINED })
@@ -97,7 +98,7 @@ export async function respondToProposal(proposalId: string, accept: boolean): Pr
 
   const proposal = mapProposalRow(data as unknown as ProposalRow);
 
-  if (accept) {
+  if (accept && closeListing) {
     await updateListingStatus(proposal.listingId, LISTING_STATUS.COMPLETED);
     await supabase
       .from('plant_listing_proposals')
@@ -306,4 +307,7 @@ export function applyProposalStatusEverywhere(queryClient: QueryClient, proposal
   queryClient.setQueryData<ProposalDetail>(['proposal-detail', proposal.id], (current) =>
     current ? { ...current, status: proposal.status } : current
   );
+  if (proposal.status === OFFER_STATUS.ACCEPTED) {
+    queryClient.invalidateQueries({ queryKey: [UNCELEBRATED_BADGES_QUERY_KEY] });
+  }
 }

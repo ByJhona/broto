@@ -6,7 +6,7 @@ import Circle from 'lucide-react-native/icons/circle';
 import Square from 'lucide-react-native/icons/square';
 import SquareCheck from 'lucide-react-native/icons/square-check';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { addDays, CATEGORY_ICONS, confirm, daysBetween, formatShortDate, today } from '@/utils';
 import { TASK_CATEGORY, type CareTask } from '@/types';
@@ -116,7 +116,7 @@ function CareTaskLeadingIcon({ task, Icon, colors, styles }: Readonly<CareTaskLe
     <Icon
       size={Metrics.icon.normal}
       color={task.done ? colors.mutedForeground : colors.leaf}
-      strokeWidth={Metrics.icon.strokeWidth}
+      strokeWidth={Metrics.icon.stroke.regular}
     />
   );
 }
@@ -130,14 +130,14 @@ type CareTaskTrailingIconProps = {
 
 function CareTaskTrailingIcon({ task, isSelecting, isSelected, colors }: Readonly<CareTaskTrailingIconProps>) {
   if (isSelecting) {
-    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />;
-    return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+    if (isSelected) return <SquareCheck size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />;
+    return <Square size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />;
   }
   if (task.done) {
-    return <CheckCircle2 size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />;
+    return <CheckCircle2 size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />;
   }
   const pendingColor = isDueNow(task) ? colors.primary : colors.mutedForeground;
-  return <Circle size={Metrics.icon.normal} color={pendingColor} strokeWidth={Metrics.icon.strokeWidth} />;
+  return <Circle size={Metrics.icon.normal} color={pendingColor} strokeWidth={Metrics.icon.stroke.regular} />;
 }
 
 export const CareTaskItem = memo(function CareTaskItem({
@@ -196,7 +196,7 @@ const makeStyles = (colors: ThemeColors) =>
     gap: Metrics.spacing.sm,
     backgroundColor: colors.card,
     borderRadius: Metrics.radius.lg,
-    borderWidth: 1,
+    borderWidth: Metrics.borderWidth.sm,
     borderColor: colors.border,
     padding: Metrics.spacing.md,
   },
@@ -212,7 +212,7 @@ const makeStyles = (colors: ThemeColors) =>
     backgroundColor: `${colors.leaf}14`,
   },
   cardPressed: {
-    opacity: 0.8,
+    opacity: Opacity.pressed,
   },
   iconOverflow: {
     overflow: 'hidden',

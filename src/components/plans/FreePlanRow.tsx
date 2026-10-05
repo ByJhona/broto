@@ -23,7 +23,7 @@ export function FreePlanRow({ plan, isCurrent }: Readonly<{ plan: PlanCatalogIte
       variant="card"
       leading={
         <IconBadge size={Metrics.size.lg}>
-          <Gift size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Gift size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
       }
       eyebrow={t('free')}

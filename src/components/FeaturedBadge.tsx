@@ -16,14 +16,14 @@ export function FeaturedBadge({ style, compact }: Readonly<FeaturedBadgeProps>) 
   if (compact) {
     return (
       <View style={[styles.badge, styles.badgeCompact, style]}>
-        <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       </View>
     );
   }
 
   return (
     <View style={[styles.badge, style]}>
-      <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+      <Sparkles size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.text}>{t('featuredBadge')}</Text>
     </View>
   );

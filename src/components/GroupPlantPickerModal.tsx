@@ -6,6 +6,7 @@ import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } fro
 import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 import { BottomSheet } from './BottomSheet';
+import { TextButton } from './TextButton';
 
 type GroupPlantPickerModalProps = {
   visible: boolean;
@@ -41,21 +42,19 @@ export function GroupPlantPickerModal({
                   {plant.photoUrl ? (
                     <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
                   ) : (
-                    <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                    <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
                   )}
                 </View>
                 <Text style={styles.rowText}>{plant.name}</Text>
                 <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                  {selected ? <Check size={Metrics.icon.xs} color={colors.leafForeground} strokeWidth={2.5} /> : null}
+                  {selected ? <Check size={Metrics.icon.xs} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.heavy} /> : null}
                 </View>
               </Pressable>
             );
           })}
         </ScrollView>
       )}
-      <Pressable style={styles.done} onPress={onClose}>
-        <Text style={styles.doneText}>{t('done')}</Text>
-      </Pressable>
+      <TextButton label={t('done')} tone="primary" onPress={onClose} style={styles.done} />
     </BottomSheet>
   );
 }
@@ -79,7 +78,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.md,
       paddingVertical: Metrics.spacing.sm,
-      borderBottomWidth: 1,
+      borderBottomWidth: Metrics.borderWidth.sm,
       borderBottomColor: colors.border,
     },
     avatar: {
@@ -104,7 +103,7 @@ const makeStyles = (colors: ThemeColors) =>
       width: Metrics.size.xs,
       height: Metrics.size.xs,
       borderRadius: Metrics.radius.full,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.border,
       justifyContent: 'center',
       alignItems: 'center',
@@ -114,11 +113,6 @@ const makeStyles = (colors: ThemeColors) =>
       borderColor: colors.leaf,
     },
     done: {
-      alignItems: 'center',
-      paddingVertical: Metrics.spacing.md,
-    },
-    doneText: {
-      ...Typography.labelStrong,
-      color: colors.primary,
+      marginTop: Metrics.spacing.sm,
     },
   });

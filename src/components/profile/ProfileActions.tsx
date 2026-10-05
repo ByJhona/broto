@@ -35,7 +35,7 @@ export function ProfileActions({ isOwnProfile, following, onToggleFollow, onPres
         )}
       </View>
       <IconButton accessibilityLabel={t('common:a11ySendMessage')} size={Metrics.size.xl} style={styles.message} onPress={onPressMessage}>
-        <MessageCircle size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <MessageCircle size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       </IconButton>
     </View>
   );
@@ -52,7 +52,7 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
     },
     message: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
     },
   });

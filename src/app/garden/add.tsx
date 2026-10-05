@@ -63,7 +63,7 @@ function PlantThumbnail({ item, colors, styles }: Readonly<PlantThumbnailProps>)
   if (!photoUrl) {
     return (
       <View style={[styles.thumb, styles.thumbPlaceholder]}>
-        <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       </View>
     );
   }
@@ -92,7 +92,7 @@ export default function AddPlantManualScreen() {
   const [query, setQuery] = useState('');
   const trimmedQuery = query.trim();
   const { results, isLoading } = useSpeciesSearch(trimmedQuery);
-  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />;
 
   const handleSelectPlant = (species: PlantSpeciesSearchResult) => {
     const candidates = [
@@ -153,7 +153,7 @@ export default function AddPlantManualScreen() {
               variant="card"
               leading={
                 <IconBadge backgroundColor={`${colors.leaf}1F`}>
-                  <Camera size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  <Camera size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
                 </IconBadge>
               }
               title={t('addPlantIdentifyByPhoto')}

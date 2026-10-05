@@ -48,7 +48,7 @@ function SpeciesInfoError({ isRetrying, onRetry }: Readonly<{ isRetrying: boolea
 
   return (
     <View style={[styles.block, styles.errorCard]}>
-      <CloudOff size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <CloudOff size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.errorTitle}>{t('infoErrorTitle')}</Text>
       <Text style={styles.errorMessage}>{t('infoErrorMessage')}</Text>
       <OutlineButton label={t('common:tryAgain')} icon={RotateCw} onPress={onRetry} loading={isRetrying} style={styles.retry} />
@@ -115,7 +115,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.xs,
       padding: Metrics.spacing.lg,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       backgroundColor: colors.card,
     },

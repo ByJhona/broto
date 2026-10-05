@@ -5,6 +5,8 @@ export const NOTIFICATION_TYPES = [
   'listing_interest',
   'care_setup_reminder',
   'care_reminder',
+  'promo_winner',
+  'promo_result',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -103,7 +103,7 @@ export default function NewPostScreen() {
       <ImagePlus
         size={Metrics.icon.normal}
         color={canAddPhoto ? colors.leaf : colors.mutedForeground}
-        strokeWidth={Metrics.icon.strokeWidth}
+        strokeWidth={Metrics.icon.stroke.regular}
       />
     </IconButton>
   );
@@ -199,7 +199,7 @@ const makeStyles = (colors: ThemeColors) =>
       marginBottom: Metrics.spacing.sm,
     },
     photoButton: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
     },
   });

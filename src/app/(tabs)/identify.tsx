@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
@@ -7,7 +7,7 @@ import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Metrics, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { IconBadge, ListRow } from '@/components';
+import { IconBadge, ListRow, TextButton } from '@/components';
 import { ArticleListItem } from '@/components/articles/ArticleListItem';
 import { FeaturedArticle } from '@/components/articles/FeaturedArticle';
 import { ActionCard } from '@/components/identify/ActionCard';
@@ -55,21 +55,19 @@ export default function IdentifyScreen() {
         />
       </View>
 
-      <Pressable style={styles.historyLink} onPress={() => router.push('/diagnose')}>
-        <Text style={styles.historyLinkText}>{t('viewPastDiagnoses')}</Text>
-      </Pressable>
+      <TextButton label={t('viewPastDiagnoses')} tone="leaf" onPress={() => router.push('/diagnose')} style={styles.historyLink} />
 
       <ListRow
         variant="card"
         style={styles.specialistRow}
         leading={
           <IconBadge size={Metrics.size.lg} backgroundColor={colors.leafForeground}>
-            <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
           </IconBadge>
         }
         title={t('specialistSectionTitle')}
         subtitle={t('specialistRowSubtitle')}
-        trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+        trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />}
         onPress={() => router.push('/specialist')}
       />
 

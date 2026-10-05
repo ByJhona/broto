@@ -36,7 +36,7 @@ export function EventRow({ event, trailing, onPress }: Readonly<EventRowProps>) 
             <Image source={{ uri: event.photoUrl }} style={styles.thumb} contentFit="cover" />
           ) : (
             <View style={[styles.thumb, styles.thumbPlaceholder]}>
-              <EventIcon size={Metrics.icon.small} color={EVENT_COLOR} strokeWidth={Metrics.icon.strokeWidth} />
+              <EventIcon size={Metrics.icon.small} color={EVENT_COLOR} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           )}
           {isBoostActive(event.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}

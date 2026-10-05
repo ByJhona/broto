@@ -2,6 +2,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { i18n } from '@/i18n';
 import { ActionSheet } from './actionSheet';
 
+export const PHOTO_QUALITY = 0.7;
+
 async function launchPicker(source: 'camera' | 'gallery'): Promise<string | null> {
   const permission =
     source === 'camera'
@@ -11,8 +13,8 @@ async function launchPicker(source: 'camera' | 'gallery'): Promise<string | null
 
   const result =
     source === 'camera'
-      ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
-      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+      ? await ImagePicker.launchCameraAsync({ quality: PHOTO_QUALITY })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: PHOTO_QUALITY });
 
   return result.canceled ? null : result.assets[0].uri;
 }

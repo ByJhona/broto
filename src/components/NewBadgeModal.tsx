@@ -1,12 +1,12 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import LottieView from 'lottie-react-native';
-import { Metrics, Overlays, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { Badge } from '@/types';
 import { BadgeCard } from './BadgeCard';
+import { ConfettiBurst } from './ConfettiBurst';
+import { Dialog } from './Dialog';
 import { SubmitButton } from './SubmitButton';
-
-const CONFETTI_ANIMATION = require('../../assets/animations/confetti.json');
+import { TextButton } from './TextButton';
 
 type NewBadgeModalProps = {
   badge: Badge | null;
@@ -19,58 +19,19 @@ export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModa
   const { t } = useTranslation('badge');
 
   return (
-    <Modal visible={!!badge} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{t('newBadgeTitle')}</Text>
-          {badge ? <BadgeCard badge={badge} /> : null}
-          <View style={styles.actions}>
-            <SubmitButton label={t('claim')} onPress={onClaim} />
-          </View>
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>{t('close')}</Text>
-          </Pressable>
-        </View>
-        {badge ? (
-          <View pointerEvents="none" style={styles.confetti}>
-            <LottieView
-              key={badge.id}
-              source={CONFETTI_ANIMATION}
-              autoPlay
-              loop={false}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-        ) : null}
+    <Dialog visible={!!badge} onClose={onClose} overlay={badge ? <ConfettiBurst playKey={badge.id} /> : null}>
+      <Text style={styles.title}>{t('newBadgeTitle')}</Text>
+      {badge ? <BadgeCard badge={badge} /> : null}
+      <View style={styles.actions}>
+        <SubmitButton label={t('claim')} onPress={onClaim} />
       </View>
-    </Modal>
+      <TextButton label={t('close')} onPress={onClose} style={styles.closeButton} />
+    </Dialog>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor: Overlays.scrim,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: Metrics.spacing.lg,
-    },
-    confetti: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-    },
-    card: {
-      width: '100%',
-      maxWidth: 340,
-      backgroundColor: colors.background,
-      borderRadius: Metrics.radius.lg,
-      padding: Metrics.spacing.xl,
-      alignItems: 'center',
-    },
     title: {
       ...Typography.title,
       color: colors.foreground,
@@ -82,12 +43,6 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: Metrics.spacing.lg,
     },
     closeButton: {
-      alignItems: 'center',
       marginTop: Metrics.spacing.sm,
-      padding: Metrics.spacing.sm,
-    },
-    closeText: {
-      ...Typography.label,
-      color: colors.mutedForeground,
     },
   });

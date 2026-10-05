@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import CircleAlert from 'lucide-react-native/icons/circle-alert';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { MESSAGE_DELIVERY, type ChatMessage, type MessageDelivery } from '@/types';
 import { formatTime } from '@/utils';
@@ -38,7 +38,7 @@ function MessageMeta({ createdAt, delivery, isMine }: Readonly<MessageMetaProps>
   if (delivery === MESSAGE_DELIVERY.FAILED) {
     return (
       <View style={[styles.meta, styles.metaMine]}>
-        <CircleAlert size={Metrics.icon.xs} color={colors.destructive} strokeWidth={Metrics.icon.strokeWidth} />
+        <CircleAlert size={Metrics.icon.xs} color={colors.destructive} strokeWidth={Metrics.icon.stroke.regular} />
         <Text style={[styles.metaText, styles.metaFailed]}>{t('messageFailed')}</Text>
       </View>
     );
@@ -114,7 +114,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.primary,
     },
     bubblePending: {
-      opacity: 0.7,
+      opacity: Opacity.pending,
     },
     photo: {
       width: Metrics.media.md,

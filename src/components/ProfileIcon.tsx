@@ -5,6 +5,8 @@ import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { Avatar } from './Avatar';
 
+const GUEST_ICON_RATIO = 0.55;
+
 type ProfileIconProps = {
   name: string;
   url?: string | null;
@@ -24,7 +26,7 @@ export function ProfileIcon({ name, url, loggedIn = true, size = Metrics.size.xl
   return (
     <Pressable
       onPress={handlePress}
-      hitSlop={8}
+      hitSlop={Metrics.hitSlop}
       accessibilityRole="button"
       accessibilityLabel={t('openProfile')}
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
@@ -33,7 +35,7 @@ export function ProfileIcon({ name, url, loggedIn = true, size = Metrics.size.xl
         <Avatar name={name} url={url} size={size} style={[styles.avatar, style]} />
       ) : (
         <View style={[styles.avatar, styles.guest, { width: size, height: size, borderRadius: size / 2 }, style]}>
-          <UserRound size={size * 0.55} color={colors.mutedForeground} strokeWidth={2} />
+          <UserRound size={size * GUEST_ICON_RATIO} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.bold} />
         </View>
       )}
     </Pressable>
@@ -43,7 +45,7 @@ export function ProfileIcon({ name, url, loggedIn = true, size = Metrics.size.xl
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     avatar: {
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.leafForeground,
     },
     guest: {

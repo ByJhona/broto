@@ -1,5 +1,6 @@
 import { ActionSheetHost } from '@/components/ActionSheetHost';
 import { AlertHost } from '@/components/AlertHost';
+import { BadgeCelebrationHost } from '@/components/BadgeCelebrationHost';
 import { LevelUpHost } from '@/components/LevelUpHost';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
@@ -120,6 +121,7 @@ function RootNavigator() {
       <ActionSheetHost />
       <ToastHost />
       <LevelUpHost />
+      <BadgeCelebrationHost />
     </NotificationsProvider>
   );
 }

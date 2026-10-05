@@ -41,7 +41,7 @@ export function ArticleCover({ slug, coverUrl, iconSize, style }: Readonly<Artic
   const { tone, Icon } = coverArt(colors, slug);
   return (
     <View style={[styles.cover, styles.placeholder, { backgroundColor: `${tone}1F` }, style]} accessible={false}>
-      <Icon size={iconSize} color={tone} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={iconSize} color={tone} strokeWidth={Metrics.icon.stroke.regular} />
     </View>
   );
 }

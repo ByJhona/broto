@@ -6,7 +6,9 @@ import Droplet from 'lucide-react-native/icons/droplet';
 import Heart from 'lucide-react-native/icons/heart';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Sprout from 'lucide-react-native/icons/sprout';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import Ticket from 'lucide-react-native/icons/ticket';
+import Trophy from 'lucide-react-native/icons/trophy';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { Notification, NotificationType } from '@/types';
 import { formatTimeAgo, notificationCopy } from '@/utils';
@@ -20,10 +22,12 @@ const TYPE_ICONS: Record<NotificationType, LucideIcon> = {
   listing_interest: Sprout,
   care_setup_reminder: Droplet,
   care_reminder: Droplet,
+  promo_winner: Trophy,
+  promo_result: Ticket,
 };
 
 function typeColor(type: NotificationType, colors: ThemeColors): string {
-  if (type === 'like') return colors.primary;
+  if (type === 'like' || type === 'promo_winner') return colors.primary;
   if (type === 'listing_interest') return colors.accent;
   return colors.leaf;
 }
@@ -37,7 +41,7 @@ function NotificationLeading({ notification }: Readonly<{ notification: Notifica
   if (!notification.actorId) {
     return (
       <IconBadge size={Metrics.size.lg} backgroundColor={`${color}1F`}>
-        <Icon size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+        <Icon size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
     );
   }
@@ -46,7 +50,7 @@ function NotificationLeading({ notification }: Readonly<{ notification: Notifica
     <View>
       <Avatar name={notification.actorName ?? ''} url={notification.actorAvatarUrl} size={Metrics.size.lg} />
       <IconBadge size={Metrics.size.xs} backgroundColor={color} style={styles.typeBadge}>
-        <Icon size={Metrics.icon.xs} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Icon size={Metrics.icon.xs} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
     </View>
   );
@@ -108,13 +112,13 @@ const makeStyles = (colors: ThemeColors) =>
       paddingVertical: Metrics.spacing.md,
     },
     pressed: {
-      opacity: 0.7,
+      opacity: Opacity.pressed,
     },
     typeBadge: {
       position: 'absolute',
       right: -Metrics.spacing.xs,
       bottom: -Metrics.spacing.xs,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.card,
     },
     body: {

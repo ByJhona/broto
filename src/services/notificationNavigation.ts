@@ -10,7 +10,10 @@ type NotificationTapData = {
   notificationId?: string;
 };
 
+const PROMO_NOTIFICATION_TYPES = new Set<Notification['type']>(['promo_winner', 'promo_result']);
+
 export function notificationHref(notification: Notification): Href | null {
+  if (PROMO_NOTIFICATION_TYPES.has(notification.type)) return '/profile/redeem-code';
   if (notification.postId) return { pathname: '/post/[id]', params: { id: notification.postId } };
   if (notification.listingId) return { pathname: '/listing/[id]', params: { id: notification.listingId } };
   if (notification.plantId) return { pathname: '/plant/[id]', params: { id: notification.plantId } };

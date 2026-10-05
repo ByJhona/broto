@@ -8,6 +8,7 @@ import { OFFER_STATUS, type OfferStatus } from '@/types';
 import { Avatar } from './Avatar';
 import { ListRow } from './ListRow';
 import { InfoSection } from './InfoSection';
+import { ProposalResponseActions } from './ProposalResponseActions';
 
 export type ListingProposal = {
   id: string;
@@ -58,7 +59,7 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
             <Image source={{ uri: proposal.offeredPlantPhotoUrl }} style={styles.offeredPlantThumb} />
           ) : (
             <View style={[styles.offeredPlantThumb, styles.offeredPlantThumbPlaceholder]}>
-              <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           )}
           <Text style={styles.offeredPlantName}>{proposal.offeredPlantName}</Text>
@@ -67,7 +68,7 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
       {proposal.onViewOffer ? (
         <Pressable style={styles.viewOfferButton} onPress={proposal.onViewOffer}>
           <Text style={styles.viewOfferButtonText}>{t('offer:viewOfferAction')}</Text>
-          <ChevronRight size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronRight size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
       ) : null}
     </>
@@ -77,21 +78,13 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
 type ProposalInterestActionsProps = {
   proposal: ListingProposal;
   styles: ReturnType<typeof makeStyles>;
-  t: (key: string) => string;
 };
 
-function ProposalInterestActions({ proposal, styles, t }: Readonly<ProposalInterestActionsProps>) {
+function ProposalInterestActions({ proposal, styles }: Readonly<ProposalInterestActionsProps>) {
   if (proposal.status !== OFFER_STATUS.PENDING || (!proposal.onAccept && !proposal.onDecline)) return null;
 
   return (
-    <View style={styles.actions}>
-      <Pressable style={styles.declineButton} onPress={proposal.onDecline}>
-        <Text style={styles.declineButtonText}>{t('declineAction')}</Text>
-      </Pressable>
-      <Pressable style={styles.acceptButton} onPress={proposal.onAccept}>
-        <Text style={styles.acceptButtonText}>{t('acceptAction')}</Text>
-      </Pressable>
-    </View>
+    <ProposalResponseActions compact onAccept={proposal.onAccept} onDecline={proposal.onDecline} style={styles.actions} />
   );
 }
 
@@ -123,7 +116,7 @@ export function ListingProposalsSection({
             {proposal.offeredPlantName ? (
               <ProposalOfferedPlant proposal={proposal} colors={colors} styles={styles} t={t} />
             ) : (
-              <ProposalInterestActions proposal={proposal} styles={styles} t={t} />
+              <ProposalInterestActions proposal={proposal} styles={styles} />
             )}
           </View>
         ))
@@ -143,7 +136,7 @@ const makeStyles = (colors: ThemeColors) =>
     proposal: {
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       padding: Metrics.spacing.md,
       marginBottom: Metrics.spacing.sm,
@@ -190,7 +183,7 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
       gap: Metrics.spacing.xs,
       marginTop: Metrics.spacing.sm,
-      borderWidth: 1.5,
+      borderWidth: Metrics.borderWidth.md,
       borderColor: colors.primary,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,
@@ -200,31 +193,6 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.primary,
     },
     actions: {
-      flexDirection: 'row',
-      gap: Metrics.spacing.sm,
       marginTop: Metrics.spacing.sm,
-    },
-    declineButton: {
-      flex: 1,
-      borderWidth: 1.5,
-      borderColor: colors.destructive,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
-      alignItems: 'center',
-    },
-    declineButtonText: {
-      ...Typography.label,
-      color: colors.destructive,
-    },
-    acceptButton: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
-      alignItems: 'center',
-    },
-    acceptButtonText: {
-      ...Typography.label,
-      color: colors.primaryForeground,
     },
   });

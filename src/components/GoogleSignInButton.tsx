@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { GoogleIcon } from './GoogleIcon';
 
 type GoogleSignInButtonProps = {
@@ -36,14 +36,14 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
       gap: Metrics.spacing.sm,
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.md,
       marginTop: Metrics.spacing.sm,
     },
     buttonDisabled: {
-      opacity: 0.6,
+      opacity: Opacity.disabled,
     },
     text: {
       color: colors.foreground,

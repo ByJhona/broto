@@ -12,7 +12,7 @@ export function PlanSummary({ credits }: Readonly<{ credits: CreditsState | null
   return (
     <View style={styles.summary}>
       <IconBadge size={Metrics.size.lg} backgroundColor={colors.leaf}>
-        <Coins size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Coins size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
       <View style={styles.text}>
         <Text style={styles.title}>{creditsBalanceTitle(credits)}</Text>

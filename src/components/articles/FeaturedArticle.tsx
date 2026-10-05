@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { ArticleSummary } from '@/types';
 import { ArticleCover } from './ArticleCover';
@@ -27,7 +27,7 @@ export function FeaturedArticle({ article, onPress }: Readonly<FeaturedArticlePr
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     pressed: {
-      opacity: 0.85,
+      opacity: Opacity.pressed,
     },
     cover: {
       height: Metrics.media.md,

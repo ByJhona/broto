@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 
 type OutlineButtonProps = {
   label: string;
@@ -27,7 +27,7 @@ export function OutlineButton({ label, icon: Icon, onPress, loading = false, dis
       {loading ? (
         <ActivityIndicator size="small" color={colors.leaf} />
       ) : (
-        <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       )}
       <Text style={styles.label}>{label}</Text>
     </Pressable>
@@ -42,7 +42,7 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
       gap: Metrics.spacing.sm,
       borderRadius: Metrics.radius.full,
-      borderWidth: 1.5,
+      borderWidth: Metrics.borderWidth.md,
       borderColor: colors.leaf,
       paddingVertical: Metrics.spacing.md,
       paddingHorizontal: Metrics.spacing.lg,
@@ -51,7 +51,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.muted,
     },
     disabled: {
-      opacity: 0.6,
+      opacity: Opacity.disabled,
     },
     label: {
       ...Typography.labelStrong,

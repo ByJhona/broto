@@ -1,5 +1,5 @@
 import { LISTING_STATUS, LISTING_TYPE, type ListingType, type PlantEvent, type PlantListing } from '@/types';
-import { filterMapItems, MAP_FILTER_ALL, MAP_FILTER_EVENTS } from './mapFilter';
+import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS, toggleMapFilter } from './mapFilter';
 
 function listing(id: string, listingType: ListingType): PlantListing {
   return {
@@ -22,21 +22,50 @@ function listing(id: string, listingType: ListingType): PlantListing {
 }
 
 const event = { id: 'event' } as PlantEvent;
-const listings = [listing('donation', LISTING_TYPE.DONATION), listing('sale', LISTING_TYPE.SALE)];
+const listings = [
+  listing('donation', LISTING_TYPE.DONATION),
+  listing('exchange', LISTING_TYPE.EXCHANGE),
+  listing('sale', LISTING_TYPE.SALE),
+];
 
 describe('filterMapItems', () => {
-  it('keeps everything for the all filter', () => {
-    expect(filterMapItems(listings, [event], MAP_FILTER_ALL)).toEqual({ listings, events: [event] });
+  it('keeps everything when no filter is selected', () => {
+    expect(filterMapItems(listings, [event], [])).toEqual({ listings, events: [event] });
   });
 
   it('keeps only events for the events filter', () => {
-    expect(filterMapItems(listings, [event], MAP_FILTER_EVENTS)).toEqual({ listings: [], events: [event] });
+    expect(filterMapItems(listings, [event], [MAP_FILTER_EVENTS])).toEqual({ listings: [], events: [event] });
   });
 
-  it('keeps only listings of the chosen type', () => {
-    const result = filterMapItems(listings, [event], LISTING_TYPE.SALE);
+  it('combines the selected listing types', () => {
+    const result = filterMapItems(listings, [event], [LISTING_TYPE.DONATION, LISTING_TYPE.SALE]);
 
-    expect(result.listings.map((item) => item.id)).toEqual(['sale']);
+    expect(result.listings.map((item) => item.id)).toEqual(['donation', 'sale']);
     expect(result.events).toEqual([]);
+  });
+
+  it('combines listing types with events', () => {
+    const result = filterMapItems(listings, [event], [LISTING_TYPE.EXCHANGE, MAP_FILTER_EVENTS]);
+
+    expect(result.listings.map((item) => item.id)).toEqual(['exchange']);
+    expect(result.events).toEqual([event]);
+  });
+});
+
+describe('toggleMapFilter', () => {
+  it('adds a filter that is not selected', () => {
+    expect(toggleMapFilter([LISTING_TYPE.SALE], MAP_FILTER_EVENTS)).toEqual([LISTING_TYPE.SALE, MAP_FILTER_EVENTS]);
+  });
+
+  it('removes a filter that is already selected', () => {
+    expect(toggleMapFilter([LISTING_TYPE.SALE, MAP_FILTER_EVENTS], LISTING_TYPE.SALE)).toEqual([MAP_FILTER_EVENTS]);
+  });
+});
+
+describe('isEventsOnly', () => {
+  it('is true only when events is the single selected filter', () => {
+    expect(isEventsOnly([MAP_FILTER_EVENTS])).toBe(true);
+    expect(isEventsOnly([MAP_FILTER_EVENTS, LISTING_TYPE.SALE])).toBe(false);
+    expect(isEventsOnly([])).toBe(false);
   });
 });

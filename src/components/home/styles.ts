@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { Elevation, Metrics, type ThemeColors, Typography } from '@/theme';
+import { markerPinHeight } from '../ListingMarkerPin';
 
 export const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -25,7 +26,7 @@ export const makeStyles = (colors: ThemeColors) =>
       top: '50%',
       left: '50%',
       marginLeft: -Metrics.size.lg / 2,
-      marginTop: -Metrics.size.xl,
+      marginTop: -markerPinHeight(Metrics.size.lg),
     },
     placingPanel: {
       position: 'absolute',

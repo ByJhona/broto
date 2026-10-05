@@ -19,12 +19,12 @@ export function ChatButton({ hasUnread = false, size = Metrics.icon.normal, styl
   return (
     <Pressable
       onPress={() => router.push('/messages')}
-      hitSlop={8}
+      hitSlop={Metrics.hitSlop}
       accessibilityRole="button"
       accessibilityLabel={hasUnread ? t('accessibilityLabelUnread') : t('accessibilityLabel')}
       style={({ pressed }) => [styles.container, { opacity: pressed ? 0.7 : 1 }, style]}
     >
-      <MessageSquare size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <MessageSquare size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.regular} />
       {hasUnread && <View style={styles.badge} />}
     </Pressable>
   );
@@ -44,7 +44,7 @@ const makeStyles = (colors: ThemeColors) =>
       height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.primary,
-      borderWidth: 1.5,
+      borderWidth: Metrics.borderWidth.md,
       borderColor: colors.leafForeground,
     },
   });

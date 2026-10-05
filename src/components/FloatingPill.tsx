@@ -15,7 +15,7 @@ export function FloatingPill({ label, icon: Icon, onPress, style }: Readonly<Flo
 
   return (
     <Pressable style={[styles.pill, style]} onPress={onPress} accessibilityRole="button">
-      <Icon size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.label}>{label}</Text>
     </Pressable>
   );

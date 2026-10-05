@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography, Elevation, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useAuth, useConversations, useCredits, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
@@ -89,8 +89,8 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.leaf,
       borderBottomLeftRadius: Metrics.radius.xl,
       borderBottomRightRadius: Metrics.radius.xl,
-      zIndex: 1,
-      elevation: 4,
+      zIndex: Metrics.zIndex.raised,
+      elevation: Elevation.medium.elevation,
     },
     scroll: {
       flexGrow: 0,
@@ -117,7 +117,7 @@ const makeStyles = (colors: ThemeColors) =>
     greeting: {
       ...Typography.label,
       color: colors.leafForeground,
-      opacity: 0.85,
+      opacity: Opacity.subtle,
     },
     name: {
       ...Typography.title,

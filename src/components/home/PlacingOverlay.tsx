@@ -48,7 +48,7 @@ export function PlacingOverlay({ params, isPublishing, onConfirm, onCancel }: Re
         style={[styles.cancelButton, { top: insets.top + Metrics.spacing.sm }]}
         onPress={onCancel}
       >
-        <X size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+        <X size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
       </IconButton>
     </>
   );

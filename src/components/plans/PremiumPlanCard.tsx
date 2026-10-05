@@ -50,7 +50,7 @@ export function PremiumPlanCard({ plans, offerings, currentPlanId, purchasingId,
     <Card style={styles.card}>
       <View style={styles.header}>
         <IconBadge size={Metrics.size.lg} backgroundColor={colors.leaf}>
-          <Crown size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Crown size={Metrics.icon.normal} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <Text style={styles.name}>{selectedPlan.name}</Text>
         {isSubscribed ? <InfoChip size="sm" icon={CircleCheck} value={t('yourPlan')} /> : null}
@@ -73,7 +73,7 @@ export function PremiumPlanCard({ plans, offerings, currentPlanId, purchasingId,
       <View style={styles.benefits}>
         {planBenefits(selectedPlan).map((benefit) => (
           <View key={benefit.kind} style={styles.benefit}>
-            <CircleCheck size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <CircleCheck size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
             <Text style={styles.benefitText}>{benefit.text}</Text>
           </View>
         ))}
@@ -98,7 +98,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     card: {
       gap: Metrics.spacing.md,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.leaf,
       padding: Metrics.spacing.lg,
     },

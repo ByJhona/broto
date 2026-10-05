@@ -18,7 +18,7 @@ export function PhotoViewerModal({ photoUrl, onClose }: Readonly<PhotoViewerModa
     <Modal visible={!!photoUrl} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable accessibilityRole="button" accessibilityLabel={t('common:close')} style={styles.close} onPress={onClose}>
-          <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <X size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
         {photoUrl ? <Image source={{ uri: photoUrl }} style={styles.image} contentFit="contain" /> : null}
       </View>
@@ -38,7 +38,7 @@ const makeStyles = (colors: ThemeColors) =>
       position: 'absolute',
       top: Metrics.spacing.xl * 2,
       right: Metrics.spacing.lg,
-      zIndex: 1,
+      zIndex: Metrics.zIndex.raised,
     },
     image: {
       width: '90%',

@@ -34,7 +34,7 @@ export function CommunityComposerPrompt({ onPress, style }: Readonly<CommunityCo
       <Text style={styles.placeholder} numberOfLines={1}>
         {t('composerPlaceholder')}
       </Text>
-      <ImagePlus size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      <ImagePlus size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
     </Pressable>
   );
 }
@@ -46,7 +46,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.sm,
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
       paddingVertical: Metrics.spacing.sm,

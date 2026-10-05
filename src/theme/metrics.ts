@@ -1,5 +1,9 @@
 const icon = {
-  strokeWidth: 1.5,
+  stroke: {
+    regular: 1.5,
+    bold: 2,
+    heavy: 2.5,
+  },
   xs: 12,
   small: 16,
   normal: 24,
@@ -18,6 +22,11 @@ const spacing = {
 export const Metrics = {
   icon,
   spacing,
+  hitSlop: spacing.sm,
+  zIndex: {
+    raised: 1,
+    top: 2,
+  },
   fontSize: {
     caption: 12,
     small: 14,
@@ -35,6 +44,13 @@ export const Metrics = {
     headline: 32,
     display: 36,
     hero: 72,
+  },
+  borderWidth: {
+    sm: 1,
+    md: 1.5,
+    lg: 2,
+    xl: 3,
+    xxl: 4,
   },
   radius: {
     sm: 4,
@@ -69,6 +85,7 @@ export const Metrics = {
   },
   layout: {
     contentMaxWidth: 640,
+    dialogMaxWidth: 360,
     heroMaxHeight: 460,
     chatBoxMaxHeight: 320,
     centeredContent: {

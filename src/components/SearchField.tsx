@@ -29,7 +29,7 @@ export function SearchField({
 
   return (
     <View style={[styles.searchBar, style]}>
-      <Search size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Search size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <TextInput
         style={styles.searchInput}
         value={value}
@@ -43,8 +43,8 @@ export function SearchField({
         textContentType="none"
       />
       {value.length > 0 ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yClearSearch')} onPress={() => onChangeText('')} hitSlop={8}>
-          <X size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yClearSearch')} onPress={() => onChangeText('')} hitSlop={Metrics.hitSlop}>
+          <X size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
       ) : null}
     </View>
@@ -59,7 +59,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.sm,
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
       paddingHorizontal: Metrics.spacing.md,

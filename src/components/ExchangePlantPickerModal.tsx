@@ -5,6 +5,7 @@ import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } fro
 import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
 import { BottomSheet } from './BottomSheet';
+import { TextButton } from './TextButton';
 
 type ExchangePlantPickerModalProps = {
   visible: boolean;
@@ -31,7 +32,7 @@ export function ExchangePlantPickerModal({ visible, plants, onSelect, onClose }:
                 {plant.photoUrl ? (
                   <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
                 ) : (
-                  <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                  <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
                 )}
               </View>
               <Text style={styles.rowText}>{plant.name}</Text>
@@ -39,9 +40,7 @@ export function ExchangePlantPickerModal({ visible, plants, onSelect, onClose }:
           ))}
         </ScrollView>
       )}
-      <Pressable style={styles.cancel} onPress={onClose}>
-        <Text style={styles.cancelText}>{t('common:cancel')}</Text>
-      </Pressable>
+      <TextButton label={t('common:cancel')} onPress={onClose} style={styles.cancel} />
     </BottomSheet>
   );
 }
@@ -65,7 +64,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.md,
       paddingVertical: Metrics.spacing.sm,
-      borderBottomWidth: 1,
+      borderBottomWidth: Metrics.borderWidth.sm,
       borderBottomColor: colors.border,
     },
     avatar: {
@@ -86,11 +85,6 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.foreground,
     },
     cancel: {
-      alignItems: 'center',
-      paddingVertical: Metrics.spacing.md,
-    },
-    cancelText: {
-      ...Typography.label,
-      color: colors.mutedForeground,
+      marginTop: Metrics.spacing.sm,
     },
   });

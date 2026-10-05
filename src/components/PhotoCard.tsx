@@ -2,7 +2,7 @@ import { memo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { MetaRow, type MetaTone } from './MetaRow';
 import { SkeletonBlock } from './Skeleton';
 
@@ -55,7 +55,7 @@ export const PhotoCard = memo(function PhotoCard({
         {photoUrl ? (
           <Image source={{ uri: photoUrl }} style={styles.photoImage} contentFit="cover" recyclingKey={recyclingKey} cachePolicy="memory-disk" />
         ) : (
-          <PlaceholderIcon size={Metrics.icon.xl} color={placeholderColor ?? colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <PlaceholderIcon size={Metrics.icon.xl} color={placeholderColor ?? colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         )}
         {topLeft ? <View style={styles.topLeft}>{topLeft}</View> : null}
         {topRight ? <View style={styles.topRight}>{topRight}</View> : null}
@@ -100,7 +100,7 @@ export function PhotoBadge({ icon: Icon, label, color }: Readonly<PhotoBadgeProp
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={[styles.badge, { backgroundColor: color }]}>
-      {Icon ? <Icon size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={2} /> : null}
+      {Icon ? <Icon size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.stroke.bold} /> : null}
       <Text style={styles.badgeText} numberOfLines={1}>
         {label}
       </Text>
@@ -113,12 +113,12 @@ const makeStyles = (colors: ThemeColors) =>
     card: {
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       overflow: 'hidden',
     },
     cardPressed: {
-      opacity: 0.8,
+      opacity: Opacity.pressed,
     },
     photo: {
       width: '100%',

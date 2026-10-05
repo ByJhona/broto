@@ -30,7 +30,7 @@ export function ListingTypePicker({ value, onChange }: Readonly<ListingTypePicke
             accessibilityState={{ selected: isSelected }}
           >
             <IconBadge backgroundColor={isSelected ? color : colors.muted}>
-              <Icon size={Metrics.icon.small} color={isSelected ? colors.white : color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Icon size={Metrics.icon.small} color={isSelected ? colors.white : color} strokeWidth={Metrics.icon.stroke.regular} />
             </IconBadge>
             <Text style={styles.label}>{label}</Text>
             <Text style={styles.hint} numberOfLines={2}>
@@ -54,7 +54,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.xs,
       padding: Metrics.spacing.md,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.border,
       backgroundColor: colors.card,
     },

@@ -40,11 +40,11 @@ export function CollapsibleSection({
                 <Text style={styles.seeMore}>{t('seeMore')}</Text>
               </Pressable>
             ) : null}
-            <Pressable accessibilityRole="button" accessibilityLabel={isCollapsed ? t('common:a11yExpand') : t('common:a11yCollapse')} onPress={onToggleCollapsed} hitSlop={8}>
+            <Pressable accessibilityRole="button" accessibilityLabel={isCollapsed ? t('common:a11yExpand') : t('common:a11yCollapse')} onPress={onToggleCollapsed} hitSlop={Metrics.hitSlop}>
               {isCollapsed ? (
-                <ChevronDown size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                <ChevronDown size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
               ) : (
-                <ChevronUp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+                <ChevronUp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
               )}
             </Pressable>
           </View>

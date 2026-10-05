@@ -21,7 +21,7 @@ function SafetyRow({ icon: Icon, isToxic, title, note }: Readonly<SafetyRowProps
 
   return (
     <View style={[styles.row, { backgroundColor: `${tone}12`, borderColor: `${tone}33` }]} accessible>
-      <Icon size={Metrics.icon.small} color={tone} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.icon.small} color={tone} strokeWidth={Metrics.icon.stroke.regular} />
       <View style={styles.rowBody}>
         <Text style={[styles.title, { color: tone }]}>{title}</Text>
         {isToxic && note ? <Text style={styles.note}>{note}</Text> : null}
@@ -64,7 +64,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'flex-start',
       gap: Metrics.spacing.md,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       padding: Metrics.spacing.md,
     },
     rowBody: {

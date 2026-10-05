@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { ArticleSummary } from '@/types';
 import { ArticleCover } from './ArticleCover';
@@ -45,7 +45,7 @@ const makeStyles = (colors: ThemeColors) =>
       borderTopColor: colors.border,
     },
     pressed: {
-      opacity: 0.85,
+      opacity: Opacity.pressed,
     },
     text: {
       flex: 1,

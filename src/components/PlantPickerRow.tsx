@@ -31,7 +31,7 @@ export function PlantPickerRow({ plants, selectedId, onSelect }: Readonly<PlantP
               {plant.photoUrl ? (
                 <Image source={{ uri: plant.photoUrl }} style={styles.avatarImage} contentFit="cover" />
               ) : (
-                <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
               )}
             </View>
             <Text style={styles.optionText} numberOfLines={1}>
@@ -62,7 +62,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.muted,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: 'transparent',
       overflow: 'hidden',
     },

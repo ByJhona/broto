@@ -1,6 +1,5 @@
 import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right';
 import Gift from 'lucide-react-native/icons/gift';
-import LifeBuoy from 'lucide-react-native/icons/life-buoy';
 import Tag from 'lucide-react-native/icons/tag';
 import type { LucideIcon } from 'lucide-react-native';
 import { i18n } from '@/i18n';
@@ -12,14 +11,12 @@ const LISTING_TYPE_VALUES: ListingType[] = Object.values(LISTING_TYPE);
 export const LISTING_TYPE_ICONS: Record<ListingType, LucideIcon> = {
   [LISTING_TYPE.DONATION]: Gift,
   [LISTING_TYPE.EXCHANGE]: ArrowLeftRight,
-  [LISTING_TYPE.DISCARD]: LifeBuoy,
   [LISTING_TYPE.SALE]: Tag,
 };
 
 export const LISTING_TYPE_COLORS: Record<ListingType, string> = {
   [LISTING_TYPE.DONATION]: '#3B82F6',
   [LISTING_TYPE.EXCHANGE]: '#A855F7',
-  [LISTING_TYPE.DISCARD]: '#F59E0B',
   [LISTING_TYPE.SALE]: '#10B981',
 };
 

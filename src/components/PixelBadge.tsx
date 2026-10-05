@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
-import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Opacity } from '@/theme';
 import type { PixelArt } from '@/types';
 
 const ART_SCALE = 0.78;
+const FRAME_RATIO = 0.04;
 const BADGE_GOLD = '#D4AF37';
 
 type PixelBadgeProps = {
@@ -38,7 +39,7 @@ export function PixelBadge({ pixelArt, size = Metrics.size.hero, locked = false 
   const styles = useThemedStyles(makeStyles);
   const rects = useMemo(() => buildPixelRects(pixelArt, locked ? colors.mutedForeground : null), [pixelArt, locked, colors.mutedForeground]);
   const artSize = size * ART_SCALE;
-  const borderWidth = Math.max(2, Math.round(size * 0.04));
+  const borderWidth = Math.max(Metrics.borderWidth.lg, Math.round(size * FRAME_RATIO));
 
   return (
     <View
@@ -68,6 +69,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     frameLocked: {
       borderColor: colors.border,
-      opacity: 0.5,
+      opacity: Opacity.disabled,
     },
   });

@@ -170,10 +170,11 @@ export function useChat(otherUserId: string) {
   };
 
   const { mutateAsync: respondToProposalItem } = useMutation({
-    mutationFn: ({ proposalId, accept }: { proposalId: string; accept: boolean }) => respondToProposal(proposalId, accept),
-    onSuccess: (proposal) => {
+    mutationFn: ({ proposalId, accept, closeListing }: { proposalId: string; accept: boolean; closeListing: boolean }) =>
+      respondToProposal(proposalId, accept, closeListing),
+    onSuccess: (proposal, { closeListing }) => {
       applyProposalStatusEverywhere(queryClient, proposal, user?.id);
-      if (proposal.status === OFFER_STATUS.ACCEPTED) {
+      if (proposal.status === OFFER_STATUS.ACCEPTED && closeListing) {
         patchListingInAllCaches(queryClient, proposal.listingId, (listing) => ({ ...listing, status: LISTING_STATUS.COMPLETED }));
       }
     },

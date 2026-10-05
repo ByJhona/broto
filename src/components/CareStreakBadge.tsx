@@ -65,7 +65,7 @@ export function CareStreakBadge() {
           size={Metrics.chip.md.iconSize}
           color={iconColor}
           fill={isActive ? iconColor : 'none'}
-          strokeWidth={Metrics.icon.strokeWidth}
+          strokeWidth={Metrics.icon.stroke.regular}
         />
       </Animated.View>
       <Text style={[styles.label, isActive && styles.labelActive]}>{badgeLabel(current, t)}</Text>

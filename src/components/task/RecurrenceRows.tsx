@@ -28,7 +28,7 @@ export function RecurrenceToggleRow({ recurrenceDays, onToggleRepeat }: Readonly
       style={styles.row}
       leading={
         <IconBadge>
-          <Repeat size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Repeat size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
       }
       eyebrow={t('repeatLabel')}
@@ -62,7 +62,7 @@ export function RecurrenceStepperRow({ recurrenceDays, onChangeDays }: Readonly<
           disabled={recurrenceDays <= MIN_RECURRENCE_DAYS}
           onPress={() => onChangeDays(Math.max(MIN_RECURRENCE_DAYS, recurrenceDays - 1))}
         >
-          <Minus size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Minus size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
         <Text style={styles.stepperValue}>{t('daysCount', { count: recurrenceDays })}</Text>
         <IconButton
@@ -72,7 +72,7 @@ export function RecurrenceStepperRow({ recurrenceDays, onChangeDays }: Readonly<
           disabled={recurrenceDays >= MAX_RECURRENCE_DAYS}
           onPress={() => onChangeDays(Math.min(MAX_RECURRENCE_DAYS, recurrenceDays + 1))}
         >
-          <Plus size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Plus size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
       </View>
     </View>
@@ -100,7 +100,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.sm,
     },
     stepperButton: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
     },
     stepperValue: {

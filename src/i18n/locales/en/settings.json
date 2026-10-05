@@ -25,5 +25,6 @@
   "deleteAccountMessage": "Deleting your account and all of your data is handled by our support team. Send us an email and we'll take care of it.",
   "deleteAccountContact": "Send email",
   "deleteAccountEmailSubject": "Account deletion request",
-  "deleteAccountEmailFallback": "We couldn't find an email app. Write to {{email}}."
+  "deleteAccountEmailFallback": "We couldn't find an email app. Write to {{email}}.",
+  "redeemCode": "Redeem code"
 }

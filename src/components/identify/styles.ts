@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Metrics, type ThemeColors, Typography } from '@/theme';
+import { Metrics, type ThemeColors, Typography, Opacity } from '@/theme';
 
 export const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -45,16 +45,11 @@ export const makeStyles = (colors: ThemeColors) =>
     actionSubtitle: {
       ...Typography.bodySmall,
       color: colors.leafForeground,
-      opacity: 0.85,
+      opacity: Opacity.subtle,
       marginTop: Metrics.spacing.xs,
     },
     historyLink: {
-      alignItems: 'center',
       marginBottom: Metrics.spacing.lg,
-    },
-    historyLinkText: {
-      ...Typography.label,
-      color: colors.leaf,
     },
     specialistRow: {
       marginBottom: Metrics.spacing.xl,

@@ -13,7 +13,7 @@ export function StatusTrailing({ statusLabel }: Readonly<{ statusLabel?: string 
           <Text style={styles.statusPillText}>{statusLabel}</Text>
         </View>
       ) : null}
-      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
     </View>
   );
 }

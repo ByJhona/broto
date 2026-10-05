@@ -2,6 +2,8 @@ import { StyleSheet, Text, View, type ImageStyle, type StyleProp, type ViewStyle
 import { Image } from 'expo-image';
 import { Metrics, Fonts, type ThemeColors, useThemedStyles } from '@/theme';
 
+const INITIAL_RATIO = 0.4;
+
 type AvatarProps = {
   name: string;
   url?: string | null;
@@ -25,7 +27,7 @@ export function Avatar({ name, url, size = Metrics.size.xl, style }: Readonly<Av
 
   return (
     <View style={[styles.container, { width: size, height: size, borderRadius: size / 2 }, style]}>
-      <Text style={[styles.initial, { fontSize: size * 0.4 }]}>{initial}</Text>
+      <Text style={[styles.initial, { fontSize: size * INITIAL_RATIO }]}>{initial}</Text>
     </View>
   );
 }

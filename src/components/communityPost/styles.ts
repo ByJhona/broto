@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Metrics, type ThemeColors, Typography } from '@/theme';
+import { Metrics, type ThemeColors, Typography, Opacity } from '@/theme';
 
 export type Styles = ReturnType<typeof makeStyles>;
 
@@ -9,7 +9,7 @@ export const makeStyles = (colors: ThemeColors) =>
       width: '100%',
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       overflow: 'hidden',
       marginBottom: Metrics.spacing.md,
@@ -146,14 +146,14 @@ export const makeStyles = (colors: ThemeColors) =>
       height: Metrics.size.md,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.background,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       justifyContent: 'center',
       alignItems: 'center',
     },
     commentInput: {
       flex: 1,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderRadius: Metrics.radius.full,
       paddingHorizontal: Metrics.spacing.md,
@@ -163,7 +163,7 @@ export const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.card,
     },
     commentInputDisabled: {
-      opacity: 0.5,
+      opacity: Opacity.disabled,
     },
     commentSend: {
       width: Metrics.size.md,
@@ -174,6 +174,6 @@ export const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     commentSendDisabled: {
-      opacity: 0.5,
+      opacity: Opacity.disabled,
     },
   });

@@ -24,7 +24,7 @@ function Tag({ icon: Icon, label }: Readonly<{ icon: LucideIcon; label: string }
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={styles.tag}>
-      <Icon size={Metrics.chip.md.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.chip.md.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.tagText} numberOfLines={1}>
         {label}
       </Text>
@@ -57,11 +57,11 @@ export function PlantTitleBlock({ plant, plantType, onPressGroup }: Readonly<Pla
           accessibilityRole="button"
           accessibilityLabel={t('changeGroupA11y', { group: plant.groupName ?? t('noGroup') })}
         >
-          <Folder size={Metrics.chip.md.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Folder size={Metrics.chip.md.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.tagText} numberOfLines={1}>
             {plant.groupName ?? t('noGroup')}
           </Text>
-          <ChevronDown size={Metrics.chip.md.iconSize} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ChevronDown size={Metrics.chip.md.iconSize} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
         <Tag icon={CalendarHeart} label={daysWithYouLabel(plant.createdAt, t)} />
         {plantType ? <Tag icon={Sprout} label={plantType} /> : null}
@@ -107,7 +107,7 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: Metrics.chip.md.paddingHorizontal,
     },
     groupTag: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       backgroundColor: colors.card,
     },

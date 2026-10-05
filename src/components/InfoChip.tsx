@@ -17,7 +17,7 @@ export function InfoChip({ value, icon: Icon, size = 'md', tintColor }: Readonly
 
   return (
     <View style={[styles.chip, isCompact && [styles.chipCompact, { backgroundColor: `${color}14` }]]}>
-      <Icon size={isCompact ? Metrics.chip.sm.iconSize : Metrics.chip.md.iconSize} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={isCompact ? Metrics.chip.sm.iconSize : Metrics.chip.md.iconSize} color={color} strokeWidth={Metrics.icon.stroke.regular} />
       <Text
         style={[styles.chipText, isCompact && [styles.chipTextCompact, { color }]]}
         numberOfLines={1}

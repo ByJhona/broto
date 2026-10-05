@@ -51,7 +51,7 @@ export function PostHeader({ post, onOpenActions, onPressAuthor }: Readonly<Post
         onPress={onOpenActions}
         hitSlop={Metrics.spacing.sm}
       >
-        <MoreVertical size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <MoreVertical size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </Pressable>
     </View>
   );

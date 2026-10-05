@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Send from 'lucide-react-native/icons/send';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Motion, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconBadge } from './IconBadge';
 import { useCreditCosts, useCreditsGate, useReduceMotion } from '@/hooks';
@@ -13,21 +13,18 @@ import { Alert, Toast } from '@/utils';
 
 const MAX_VISIBLE_MESSAGES = 50;
 const TYPING_DOT_KEYS = ['first', 'second', 'third'] as const;
-const TYPING_DOT_IDLE_OPACITY = 0.35;
-const TYPING_DOT_STEP_MS = 320;
-const TYPING_DOT_STAGGER_MS = 160;
 
 function useTypingDots(reduceMotion: boolean) {
-  const [dots] = useState(() => TYPING_DOT_KEYS.map(() => new Animated.Value(TYPING_DOT_IDLE_OPACITY)));
+  const [dots] = useState(() => TYPING_DOT_KEYS.map(() => new Animated.Value(Opacity.faint)));
 
   useEffect(() => {
     if (reduceMotion) return;
     const pulse = (dot: Animated.Value) =>
       Animated.sequence([
-        Animated.timing(dot, { toValue: 1, duration: TYPING_DOT_STEP_MS, useNativeDriver: true }),
-        Animated.timing(dot, { toValue: TYPING_DOT_IDLE_OPACITY, duration: TYPING_DOT_STEP_MS, useNativeDriver: true }),
+        Animated.timing(dot, { toValue: 1, duration: Motion.medium, useNativeDriver: true }),
+        Animated.timing(dot, { toValue: Opacity.faint, duration: Motion.medium, useNativeDriver: true }),
       ]);
-    const animation = Animated.loop(Animated.stagger(TYPING_DOT_STAGGER_MS, dots.map(pulse)));
+    const animation = Animated.loop(Animated.stagger(Motion.medium / 2, dots.map(pulse)));
     animation.start();
     return () => animation.stop();
   }, [dots, reduceMotion]);
@@ -48,7 +45,7 @@ function TypingBubble({ label, colors, styles }: Readonly<TypingBubbleProps>) {
   return (
     <View style={styles.messageRow} accessible accessibilityLabel={label} accessibilityLiveRegion="polite">
       <IconBadge size={Metrics.size.sm} backgroundColor={colors.leafForeground}>
-        <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
       <View style={[styles.bubble, styles.bubbleAssistant, styles.typingBubble]}>
         {TYPING_DOT_KEYS.map((key, index) => (
@@ -179,7 +176,7 @@ export function PlantChat({ plantId = null, variant = 'embedded' }: Readonly<Pla
     return (
       <Pressable style={styles.unlockCard} onPress={handleUnlock}>
         <IconBadge size={Metrics.size.lg} backgroundColor={colors.leafForeground}>
-          <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <MessageCircle size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <Text style={styles.unlockText}>{copy.unlockText}</Text>
         <Text style={styles.unlockButtonText}>{t('chatUnlockButton')}</Text>
@@ -209,7 +206,7 @@ export function PlantChat({ plantId = null, variant = 'embedded' }: Readonly<Pla
               >
                 {message.role === 'assistant' ? (
                   <IconBadge size={Metrics.size.sm} backgroundColor={colors.leafForeground}>
-                    <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+                    <Leaf size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
                   </IconBadge>
                 ) : null}
                 <View style={[styles.bubble, message.role === 'user' ? styles.bubbleUser : styles.bubbleAssistant]}>
@@ -242,7 +239,7 @@ export function PlantChat({ plantId = null, variant = 'embedded' }: Readonly<Pla
           onPress={handleSend}
           disabled={!canSend}
         >
-          <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
       </View>
       <Text style={styles.costHint}>{t('chatCostHint', { cost: creditCost })}</Text>
@@ -310,7 +307,7 @@ const makeStyles = (colors: ThemeColors) =>
   },
   bubbleAssistant: {
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: Metrics.borderWidth.sm,
     borderColor: colors.border,
   },
   bubbleUser: {
@@ -340,14 +337,14 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'flex-end',
     gap: Metrics.spacing.sm,
     paddingTop: Metrics.spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: Metrics.borderWidth.sm,
     borderTopColor: colors.border,
   },
   input: {
     flex: 1,
     minHeight: Metrics.size.md,
     maxHeight: Metrics.size.hero,
-    borderWidth: 1,
+    borderWidth: Metrics.borderWidth.sm,
     borderColor: colors.border,
     borderRadius: Metrics.radius.lg,
     paddingHorizontal: Metrics.spacing.md,
@@ -365,7 +362,7 @@ const makeStyles = (colors: ThemeColors) =>
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    opacity: 0.5,
+    opacity: Opacity.disabled,
   },
   costHint: {
     ...Typography.caption,

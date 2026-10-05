@@ -48,7 +48,7 @@ function LockedPlantRow({ plant }: Readonly<{ plant: PlantSummary }>) {
             {plant.photoUrl ? (
               <Image source={{ uri: plant.photoUrl }} style={styles.plantThumbImage} contentFit="cover" />
             ) : (
-              <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
             )}
           </View>
         }

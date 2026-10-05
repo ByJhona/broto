@@ -35,7 +35,7 @@ export default function TabLayout() {
           title: t('home'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <Home size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Home size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           ),
         }}
@@ -46,7 +46,7 @@ export default function TabLayout() {
           title: t('community'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <Users size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Users size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           ),
         }}
@@ -63,7 +63,7 @@ export default function TabLayout() {
               style={[props.style, styles.customButtonContainer]}
             >
               <View style={styles.highlightButton}>
-                <Scan size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                <Scan size={Metrics.icon.large} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
               </View>
             </TouchableOpacity>
           ),
@@ -75,7 +75,7 @@ export default function TabLayout() {
           title: t('garden'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <Leaf size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <Leaf size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           ),
         }}
@@ -86,7 +86,7 @@ export default function TabLayout() {
           title: t('profile'),
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
-              <CircleUserRound size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+              <CircleUserRound size={Metrics.icon.normal} color={color} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           ),
         }}

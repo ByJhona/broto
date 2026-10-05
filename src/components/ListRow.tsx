@@ -73,7 +73,7 @@ const makeStyles = (colors: ThemeColors) =>
     rowCard: {
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       padding: Metrics.spacing.md,
     },

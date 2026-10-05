@@ -5,3 +5,5 @@ export * from './navigation';
 export * from './ThemeProvider';
 export * from './typography';
 export * from './elevation';
+export * from './motion';
+export * from './opacity';

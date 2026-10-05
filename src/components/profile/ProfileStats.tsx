@@ -56,7 +56,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.sm,
       padding: Metrics.spacing.md,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       backgroundColor: colors.card,
     },

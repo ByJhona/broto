@@ -2,7 +2,7 @@
   "expo": {
     "name": "Broto",
     "slug": "broto",
-    "version": "1.0.43",
+    "version": "1.0.47",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "broto",
@@ -19,12 +19,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 51,
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
-        }
-      },
+      "versionCode": 55,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -52,11 +47,11 @@
         "expo-camera",
         {
           "cameraPermission": "O broto usa a câmera para você fotografar suas plantas.",
-          "microphonePermission": false
+          "microphonePermission": false,
+          "barcodeScannerEnabled": false
         }
       ],
       "expo-image",
-      "./plugins/withReleaseSigning.js",
       "@react-native-community/datetimepicker",
       [
         "expo-location",
@@ -66,7 +61,12 @@
       ],
       "@react-native-google-signin/google-signin",
       "expo-localization",
-      "expo-maps",
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyAOQrkIVt9BM9Qw7Z7iggtmO0Wcdn_UoAE"
+        }
+      ],
       "expo-calendar",
       [
         "expo-font",

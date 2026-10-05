@@ -21,12 +21,12 @@ export function PickerRow({ icon: Icon, color, eyebrow, value, onPress }: Readon
       style={styles.row}
       leading={
         <IconBadge>
-          <Icon size={Metrics.icon.small} color={color} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.small} color={color} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
       }
       eyebrow={eyebrow}
       title={value}
-      trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+      trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />}
       onPress={onPress}
     />
   );

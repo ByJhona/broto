@@ -87,7 +87,7 @@ function CareRow({ row }: Readonly<{ row: CareRowData }>) {
       accessibilityLabel={spoken}
     >
       <View style={styles.iconBadge}>
-        <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       </View>
       <View style={styles.rowBody}>
         <View style={styles.labelLine}>

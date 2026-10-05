@@ -26,7 +26,7 @@ const makeStyles = (colors: ThemeColors) =>
     group: {
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       paddingHorizontal: Metrics.spacing.md,
       overflow: 'hidden',

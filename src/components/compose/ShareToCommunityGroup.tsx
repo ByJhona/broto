@@ -37,7 +37,7 @@ export function ShareToCommunityGroup({
         accessibilityState={{ checked: value }}
       >
         <IconBadge>
-          <MessagesSquare size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <MessagesSquare size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <View style={styles.toggleText}>
           <Text style={styles.toggleTitle}>{t('shareToCommunityTitle')}</Text>

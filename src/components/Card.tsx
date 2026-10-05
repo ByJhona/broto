@@ -20,7 +20,11 @@ export function Card({ children, style, onPress, onLongPress, disabled }: Readon
     );
   }
 
-  return <View style={[styles.card, style]}>{children}</View>;
+  return (
+    <View style={[styles.card, style]}>
+      {children}
+    </View>
+  );
 }
 
 const makeStyles = (colors: ThemeColors) =>
@@ -28,7 +32,7 @@ const makeStyles = (colors: ThemeColors) =>
     card: {
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       padding: Metrics.spacing.md,
     },

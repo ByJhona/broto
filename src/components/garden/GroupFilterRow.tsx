@@ -26,11 +26,11 @@ export function GroupFilterRow({ groups, value, onChange, onCreateGroup }: Reado
   return (
     <FilterChipRow
       options={options}
-      value={value}
+      selected={[value]}
       onChange={onChange}
       trailing={
         <Pressable style={styles.addChip} onPress={onCreateGroup} accessibilityRole="button">
-          <Plus size={Metrics.chip.md.iconSize} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Plus size={Metrics.chip.md.iconSize} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.addChipText}>{t('newGroupChip')}</Text>
         </Pressable>
       }
@@ -45,7 +45,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.chip.md.gap,
       borderRadius: Metrics.radius.full,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderStyle: 'dashed',
       paddingVertical: Metrics.chip.md.paddingVertical - 1,

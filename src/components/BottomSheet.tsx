@@ -13,25 +13,23 @@ import {
 } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Metrics, Overlays, type ThemeColors, useThemedStyles } from '@/theme';
+import { Metrics, Overlays, type ThemeColors, useThemedStyles, Motion, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useReduceMotion } from '@/hooks';
 
-const ENTER_DURATION_MS = 320;
-const EXIT_DURATION_MS = 220;
 const CLOSE_DRAG_DISTANCE = 96;
 const CLOSE_DRAG_VELOCITY = 1;
 
 const ENTER_ANIMATION = {
   toValue: 1,
-  duration: ENTER_DURATION_MS,
+  duration: Motion.medium,
   easing: Easing.out(Easing.cubic),
   useNativeDriver: true,
 };
 
 const EXIT_ANIMATION = {
   toValue: 0,
-  duration: EXIT_DURATION_MS,
+  duration: Motion.fast,
   easing: Easing.in(Easing.cubic),
   useNativeDriver: true,
 };
@@ -151,6 +149,6 @@ const makeStyles = (colors: ThemeColors) =>
       height: Metrics.spacing.xs,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.mutedForeground,
-      opacity: 0.35,
+      opacity: Opacity.faint,
     },
   });

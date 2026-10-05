@@ -32,7 +32,7 @@ export function FloatingScreenControls({
     <View style={[styles.bar, { top: insets.top + Metrics.spacing.sm }]} pointerEvents="box-none">
       {showBack ? (
         <IconButton accessibilityLabel={t('a11yBack')} size={Metrics.size.md} elevated onPress={() => router.back()}>
-          <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
       ) : (
         <View />
@@ -45,7 +45,7 @@ export function FloatingScreenControls({
           disabled={isBusy}
           onPress={onOpenActions}
         >
-          <ActionIcon size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ActionIcon size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
       ) : null}
     </View>

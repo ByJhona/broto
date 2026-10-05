@@ -38,7 +38,7 @@ export function MetaRow({
       <Icon
         size={isCaption ? Metrics.icon.xs : Metrics.icon.small}
         color={iconColor ?? toneColor(tone, colors)}
-        strokeWidth={Metrics.icon.strokeWidth}
+        strokeWidth={Metrics.icon.stroke.regular}
       />
       <Text style={[isCaption ? styles.caption : styles.small, styles[tone]]} numberOfLines={numberOfLines}>
         {label}

@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, FloatingScreenControls, LoadingScreen, OwnerRow, PageTitle, PhotoPager, ScreenContent } from '@/components';
+import { EmptyState, FloatingScreenControls, LoadingScreen, OwnerRow, PageTitle, PhotoPager, ProposalResponseActions, ScreenContent } from '@/components';
 import { SpeciesSections } from '@/components/species/SpeciesSections';
 import { useSpeciesInfo } from '@/components/species/useSpeciesInfo';
 import { useAuth } from '@/hooks';
@@ -18,7 +18,7 @@ import {
   type OfferedPlantDetail,
 } from '@/services';
 import { LISTING_STATUS, OFFER_STATUS, type OfferStatus } from '@/types';
-import { Toast } from '@/utils';
+import { confirmCloseListing, Toast } from '@/utils';
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
 
@@ -58,31 +58,6 @@ function OfferStatusLabel({ status, styles, t }: Readonly<OfferStatusLabelProps>
   return <Text style={styles.statusLabel}>{t(STATUS_LABEL_KEY[status])}</Text>;
 }
 
-type OfferActionsBarProps = {
-  isResponding: boolean;
-  onRespond: (accept: boolean) => void;
-  bottomInset: number;
-  styles: Styles;
-  t: TranslateFn;
-};
-
-function OfferActionsBar({ isResponding, onRespond, bottomInset, styles, t }: Readonly<OfferActionsBarProps>) {
-  return (
-    <View style={[styles.actions, { paddingBottom: bottomInset + Metrics.spacing.md }]}>
-      <Pressable style={styles.declineButton} onPress={() => onRespond(false)} disabled={isResponding}>
-        <Text style={styles.declineButtonText}>{t('listing:declineAction')}</Text>
-      </Pressable>
-      <Pressable style={styles.acceptButton} onPress={() => onRespond(true)} disabled={isResponding}>
-        {isResponding ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.acceptButtonText}>{t('listing:acceptAction')}</Text>
-        )}
-      </Pressable>
-    </View>
-  );
-}
-
 type Styles = ReturnType<typeof makeStyles>;
 
 export default function OfferDetailScreen() {
@@ -108,11 +83,13 @@ export default function OfferDetailScreen() {
   const handleRespond = async (accept: boolean) => {
     if (!proposal) return;
 
+    const closeListing = accept ? await confirmCloseListing() : false;
+    if (closeListing === null) return;
     setIsResponding(true);
     try {
-      const updatedProposal = await respondToProposal(proposal.id, accept);
+      const updatedProposal = await respondToProposal(proposal.id, accept, closeListing);
       applyProposalStatusEverywhere(queryClient, updatedProposal, user?.id);
-      if (accept) {
+      if (closeListing) {
         patchListingInAllCaches(queryClient, updatedProposal.listingId, (listing) => ({ ...listing, status: LISTING_STATUS.COMPLETED }));
       }
       Toast.success(t(accept ? 'offer:acceptSuccess' : 'offer:declineSuccess'));
@@ -182,7 +159,12 @@ export default function OfferDetailScreen() {
       </ScrollView>
 
       {canRespond ? (
-        <OfferActionsBar isResponding={isResponding} onRespond={handleRespond} bottomInset={insets.bottom} styles={styles} t={t} />
+        <ProposalResponseActions
+          loading={isResponding}
+          onAccept={() => handleRespond(true)}
+          onDecline={() => handleRespond(false)}
+          style={[styles.actions, { paddingBottom: insets.bottom + Metrics.spacing.md }]}
+        />
       ) : null}
       <FloatingScreenControls />
     </View>
@@ -241,35 +223,10 @@ const makeStyles = (colors: ThemeColors) =>
       left: 0,
       right: 0,
       bottom: 0,
-      flexDirection: 'row',
-      gap: Metrics.spacing.sm,
       padding: Metrics.spacing.lg,
       backgroundColor: colors.background,
-      borderTopWidth: 1,
+      borderTopWidth: Metrics.borderWidth.sm,
       borderTopColor: colors.border,
-    },
-    declineButton: {
-      flex: 1,
-      borderWidth: 1.5,
-      borderColor: colors.destructive,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.md,
-      alignItems: 'center',
-    },
-    declineButtonText: {
-      ...Typography.headingMedium,
-      color: colors.destructive,
-    },
-    acceptButton: {
-      flex: 1,
-      backgroundColor: colors.primary,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.md,
-      alignItems: 'center',
-    },
-    acceptButtonText: {
-      ...Typography.headingMedium,
-      color: colors.primaryForeground,
     },
     statusLabel: {
       ...Typography.label,

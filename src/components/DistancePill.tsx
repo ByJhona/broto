@@ -13,7 +13,7 @@ export function DistancePill({ label }: Readonly<DistancePillProps>) {
 
   return (
     <View style={styles.pill}>
-      <MapPin size={Metrics.chip.sm.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+      <MapPin size={Metrics.chip.sm.iconSize} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
       {label ? (
         <Text style={styles.pillText} numberOfLines={1}>
           {label}

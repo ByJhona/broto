@@ -6,7 +6,11 @@ export type AlertButton = {
   style?: AlertButtonStyle;
 };
 
-type AlertHandler = (title: string, message?: string, buttons?: AlertButton[]) => void;
+export type AlertOptions = {
+  onDismiss?: () => void;
+};
+
+type AlertHandler = (title: string, message?: string, buttons?: AlertButton[], options?: AlertOptions) => void;
 
 let handler: AlertHandler | null = null;
 
@@ -15,8 +19,8 @@ export function registerAlertHandler(fn: AlertHandler | null) {
 }
 
 export const Alert = {
-  alert(title: string, message?: string, buttons?: AlertButton[]) {
-    handler?.(title, message, buttons);
+  alert(title: string, message?: string, buttons?: AlertButton[], options?: AlertOptions) {
+    handler?.(title, message, buttons, options);
   },
 };
 

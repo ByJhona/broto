@@ -22,7 +22,7 @@ function BackButton({ top }: Readonly<{ top: number }>) {
       style={[styles.backButton, { top }]}
       onPress={() => router.back()}
     >
-      <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+      <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
     </IconButton>
   );
 }

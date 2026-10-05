@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock, useScreenTopInset } from '@/components';
+import { FloatingScreenControls, InfoSection, PageTitle, SkeletonBlock, TextButton, useScreenTopInset } from '@/components';
 import { CreditPackPicker } from '@/components/plans/CreditPackPicker';
 import { FreePlanRow } from '@/components/plans/FreePlanRow';
 import { PlanSummary } from '@/components/plans/PlanSummary';
@@ -177,12 +177,8 @@ export default function PlansScreen() {
         ) : null}
 
         <View style={styles.footer}>
-          <Pressable onPress={handleRestore} disabled={isRestoring} hitSlop={8} accessibilityRole="button">
-            <Text style={styles.link}>{isRestoring ? t('processing') : t('restorePurchases')}</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/profile/privacy')} hitSlop={8} accessibilityRole="link">
-            <Text style={styles.link}>{t('privacyPolicy')}</Text>
-          </Pressable>
+          <TextButton label={isRestoring ? t('processing') : t('restorePurchases')} onPress={handleRestore} disabled={isRestoring} />
+          <TextButton label={t('privacyPolicy')} onPress={() => router.push('/profile/privacy')} accessibilityRole="link" />
         </View>
       </ScrollView>
       <FloatingScreenControls />
@@ -217,9 +213,5 @@ const makeStyles = (colors: ThemeColors) =>
     footer: {
       alignItems: 'center',
       gap: Metrics.spacing.md,
-    },
-    link: {
-      ...Typography.label,
-      color: colors.mutedForeground,
     },
   });

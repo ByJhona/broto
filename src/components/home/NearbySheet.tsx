@@ -40,7 +40,7 @@ function NearbyRow({ item, onSelect }: Readonly<{ item: NearbyPin; onSelect: (pi
           {model.photoUrl ? (
             <Image source={{ uri: model.photoUrl }} style={styles.thumbImage} contentFit="cover" />
           ) : (
-            <Icon size={Metrics.icon.small} color={model.color} strokeWidth={Metrics.icon.strokeWidth} />
+            <Icon size={Metrics.icon.small} color={model.color} strokeWidth={Metrics.icon.stroke.regular} />
           )}
         </View>
       }

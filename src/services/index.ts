@@ -8,6 +8,7 @@ export * from './careStreak';
 export * from './careTasks';
 export * from './chat';
 export * from './credits';
+export * from './promoCodes';
 export * from './events';
 export * from './functionErrors';
 export * from './imageResize';

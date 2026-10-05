@@ -5,5 +5,9 @@
   "respondError": "Não foi possível responder a proposta.",
   "acceptSuccess": "Proposta aceita!",
   "declineSuccess": "Proposta recusada.",
-  "notFoundMessage": "Essa proposta não existe mais."
+  "notFoundMessage": "Essa proposta não existe mais.",
+  "closeListingTitle": "Encerrar o anúncio?",
+  "closeListingMessage": "Se ainda tiver mudas, mantenha o anúncio aberto para outras pessoas. Ao encerrar, as demais propostas pendentes serão recusadas.",
+  "closeListingConfirm": "Sim, encerrar",
+  "keepListingOpen": "Manter aberto"
 }

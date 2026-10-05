@@ -29,7 +29,7 @@ export function MapActionButtons({ visible, onCreate, onLocate }: Readonly<MapAc
           style={[styles.locateButton, { bottom: createBottom + Metrics.size.xl + Metrics.spacing.md }]}
           onPress={onLocate}
         >
-          <LocateFixed size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <LocateFixed size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
       ) : null}
       <FloatingCreateButton

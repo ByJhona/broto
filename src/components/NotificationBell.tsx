@@ -19,12 +19,12 @@ export function NotificationBell({ hasUnread = false, size = Metrics.icon.normal
   return (
     <Pressable
       onPress={() => router.push('/profile/notifications')}
-      hitSlop={8}
+      hitSlop={Metrics.hitSlop}
       accessibilityRole="button"
       accessibilityLabel={hasUnread ? t('notificationsUnreadLabel') : t('notificationsLabel')}
       style={({ pressed }) => [styles.container, { opacity: pressed ? 0.7 : 1 }, style]}
     >
-      <Bell size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Bell size={size} color={colors.leafForeground} strokeWidth={Metrics.icon.stroke.regular} />
       {hasUnread && <View style={styles.badge} />}
     </Pressable>
   );
@@ -44,7 +44,7 @@ const makeStyles = (colors: ThemeColors) =>
       height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
       backgroundColor: colors.primary,
-      borderWidth: 1.5,
+      borderWidth: Metrics.borderWidth.md,
       borderColor: colors.leafForeground,
     },
   });

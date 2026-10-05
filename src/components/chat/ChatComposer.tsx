@@ -49,7 +49,7 @@ export function ChatComposer({ draft, onChangeDraft, attachedPhotoUri, onPickPho
               multiline
             />
             <IconButton accessibilityLabel={t('common:addPhoto')} size={Metrics.size.md} backgroundColor={colors.card} onPress={onPickPhoto}>
-              <Camera size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              <Camera size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
             </IconButton>
           </View>
           <IconButton
@@ -62,7 +62,7 @@ export function ChatComposer({ draft, onChangeDraft, attachedPhotoUri, onPickPho
             <Send
               size={Metrics.icon.normal}
               color={canSend ? colors.primaryForeground : colors.mutedForeground}
-              strokeWidth={Metrics.icon.strokeWidth}
+              strokeWidth={Metrics.icon.stroke.regular}
             />
           </IconButton>
         </View>

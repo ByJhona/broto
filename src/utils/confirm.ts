@@ -22,6 +22,20 @@ export function confirm(title: string, message: string, options: ConfirmOptions 
   });
 }
 
+export function confirmCloseListing(): Promise<boolean | null> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      i18n.t('offer:closeListingTitle'),
+      i18n.t('offer:closeListingMessage'),
+      [
+        { text: i18n.t('offer:keepListingOpen'), style: 'cancel', onPress: () => resolve(false) },
+        { text: i18n.t('offer:closeListingConfirm'), onPress: () => resolve(true) },
+      ],
+      { onDismiss: () => resolve(null) }
+    );
+  });
+}
+
 export async function confirmAndDeleteMany(
   selectedIds: string[],
   onDelete: (id: string) => void,

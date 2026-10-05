@@ -87,6 +87,29 @@ export async function checkNewlyEarnedBadge(userId: string, scientificName: stri
   return mapBadgeRow(badgeRow);
 }
 
+export const UNCELEBRATED_BADGES_QUERY_KEY = 'uncelebrated-badges';
+
+export async function getUncelebratedBadges(userId: string): Promise<Badge[]> {
+  const { data, error } = await supabase
+    .from('user_badges')
+    .select('badges(id, batch_id, name, description, pixel_art)')
+    .eq('user_id', userId)
+    .is('celebrated_at', null)
+    .order('granted_at', { ascending: true });
+
+  if (error) throw error;
+
+  return (data as unknown as { badges: BadgeRow | null }[])
+    .map((row) => row.badges)
+    .filter((row): row is BadgeRow => row !== null)
+    .map(mapBadgeRow);
+}
+
+export async function markBadgesCelebrated(badgeIds: string[]): Promise<void> {
+  const { error } = await supabase.rpc('mark_badges_celebrated', { p_badge_ids: badgeIds });
+  if (error) console.error(error);
+}
+
 export async function getUserBadgesWithDetails(userId: string): Promise<EarnedBadge[]> {
   const { data, error } = await supabase
     .from('user_badges')

@@ -55,7 +55,7 @@ function PackTile({ pack, offerings, isSelected, isBestValue, width, onSelect }:
     >
       <View style={styles.tileTop}>
         <IconBadge backgroundColor={isSelected ? colors.leaf : colors.muted}>
-          <Icon size={Metrics.icon.small} color={isSelected ? colors.leafForeground : colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.small} color={isSelected ? colors.leafForeground : colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
       </View>
       <Text style={styles.credits}>{t('packCredits', { count: pack.credits })}</Text>
@@ -122,7 +122,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.xs,
       padding: Metrics.spacing.md,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.border,
       backgroundColor: colors.card,
     },

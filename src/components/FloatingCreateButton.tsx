@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Plus from 'lucide-react-native/icons/plus';
-import { Metrics, useColors } from '@/theme';
+import { Metrics, useColors, Motion } from '@/theme';
 import { useReduceMotion } from '@/hooks';
 import { IconButton } from './IconButton';
 
-const TRANSITION_DURATION_MS = 200;
 const HIDDEN_SCALE = 0.6;
 const HIDDEN_OFFSET = Metrics.spacing.lg;
 
@@ -24,7 +23,7 @@ export function FloatingCreateButton({ visible, accessibilityLabel, onPress, sty
   useEffect(() => {
     Animated.timing(progress, {
       toValue: visible ? 1 : 0,
-      duration: reduceMotion ? 0 : TRANSITION_DURATION_MS,
+      duration: reduceMotion ? 0 : Motion.fast,
       easing: visible ? Easing.out(Easing.back(1.5)) : Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start();
@@ -52,7 +51,7 @@ export function FloatingCreateButton({ visible, accessibilityLabel, onPress, sty
         elevated
         onPress={onPress}
       >
-        <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Plus size={Metrics.icon.normal} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       </IconButton>
     </Animated.View>
   );

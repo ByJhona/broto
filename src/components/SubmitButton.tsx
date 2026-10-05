@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 
 type SubmitButtonProps = {
   label: string;
@@ -38,7 +38,7 @@ const makeStyles = (colors: ThemeColors) =>
       marginTop: Metrics.spacing.sm,
     },
     buttonDisabled: {
-      opacity: 0.6,
+      opacity: Opacity.disabled,
     },
     text: {
       color: colors.primaryForeground,

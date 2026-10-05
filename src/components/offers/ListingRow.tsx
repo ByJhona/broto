@@ -35,7 +35,7 @@ export function ListingRow({ listing, subtitle, trailing, onPress }: Readonly<Li
             <Image source={{ uri: coverPhotoUrl }} style={styles.thumb} contentFit="cover" />
           ) : (
             <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: color }]}>
-              <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+              <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
             </View>
           )}
           {isBoostActive(listing.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
@@ -44,7 +44,7 @@ export function ListingRow({ listing, subtitle, trailing, onPress }: Readonly<Li
       title={listing.title}
       titleTrailing={
         <View style={[styles.typeBadge, { backgroundColor: color }]}>
-          <Icon size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.chip.sm.iconSize} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.typeBadgeText}>{listingTypeLabel(listing.listingType)}</Text>
         </View>
       }

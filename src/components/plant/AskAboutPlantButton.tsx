@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
-import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 
 export const ASK_BUTTON_CLEARANCE = Metrics.size.hero;
@@ -20,7 +20,7 @@ export function AskAboutPlantButton({ plantId }: Readonly<{ plantId: string }>) 
       onPress={() => router.push({ pathname: '/specialist', params: { plantId } })}
       accessibilityRole="button"
     >
-      <MessageCircle size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <MessageCircle size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.label}>{t('askAboutPlantCta')}</Text>
     </Pressable>
   );
@@ -42,7 +42,7 @@ const makeStyles = (colors: ThemeColors) =>
       shadowColor: colors.black,
     },
     pressed: {
-      opacity: 0.9,
+      opacity: Opacity.pressed,
     },
     label: {
       ...Typography.heading,

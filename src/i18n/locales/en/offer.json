@@ -5,5 +5,9 @@
   "respondError": "Couldn't respond to the offer.",
   "acceptSuccess": "Offer accepted!",
   "declineSuccess": "Offer declined.",
-  "notFoundMessage": "This offer no longer exists."
+  "notFoundMessage": "This offer no longer exists.",
+  "closeListingTitle": "Close the listing?",
+  "closeListingMessage": "If you still have seedlings, keep the listing open for others. Closing it declines the other pending offers.",
+  "closeListingConfirm": "Yes, close it",
+  "keepListingOpen": "Keep it open"
 }

@@ -38,7 +38,7 @@ function CommentRow({ comment, onOpenActions }: Readonly<CommentRowProps>) {
         onPress={onOpenActions}
         hitSlop={Metrics.spacing.sm}
       >
-        <MoreVertical size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <MoreVertical size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </Pressable>
     </View>
   );
@@ -94,14 +94,14 @@ export const PostComments = memo(function PostComments({
         <View style={styles.attachmentPreviewWrapper}>
           <Image source={{ uri: attachedPhotoUri }} style={styles.attachmentPreview} contentFit="cover" />
           <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yRemovePhoto')} style={styles.attachmentRemoveButton} onPress={() => setAttachedPhotoUri(null)} hitSlop={Metrics.spacing.sm}>
-            <X size={Metrics.icon.xs} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+            <X size={Metrics.icon.xs} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
           </Pressable>
         </View>
       ) : null}
 
       <View style={styles.commentInputRow}>
         <Pressable accessibilityRole="button" accessibilityLabel={t('common:addPhoto')} style={styles.commentPhotoButton} onPress={handlePickPhoto} disabled={isSending}>
-          <Camera size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <Camera size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
         </Pressable>
         <TextInput
           style={[styles.commentInput, isSending && styles.commentInputDisabled]}
@@ -122,7 +122,7 @@ export const PostComments = memo(function PostComments({
           {isSending ? (
             <ActivityIndicator size="small" color={colors.primaryForeground} />
           ) : (
-            <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.strokeWidth} />
+            <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
           )}
         </Pressable>
       </View>

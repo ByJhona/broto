@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Metrics, Overlays, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Metrics, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { registerAlertHandler, type AlertButton } from '@/utils';
+import { Dialog } from './Dialog';
 
 type AlertState = {
   title: string;
   message?: string;
   buttons: AlertButton[];
+  onDismiss?: () => void;
 };
 
 type Styles = ReturnType<typeof makeStyles>;
@@ -45,8 +47,8 @@ export function AlertHost() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    registerAlertHandler((title, message, buttons) => {
-      setAlert({ title, message, buttons: buttons && buttons.length > 0 ? buttons : [{ text: t('ok') }] });
+    registerAlertHandler((title, message, buttons, options) => {
+      setAlert({ title, message, buttons: buttons && buttons.length > 0 ? buttons : [{ text: t('ok') }], onDismiss: options?.onDismiss });
       setVisible(true);
     });
     return () => registerAlertHandler(null);
@@ -58,55 +60,40 @@ export function AlertHost() {
   };
 
   const dismiss = () => {
-    const cancelButton = alert?.buttons.find((button) => button.style === 'cancel');
+    const onDismiss = alert?.onDismiss ?? alert?.buttons.find((button) => button.style === 'cancel')?.onPress;
     setVisible(false);
-    cancelButton?.onPress?.();
+    onDismiss?.();
   };
 
   const isSideBySide = alert?.buttons.length === 2;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss}>
-      <Pressable style={styles.backdrop} onPress={dismiss}>
-        <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
-          {alert ? (
-            <>
-              <Text style={styles.title}>{alert.title}</Text>
-              {alert.message ? <Text style={styles.message}>{alert.message}</Text> : null}
-              <View style={[styles.buttons, isSideBySide && styles.buttonsSideBySide]}>
-                {alert.buttons.map((button, index) => (
-                  <AlertActionButton
-                    key={`${button.text}-${index}`}
-                    button={button}
-                    isSideBySide={isSideBySide}
-                    onPress={() => handlePress(button)}
-                    styles={styles}
-                  />
-                ))}
-              </View>
-            </>
-          ) : null}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <Dialog visible={visible} onClose={dismiss} cardStyle={styles.card}>
+      {alert ? (
+        <>
+          <Text style={styles.title}>{alert.title}</Text>
+          {alert.message ? <Text style={styles.message}>{alert.message}</Text> : null}
+          <View style={[styles.buttons, isSideBySide && styles.buttonsSideBySide]}>
+            {alert.buttons.map((button, index) => (
+              <AlertActionButton
+                key={`${button.text}-${index}`}
+                button={button}
+                isSideBySide={isSideBySide}
+                onPress={() => handlePress(button)}
+                styles={styles}
+              />
+            ))}
+          </View>
+        </>
+      ) : null}
+    </Dialog>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: Overlays.scrim,
-      padding: Metrics.spacing.lg,
-    },
     card: {
-      width: '100%',
-      maxWidth: 360,
-      backgroundColor: colors.background,
-      borderRadius: Metrics.radius.lg,
-      padding: Metrics.spacing.lg,
+      alignItems: 'stretch',
     },
     title: {
       ...Typography.title,
@@ -137,7 +124,7 @@ const makeStyles = (colors: ThemeColors) =>
       flex: 1,
     },
     buttonPressed: {
-      opacity: 0.85,
+      opacity: Opacity.pressed,
     },
     buttonPrimary: {
       backgroundColor: colors.primary,

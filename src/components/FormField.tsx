@@ -35,12 +35,12 @@ export function FormField({ label, error, style, secureTextEntry, ...inputProps 
             accessibilityLabel={isPasswordVisible ? t('common:a11yHidePassword') : t('common:a11yShowPassword')}
             style={styles.toggleButton}
             onPress={() => setIsPasswordVisible((current) => !current)}
-            hitSlop={8}
+            hitSlop={Metrics.hitSlop}
           >
             {isPasswordVisible ? (
-              <EyeOff size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              <EyeOff size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
             ) : (
-              <Eye size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+              <Eye size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
             )}
           </Pressable>
         ) : null}
@@ -68,7 +68,7 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
     },
     input: {
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       borderRadius: Metrics.radius.md,
       paddingHorizontal: Metrics.spacing.md,

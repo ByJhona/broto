@@ -67,7 +67,7 @@ export default function DiagnosisHistoryScreen() {
     queryFn: () => getDiagnosisHistory(user!.id),
     enabled: !!user?.id,
   });
-  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  const chevron = <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />;
 
   const openResult = (item: PlantDiagnosis) => {
     router.push({ pathname: '/diagnose/result', params: { diagnosis: JSON.stringify(item) } });

@@ -13,7 +13,7 @@ type PostLinkedPreviewsProps = {
 
 function RowChevron() {
   const colors = useColors();
-  return <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />;
+  return <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />;
 }
 
 export function PostLinkedPreviews({ listing, event, onPressListing, onPressEvent }: Readonly<PostLinkedPreviewsProps>) {

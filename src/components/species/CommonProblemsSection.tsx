@@ -30,7 +30,7 @@ function ProblemItem({ problem, isExpanded, onToggle }: Readonly<ProblemItemProp
         <ChevronDown
           size={Metrics.icon.small}
           color={colors.mutedForeground}
-          strokeWidth={Metrics.icon.strokeWidth}
+          strokeWidth={Metrics.icon.stroke.regular}
           style={isExpanded ? styles.chevronOpen : undefined}
         />
       </Pressable>

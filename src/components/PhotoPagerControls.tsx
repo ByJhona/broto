@@ -28,7 +28,7 @@ export function AddPhotoPage({ hint, onPress, isUploading = false }: Readonly<Ad
         <ActivityIndicator color={colors.leaf} />
       ) : (
         <>
-          <ImagePlus size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <ImagePlus size={Metrics.icon.xl} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.addTitle}>{t('addPhoto')}</Text>
           <Text style={styles.addHint}>{hint}</Text>
         </>
@@ -42,9 +42,9 @@ export function RemovePhotoButton({ onPress }: Readonly<{ onPress: () => void }>
   const { t } = useTranslation('common');
 
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={t('a11yDeletePhoto')} onPress={onPress} hitSlop={8}>
+    <Pressable accessibilityRole="button" accessibilityLabel={t('a11yDeletePhoto')} onPress={onPress} hitSlop={Metrics.hitSlop}>
       <IconBadge backgroundColor={Overlays.scrimMedium} size={Metrics.size.md}>
-        <Trash2 size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+        <Trash2 size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
       </IconBadge>
     </Pressable>
   );

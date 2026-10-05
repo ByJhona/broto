@@ -14,7 +14,7 @@ export function EmptyState({ icon: Icon, title, message, style }: Readonly<Empty
   const styles = useThemedStyles(makeStyles);
   return (
     <View style={[styles.container, style]}>
-      <Icon size={Metrics.icon.xl} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.icon.xl} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       {title ? <Text style={styles.title}>{title}</Text> : null}
       <Text style={styles.message}>{message}</Text>
     </View>

@@ -89,7 +89,7 @@ export function PhotoPager({
     >
       {pageCount === 0 ? (
         <View style={styles.placeholder}>
-          <PlaceholderIcon size={Metrics.icon.xl} color={placeholderColor ?? colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <PlaceholderIcon size={Metrics.icon.xl} color={placeholderColor ?? colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </View>
       ) : null}
 
@@ -186,7 +186,7 @@ const makeStyles = (colors: ThemeColors) =>
       height: Metrics.size.dot,
       borderRadius: Metrics.radius.full,
       backgroundColor: Overlays.whiteTint,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: Overlays.scrimLight,
     },
     dotActive: {

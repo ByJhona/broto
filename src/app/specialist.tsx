@@ -23,7 +23,7 @@ export default function SpecialistScreen() {
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Metrics.spacing.sm }]}>
         <IconButton accessibilityLabel={t('common:a11yBack')} size={Metrics.size.md} onPress={() => router.back()}>
-          <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.strokeWidth} />
+          <ArrowLeft size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
         </IconButton>
         <Text style={styles.title} accessibilityRole="header">
           {t('specialistSectionTitle')}

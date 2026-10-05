@@ -17,8 +17,8 @@ export function PlantsSectionHeader({ count, onEditGroup }: Readonly<PlantsSecti
     <View style={styles.row}>
       <Text style={styles.count}>{count === 1 ? t('onePlant') : t('plantsCount', { count })}</Text>
       {onEditGroup ? (
-        <Pressable style={styles.editButton} onPress={onEditGroup} hitSlop={8} accessibilityRole="button">
-          <Pencil size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Pressable style={styles.editButton} onPress={onEditGroup} hitSlop={Metrics.hitSlop} accessibilityRole="button">
+          <Pencil size={Metrics.icon.xs} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
           <Text style={styles.editText}>{t('editGroupTitle')}</Text>
         </Pressable>
       ) : null}

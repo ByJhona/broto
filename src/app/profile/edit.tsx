@@ -12,7 +12,7 @@ import { Avatar, FloatingScreenControls, FormField, IconBadge, ScreenHeader, Ske
 import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
 import { useAuth } from '@/hooks';
 import { getProfile, updateProfile, uploadAvatar, UsernameTakenError } from '@/services';
-import { normalizeUsername, Toast, validateUsername } from '@/utils';
+import { normalizeUsername, PHOTO_QUALITY, Toast, validateUsername } from '@/utils';
 
 function EditProfileSkeleton() {
   const styles = useThemedStyles(makeStyles);
@@ -73,7 +73,7 @@ export default function EditProfileScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.8,
+      quality: PHOTO_QUALITY,
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -134,7 +134,7 @@ export default function EditProfileScreen() {
               <View>
                 <Avatar name={name || user?.email || ''} url={localAvatarUri || avatarUrl} size={Metrics.size.hero} />
                 <IconBadge backgroundColor={colors.primary} style={styles.cameraBadge}>
-                  <Camera size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.strokeWidth} />
+                  <Camera size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
                 </IconBadge>
               </View>
               <Text style={styles.avatarHint}>{t('changePhotoHint')}</Text>
@@ -188,7 +188,7 @@ const makeStyles = (colors: ThemeColors) =>
       position: 'absolute',
       bottom: 0,
       right: 0,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: colors.background,
     },
     avatarHint: {

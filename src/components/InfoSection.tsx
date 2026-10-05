@@ -14,7 +14,7 @@ function HeadingAction({ actionLabel, onAction }: Readonly<Pick<SectionHeadingPr
   const styles = useThemedStyles(makeStyles);
   if (!actionLabel || !onAction) return null;
   return (
-    <Pressable onPress={onAction} hitSlop={8} accessibilityRole="button">
+    <Pressable onPress={onAction} hitSlop={Metrics.hitSlop} accessibilityRole="button">
       <Text style={styles.action}>{actionLabel}</Text>
     </Pressable>
   );

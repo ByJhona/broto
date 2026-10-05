@@ -12,14 +12,14 @@ export type FilterChipOption<T> = {
 
 type FilterChipRowProps<T> = {
   options: FilterChipOption<T>[];
-  value: T;
+  selected: readonly T[];
   onChange: (value: T) => void;
   trailing?: ReactNode;
   floating?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function FilterChipRow<T>({ options, value, onChange, trailing, floating = false, style }: Readonly<FilterChipRowProps<T>>) {
+export function FilterChipRow<T>({ options, selected, onChange, trailing, floating = false, style }: Readonly<FilterChipRowProps<T>>) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const activeColor = floating ? colors.leafForeground : colors.leaf;
@@ -27,7 +27,7 @@ export function FilterChipRow<T>({ options, value, onChange, trailing, floating 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.row, style]}>
       {options.map((option) => {
-        const selected = option.value === value;
+        const isSelected = selected.includes(option.value);
         const Icon = option.icon;
         return (
           <Pressable
@@ -35,24 +35,24 @@ export function FilterChipRow<T>({ options, value, onChange, trailing, floating 
             style={[
               styles.chip,
               floating && styles.chipFloating,
-              selected && (floating ? styles.chipFloatingActive : styles.chipActive),
+              isSelected && (floating ? styles.chipFloatingActive : styles.chipActive),
             ]}
             onPress={() => onChange(option.value)}
             accessibilityRole="button"
-            accessibilityState={{ selected }}
+            accessibilityState={{ selected: isSelected }}
           >
             {Icon ? (
               <Icon
                 size={Metrics.chip.md.iconSize}
-                color={selected ? activeColor : (option.color ?? colors.mutedForeground)}
-                strokeWidth={Metrics.icon.strokeWidth}
+                color={isSelected ? activeColor : (option.color ?? colors.mutedForeground)}
+                strokeWidth={Metrics.icon.stroke.regular}
               />
             ) : null}
             <Text
               style={[
                 styles.chipText,
                 floating && styles.chipTextFloating,
-                selected && (floating ? styles.chipTextFloatingActive : styles.chipTextActive),
+                isSelected && (floating ? styles.chipTextFloatingActive : styles.chipTextActive),
               ]}
             >
               {option.label}

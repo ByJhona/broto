@@ -95,7 +95,7 @@ export function ProposalEventCard({ proposal, isMine, onRespond, onViewOffer, on
           <Image source={{ uri: proposal.listingPhotoUrl }} style={styles.photo} contentFit="cover" />
         ) : (
           <View style={[styles.photo, styles.photoPlaceholder]}>
-            <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+            <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
           </View>
         )}
         <View style={styles.headerText}>
@@ -111,7 +111,7 @@ export function ProposalEventCard({ proposal, isMine, onRespond, onViewOffer, on
             </Text>
           ) : null}
         </View>
-        <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </View>
 
       <ProposalActions proposal={proposal} isMine={isMine} onRespond={onRespond} onViewOffer={onViewOffer} />

@@ -22,7 +22,7 @@ export function PropagationSection({ methods, action }: Readonly<PropagationSect
       <View style={styles.list}>
         {methods.map((method) => (
           <View key={method} style={styles.row}>
-            <Scissors size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} style={styles.icon} />
+            <Scissors size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} style={styles.icon} />
             <Text style={styles.text}>{method}</Text>
           </View>
         ))}

@@ -22,13 +22,13 @@ function FaqRow({ item, isOpen, onToggle, styles }: Readonly<FaqRowProps>) {
     <Card style={styles.card} onPress={onToggle}>
       <View style={styles.row}>
         <IconBadge>
-          <Icon size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <Text style={styles.question}>{item.question}</Text>
         <ChevronDown
           size={Metrics.icon.normal}
           color={colors.mutedForeground}
-          strokeWidth={Metrics.icon.strokeWidth}
+          strokeWidth={Metrics.icon.stroke.regular}
           style={isOpen ? styles.chevronOpen : undefined}
         />
       </View>

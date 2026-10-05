@@ -20,11 +20,11 @@ export function LockedFeatureCard({ message, ctaLabel }: Readonly<LockedFeatureC
   return (
     <View style={styles.card}>
       <View style={styles.icon}>
-        <Lock size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <Lock size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </View>
       <Text style={styles.text}>{message}</Text>
       <Pressable style={styles.button} onPress={() => router.push('/profile/plans')}>
-        <Sparkles size={Metrics.icon.xs} color={colors.primaryForeground} strokeWidth={2} />
+        <Sparkles size={Metrics.icon.xs} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.bold} />
         <Text style={styles.buttonText}>{resolvedCtaLabel}</Text>
       </Pressable>
     </View>

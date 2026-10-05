@@ -148,7 +148,7 @@ const makeStyles = (colors: ThemeColors) =>
       height: THUMB_HEIGHT,
       borderRadius: Metrics.radius.md,
       backgroundColor: colors.muted,
-      borderWidth: 2,
+      borderWidth: Metrics.borderWidth.lg,
       borderColor: 'transparent',
     },
     thumbSelected: {

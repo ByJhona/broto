@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { PlantEvent, PlantListing } from '@/types';
-import { MAP_FILTER_EVENTS, type MapFilter } from './mapFilter';
+import { isEventsOnly, type MapFilter } from './mapFilter';
 import { limitToRadius, pinsByDistance, searchPins, sortByEventDate, type NearbyPin } from './nearbyPins';
 import type { Coordinates } from './useHomeLocation';
 
@@ -9,7 +9,7 @@ type NearbySheetSources = {
   events: PlantEvent[];
   userLocation: Coordinates | null;
   mapCenter: Coordinates;
-  filter: MapFilter;
+  filters: MapFilter[];
 };
 
 function visiblePins(allPins: NearbyPin[], nearby: NearbyPin[], query: string, showAll: boolean): NearbyPin[] {
@@ -17,7 +17,7 @@ function visiblePins(allPins: NearbyPin[], nearby: NearbyPin[], query: string, s
   return showAll ? allPins : nearby;
 }
 
-export function useNearbySheet({ listings, events, userLocation, mapCenter, filter }: NearbySheetSources) {
+export function useNearbySheet({ listings, events, userLocation, mapCenter, filters }: NearbySheetSources) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -26,7 +26,7 @@ export function useNearbySheet({ listings, events, userLocation, mapCenter, filt
   const nearby = useMemo(() => limitToRadius(allPins), [allPins]);
   const trimmedQuery = query.trim();
   const pins = visiblePins(allPins, nearby, trimmedQuery, showAll);
-  const items = filter === MAP_FILTER_EVENTS ? sortByEventDate(pins) : pins;
+  const items = isEventsOnly(filters) ? sortByEventDate(pins) : pins;
   const hiddenCount = trimmedQuery || showAll ? 0 : allPins.length - nearby.length;
 
   const open = useCallback(() => setIsOpen(true), []);

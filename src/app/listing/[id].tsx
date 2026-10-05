@@ -29,6 +29,7 @@ import {
 import {
   ActionSheet,
   Alert,
+  confirmCloseListing,
   closeAlertButton,
   confirm,
   formatPrice,
@@ -213,9 +214,11 @@ export default function ListingDetailScreen() {
 
   const handleRespondProposal = async (proposalId: string, accept: boolean) => {
     try {
-      const proposal = await respondToProposal(proposalId, accept);
+      const closeListing = accept ? await confirmCloseListing() : false;
+      if (closeListing === null) return;
+      const proposal = await respondToProposal(proposalId, accept, closeListing);
       applyProposalStatusEverywhere(queryClient, proposal, user?.id);
-      if (accept) {
+      if (closeListing) {
         patchListingInAllCaches(queryClient, proposal.listingId, (item) => ({ ...item, status: LISTING_STATUS.COMPLETED }));
       }
     } catch {

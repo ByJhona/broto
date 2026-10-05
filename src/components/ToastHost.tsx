@@ -5,7 +5,7 @@ import AlertCircle from 'lucide-react-native/icons/circle-alert';
 import CheckCircle2 from 'lucide-react-native/icons/circle-check';
 import Info from 'lucide-react-native/icons/info';
 import type { LucideIcon } from 'lucide-react-native';
-import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Motion } from '@/theme';
 import { registerToastHandler, type ToastType } from '@/utils';
 
 function getToastMeta(colors: ThemeColors): Record<ToastType, { icon: LucideIcon; color: string }> {
@@ -43,13 +43,13 @@ export function ToastHost() {
     opacity.setValue(0);
     Animated.parallel([
       Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: Motion.fast, useNativeDriver: true }),
     ]).start();
 
     hideTimeout.current = setTimeout(() => {
       Animated.parallel([
-        Animated.timing(translateY, { toValue: HIDDEN_OFFSET, duration: 200, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: HIDDEN_OFFSET, duration: Motion.fast, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0, duration: Motion.fast, useNativeDriver: true }),
       ]).start(() => setToast(null));
     }, VISIBLE_DURATION_MS);
 
@@ -68,7 +68,7 @@ export function ToastHost() {
       style={[styles.container, { top: insets.top + Metrics.spacing.sm, opacity, transform: [{ translateY }] }]}
       pointerEvents="none"
     >
-      <Icon size={Metrics.icon.normal} color={meta.color} strokeWidth={Metrics.icon.strokeWidth} />
+      <Icon size={Metrics.icon.normal} color={meta.color} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.message}>{toast.message}</Text>
     </Animated.View>
   );

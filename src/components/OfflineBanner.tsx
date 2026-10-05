@@ -14,7 +14,7 @@ export function OfflineBanner({ message }: Readonly<OfflineBannerProps>) {
   const resolvedMessage = message ?? t('offlineDataMessage');
   return (
     <View style={styles.container}>
-      <WifiOff size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <WifiOff size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       <Text style={styles.text}>{resolvedMessage}</Text>
     </View>
   );

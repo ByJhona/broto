@@ -24,7 +24,7 @@ export function OwnerRow({ eyebrow, ownerName, ownerAvatarUrl, onPress, style }:
       leading={<Avatar name={ownerName} url={ownerAvatarUrl} size={Metrics.size.lg} />}
       eyebrow={eyebrow}
       title={ownerName}
-      trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+      trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />}
       onPress={onPress}
     />
   );

@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import type { PlantCandidate } from '@/types';
 import { InfoSection } from '../InfoSection';
 import { confidencePercent } from './confidence';
+import { TextButton } from '../TextButton';
 
 type AlternativeRowProps = {
   candidate: PlantCandidate;
@@ -36,7 +37,7 @@ function AlternativeRow({ candidate, onPress }: Readonly<AlternativeRowProps>) {
         ) : null}
       </View>
       <Text style={styles.percent}>{percent}</Text>
-      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+      <ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
     </Pressable>
   );
 }
@@ -64,9 +65,7 @@ export function CandidateAlternatives({ candidates, selectedIndex, onSelect, onR
         )}
       </View>
       {onRetake ? (
-        <Pressable onPress={onRetake} hitSlop={8} accessibilityRole="button" style={styles.retake}>
-          <Text style={styles.retakeText}>{t('noneOfTheseCta')}</Text>
-        </Pressable>
+        <TextButton label={t('noneOfTheseCta')} tone="leaf" onPress={onRetake} style={styles.retake} />
       ) : null}
     </InfoSection>
   );
@@ -83,7 +82,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: Metrics.spacing.md,
       backgroundColor: colors.card,
       borderRadius: Metrics.radius.lg,
-      borderWidth: 1,
+      borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       paddingVertical: Metrics.spacing.md,
       paddingHorizontal: Metrics.spacing.md,
@@ -110,9 +109,5 @@ const makeStyles = (colors: ThemeColors) =>
     retake: {
       marginTop: Metrics.spacing.md,
       alignSelf: 'flex-start',
-    },
-    retakeText: {
-      ...Typography.labelStrong,
-      color: colors.leaf,
     },
   });

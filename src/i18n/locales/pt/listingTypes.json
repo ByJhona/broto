@@ -1,11 +1,9 @@
 {
   "donation": "Doação",
   "exchange": "Troca",
-  "discard": "Resgate",
   "sale": "Venda",
   "shareVerb_donation": "Estou doando",
   "shareVerb_exchange": "Quero trocar",
-  "shareVerb_discard": "Preciso me desfazer de",
   "shareVerb_sale": "Estou vendendo",
   "status_completed": "Concluída",
   "status_cancelled": "Cancelada",
@@ -13,6 +11,5 @@
   "notice_cancelled": "Essa oferta foi cancelada.",
   "hint_donation": "De graça para quem quiser",
   "hint_exchange": "Por outra planta",
-  "hint_discard": "Precisa de um novo lar logo",
   "hint_sale": "Pelo preço que você definir"
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/i18n';
 import { useAuth, usePlants } from '@/hooks';
-import { checkNewlyEarnedBadge } from '@/services';
+import { checkNewlyEarnedBadge, markBadgesCelebrated } from '@/services';
 import type { Badge, PlantCandidate, PlantSpeciesInfo } from '@/types';
 import { requireLogin } from '@/utils';
 import { suggestedWateringDays } from '../species/speciesLabels';
@@ -54,6 +54,7 @@ export function useAddIdentifiedPlant(candidate: PlantCandidate | undefined, spe
       if (earnedBadge) {
         setAddedPlantId(plant.id);
         setNewBadge(earnedBadge);
+        markBadgesCelebrated([earnedBadge.id]);
       } else {
         router.replace(`/plant/${plant.id}`);
       }

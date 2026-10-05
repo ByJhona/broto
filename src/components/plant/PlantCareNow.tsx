@@ -52,7 +52,7 @@ function WateringSuggestion({ plant, days }: Readonly<WateringSuggestionProps>) 
   return (
     <View style={styles.suggestion}>
       <View style={styles.suggestionHeader}>
-        <Droplet size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+        <Droplet size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         <Text style={styles.suggestionTitle}>{t('wateringSuggestionTitle')}</Text>
       </View>
       <Text style={styles.suggestionText}>{t('wateringSuggestionMessage', { days })}</Text>

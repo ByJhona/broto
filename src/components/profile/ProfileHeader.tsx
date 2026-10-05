@@ -70,12 +70,12 @@ export function ProfileHeader({
           variant="card"
           leading={
             <IconBadge backgroundColor={`${colors.leaf}1F`}>
-              <ClipboardList size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+              <ClipboardList size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
             </IconBadge>
           }
           title={t('manageOffersTitle')}
           subtitle={t('manageOffersSubtitle')}
-          trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />}
+          trailing={<ChevronRight size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />}
           onPress={onManage}
         />
       ) : null}

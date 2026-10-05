@@ -63,10 +63,10 @@ export function CandidateHeader({ candidate, plantType, showConfidence, onRetake
 
       {isUncertain ? (
         <View style={styles.notice}>
-          <CircleHelp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+          <CircleHelp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
           <View style={styles.noticeBody}>
             <Text style={styles.noticeText}>{t('lowConfidenceMessage')}</Text>
-            <Pressable onPress={onRetake} hitSlop={8} accessibilityRole="button">
+            <Pressable onPress={onRetake} hitSlop={Metrics.hitSlop} accessibilityRole="button">
               <Text style={styles.noticeAction}>{t('retakePhotoCta')}</Text>
             </Pressable>
           </View>

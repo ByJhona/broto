@@ -18,7 +18,7 @@ import { MessageBubble } from '@/components/chat/MessageBubble';
 import { ProposalEventCard } from '@/components/chat/ProposalEventCard';
 import { useChat } from '@/hooks';
 import { getProfile, setActiveChatUser } from '@/services';
-import { ActionSheet, pickPhoto, Toast } from '@/utils';
+import { ActionSheet, confirmCloseListing, pickPhoto, Toast } from '@/utils';
 
 function useNewMessagesIndicator(latestRow: ChatRow | undefined) {
   const latestKey = latestRow?.key ?? null;
@@ -102,7 +102,9 @@ export default function ChatScreen() {
 
   const handleRespond = async (proposalId: string, accept: boolean) => {
     try {
-      await chat.respondToProposal({ proposalId, accept });
+      const closeListing = accept ? await confirmCloseListing() : false;
+      if (closeListing === null) return;
+      await chat.respondToProposal({ proposalId, accept, closeListing });
     } catch (err) {
       console.error(err);
       Toast.error(t('respondOfferError'));

@@ -1,21 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import { GoogleMaps } from 'expo-maps';
+import { StyleSheet, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import MapView, { PROVIDER_GOOGLE, type MapPressEvent, type Region } from 'react-native-maps';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Search from 'lucide-react-native/icons/search';
-import { Metrics, useAppTheme, useColors, useThemedStyles } from '@/theme';
+import { Metrics, Motion, useAppTheme, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { CreateChoiceSheet, FilterChipRow, HomeHeader, type FilterChipOption } from '@/components';
 import { MapActionButtons } from '@/components/home/MapActionButtons';
-import { filterMapItems, MAP_FILTER_ALL, MAP_FILTER_EVENTS, type MapFilter } from '@/components/home/mapFilter';
-import {
-  allPinIconsLoaded,
-  buildMarkers,
-  findPinForMarker,
-  useMapPinIcons,
-  type SelectedPin,
-} from '@/components/home/mapPins';
+import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS, toggleMapFilter, type MapFilter } from '@/components/home/mapFilter';
+import { ClusterMarker } from '@/components/home/ClusterMarker';
+import { buildClusterIndex, visibleMapItems, type MapCluster } from '@/components/home/mapClusters';
+import { MapPinMarker } from '@/components/home/MapPinMarker';
+import { isSamePin, mapPins, pinAppearance, type SelectedPin } from '@/components/home/mapPins';
 import { resolvePlacingKind, type PlacingParams } from '@/components/home/placement';
 import { NearbyPeek } from '@/components/home/NearbyPeek';
 import { NearbySheet } from '@/components/home/NearbySheet';
@@ -29,7 +26,7 @@ import { useEvents, useListings } from '@/hooks';
 import type { ListingType } from '@/types';
 import { EVENT_COLOR, EVENT_ICON, listingTypes, Toast } from '@/utils';
 
-const MAP_STYLE_JSON = JSON.stringify([
+const MAP_STYLE = [
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.school', stylers: [{ visibility: 'off' }] },
@@ -38,11 +35,14 @@ const MAP_STYLE_JSON = JSON.stringify([
   { featureType: 'poi.government', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.attraction', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-]);
+];
 
-const INITIAL_CAMERA = {
-  coordinates: { latitude: -23.5505, longitude: -46.6333 },
-  zoom: 12,
+const INITIAL_CENTER = { latitude: -23.5505, longitude: -46.6333 };
+
+const INITIAL_REGION: Region = {
+  ...INITIAL_CENTER,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1,
 };
 
 const LOCATED_ZOOM = 15;
@@ -52,14 +52,13 @@ function nearbyPeekLabel(count: number, isNearUser: boolean, t: (key: string, op
   return t(isNearUser ? 'nearbyYou' : 'nearbyArea', { count });
 }
 
-function nearbySheetTitle(filter: MapFilter, isNearUser: boolean, t: (key: string) => string): string {
-  if (filter === MAP_FILTER_EVENTS) return t('upcomingEventsTitle');
+function nearbySheetTitle(filters: MapFilter[], isNearUser: boolean, t: (key: string) => string): string {
+  if (isEventsOnly(filters)) return t('upcomingEventsTitle');
   return isNearUser ? t('nearbyYouTitle') : t('nearbyAreaTitle');
 }
 
 function mapFilterOptions(t: (key: string) => string): FilterChipOption<MapFilter>[] {
   return [
-    { value: MAP_FILTER_ALL, label: t('filterAll') },
     ...listingTypes().map(({ value, label, icon, color }) => ({ value, label, icon, color })),
     { value: MAP_FILTER_EVENTS, label: t('filterEvents'), icon: EVENT_ICON, color: EVENT_COLOR },
   ];
@@ -75,32 +74,32 @@ export default function HomeScreen() {
   const params = useLocalSearchParams<PlacingParams>();
   const { listings: allListings, refresh: refreshListings } = useListings();
   const { events: allEvents, refresh: refreshEvents } = useEvents();
-  const [mapFilter, setMapFilter] = useState<MapFilter>(MAP_FILTER_ALL);
+  const [mapFilters, setMapFilters] = useState<MapFilter[]>([]);
   const [headerHeight, setHeaderHeight] = useState(0);
   const { listings, events } = useMemo(
-    () => filterMapItems(allListings, allEvents, mapFilter),
-    [allListings, allEvents, mapFilter]
+    () => filterMapItems(allListings, allEvents, mapFilters),
+    [allListings, allEvents, mapFilters]
   );
-  const [mapCenter, setMapCenter] = useState(INITIAL_CAMERA.coordinates);
+  const [region, setRegion] = useState<Region>(INITIAL_REGION);
+  const mapCenter = useMemo(() => ({ latitude: region.latitude, longitude: region.longitude }), [region]);
+  const { width: mapWidth } = useWindowDimensions();
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   const [isCreateChoiceOpen, setIsCreateChoiceOpen] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const mapRef = useRef<GoogleMaps.MapView>(null);
-  const pinIcons = useMapPinIcons();
-  const iconsReady = allPinIconsLoaded(pinIcons);
+  const mapRef = useRef<MapView>(null);
   const isPlacing = resolvePlacingKind(params) !== null;
   const { lastKnownLocation, currentLocation, refreshCurrentLocation } = useHomeLocation(isPlacing);
   const { isPublishing, confirmPlacing } = usePlacementPublishing(params, mapCenter);
-  const nearby = useNearbySheet({ listings, events, userLocation: currentLocation ?? lastKnownLocation, mapCenter, filter: mapFilter });
+  const nearby = useNearbySheet({ listings, events, userLocation: currentLocation ?? lastKnownLocation, mapCenter, filters: mapFilters });
 
   useEffect(() => {
     if (!isMapLoaded || !lastKnownLocation) return;
-    mapRef.current?.setCameraPosition({ coordinates: lastKnownLocation, zoom: LOCATED_ZOOM });
+    mapRef.current?.setCamera({ center: lastKnownLocation, zoom: LOCATED_ZOOM });
   }, [isMapLoaded, lastKnownLocation]);
 
   useEffect(() => {
     if (!isMapLoaded || !currentLocation) return;
-    mapRef.current?.setCameraPosition({ coordinates: currentLocation, zoom: LOCATED_ZOOM, duration: 500 });
+    mapRef.current?.animateCamera({ center: currentLocation, zoom: LOCATED_ZOOM }, { duration: Motion.slow });
   }, [isMapLoaded, currentLocation]);
 
   useFocusEffect(
@@ -109,35 +108,37 @@ export default function HomeScreen() {
     }, [])
   );
 
-  const markers = useMemo<GoogleMaps.Marker[]>(
-    () => (isPlacing || !iconsReady ? [] : buildMarkers(listings, events, pinIcons, selectedPin)),
-    [isPlacing, iconsReady, listings, events, pinIcons, selectedPin]
+  const clusterIndex = useMemo(() => buildClusterIndex(isPlacing ? [] : mapPins(listings, events)), [isPlacing, listings, events]);
+  const mapItems = useMemo(() => visibleMapItems(clusterIndex, region, mapWidth), [clusterIndex, region, mapWidth]);
+  const isSelectedHidden = !!selectedPin && !mapItems.pins.some((pin) => isSamePin(selectedPin, pin));
+  const visiblePins = selectedPin && isSelectedHidden ? [...mapItems.pins, selectedPin] : mapItems.pins;
+
+  const handleClusterPress = useCallback(
+    (cluster: MapCluster) => {
+      const zoom = clusterIndex.getClusterExpansionZoom(cluster.id);
+      mapRef.current?.animateCamera({ center: cluster.coordinate, zoom }, { duration: Motion.slow });
+    },
+    [clusterIndex]
   );
 
-  const handleMarkerClick = (marker: GoogleMaps.Marker) => {
-    const pin = findPinForMarker(marker.id, listings, events);
-    if (pin) setSelectedPin(pin);
-  };
+  const handleSelectPin = useCallback((pin: SelectedPin) => {
+    setSelectedPin(pin);
+    mapRef.current?.animateCamera({ center: pinAppearance(pin).coordinate }, { duration: Motion.slow });
+  }, []);
 
-  const handleCameraMove = (event: { coordinates: { latitude?: number; longitude?: number } }) => {
-    const { latitude, longitude } = event.coordinates;
-    if (latitude != null && longitude != null) setMapCenter({ latitude, longitude });
+  const handleMapPress = (event: MapPressEvent) => {
+    if (event.nativeEvent.action !== 'marker-press') setSelectedPin(null);
   };
 
   const handleChangeFilter = (filter: MapFilter) => {
     setSelectedPin(null);
-    setMapFilter(filter);
+    setMapFilters((current) => toggleMapFilter(current, filter));
   };
 
   const handleSelectNearby = (pin: SelectedPin) => {
     nearby.close();
+    mapRef.current?.setCamera({ center: pinAppearance(pin).coordinate, zoom: LOCATED_ZOOM });
     setSelectedPin(pin);
-    const coordinates = pin.kind === 'listing' ? pin.listing : pin.event;
-    mapRef.current?.setCameraPosition({
-      coordinates: { latitude: coordinates.latitude, longitude: coordinates.longitude },
-      zoom: LOCATED_ZOOM,
-      duration: 500,
-    });
   };
 
   const handleHeaderLayout = (event: LayoutChangeEvent) => setHeaderHeight(event.nativeEvent.layout.height);
@@ -159,23 +160,40 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <GoogleMaps.View
+      <MapView
+        key={scheme}
         ref={mapRef}
+        provider={PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFill}
-        cameraPosition={INITIAL_CAMERA}
-        markers={markers}
-        properties={{ isMyLocationEnabled: !!currentLocation, mapStyleOptions: { json: MAP_STYLE_JSON } }}
-        uiSettings={{ myLocationButtonEnabled: false, zoomControlsEnabled: false }}
-        colorScheme={scheme === 'dark' ? GoogleMaps.MapColorScheme.DARK : GoogleMaps.MapColorScheme.LIGHT}
-        onMapLoaded={() => setIsMapLoaded(true)}
-        onMapClick={() => setSelectedPin(null)}
-        onMarkerClick={handleMarkerClick}
-        onCameraMove={handleCameraMove}
-      />
+        initialRegion={region}
+        customMapStyle={MAP_STYLE}
+        userInterfaceStyle={scheme}
+        showsUserLocation={!!currentLocation}
+        showsMyLocationButton={false}
+        toolbarEnabled={false}
+        moveOnMarkerPress={false}
+        onMapReady={() => setIsMapLoaded(true)}
+        onPress={handleMapPress}
+        onRegionChangeComplete={setRegion}
+      >
+        {mapItems.clusters.map((cluster) => (
+          <ClusterMarker key={`cluster-${cluster.id}`} cluster={cluster} onPress={handleClusterPress} />
+        ))}
+        {visiblePins.map((pin) => (
+          <MapPinMarker key={pinAppearance(pin).key} pin={pin} isSelected={isSamePin(selectedPin, pin)} onSelect={handleSelectPin} />
+        ))}
+      </MapView>
 
       {isMapLoaded ? null : <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />}
 
-      {selectedPin ? <SelectedPinCallout pin={selectedPin} userLocation={currentLocation} /> : null}
+      {selectedPin ? (
+        <SelectedPinCallout
+          key={pinAppearance(selectedPin).key}
+          pin={selectedPin}
+          userLocation={currentLocation}
+          onClose={() => setSelectedPin(null)}
+        />
+      ) : null}
 
       {isPlacing ? (
         <PlacingOverlay
@@ -191,7 +209,7 @@ export default function HomeScreen() {
             <FilterChipRow
               floating
               options={mapFilterOptions(t)}
-              value={mapFilter}
+              selected={mapFilters}
               onChange={handleChangeFilter}
               style={styles.mapFiltersRow}
             />
@@ -210,7 +228,7 @@ export default function HomeScreen() {
 
       <NearbySheet
         visible={nearby.isOpen}
-        title={nearbySheetTitle(mapFilter, nearby.isNearUser, t)}
+        title={nearbySheetTitle(mapFilters, nearby.isNearUser, t)}
         items={nearby.items}
         query={nearby.query}
         onChangeQuery={nearby.setQuery}

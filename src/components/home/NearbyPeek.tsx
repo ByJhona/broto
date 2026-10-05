@@ -35,12 +35,12 @@ export function NearbyPeek({ label, icon: Icon = MapPin, onOpen, style }: Readon
     <View style={[styles.container, style]} {...panResponder.panHandlers}>
       <Pressable style={styles.peek} onPress={onOpen} accessibilityRole="button">
         <IconBadge size={Metrics.size.sm} backgroundColor={`${colors.leaf}1F`}>
-          <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.strokeWidth} />
+          <Icon size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
         </IconBadge>
         <Text style={styles.label} numberOfLines={1}>
           {label}
         </Text>
-        <ChevronUp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.strokeWidth} />
+        <ChevronUp size={Metrics.icon.small} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
       </Pressable>
     </View>
   );

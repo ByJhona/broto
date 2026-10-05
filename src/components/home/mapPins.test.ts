@@ -1,36 +1,40 @@
 import type { PlantEvent, PlantListing } from '@/types';
-import { buildMarkers, findPinForMarker } from './mapPins';
+import { EVENT_COLOR, LISTING_TYPE_COLORS } from '@/utils';
+import { isSamePin, mapPins, pinAppearance } from './mapPins';
 
-const listing = { id: 'l1', listingType: 'donation', latitude: 1, longitude: 2 } as PlantListing;
-const event = { id: 'e1', latitude: 3, longitude: 4 } as PlantEvent;
-const iconSet = { default: null, highlighted: null };
-const icons = { donation: iconSet, exchange: iconSet, discard: iconSet, sale: iconSet, event: iconSet };
+const listing = { id: 'l1', listingType: 'donation', latitude: 1, longitude: 2, photoUrls: ['a.jpg', 'b.jpg'] } as unknown as PlantListing;
+const event = { id: 'e1', latitude: 3, longitude: 4, photoUrl: null } as unknown as PlantEvent;
 
-describe('buildMarkers', () => {
-  it('creates one marker per listing and event', () => {
-    const markers = buildMarkers([listing], [event], icons, null);
-
-    expect(markers.map((marker) => marker.id)).toEqual(['listing-l1', 'event-e1']);
-  });
-
-  it('raises only the selected pin above the others', () => {
-    const markers = buildMarkers([listing], [event], icons, { kind: 'event', event });
-
-    expect(markers.map((marker) => marker.zIndex)).toEqual([0, 1]);
+describe('mapPins', () => {
+  it('creates one pin per listing and event', () => {
+    expect(mapPins([listing], [event])).toEqual([
+      { kind: 'listing', listing },
+      { kind: 'event', event },
+    ]);
   });
 });
 
-describe('findPinForMarker', () => {
-  it('finds the listing behind a listing marker', () => {
-    expect(findPinForMarker('listing-l1', [listing], [event])).toEqual({ kind: 'listing', listing });
+describe('pinAppearance', () => {
+  it('uses the first listing photo and the listing type color', () => {
+    const appearance = pinAppearance({ kind: 'listing', listing });
+
+    expect(appearance).toMatchObject({
+      key: 'listing-l1',
+      coordinate: { latitude: 1, longitude: 2 },
+      color: LISTING_TYPE_COLORS.donation,
+      photoUrl: 'a.jpg',
+    });
   });
 
-  it('finds the event behind an event marker', () => {
-    expect(findPinForMarker('event-e1', [listing], [event])).toEqual({ kind: 'event', event });
+  it('falls back to no photo for events without one', () => {
+    expect(pinAppearance({ kind: 'event', event })).toMatchObject({ key: 'event-e1', color: EVENT_COLOR, photoUrl: null });
   });
+});
 
-  it('returns null for an unknown or missing marker id', () => {
-    expect(findPinForMarker('listing-missing', [listing], [event])).toBeNull();
-    expect(findPinForMarker(undefined, [listing], [event])).toBeNull();
+describe('isSamePin', () => {
+  it('matches pins by kind and id', () => {
+    expect(isSamePin({ kind: 'event', event }, { kind: 'event', event })).toBe(true);
+    expect(isSamePin({ kind: 'listing', listing }, { kind: 'event', event })).toBe(false);
+    expect(isSamePin(null, { kind: 'event', event })).toBe(false);
   });
 });
