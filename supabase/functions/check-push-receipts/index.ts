@@ -80,23 +80,29 @@ async function processChunk(): Promise<{ checked: number; staleTokensRemoved: nu
   const receipts = await fetchReceipts(tickets.map((ticket) => ticket.ticket_id));
   if (!receipts) return null;
 
-  const staleTokens = staleTokensFrom(tickets, receipts);
+  const answered = tickets.filter((ticket) => receipts[ticket.ticket_id]);
+  if (answered.length === 0) return { checked: 0, staleTokensRemoved: 0 };
+
+  const staleTokens = staleTokensFrom(answered, receipts);
   if (staleTokens.length > 0) {
     const { error: tokenError } = await supabaseAdmin.from('push_tokens').delete().in('token', staleTokens);
-    if (tokenError) console.error('Erro apagando push_tokens inválidos:', tokenError);
+    if (tokenError) {
+      console.error('Erro apagando push_tokens inválidos:', tokenError);
+      return null;
+    }
   }
 
   const { error: deleteError } = await supabaseAdmin
     .from('push_tickets')
     .delete()
-    .in('ticket_id', tickets.map((ticket) => ticket.ticket_id));
+    .in('ticket_id', answered.map((ticket) => ticket.ticket_id));
 
   if (deleteError) {
     console.error('Erro apagando push_tickets processados:', deleteError);
     return null;
   }
 
-  return { checked: tickets.length, staleTokensRemoved: staleTokens.length };
+  return { checked: answered.length, staleTokensRemoved: staleTokens.length };
 }
 
 Deno.serve(async (req) => {

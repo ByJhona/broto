@@ -455,6 +455,8 @@ begin
 end;
 $$;
 
+REVOKE ALL ON FUNCTION public.grant_badge(uuid, text, text) FROM PUBLIC, anon, authenticated;
+
 CREATE OR REPLACE FUNCTION "public"."grant_badge_on_proposal_accepted"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -908,6 +910,8 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.renew_all_subscriptions() FROM PUBLIC, anon, authenticated;
+
 CREATE OR REPLACE FUNCTION "public"."reset_credits_to_plan"("target_user_id" "uuid", "target_balance" integer, "grant_reason" "text") RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1035,6 +1039,8 @@ begin
   where id = any(target_plant_ids);
 end;
 $$;
+
+REVOKE ALL ON FUNCTION public.send_care_setup_reminders() FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION "public"."set_proposal_responded_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -2402,3 +2408,5 @@ INSERT INTO "public"."plans" ("id", "name", "description", "monthly_credits", "r
 	('premium', 'Bulbo+', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados', 40, 'broto_prod', 2, 'weekly', 8),
 	('premium_annual', 'Bulbo+ Anual', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados · preço travado por 12 meses', 40, 'broto_prod', 3, 'weekly', 8),
 	('free', 'Plano Gratuito', '15 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados', 15, NULL, 1, 'weekly', 3);
+
+RESET session_replication_role;
