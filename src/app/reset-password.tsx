@@ -73,7 +73,10 @@ function NewPasswordForm({ isOffline }: Readonly<{ isOffline: boolean }>) {
         label={t('newPasswordLabel')}
         value={password}
         onChangeText={setPassword}
-        placeholder={t('passwordMinPlaceholder')}
+        hint={t('passwordMinHint')}
+        autoFocus
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}

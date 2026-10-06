@@ -106,6 +106,7 @@ function RootNavigator() {
         </Stack.Protected>
 
         <Stack.Screen name="reset-password" options={{ headerShown: false }} />
+        <Stack.Screen name="privacy" options={{ headerShown: false }} />
       </Stack>
       <AlertHost />
       <ActionSheetHost />

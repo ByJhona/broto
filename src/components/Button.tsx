@@ -1,6 +1,8 @@
+import type { ComponentType } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
-import type { LucideIcon } from 'lucide-react-native';
 import { Metrics, Opacity, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+
+export type ButtonIcon = ComponentType<{ size: number; color: string; strokeWidth: number }>;
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'destructive';
 
@@ -8,7 +10,7 @@ type ButtonProps = {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
-  icon?: LucideIcon;
+  icon?: ButtonIcon;
   compact?: boolean;
   loading?: boolean;
   disabled?: boolean;

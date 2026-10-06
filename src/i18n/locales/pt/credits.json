@@ -58,7 +58,7 @@
   "promoTitle": "Ativar código",
   "promoSubtitle": "Digite o código do cartão ou da campanha para receber sua recompensa.",
   "promoCodeLabel": "Código",
-  "promoCodePlaceholder": "BROTO-XXXXXX",
+  "promoCodePlaceholder": "BULBO-XXXXXXXX",
   "promoRedeem": "Ativar",
   "promoEmpty": "Digite um código.",
   "promoInvalid": "Código inválido. Confira e tente de novo.",
@@ -69,7 +69,7 @@
   "promoUnknownError": "Não foi possível ativar agora. Tente de novo em instantes.",
   "promoSuccessTitle": "Código ativado!",
   "promoLuckyNumberLabel": "Seu número da sorte",
-  "promoLuckyNumberHint": "Guarde esse número. O sorteio é feito ao vivo no Instagram do Broto.",
+  "promoLuckyNumberHint": "Guarde esse número. O sorteio é feito ao vivo no Instagram do Bulbo.",
   "promoCreditsEarned_one": "+{{count}} crédito na sua conta",
   "promoCreditsEarned_other": "+{{count}} créditos na sua conta",
   "promoDone": "Concluir",
@@ -78,5 +78,5 @@
   "luckyStatusPendingUntil": "Aguardando sorteio · encerra em {{date}}",
   "luckyStatusDrawn": "Sorteio realizado. Não foi dessa vez.",
   "luckyStatusWinner": "Você ganhou!",
-  "luckyContactAction": "Falar com o Broto"
+  "luckyContactAction": "Falar com o Bulbo"
 }

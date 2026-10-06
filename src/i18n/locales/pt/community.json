@@ -23,7 +23,7 @@
   "otherPostActionsTitle": "Publicação de {{name}}",
   "otherCommentActionsTitle": "Recado de {{name}}",
   "sharePostAction": "Compartilhar",
-  "sharePostMessage": "Veja essa publicação de {{author}} no broto: {{link}}",
+  "sharePostMessage": "Veja essa publicação de {{author}} no Bulbo: {{link}}",
   "reportPostAction": "Denunciar publicação",
   "reportCommentAction": "Denunciar recado",
   "reportReasonTitle": "Por que você está denunciando?",

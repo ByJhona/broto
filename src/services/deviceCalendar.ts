@@ -1,31 +1,31 @@
 import * as Calendar from 'expo-calendar';
 import type { CareTask } from '@/types';
 
-const BROTO_CALENDAR_TITLE = 'Broto';
-const BROTO_CALENDAR_COLOR = '#455F40';
+const APP_CALENDAR_TITLE = 'Bulbo';
+const APP_CALENDAR_COLOR = '#455F40';
 const EVENT_DURATION_MINUTES = 30;
 
 let cachedCalendarId: string | null = null;
 
 async function findExistingCalendar(): Promise<Calendar.ExpoCalendar | undefined> {
   const calendars = await Calendar.getCalendars(Calendar.EntityTypes.EVENT);
-  return calendars.find((calendar) => calendar.title === BROTO_CALENDAR_TITLE);
+  return calendars.find((calendar) => calendar.title === APP_CALENDAR_TITLE);
 }
 
-async function createBrotoCalendar(): Promise<Calendar.ExpoCalendar> {
+async function createAppCalendar(): Promise<Calendar.ExpoCalendar> {
   return Calendar.createCalendar({
-    title: BROTO_CALENDAR_TITLE,
-    color: BROTO_CALENDAR_COLOR,
+    title: APP_CALENDAR_TITLE,
+    color: APP_CALENDAR_COLOR,
     entityType: Calendar.EntityTypes.EVENT,
-    source: { isLocalAccount: true, name: BROTO_CALENDAR_TITLE, type: Calendar.SourceType.LOCAL },
-    ownerAccount: BROTO_CALENDAR_TITLE,
+    source: { isLocalAccount: true, name: APP_CALENDAR_TITLE, type: Calendar.SourceType.LOCAL },
+    ownerAccount: APP_CALENDAR_TITLE,
     accessLevel: Calendar.CalendarAccessLevel.OWNER,
     isSynced: true,
     isVisible: true,
   });
 }
 
-async function ensureBrotoCalendar(): Promise<string | null> {
+async function ensureAppCalendar(): Promise<string | null> {
   if (cachedCalendarId) return cachedCalendarId;
 
   const permission = await Calendar.requestCalendarPermissions();
@@ -34,7 +34,7 @@ async function ensureBrotoCalendar(): Promise<string | null> {
   const existing = await findExistingCalendar();
   if (existing && !existing.isVisible) await existing.delete();
 
-  const calendar = existing?.isVisible ? existing : await createBrotoCalendar();
+  const calendar = existing?.isVisible ? existing : await createAppCalendar();
 
   cachedCalendarId = calendar.id;
   return calendar.id;
@@ -52,7 +52,7 @@ function taskRecurrenceRule(task: CareTask): Calendar.RecurrenceRule | null {
 
 export async function syncTaskToDeviceCalendar(task: CareTask): Promise<string | null> {
   try {
-    const calendarId = await ensureBrotoCalendar();
+    const calendarId = await ensureAppCalendar();
     if (!calendarId) return null;
 
     const calendarInstance = await Calendar.ExpoCalendar.get(calendarId);

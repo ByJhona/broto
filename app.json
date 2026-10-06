@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Broto",
+    "name": "Bulbo",
     "slug": "broto",
     "version": "1.0.47",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "broto",
+    "scheme": "com.byjhona.broto",
     "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
@@ -40,13 +40,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "O broto usa suas fotos para você adicionar uma imagem da sua planta."
+          "photosPermission": "O Bulbo usa suas fotos para você adicionar uma imagem da sua planta."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "O broto usa a câmera para você fotografar suas plantas.",
+          "cameraPermission": "O Bulbo usa a câmera para você fotografar suas plantas.",
           "microphonePermission": false,
           "barcodeScannerEnabled": false
         }
@@ -56,7 +56,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "O broto usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
+          "locationWhenInUsePermission": "O Bulbo usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
         }
       ],
       "@react-native-google-signin/google-signin",

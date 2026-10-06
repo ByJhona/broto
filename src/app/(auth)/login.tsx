@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Mail from 'lucide-react-native/icons/mail';
 import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { AuthFooterLink, AuthLayout, Button, GoogleSignInButton } from '@/components';
+import { AuthLayout, Button, GoogleIcon } from '@/components';
 import { EmailLoginForm } from '@/components/auth/EmailLoginForm';
 import { useGoogleSignIn } from '@/components/auth/useGoogleSignIn';
 import { useNetworkStatus } from '@/hooks';
@@ -20,10 +20,13 @@ export default function LoginScreen() {
       subtitle={t('loginSubtitle')}
       isOffline={isOffline}
       offlineMessage={t('loginOfflineMessage')}
-      showMosaic
+      showLegalNotice
+      footerLink={{ label: t('noAccountSignupLink'), href: '/(auth)/signup' }}
     >
-      <GoogleSignInButton
+      <Button
         label={t('continueWithGoogle')}
+        variant="secondary"
+        icon={GoogleIcon}
         onPress={handleGoogleSignIn}
         loading={isGoogleSubmitting}
         disabled={isOffline}
@@ -42,15 +45,13 @@ export default function LoginScreen() {
           style={styles.emailButton}
         />
       )}
-
-      <AuthFooterLink href="/(auth)/signup" label={t('noAccountSignupLink')} />
     </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
   emailButton: {
-    marginTop: Metrics.spacing.sm,
+    marginTop: Metrics.spacing.md,
   },
   emailForm: {
     marginTop: Metrics.spacing.lg,

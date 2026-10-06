@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import Eye from 'lucide-react-native/icons/eye';
 import EyeOff from 'lucide-react-native/icons/eye-off';
@@ -8,9 +8,11 @@ import { useTranslation } from '@/i18n';
 type FormFieldProps = TextInputProps & {
   label: string;
   error?: string | null;
+  hint?: string;
+  ref?: Ref<TextInput>;
 };
 
-export function FormField({ label, error, style, secureTextEntry, ...inputProps }: Readonly<FormFieldProps>) {
+export function FormField({ label, error, hint, style, secureTextEntry, ref, ...inputProps }: Readonly<FormFieldProps>) {
   const colors = useColors();
   const { t } = useTranslation();
   const styles = useThemedStyles(makeStyles);
@@ -22,10 +24,11 @@ export function FormField({ label, error, style, secureTextEntry, ...inputProps 
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrapper}>
         <TextInput
+          ref={ref}
           placeholderTextColor={colors.mutedForeground}
           style={[styles.input, isPasswordField && styles.inputWithToggle, !!error && styles.inputError, style]}
           accessibilityLabel={label}
-          accessibilityHint={error ?? undefined}
+          accessibilityHint={error ?? hint}
           secureTextEntry={isPasswordField && !isPasswordVisible}
           {...inputProps}
         />
@@ -50,6 +53,7 @@ export function FormField({ label, error, style, secureTextEntry, ...inputProps 
           {error}
         </Text>
       ) : null}
+      {!error && hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 }
@@ -86,6 +90,11 @@ const makeStyles = (colors: ThemeColors) =>
     error: {
       ...Typography.caption,
       color: colors.destructive,
+      marginTop: Metrics.spacing.xs,
+    },
+    hint: {
+      ...Typography.caption,
+      color: colors.mutedForeground,
       marginTop: Metrics.spacing.xs,
     },
     toggleButton: {

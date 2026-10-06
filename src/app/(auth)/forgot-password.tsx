@@ -40,6 +40,7 @@ export default function ForgotPasswordScreen() {
         title={t('resetLinkSentTitle')}
         subtitle={t('resetLinkSentMessage', { email: sentTo })}
         isOffline={isOffline}
+      backHref="/(auth)/login"
         offlineMessage={t('loginOfflineMessage')}
       >
         <Button label={t('backToLogin')} onPress={() => router.replace('/(auth)/login')} />
@@ -52,6 +53,7 @@ export default function ForgotPasswordScreen() {
       title={t('forgotPasswordTitle')}
       subtitle={t('forgotPasswordMessage')}
       isOffline={isOffline}
+      backHref="/(auth)/login"
       offlineMessage={t('loginOfflineMessage')}
     >
       <FormField
@@ -62,6 +64,9 @@ export default function ForgotPasswordScreen() {
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
+        autoFocus
+        returnKeyType="send"
+        onSubmitEditing={handleSubmit}
         error={fieldErrors.email}
       />
       <FormError>{error}</FormError>

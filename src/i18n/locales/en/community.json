@@ -23,7 +23,7 @@
   "otherPostActionsTitle": "{{name}}'s post",
   "otherCommentActionsTitle": "{{name}}'s comment",
   "sharePostAction": "Share",
-  "sharePostMessage": "Check out this post by {{author}} on broto: {{link}}",
+  "sharePostMessage": "Check out this post by {{author}} on Bulbo: {{link}}",
   "reportPostAction": "Report post",
   "reportCommentAction": "Report comment",
   "reportReasonTitle": "Why are you reporting this?",

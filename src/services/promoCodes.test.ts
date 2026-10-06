@@ -16,6 +16,6 @@ describe('promoCodeErrorKind', () => {
 
 describe('normalizePromoCode', () => {
   it('trims and uppercases the code', () => {
-    expect(normalizePromoCode('  broto-7k3f ')).toBe('BROTO-7K3F');
+    expect(normalizePromoCode('  bulbo-7k3f ')).toBe('BULBO-7K3F');
   });
 });

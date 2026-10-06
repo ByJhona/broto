@@ -1,6 +1,6 @@
-# Broto 🌱
+# Bulbo 🌱
 
-Broto é um app mobile para quem cuida de plantas: identifica espécies e problemas por foto, organiza lembretes de cuidado, e conecta a comunidade em volta de plantas — de trocar mudas a compartilhar dicas.
+Bulbo é um app mobile para quem cuida de plantas: identifica espécies e problemas por foto, organiza lembretes de cuidado, e conecta a comunidade em volta de plantas — de trocar mudas a compartilhar dicas.
 
 ## Funcionalidades
 

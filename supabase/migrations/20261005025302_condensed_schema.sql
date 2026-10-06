@@ -305,10 +305,12 @@ begin
 end;
 $$;
 
-CREATE OR REPLACE FUNCTION "public"."generate_promo_codes"("p_campaign_id" "uuid", "p_count" integer, "p_prefix" "text" DEFAULT 'BROTO'::"text") RETURNS SETOF "text"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
+CREATE OR REPLACE FUNCTION public.generate_promo_codes(p_campaign_id uuid, p_count integer, p_prefix text DEFAULT 'BULBO')
+RETURNS SETOF text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
 declare
   v_alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   v_code text;
@@ -316,8 +318,8 @@ declare
 begin
   while v_generated < p_count loop
     v_code := upper(p_prefix) || '-' || (
-      select string_agg(substr(v_alphabet, 1 + floor(random() * length(v_alphabet))::int, 1), '')
-      from generate_series(1, 6)
+      select string_agg(substr(v_alphabet, 1 + get_byte(extensions.gen_random_bytes(1), 0) % length(v_alphabet), 1), '')
+      from generate_series(1, 8)
     );
 
     insert into public.promo_codes (code, campaign_id, max_uses)
@@ -772,10 +774,12 @@ begin
 end;
 $$;
 
-CREATE OR REPLACE FUNCTION "public"."redeem_promo_code"("p_code" "text") RETURNS "jsonb"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
+CREATE OR REPLACE FUNCTION public.redeem_promo_code(p_code text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
 declare
   v_user_id uuid := auth.uid();
   v_code public.promo_codes;
@@ -787,51 +791,63 @@ begin
     raise exception 'not_authenticated';
   end if;
 
-  select * into v_code from public.promo_codes where code = upper(trim(p_code));
-  if not found then
-    raise exception 'invalid_code';
-  end if;
-
-  select * into v_campaign from public.promo_campaigns where id = v_code.campaign_id;
-
-  if now() < v_campaign.starts_at or (v_campaign.ends_at is not null and now() > v_campaign.ends_at) then
-    raise exception 'expired_code';
-  end if;
-
-  if exists (select 1 from public.promo_redemptions where campaign_id = v_campaign.id and user_id = v_user_id) then
-    raise exception 'already_redeemed';
-  end if;
-
-  if v_code.max_uses is not null then
-    update public.promo_codes set uses = uses + 1 where code = v_code.code and uses < max_uses;
-    if not found then
-      raise exception 'code_exhausted';
-    end if;
-  end if;
-
-  update public.promo_campaigns
-  set redemption_count = redemption_count + 1
-  where id = v_campaign.id and (max_redemptions is null or redemption_count < max_redemptions)
-  returning redemption_count into v_position;
-  if v_position is null then
-    raise exception 'code_exhausted';
-  end if;
-
-  if v_campaign.has_raffle then
-    v_lucky_number := v_position;
+  if (
+    select count(*) from public.promo_redeem_failures
+    where user_id = v_user_id and created_at > now() - interval '1 hour'
+  ) >= 10 then
+    return jsonb_build_object('error', 'too_many_attempts');
   end if;
 
   begin
-    insert into public.promo_redemptions (campaign_id, code, user_id, credits, lucky_number)
-    values (v_campaign.id, v_code.code, v_user_id, v_campaign.credits, v_lucky_number);
-  exception when unique_violation then
-    raise exception 'already_redeemed';
-  end;
+    select * into v_code from public.promo_codes where code = upper(trim(p_code));
+    if not found then
+      raise exception 'invalid_code';
+    end if;
 
-  if v_campaign.credits > 0 then
-    insert into public.credit_ledger (user_id, amount, reason)
-    values (v_user_id, v_campaign.credits, 'promo_code');
-  end if;
+    select * into v_campaign from public.promo_campaigns where id = v_code.campaign_id;
+
+    if now() < v_campaign.starts_at or (v_campaign.ends_at is not null and now() > v_campaign.ends_at) then
+      raise exception 'expired_code';
+    end if;
+
+    if exists (select 1 from public.promo_redemptions where campaign_id = v_campaign.id and user_id = v_user_id) then
+      raise exception 'already_redeemed';
+    end if;
+
+    if v_code.max_uses is not null then
+      update public.promo_codes set uses = uses + 1 where code = v_code.code and uses < max_uses;
+      if not found then
+        raise exception 'code_exhausted';
+      end if;
+    end if;
+
+    update public.promo_campaigns
+    set redemption_count = redemption_count + 1
+    where id = v_campaign.id and (max_redemptions is null or redemption_count < max_redemptions)
+    returning redemption_count into v_position;
+    if v_position is null then
+      raise exception 'code_exhausted';
+    end if;
+
+    if v_campaign.has_raffle then
+      v_lucky_number := v_position;
+    end if;
+
+    begin
+      insert into public.promo_redemptions (campaign_id, code, user_id, credits, lucky_number)
+      values (v_campaign.id, v_code.code, v_user_id, v_campaign.credits, v_lucky_number);
+    exception when unique_violation then
+      raise exception 'already_redeemed';
+    end;
+
+    if v_campaign.credits > 0 then
+      insert into public.credit_ledger (user_id, amount, reason)
+      values (v_user_id, v_campaign.credits, 'promo_code');
+    end if;
+  exception when raise_exception then
+    insert into public.promo_redeem_failures (user_id) values (v_user_id);
+    return jsonb_build_object('error', SQLERRM);
+  end;
 
   return jsonb_build_object(
     'campaignName', v_campaign.name,
@@ -842,22 +858,27 @@ begin
 end;
 $$;
 
-CREATE OR REPLACE FUNCTION "public"."register_push_token"("p_token" "text") RETURNS "void"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
+CREATE OR REPLACE FUNCTION public.register_push_token(p_token text, p_device_id text DEFAULT NULL)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
 begin
   if auth.uid() is null then
     raise exception 'not_authenticated';
   end if;
 
-  delete from public.push_tokens where token = p_token and user_id <> auth.uid();
+  delete from public.push_tokens where token = p_token or device_id = p_device_id;
 
-  insert into public.push_tokens (user_id, token)
-  values (auth.uid(), p_token)
-  on conflict (token) do nothing;
+  insert into public.push_tokens (user_id, token, device_id)
+  values (auth.uid(), p_token, p_device_id);
 end;
 $$;
+
+REVOKE ALL ON FUNCTION public.register_push_token(text, text) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.register_push_token(text, text) TO authenticated;
 
 CREATE OR REPLACE FUNCTION "public"."renew_all_subscriptions"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -1398,6 +1419,14 @@ CREATE TABLE IF NOT EXISTS "public"."promo_redemptions" (
     "redeemed_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
+CREATE TABLE public.promo_redeem_failures (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX promo_redeem_failures_user_created_idx ON public.promo_redeem_failures (user_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS "public"."push_tickets" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "ticket_id" "text" NOT NULL,
@@ -1409,6 +1438,7 @@ CREATE TABLE IF NOT EXISTS "public"."push_tokens" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
     "token" "text" NOT NULL,
+    "device_id" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
@@ -1656,6 +1686,8 @@ CREATE INDEX "promo_redemptions_code_idx" ON "public"."promo_redemptions" USING 
 CREATE INDEX "promo_redemptions_user_id_idx" ON "public"."promo_redemptions" USING "btree" ("user_id");
 
 CREATE INDEX "push_tickets_created_at_idx" ON "public"."push_tickets" USING "btree" ("created_at");
+
+CREATE UNIQUE INDEX "push_tokens_device_id_key" ON "public"."push_tokens" USING "btree" ("device_id");
 
 CREATE INDEX "push_tokens_user_id_idx" ON "public"."push_tokens" USING "btree" ("user_id");
 
@@ -2104,6 +2136,10 @@ ALTER TABLE "public"."promo_campaigns" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."promo_codes" ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.promo_redeem_failures ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE public.promo_redeem_failures FROM anon, authenticated;
+
 ALTER TABLE "public"."promo_redemptions" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."push_tickets" ENABLE ROW LEVEL SECURITY;
@@ -2320,7 +2356,7 @@ INSERT INTO "public"."articles" ("id", "slug", "locale", "category", "title", "d
 
 INSERT INTO "public"."badge_batches" ("id", "name", "description", "sort_order", "is_active") VALUES
 	('plantas-populares', 'Plantas Populares', 'Emblemas das plantas mais comuns em jardins e casas do Brasil.', 0, true),
-	('conquistas', 'Conquistas', 'Emblemas por marcos de engajamento no broto.', 1, true);
+	('conquistas', 'Conquistas', 'Emblemas por marcos de engajamento no Bulbo.', 1, true);
 
 INSERT INTO "public"."badges" ("id", "batch_id", "name", "description", "pixel_art", "sort_order", "is_active", "scientific_name") VALUES
 	('primeira-doacao', 'conquistas', 'Primeira doação', 'Você participou da sua primeira doação de planta.', '{"size": 32, "pixels": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 1, 4, 2, 2, 2, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 5, 4, 1, 2, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 5, 5, 1, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9, 7, 7, 9, 9, 9, 9, 9, 8, 8, 8, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "palette": [null, "#26301F", "#7CC47E", "#4E9A5F", "#3D6B2F", "#2F6B3F", "#E04A52", "#D4AF37", "#8E1F28", "#C8323A"]}', 3, true, NULL),
@@ -2357,12 +2393,12 @@ INSERT INTO "public"."credit_costs" ("reason", "cost") VALUES
 	('boost_content', 20);
 
 INSERT INTO "public"."credit_packs" ("id", "name", "credits", "sort_order") VALUES
-	('credits_30', 'Pacote Broto', 30, 1),
+	('credits_30', 'Pacote Muda', 30, 1),
 	('credits_80', 'Pacote Verde', 80, 2),
 	('credits_200', 'Pacote Floresta', 200, 3),
 	('credits_500', 'Pacote Jardim', 500, 4);
 
 INSERT INTO "public"."plans" ("id", "name", "description", "monthly_credits", "revenuecat_entitlement_id", "sort_order", "credit_renewal_period", "max_listing_photos") VALUES
-	('premium', 'Broto+', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados', 40, 'broto_prod', 2, 'weekly', 8),
-	('premium_annual', 'Broto+ Anual', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados · preço travado por 12 meses', 40, 'broto_prod', 3, 'weekly', 8),
+	('premium', 'Bulbo+', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados', 40, 'broto_prod', 2, 'weekly', 8),
+	('premium_annual', 'Bulbo+ Anual', '40 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados · preço travado por 12 meses', 40, 'broto_prod', 3, 'weekly', 8),
 	('free', 'Plano Gratuito', '15 créditos por semana para identificar, diagnosticar e cuidar das suas plantas · anúncios e eventos ilimitados', 15, NULL, 1, 'weekly', 3);

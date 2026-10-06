@@ -1,19 +1,28 @@
 import { type PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Link, type Href } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
-import { BadgeMosaic } from './auth/BadgeMosaic';
+import { useTranslation } from '@/i18n';
 import { BrotoLogo } from './BrotoLogo';
+import { FloatingScreenControls } from './FloatingScreenControls';
 import { OfflineBanner } from './OfflineBanner';
+import { TextButton } from './TextButton';
+
+type AuthFooterLink = {
+  label: string;
+  href: Href;
+};
 
 type AuthLayoutProps = PropsWithChildren<{
   title: string;
   subtitle: string;
   isOffline: boolean;
   offlineMessage: string;
-  showMosaic?: boolean;
+  footerLink?: AuthFooterLink;
+  showLegalNotice?: boolean;
+  backHref?: Href;
 }>;
 
 export function AuthLayout({
@@ -21,92 +30,110 @@ export function AuthLayout({
   subtitle,
   isOffline,
   offlineMessage,
-  showMosaic = false,
+  footerLink,
+  showLegalNotice = false,
+  backHref,
   children,
 }: Readonly<AuthLayoutProps>) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(makeStyles);
+  const { t } = useTranslation('auth');
+
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + Metrics.spacing.lg }]}
-      keyboardShouldPersistTaps="handled"
-      bottomOffset={Metrics.spacing.lg}
-    >
-      {showMosaic ? <BadgeMosaic /> : null}
-
-      <View style={styles.logo}>
-        <BrotoLogo size={showMosaic ? 40 : 64} />
-      </View>
-
-      <Text style={styles.title} accessibilityRole="header">
-        {title}
-      </Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
-
-      {isOffline ? (
-        <View style={styles.banner}>
-          <OfflineBanner message={offlineMessage} />
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + Metrics.spacing.lg, paddingBottom: insets.bottom + Metrics.spacing.lg },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={Metrics.spacing.lg}
+      >
+        <View style={styles.logo}>
+          <BrotoLogo size={Metrics.size.hero} />
         </View>
-      ) : null}
 
-      {children}
-    </KeyboardAwareScrollView>
-  );
-}
+        <Text style={styles.title} accessibilityRole="header">
+          {title}
+        </Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
 
-type AuthFooterLinkProps = {
-  href: Href;
-  label: string;
-};
+        {isOffline ? (
+          <View style={styles.banner}>
+            <OfflineBanner message={offlineMessage} />
+          </View>
+        ) : null}
 
-export function AuthFooterLink({ href, label }: Readonly<AuthFooterLinkProps>) {
-  const styles = useThemedStyles(makeStyles);
-  return (
-    <Link href={href} style={styles.link}>
-      <Text style={styles.linkText}>{label}</Text>
-    </Link>
+        {children}
+
+        {footerLink ? (
+          <TextButton
+            label={footerLink.label}
+            tone="primary"
+            accessibilityRole="link"
+            onPress={() => router.replace(footerLink.href)}
+            style={styles.footerLink}
+          />
+        ) : null}
+
+        {showLegalNotice ? (
+          <Text style={styles.legal}>
+            {t('legalNotice')}{' '}
+            <Text style={styles.legalLink} accessibilityRole="link" onPress={() => router.push('/privacy')}>
+              {t('privacyPolicyLink')}
+            </Text>
+          </Text>
+        ) : null}
+      </KeyboardAwareScrollView>
+      {backHref ? <FloatingScreenControls onBack={() => router.dismissTo(backHref)} /> : null}
+    </View>
   );
 }
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    ...Metrics.layout.centeredContent,
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: Metrics.spacing.lg,
-  },
-  logo: {
-    alignSelf: 'center',
-    marginBottom: Metrics.spacing.lg,
-  },
-  title: {
-    ...Typography.display,
-    color: colors.foreground,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...Typography.bodySmall,
-    color: colors.mutedForeground,
-    textAlign: 'center',
-    marginTop: Metrics.spacing.xs,
-    marginBottom: Metrics.spacing.xl,
-  },
-  banner: {
-    marginBottom: Metrics.spacing.md,
-    marginHorizontal: -Metrics.spacing.lg,
-  },
-  link: {
-    marginTop: Metrics.spacing.lg,
-    alignSelf: 'center',
-  },
-  linkText: {
-    color: colors.primary,
-    ...Typography.label,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      ...Metrics.layout.centeredContent,
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: Metrics.spacing.lg,
+    },
+    logo: {
+      alignSelf: 'center',
+      marginBottom: Metrics.spacing.lg,
+    },
+    title: {
+      ...Typography.display,
+      color: colors.foreground,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...Typography.bodySmall,
+      color: colors.mutedForeground,
+      textAlign: 'center',
+      marginTop: Metrics.spacing.xs,
+      marginBottom: Metrics.spacing.xl,
+    },
+    banner: {
+      marginBottom: Metrics.spacing.md,
+      marginHorizontal: -Metrics.spacing.lg,
+    },
+    footerLink: {
+      marginTop: Metrics.spacing.lg,
+    },
+    legal: {
+      ...Typography.caption,
+      color: colors.mutedForeground,
+      textAlign: 'center',
+      marginTop: Metrics.spacing.lg,
+    },
+    legalLink: {
+      ...Typography.captionStrong,
+      color: colors.primary,
+    },
   });

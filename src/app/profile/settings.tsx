@@ -155,7 +155,7 @@ export default function ProfileSettingsScreen() {
 
         <InfoSection title={t('support')}>
           <CardGroup>
-            <SettingsListItem icon={ShieldCheck} label={t('privacyAndSecurity')} onPress={() => router.push('/profile/privacy')} />
+            <SettingsListItem icon={ShieldCheck} label={t('privacyAndSecurity')} onPress={() => router.push('/privacy')} />
             <SettingsListItem icon={CircleHelp} label={t('help')} onPress={() => router.push('/profile/help')} />
           </CardGroup>
         </InfoSection>

@@ -1,17 +1,8 @@
 import { Stack } from 'expo-router';
-import { useColors } from '@/theme';
 
 export default function AuthLayout() {
-  const colors = useColors();
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.foreground,
-        headerShadowVisible: false,
-        headerTitle: '',
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
       <Stack.Screen name="forgot-password" />

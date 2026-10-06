@@ -178,7 +178,7 @@ export default function PlansScreen() {
 
         <View style={styles.footer}>
           <TextButton label={isRestoring ? t('processing') : t('restorePurchases')} onPress={handleRestore} disabled={isRestoring} />
-          <TextButton label={t('privacyPolicy')} onPress={() => router.push('/profile/privacy')} accessibilityRole="link" />
+          <TextButton label={t('privacyPolicy')} onPress={() => router.push('/privacy')} accessibilityRole="link" />
         </View>
       </ScrollView>
       <FloatingScreenControls />

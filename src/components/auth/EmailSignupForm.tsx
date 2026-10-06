@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { useAuth } from '@/hooks';
 import { authErrorMessage, hasFieldErrors, validateSignup, type AuthFieldErrors } from '@/utils';
@@ -15,6 +16,8 @@ export function EmailSignupForm({ disabled }: Readonly<EmailSignupFormProps>) {
   const { t } = useTranslation('auth');
   const { signUp } = useAuth();
   const goToApp = useGoToApp();
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,6 +51,11 @@ export function EmailSignupForm({ disabled }: Readonly<EmailSignupFormProps>) {
         onChangeText={setName}
         placeholder={t('namePlaceholder')}
         autoComplete="name"
+        autoCapitalize="words"
+        autoFocus
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => emailRef.current?.focus()}
         error={fieldErrors.name}
       />
       <FormField
@@ -58,17 +66,25 @@ export function EmailSignupForm({ disabled }: Readonly<EmailSignupFormProps>) {
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
+        ref={emailRef}
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
         error={fieldErrors.email}
       />
       <FormField
         label={t('passwordLabel')}
         value={password}
         onChangeText={setPassword}
-        placeholder={t('passwordMinPlaceholder')}
+        placeholder={t('passwordPlaceholder')}
+        hint={t('passwordMinHint')}
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="password-new"
+        ref={passwordRef}
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
         error={fieldErrors.password}
       />
 

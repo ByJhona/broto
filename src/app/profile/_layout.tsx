@@ -11,7 +11,6 @@ export default function ProfileLayout() {
       <Stack.Screen name="[id]" options={{ headerShown: false, title: t('profileTitle') }} />
       <Stack.Screen name="edit" options={{ headerShown: false, title: t('editProfileTitle') }} />
       <Stack.Screen name="notifications" options={{ headerShown: false, title: t('notificationsTitle') }} />
-      <Stack.Screen name="privacy" options={{ headerShown: false, title: t('privacyTitle') }} />
       <Stack.Screen name="plans" options={{ headerShown: false, title: t('plansTitle') }} />
       <Stack.Screen name="badges" options={{ headerShown: false, title: t('badge:catalogTitle') }} />
       <Stack.Screen name="redeem-code" options={{ headerShown: false, title: t('settings:redeemCode') }} />

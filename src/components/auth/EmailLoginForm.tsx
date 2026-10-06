@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { Link } from 'expo-router';
-import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { useRef, useState } from 'react';
+import { StyleSheet, type TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useAuth } from '@/hooks';
 import { authErrorMessage, hasFieldErrors, validateLogin, type AuthFieldErrors } from '@/utils';
 import { FormError } from '../FormError';
 import { FormField } from '../FormField';
 import { Button } from '../Button';
+import { TextButton } from '../TextButton';
 import { useGoToApp } from './useGoToApp';
 
 type EmailLoginFormProps = {
@@ -15,10 +16,11 @@ type EmailLoginFormProps = {
 };
 
 export function EmailLoginForm({ disabled }: Readonly<EmailLoginFormProps>) {
-  const styles = useThemedStyles(makeStyles);
+  const router = useRouter();
   const { t } = useTranslation('auth');
   const { signIn } = useAuth();
   const goToApp = useGoToApp();
+  const passwordRef = useRef<TextInput>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
@@ -52,6 +54,10 @@ export function EmailLoginForm({ disabled }: Readonly<EmailLoginFormProps>) {
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
+        autoFocus
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => passwordRef.current?.focus()}
         error={fieldErrors.email}
       />
       <FormField
@@ -63,11 +69,18 @@ export function EmailLoginForm({ disabled }: Readonly<EmailLoginFormProps>) {
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="password"
+        ref={passwordRef}
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
         error={fieldErrors.password}
       />
-      <Link href="/(auth)/forgot-password" style={styles.forgotLink}>
-        <Text style={styles.forgotLinkText}>{t('forgotPasswordLink')}</Text>
-      </Link>
+      <TextButton
+        label={t('forgotPasswordLink')}
+        tone="primary"
+        accessibilityRole="link"
+        onPress={() => router.push('/(auth)/forgot-password')}
+        style={styles.forgotLink}
+      />
 
       <FormError>{error}</FormError>
 
@@ -76,15 +89,9 @@ export function EmailLoginForm({ disabled }: Readonly<EmailLoginFormProps>) {
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    forgotLink: {
-      alignSelf: 'flex-end',
-      marginTop: -Metrics.spacing.xs,
-      marginBottom: Metrics.spacing.md,
-    },
-    forgotLinkText: {
-      ...Typography.label,
-      color: colors.primary,
-    },
-  });
+const styles = StyleSheet.create({
+  forgotLink: {
+    alignSelf: 'flex-end',
+    marginBottom: Metrics.spacing.sm,
+  },
+});
