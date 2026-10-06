@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bulbo",
     "slug": "broto",
-    "version": "1.0.47",
+    "version": "1.0.48",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "com.byjhona.broto",
@@ -19,7 +19,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 55,
+      "versionCode": 56,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
