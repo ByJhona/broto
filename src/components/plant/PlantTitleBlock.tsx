@@ -9,6 +9,7 @@ import { useTranslation } from '@/i18n';
 import type { Plant } from '@/types';
 import { daysBetween, today } from '@/utils';
 import { PageTitle } from '../PageTitle';
+import { ScientificName } from '../ScientificName';
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
@@ -48,7 +49,7 @@ export function PlantTitleBlock({ plant, plantType, onPressGroup }: Readonly<Pla
     <View style={styles.block}>
       <PageTitle>{plant.name}</PageTitle>
       {showCommonName ? <Text style={styles.commonName}>{plant.commonName}</Text> : null}
-      {plant.species ? <Text style={styles.species}>{plant.species}</Text> : null}
+      {plant.species ? <ScientificName name={plant.species} /> : null}
 
       <View style={styles.tags}>
         <Pressable
@@ -82,12 +83,6 @@ const makeStyles = (colors: ThemeColors) =>
     commonName: {
       ...Typography.body,
       color: colors.foreground,
-      marginTop: Metrics.spacing.xs,
-    },
-    species: {
-      ...Typography.body,
-      fontStyle: 'italic',
-      color: colors.mutedForeground,
       marginTop: Metrics.spacing.xs,
     },
     tags: {

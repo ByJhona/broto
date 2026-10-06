@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import UserRound from 'lucide-react-native/icons/user-round';
 import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, SubmitButton } from '@/components';
+import { EmptyState } from '@/components';
 import { ProfileView } from '@/components/profile/ProfileView';
 import { useAuth } from '@/hooks';
 
@@ -17,8 +17,12 @@ export default function ProfileTabScreen() {
 
   return (
     <View style={styles.guest}>
-      <EmptyState icon={UserRound} title={t('signInToSeeProfileTitle')} message={t('signInToSeeProfileMessage')} />
-      <SubmitButton label={t('common:signIn')} onPress={() => router.push('/(auth)/login')} />
+      <EmptyState
+        icon={UserRound}
+        title={t('signInToSeeProfileTitle')}
+        message={t('signInToSeeProfileMessage')}
+        action={{ label: t('common:signIn'), onPress: () => router.push('/(auth)/login') }}
+      />
     </View>
   );
 }

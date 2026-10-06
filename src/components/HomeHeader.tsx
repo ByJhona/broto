@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { RefreshControl, ScrollView, View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import Bell from 'lucide-react-native/icons/bell';
+import MessageSquare from 'lucide-react-native/icons/message-square';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography, Elevation, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useAuth, useConversations, useCredits, useNotifications } from '@/hooks';
 import { getGreeting } from '@/utils';
 import { getProfile } from '@/services';
-import { ChatButton } from './ChatButton';
 import { CreditsBar } from './CreditsBar';
-import { NotificationBell } from './NotificationBell';
+import { HeaderIconButton } from './HeaderIconButton';
 import { ProfileIcon } from './ProfileIcon';
 
 type HomeHeaderProps = {
@@ -21,7 +23,8 @@ export function HomeHeader({ onLayout, onRefresh }: Readonly<HomeHeaderProps>) {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation('profile');
+  const router = useRouter();
+  const { t } = useTranslation(['profile', 'chat']);
   const { hasUnread } = useNotifications();
   const { hasUnread: hasUnreadMessages } = useConversations();
   const { user } = useAuth();
@@ -67,8 +70,18 @@ export function HomeHeader({ onLayout, onRefresh }: Readonly<HomeHeaderProps>) {
             </Text>
           </View>
           <View style={styles.headerActions}>
-            <NotificationBell hasUnread={hasUnread} />
-            <ChatButton hasUnread={hasUnreadMessages} />
+            <HeaderIconButton
+              icon={Bell}
+              hasUnread={hasUnread}
+              accessibilityLabel={hasUnread ? t('notificationsUnreadLabel') : t('notificationsLabel')}
+              onPress={() => router.push('/profile/notifications')}
+            />
+            <HeaderIconButton
+              icon={MessageSquare}
+              hasUnread={hasUnreadMessages}
+              accessibilityLabel={hasUnreadMessages ? t('chat:accessibilityLabelUnread') : t('chat:accessibilityLabel')}
+              onPress={() => router.push('/messages')}
+            />
             <ProfileIcon name={firstName} url={profile?.avatar_url} loggedIn={!!user} />
           </View>
         </View>

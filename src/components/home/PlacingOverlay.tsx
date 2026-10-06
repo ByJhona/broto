@@ -5,7 +5,7 @@ import { Metrics, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconButton } from '../IconButton';
 import { ListingMarkerPin } from '../ListingMarkerPin';
-import { SubmitButton } from '../SubmitButton';
+import { Button } from '../Button';
 import { resolveDraftColor, resolveDraftIcon, resolvePlacingKind, type PlacingParams } from './placement';
 import { makeStyles } from './styles';
 
@@ -34,7 +34,7 @@ export function PlacingOverlay({ params, isPublishing, onConfirm, onCancel }: Re
 
       <View style={[styles.placingPanel, { bottom: insets.bottom + Metrics.spacing.lg }]}>
         <Text style={styles.placingText}>{isEvent ? t('placingEventInstructions') : t('placingListingInstructions')}</Text>
-        <SubmitButton
+        <Button
           label={isEvent ? t('publishEventHere') : t('publishListingHere')}
           onPress={onConfirm}
           loading={isPublishing}

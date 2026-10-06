@@ -6,7 +6,7 @@ import { useTranslation } from '@/i18n';
 import { registerLevelUpHandler } from '@/utils';
 import { ConfettiBurst } from './ConfettiBurst';
 import { Dialog } from './Dialog';
-import { SubmitButton } from './SubmitButton';
+import { Button } from './Button';
 
 export function LevelUpHost() {
   const styles = useThemedStyles(makeStyles);
@@ -29,7 +29,7 @@ export function LevelUpHost() {
       <Text style={styles.title}>{t('levelUpTitle')}</Text>
       <Text style={styles.message}>{t('levelUpMessage', { level })}</Text>
       <View style={styles.actions}>
-        <SubmitButton label={t('levelUpContinue')} onPress={handleClose} />
+        <Button label={t('levelUpContinue')} onPress={handleClose} />
       </View>
     </Dialog>
   );

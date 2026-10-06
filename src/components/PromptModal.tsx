@@ -1,10 +1,10 @@
-import { StyleSheet, Text } from 'react-native';
-import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { StyleSheet } from 'react-native';
+import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { BottomSheet } from './BottomSheet';
 import { FormError } from './FormError';
 import { FormField } from './FormField';
-import { SubmitButton } from './SubmitButton';
+import { Button } from './Button';
 import { TextButton } from './TextButton';
 
 type PromptModalProps = {
@@ -42,11 +42,10 @@ export function PromptModal({
   };
 
   return (
-    <BottomSheet visible={visible} onClose={handleClose}>
-      <Text style={styles.title}>{title}</Text>
+    <BottomSheet title={title} visible={visible} onClose={handleClose}>
       <FormField label={label} value={value} onChangeText={onChangeText} placeholder={placeholder} autoFocus />
       <FormError>{error ?? null}</FormError>
-      <SubmitButton label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
+      <Button label={submitLabel} onPress={onSubmit} loading={isSubmitting} />
       <TextButton label={t('cancel')} onPress={handleClose} disabled={isSubmitting} style={styles.cancel} />
     </BottomSheet>
   );
@@ -54,11 +53,6 @@ export function PromptModal({
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    title: {
-      ...Typography.title,
-      color: colors.foreground,
-      marginBottom: Metrics.spacing.md,
-    },
     cancel: {
       marginTop: Metrics.spacing.sm,
     },

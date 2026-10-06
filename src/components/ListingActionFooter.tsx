@@ -1,6 +1,8 @@
+import { StyleSheet } from 'react-native';
+import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { LISTING_STATUS, LISTING_TYPE, type ListingStatus, type ListingType } from '@/types';
-import { SubmitButton } from './SubmitButton';
+import { Button } from './Button';
 
 type TranslateFn = (key: string) => string;
 
@@ -35,20 +37,28 @@ export function ListingActionFooter({
 
   if (listingType === LISTING_TYPE.EXCHANGE) {
     return (
-      <SubmitButton
+      <Button
         label={hasSentInterest ? t('openChatLabel') : t('proposeExchangeLabel')}
         onPress={hasSentInterest ? onOpenChat : onPropose}
         loading={isActing}
+        style={styles.button}
       />
     );
   }
 
   return (
-    <SubmitButton
+    <Button
       label={interestLabel(listingType, hasSentInterest, t)}
       onPress={onInterest}
       loading={isActing}
       disabled={hasSentInterest}
+      style={styles.button}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    marginTop: Metrics.spacing.sm,
+  },
+});

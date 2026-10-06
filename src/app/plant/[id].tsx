@@ -6,7 +6,7 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, OutlineButton, PromptModal, SkeletonBlock } from '@/components';
+import { Button, EmptyState, PromptModal, SkeletonBlock } from '@/components';
 import { ASK_BUTTON_CLEARANCE, AskAboutPlantButton } from '@/components/plant/AskAboutPlantButton';
 import { PlantCareNow } from '@/components/plant/PlantCareNow';
 import { PlantGallery } from '@/components/plant/PlantGallery';
@@ -60,14 +60,14 @@ function SpeciesKnowledge({ plant, speciesQuery }: Readonly<{ plant: Plant; spec
     <SpeciesSections
       query={speciesQuery}
       problemsAction={
-        <OutlineButton
+        <Button variant="outline"
           label={t('diagnoseCta')}
           icon={Stethoscope}
           onPress={() => router.push({ pathname: '/identify/capture', params: { mode: 'diagnose' } })}
         />
       }
       propagationAction={
-        <OutlineButton
+        <Button variant="outline"
           label={t('offerCuttingCta')}
           icon={HandHeart}
           onPress={() => router.push({ pathname: '/listing/new', params: { plantId: plant.id } })}

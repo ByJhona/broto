@@ -4,7 +4,6 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { EmptyState } from '../EmptyState';
-import { SubmitButton } from '../SubmitButton';
 
 type GardenEmptyStateProps = {
   isGroupSelected: boolean;
@@ -17,8 +16,12 @@ export function GardenEmptyState({ isGroupSelected, onAddPlantsToGroup }: Readon
   if (isGroupSelected) {
     return (
       <View style={styles.container}>
-        <EmptyState icon={Folder} title={t('group:emptyGroupTitle')} message={t('group:emptyGroupMessage')} />
-        <SubmitButton label={t('group:addPlants')} onPress={onAddPlantsToGroup} />
+        <EmptyState
+          icon={Folder}
+          title={t('group:emptyGroupTitle')}
+          message={t('group:emptyGroupMessage')}
+          action={{ label: t('group:addPlants'), onPress: onAddPlantsToGroup }}
+        />
       </View>
     );
   }

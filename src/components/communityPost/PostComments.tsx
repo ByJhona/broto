@@ -1,15 +1,15 @@
 import { memo, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import Camera from 'lucide-react-native/icons/camera';
 import MoreVertical from 'lucide-react-native/icons/ellipsis-vertical';
-import Send from 'lucide-react-native/icons/send';
-import X from 'lucide-react-native/icons/x';
 import { Metrics, useColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { type CommunityComment } from '@/types';
 import { pickPhoto } from '@/utils';
+import { AttachmentPreview } from '../AttachmentPreview';
 import { Avatar } from '../Avatar';
+import { SendButton } from '../SendButton';
 import { makeStyles } from './styles';
 
 type CommentRowProps = {
@@ -91,12 +91,7 @@ export const PostComments = memo(function PostComments({
       ))}
 
       {attachedPhotoUri ? (
-        <View style={styles.attachmentPreviewWrapper}>
-          <Image source={{ uri: attachedPhotoUri }} style={styles.attachmentPreview} contentFit="cover" />
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common:a11yRemovePhoto')} style={styles.attachmentRemoveButton} onPress={() => setAttachedPhotoUri(null)} hitSlop={Metrics.spacing.sm}>
-            <X size={Metrics.icon.xs} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
-          </Pressable>
-        </View>
+        <AttachmentPreview uri={attachedPhotoUri} onRemove={() => setAttachedPhotoUri(null)} style={styles.attachmentPreview} />
       ) : null}
 
       <View style={styles.commentInputRow}>
@@ -112,19 +107,7 @@ export const PostComments = memo(function PostComments({
           onSubmitEditing={handleSend}
           editable={!isSending}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('common:a11ySend')}
-          style={[styles.commentSend, (isSending || (!draft.trim() && !attachedPhotoUri)) && styles.commentSendDisabled]}
-          onPress={handleSend}
-          disabled={isSending || (!draft.trim() && !attachedPhotoUri)}
-        >
-          {isSending ? (
-            <ActivityIndicator size="small" color={colors.primaryForeground} />
-          ) : (
-            <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
-          )}
-        </Pressable>
+        <SendButton loading={isSending} disabled={!draft.trim() && !attachedPhotoUri} onPress={handleSend} />
       </View>
     </View>
   );

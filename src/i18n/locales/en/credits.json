@@ -65,6 +65,7 @@
   "promoExpired": "This code is no longer valid.",
   "promoExhausted": "This code has already been used.",
   "promoAlreadyRedeemed": "You already joined this campaign.",
+  "promoTooManyAttempts": "Too many attempts. Wait a bit and try again.",
   "promoUnknownError": "Could not redeem right now. Try again in a moment.",
   "promoSuccessTitle": "Code redeemed!",
   "promoLuckyNumberLabel": "Your lucky number",

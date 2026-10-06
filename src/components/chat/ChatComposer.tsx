@@ -1,13 +1,12 @@
 import { StyleSheet, TextInput, View } from 'react-native';
-import { Image } from 'expo-image';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Camera from 'lucide-react-native/icons/camera';
-import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
+import { AttachmentPreview } from '../AttachmentPreview';
 import { IconButton } from '../IconButton';
-import { RemovePhotoButton } from '../PhotoPagerControls';
+import { SendButton } from '../SendButton';
 
 type ChatComposerProps = {
   draft: string;
@@ -29,12 +28,7 @@ export function ChatComposer({ draft, onChangeDraft, attachedPhotoUri, onPickPho
     <KeyboardStickyView style={[styles.sticky, { paddingBottom: insets.bottom + Metrics.spacing.sm }]}>
       <View style={styles.content}>
         {attachedPhotoUri ? (
-          <View style={styles.attachment}>
-            <Image source={{ uri: attachedPhotoUri }} style={styles.attachmentPhoto} contentFit="cover" />
-            <View style={styles.attachmentRemove}>
-              <RemovePhotoButton onPress={onRemovePhoto} />
-            </View>
-          </View>
+          <AttachmentPreview uri={attachedPhotoUri} onRemove={onRemovePhoto} />
         ) : null}
 
         <View style={styles.row}>
@@ -52,19 +46,7 @@ export function ChatComposer({ draft, onChangeDraft, attachedPhotoUri, onPickPho
               <Camera size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
             </IconButton>
           </View>
-          <IconButton
-            accessibilityLabel={t('common:a11ySend')}
-            size={Metrics.size.lg}
-            backgroundColor={canSend ? colors.primary : colors.muted}
-            disabled={!canSend}
-            onPress={onSend}
-          >
-            <Send
-              size={Metrics.icon.normal}
-              color={canSend ? colors.primaryForeground : colors.mutedForeground}
-              strokeWidth={Metrics.icon.stroke.regular}
-            />
-          </IconButton>
+          <SendButton size={Metrics.size.lg} disabled={!canSend} onPress={onSend} />
         </View>
       </View>
     </KeyboardStickyView>
@@ -81,22 +63,6 @@ const makeStyles = (colors: ThemeColors) =>
     content: {
       ...Metrics.layout.centeredContent,
       gap: Metrics.spacing.sm,
-    },
-    attachment: {
-      width: Metrics.size.hero,
-      aspectRatio: Metrics.aspect.portrait,
-      borderRadius: Metrics.radius.lg,
-      overflow: 'hidden',
-      backgroundColor: colors.muted,
-    },
-    attachmentPhoto: {
-      width: '100%',
-      height: '100%',
-    },
-    attachmentRemove: {
-      position: 'absolute',
-      top: Metrics.spacing.xs,
-      right: Metrics.spacing.xs,
     },
     row: {
       flexDirection: 'row',

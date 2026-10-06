@@ -5,6 +5,7 @@ export const PROMO_CODE_ERROR = {
   EXPIRED: 'expired_code',
   EXHAUSTED: 'code_exhausted',
   ALREADY_REDEEMED: 'already_redeemed',
+  TOO_MANY_ATTEMPTS: 'too_many_attempts',
   UNKNOWN: 'unknown',
 } as const;
 
@@ -15,6 +16,7 @@ const KNOWN_ERRORS: PromoCodeErrorKind[] = [
   PROMO_CODE_ERROR.EXPIRED,
   PROMO_CODE_ERROR.EXHAUSTED,
   PROMO_CODE_ERROR.ALREADY_REDEEMED,
+  PROMO_CODE_ERROR.TOO_MANY_ATTEMPTS,
 ];
 
 export class PromoCodeError extends Error {
@@ -84,10 +86,12 @@ export async function redeemPromoCode(code: string): Promise<PromoCodeReward> {
   const { data, error } = await supabase.rpc('redeem_promo_code', { p_code: normalizePromoCode(code) });
 
   if (error) {
-    const kind = promoCodeErrorKind(error.message);
-    if (kind === PROMO_CODE_ERROR.UNKNOWN) console.error(error);
-    throw new PromoCodeError(kind);
+    console.error(error);
+    throw new PromoCodeError(PROMO_CODE_ERROR.UNKNOWN);
   }
 
-  return data as PromoCodeReward;
+  const result = data as PromoCodeReward | { error: string };
+  if ('error' in result) throw new PromoCodeError(promoCodeErrorKind(result.error));
+
+  return result;
 }

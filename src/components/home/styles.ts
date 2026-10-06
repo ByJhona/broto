@@ -42,7 +42,7 @@ export const makeStyles = (colors: ThemeColors) =>
       ...Typography.bodySmall,
       color: colors.mutedForeground,
       textAlign: 'center',
-      marginBottom: Metrics.spacing.xs,
+      marginBottom: Metrics.spacing.md,
     },
     cancelButton: {
       position: 'absolute',

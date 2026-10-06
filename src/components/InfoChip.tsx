@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import type { LucideIcon } from 'lucide-react-native';
+import { SkeletonBlock } from './Skeleton';
 
 type InfoChipProps = {
-  value: string;
+  value: string | null;
   icon: LucideIcon;
   size?: 'md' | 'sm';
   tintColor?: string;
@@ -18,12 +19,13 @@ export function InfoChip({ value, icon: Icon, size = 'md', tintColor }: Readonly
   return (
     <View style={[styles.chip, isCompact && [styles.chipCompact, { backgroundColor: `${color}14` }]]}>
       <Icon size={isCompact ? Metrics.chip.sm.iconSize : Metrics.chip.md.iconSize} color={color} strokeWidth={Metrics.icon.stroke.regular} />
-      <Text
-        style={[styles.chipText, isCompact && [styles.chipTextCompact, { color }]]}
-        numberOfLines={1}
-      >
-        {value}
-      </Text>
+      {value === null ? (
+        <SkeletonBlock width={Metrics.size.sm} height={Metrics.fontSize.caption} radius={Metrics.radius.sm} />
+      ) : (
+        <Text style={[styles.chipText, isCompact && [styles.chipTextCompact, { color }]]} numberOfLines={1}>
+          {value}
+        </Text>
+      )}
     </View>
   );
 }

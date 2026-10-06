@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks';
 import { authErrorMessage, hasFieldErrors, validateSignup, type AuthFieldErrors } from '@/utils';
 import { FormError } from '../FormError';
 import { FormField } from '../FormField';
-import { SubmitButton } from '../SubmitButton';
+import { Button } from '../Button';
 import { useGoToApp } from './useGoToApp';
 
 type EmailSignupFormProps = {
@@ -74,7 +74,7 @@ export function EmailSignupForm({ disabled }: Readonly<EmailSignupFormProps>) {
 
       <FormError>{error}</FormError>
 
-      <SubmitButton label={t('signupCta')} onPress={handleSubmit} loading={isSubmitting} disabled={disabled} />
+      <Button label={t('signupCta')} onPress={handleSubmit} loading={isSubmitting} disabled={disabled} />
     </>
   );
 }

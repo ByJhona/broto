@@ -1,12 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
-import ChevronRight from 'lucide-react-native/icons/chevron-right';
-import Leaf from 'lucide-react-native/icons/leaf';
+import { StyleSheet, Text, View } from 'react-native';
+import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { OFFER_STATUS, type OfferStatus } from '@/types';
 import { Avatar } from './Avatar';
+import { Button } from './Button';
 import { ListRow } from './ListRow';
+import { PlantAvatar } from './PlantAvatar';
 import { InfoSection } from './InfoSection';
 import { ProposalResponseActions } from './ProposalResponseActions';
 
@@ -55,21 +55,19 @@ function ProposalOfferedPlant({ proposal, colors, styles, t }: Readonly<Proposal
       <View style={styles.offeredPlant}>
         <Text style={styles.offeredPlantLabel}>{t('offeredPlantLabel')}</Text>
         <View style={styles.offeredPlantRow}>
-          {proposal.offeredPlantPhotoUrl ? (
-            <Image source={{ uri: proposal.offeredPlantPhotoUrl }} style={styles.offeredPlantThumb} />
-          ) : (
-            <View style={[styles.offeredPlantThumb, styles.offeredPlantThumbPlaceholder]}>
-              <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
-            </View>
-          )}
+          <PlantAvatar photoUrl={proposal.offeredPlantPhotoUrl} size={Metrics.size.md} />
           <Text style={styles.offeredPlantName}>{proposal.offeredPlantName}</Text>
         </View>
       </View>
       {proposal.onViewOffer ? (
-        <Pressable style={styles.viewOfferButton} onPress={proposal.onViewOffer}>
-          <Text style={styles.viewOfferButtonText}>{t('offer:viewOfferAction')}</Text>
-          <ChevronRight size={Metrics.icon.small} color={colors.primary} strokeWidth={Metrics.icon.stroke.regular} />
-        </Pressable>
+        <Button
+          label={t('offer:viewOfferAction')}
+          variant="outline"
+          icon={ArrowLeftRight}
+          compact
+          onPress={proposal.onViewOffer}
+          style={styles.viewOfferButton}
+        />
       ) : null}
     </>
   );
@@ -163,34 +161,12 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       gap: Metrics.spacing.sm,
     },
-    offeredPlantThumb: {
-      width: Metrics.size.md,
-      height: Metrics.size.md,
-      borderRadius: Metrics.radius.sm,
-      backgroundColor: colors.muted,
-    },
-    offeredPlantThumbPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     offeredPlantName: {
       ...Typography.label,
       color: colors.foreground,
     },
     viewOfferButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Metrics.spacing.xs,
       marginTop: Metrics.spacing.sm,
-      borderWidth: Metrics.borderWidth.md,
-      borderColor: colors.primary,
-      borderRadius: Metrics.radius.full,
-      paddingVertical: Metrics.spacing.sm,
-    },
-    viewOfferButtonText: {
-      ...Typography.label,
-      color: colors.primary,
     },
     actions: {
       marginTop: Metrics.spacing.sm,

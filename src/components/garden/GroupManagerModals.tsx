@@ -1,6 +1,6 @@
 import { useTranslation } from '@/i18n';
 import type { PlantSummary } from '@/types';
-import { GroupPlantPickerModal } from '../GroupPlantPickerModal';
+import { PlantPickerSheet } from '../PlantPickerSheet';
 import { PromptModal } from '../PromptModal';
 import type { GroupActions } from './useGroupActions';
 
@@ -23,7 +23,14 @@ export function GroupManagerModals({ actions, plants, groupId }: Readonly<GroupM
         placeholder={t('namePlaceholder')}
         submitLabel={t('common:save')}
       />
-      <GroupPlantPickerModal {...actions.pickerProps} plants={plants} selectedIds={selectedIds} />
+      <PlantPickerSheet
+        {...actions.pickerProps}
+        title={t('pickerTitle')}
+        emptyMessage={t('noPlantsRegistered')}
+        closeLabel={t('done')}
+        plants={plants}
+        selectedIds={selectedIds}
+      />
     </>
   );
 }

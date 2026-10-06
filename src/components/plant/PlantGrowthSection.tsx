@@ -10,7 +10,7 @@ import { useCreditCosts, useCreditsGate } from '@/hooks';
 import { analyzePlantGrowth, getPlantGrowthCheckins, InsufficientCreditsError } from '@/services';
 import type { Plant, PlantGrowthCheckin } from '@/types';
 import { Alert, formatShortDate, pickPhoto, Toast } from '@/utils';
-import { OutlineButton } from '../OutlineButton';
+import { Button } from '../Button';
 import { SkeletonBlock } from '../Skeleton';
 import { InfoSection } from '../InfoSection';
 
@@ -127,7 +127,7 @@ export function PlantGrowthSection({ plant }: Readonly<{ plant: Plant }>) {
         </>
       ) : null}
       {!isLoading && !selected ? <Text style={styles.emptyText}>{t('growthEmpty')}</Text> : null}
-      <OutlineButton
+      <Button variant="outline"
         label={isAnalyzing ? t('analyzing') : t('analyzeButton', { cost })}
         icon={Camera}
         onPress={analyze}

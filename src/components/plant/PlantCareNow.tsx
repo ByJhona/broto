@@ -9,7 +9,7 @@ import { useCareTasks } from '@/hooks';
 import { TASK_CATEGORY, type CareTask, type Plant } from '@/types';
 import { Toast } from '@/utils';
 import { CareTaskItem } from '../CareTaskItem';
-import { OutlineButton } from '../OutlineButton';
+import { Button } from '../Button';
 import { InfoSection } from '../InfoSection';
 
 function plantTasks(tasks: CareTask[], plantId: string): CareTask[] {
@@ -56,7 +56,7 @@ function WateringSuggestion({ plant, days }: Readonly<WateringSuggestionProps>) 
         <Text style={styles.suggestionTitle}>{t('wateringSuggestionTitle')}</Text>
       </View>
       <Text style={styles.suggestionText}>{t('wateringSuggestionMessage', { days })}</Text>
-      <OutlineButton
+      <Button variant="outline"
         label={t('wateringSuggestionCta', { days })}
         icon={BellPlus}
         onPress={handleCreate}

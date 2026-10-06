@@ -8,7 +8,7 @@ import Coins from 'lucide-react-native/icons/coins';
 import TicketCheck from 'lucide-react-native/icons/ticket-check';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Card, FloatingScreenControls, FormField, IconBadge, InfoSection, ScreenHeader, SubmitButton, useScreenTopInset } from '@/components';
+import { Button, Card, FloatingScreenControls, FormField, IconBadge, InfoSection, ScreenHeader, useScreenTopInset } from '@/components';
 import { LuckyNumberCard } from '@/components/promo/LuckyNumberCard';
 import { useAuth, useCredits } from '@/hooks';
 import {
@@ -27,6 +27,7 @@ const ERROR_KEYS: Record<PromoCodeErrorKind, string> = {
   [PROMO_CODE_ERROR.EXPIRED]: 'promoExpired',
   [PROMO_CODE_ERROR.EXHAUSTED]: 'promoExhausted',
   [PROMO_CODE_ERROR.ALREADY_REDEEMED]: 'promoAlreadyRedeemed',
+  [PROMO_CODE_ERROR.TOO_MANY_ATTEMPTS]: 'promoTooManyAttempts',
   [PROMO_CODE_ERROR.UNKNOWN]: 'promoUnknownError',
 };
 
@@ -60,7 +61,7 @@ function RewardSummary({ reward, onDone }: Readonly<{ reward: PromoCodeReward; o
         </View>
       ) : null}
 
-      <SubmitButton label={t('promoDone')} onPress={onDone} />
+      <Button label={t('promoDone')} onPress={onDone} />
     </View>
   );
 }
@@ -130,7 +131,7 @@ export default function RedeemCodeScreen() {
               onSubmitEditing={handleRedeem}
               error={error ?? undefined}
             />
-            <SubmitButton label={t('promoRedeem')} onPress={handleRedeem} loading={isRedeeming} />
+            <Button label={t('promoRedeem')} onPress={handleRedeem} loading={isRedeeming} />
             {luckyNumbers.length > 0 ? (
               <InfoSection title={t('luckyNumbersTitle')}>
                 <View style={styles.luckyList}>

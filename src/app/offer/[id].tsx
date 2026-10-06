@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, FloatingScreenControls, LoadingScreen, OwnerRow, PageTitle, PhotoPager, ProposalResponseActions, ScreenContent } from '@/components';
+import { BottomBar, EmptyState, FloatingScreenControls, LoadingScreen, OwnerRow, PageTitle, PhotoPager, ProposalResponseActions, ScientificName, ScreenContent } from '@/components';
 import { SpeciesSections } from '@/components/species/SpeciesSections';
 import { useSpeciesInfo } from '@/components/species/useSpeciesInfo';
 import { useAuth } from '@/hooks';
@@ -42,7 +42,7 @@ function OfferedPlantHero({ plant, styles }: Readonly<OfferedPlantHeroProps>) {
       <View style={styles.titleBlock}>
         <PageTitle>{plant.name}</PageTitle>
         {showCommonName ? <Text style={styles.commonName}>{plant.commonName}</Text> : null}
-        {plant.species ? <Text style={styles.species}>{plant.species}</Text> : null}
+        {plant.species ? <ScientificName name={plant.species} /> : null}
       </View>
     </>
   );
@@ -159,12 +159,9 @@ export default function OfferDetailScreen() {
       </ScrollView>
 
       {canRespond ? (
-        <ProposalResponseActions
-          loading={isResponding}
-          onAccept={() => handleRespond(true)}
-          onDecline={() => handleRespond(false)}
-          style={[styles.actions, { paddingBottom: insets.bottom + Metrics.spacing.md }]}
-        />
+        <BottomBar>
+          <ProposalResponseActions loading={isResponding} onAccept={() => handleRespond(true)} onDecline={() => handleRespond(false)} />
+        </BottomBar>
       ) : null}
       <FloatingScreenControls />
     </View>
@@ -205,28 +202,12 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.foreground,
       marginTop: Metrics.spacing.xs,
     },
-    species: {
-      ...Typography.body,
-      fontStyle: 'italic',
-      color: colors.mutedForeground,
-      marginTop: Metrics.spacing.xs,
-    },
     ownerRow: {
       marginBottom: Metrics.spacing.sm,
     },
     context: {
       ...Typography.bodySmall,
       color: colors.mutedForeground,
-    },
-    actions: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      padding: Metrics.spacing.lg,
-      backgroundColor: colors.background,
-      borderTopWidth: Metrics.borderWidth.sm,
-      borderTopColor: colors.border,
     },
     statusLabel: {
       ...Typography.label,

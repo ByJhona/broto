@@ -1,11 +1,11 @@
 import { ActionSheetHost } from '@/components/ActionSheetHost';
+import { AppUpdateHost } from '@/components/AppUpdateHost';
 import { AlertHost } from '@/components/AlertHost';
 import { BadgeCelebrationHost } from '@/components/BadgeCelebrationHost';
 import { LevelUpHost } from '@/components/LevelUpHost';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
-import { i18n, LanguageProvider, useLanguage, useTranslation } from '@/i18n';
-import { checkForAppUpdate } from '@/services/appVersion';
+import { LanguageProvider, useLanguage, useTranslation } from '@/i18n';
 import { registerCareReminderChannel, registerCareTaskNotificationHandlers } from '@/services/careTasks';
 import {
   CATALOG_STALE_TIME,
@@ -23,11 +23,10 @@ import { queryClient } from '@/services/queryClient';
 import { getXpProgress } from '@/services/xp';
 import { AuthProvider, NotificationsProvider } from '@/store';
 import { ThemeProvider, useColors, useAppTheme, useThemedStackScreenOptions, type ThemeColors, useThemedStyles } from '@/theme';
-import { Alert } from '@/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, Linking, StatusBar, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StatusBar, StyleSheet, View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 function RootNavigator() {
@@ -43,15 +42,6 @@ function RootNavigator() {
     registerCareTaskNotificationHandlers();
     registerNotificationTapHandler();
     watchPushTokenRefresh();
-
-    checkForAppUpdate().then((result) => {
-      if (!result?.updateAvailable) return;
-
-      Alert.alert(i18n.t('nav:updateAvailableTitle'), i18n.t('nav:updateAvailableMessage'), [
-        { text: i18n.t('nav:updateLater'), style: 'cancel' },
-        { text: i18n.t('nav:updateNow'), onPress: () => Linking.openURL(result.storeUrl) },
-      ]);
-    });
   }, []);
 
   useEffect(() => {
@@ -122,6 +112,7 @@ function RootNavigator() {
       <ToastHost />
       <LevelUpHost />
       <BadgeCelebrationHost />
+      <AppUpdateHost />
     </NotificationsProvider>
   );
 }

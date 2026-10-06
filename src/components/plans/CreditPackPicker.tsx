@@ -13,7 +13,7 @@ import { findStorePackage, type CreditPack } from '@/services';
 import { GRID_GAP, useGridCardWidth } from '../gridLayout';
 import { IconBadge } from '../IconBadge';
 import { InfoChip } from '../InfoChip';
-import { SubmitButton } from '../SubmitButton';
+import { Button } from '../Button';
 import { bestValuePackId, cheapestPackId, pricePerCredit, type StoreOfferings } from './storePricing';
 
 const PACK_ICONS: Record<string, LucideIcon> = {
@@ -98,7 +98,7 @@ export function CreditPackPicker({ packs, offerings, purchasingId, onBuy }: Read
           />
         ))}
       </View>
-      <SubmitButton
+      <Button
         label={t('buyPack', { count: selectedPack.credits, price: selectedPrice })}
         onPress={() => onBuy(selectedPack.id)}
         loading={purchasingId === selectedPack.id}

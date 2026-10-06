@@ -4,6 +4,7 @@ import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme'
 import { useTranslation } from '@/i18n';
 import { registerActionSheetHandler, type AlertButton } from '@/utils';
 import { BottomSheet } from './BottomSheet';
+import { TextButton } from './TextButton';
 
 type ActionSheetState = {
   title: string;
@@ -56,16 +57,13 @@ export function ActionSheetHost() {
   };
 
   return (
-    <BottomSheet visible={visible} onClose={handleDismiss} sheetStyle={styles.sheet}>
-      {sheet ? <Text style={styles.title}>{sheet.title}</Text> : null}
+    <BottomSheet title={sheet?.title} visible={visible} onClose={handleDismiss} sheetStyle={styles.sheet}>
       <ScrollView>
         {actions.map((button, index) => (
           <ActionRow key={`${button.text}-${index}`} button={button} onPress={() => handleSelect(button)} styles={styles} />
         ))}
       </ScrollView>
-      <Pressable accessibilityRole="button" style={styles.cancel} onPress={handleDismiss}>
-        <Text style={styles.cancelText}>{cancelButton?.text ?? t('cancel')}</Text>
-      </Pressable>
+      <TextButton label={cancelButton?.text ?? t('cancel')} onPress={handleDismiss} style={styles.cancel} />
     </BottomSheet>
   );
 }
@@ -74,11 +72,6 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     sheet: {
       maxHeight: '80%',
-    },
-    title: {
-      ...Typography.title,
-      color: colors.foreground,
-      marginBottom: Metrics.spacing.sm,
     },
     row: {
       paddingVertical: Metrics.spacing.md,
@@ -97,14 +90,6 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.destructive,
     },
     cancel: {
-      alignItems: 'center',
-      paddingVertical: Metrics.spacing.md,
       marginTop: Metrics.spacing.sm,
-      borderRadius: Metrics.radius.full,
-      backgroundColor: colors.muted,
-    },
-    cancelText: {
-      ...Typography.headingMedium,
-      color: colors.foreground,
     },
   });

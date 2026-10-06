@@ -5,7 +5,7 @@ import type { Badge } from '@/types';
 import { BadgeCard } from './BadgeCard';
 import { ConfettiBurst } from './ConfettiBurst';
 import { Dialog } from './Dialog';
-import { SubmitButton } from './SubmitButton';
+import { Button } from './Button';
 import { TextButton } from './TextButton';
 
 type NewBadgeModalProps = {
@@ -23,7 +23,7 @@ export function NewBadgeModal({ badge, onClaim, onClose }: Readonly<NewBadgeModa
       <Text style={styles.title}>{t('newBadgeTitle')}</Text>
       {badge ? <BadgeCard badge={badge} /> : null}
       <View style={styles.actions}>
-        <SubmitButton label={t('claim')} onPress={onClaim} />
+        <Button label={t('claim')} onPress={onClaim} />
       </View>
       <TextButton label={t('close')} onPress={onClose} style={styles.closeButton} />
     </Dialog>

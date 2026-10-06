@@ -5,8 +5,7 @@ import Pencil from 'lucide-react-native/icons/pencil';
 import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconButton } from '../IconButton';
-import { OutlineButton } from '../OutlineButton';
-import { SubmitButton } from '../SubmitButton';
+import { Button } from '../Button';
 
 type ProfileActionsProps = {
   isOwnProfile: boolean;
@@ -22,16 +21,16 @@ export function ProfileActions({ isOwnProfile, following, onToggleFollow, onPres
   const { t } = useTranslation(['profile', 'common']);
 
   if (isOwnProfile) {
-    return <OutlineButton label={t('editProfileTitle')} icon={Pencil} onPress={onEditProfile} />;
+    return <Button variant="outline" label={t('editProfileTitle')} icon={Pencil} onPress={onEditProfile} />;
   }
 
   return (
     <View style={styles.row}>
       <View style={styles.primary}>
         {following ? (
-          <OutlineButton label={t('following')} icon={Check} onPress={onToggleFollow} />
+          <Button variant="outline" label={t('following')} icon={Check} onPress={onToggleFollow} />
         ) : (
-          <SubmitButton label={t('follow')} onPress={onToggleFollow} />
+          <Button label={t('follow')} onPress={onToggleFollow} />
         )}
       </View>
       <IconButton accessibilityLabel={t('common:a11ySendMessage')} size={Metrics.size.xl} style={styles.message} onPress={onPressMessage}>

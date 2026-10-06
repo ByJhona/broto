@@ -25,8 +25,7 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
   const EventIcon = EVENT_ICON;
 
   return (
-    <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>{t('createChoiceTitle')}</Text>
+    <BottomSheet title={t('createChoiceTitle')} visible={visible} onClose={onClose}>
 
       <Text style={styles.sectionLabel}>{t('newListingTitle')}</Text>
       <CardGroup style={styles.group}>
@@ -69,11 +68,6 @@ export function CreateChoiceSheet({ visible, onCreateListing, onCreateEvent, onC
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    title: {
-      ...Typography.title,
-      color: colors.foreground,
-      marginBottom: Metrics.spacing.md,
-    },
     sectionLabel: {
       ...Typography.captionLabel,
       color: colors.mutedForeground,

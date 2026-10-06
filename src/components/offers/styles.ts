@@ -9,16 +9,6 @@ export const makeRowStyles = (colors: ThemeColors) =>
     thumbWrapper: {
       position: 'relative',
     },
-    thumb: {
-      width: Metrics.size.xl,
-      height: Metrics.size.xl,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    thumbPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     thumbBadge: {
       position: 'absolute',
       bottom: -Metrics.spacing.xs,

@@ -11,7 +11,7 @@ import ImageIcon from 'lucide-react-native/icons/image';
 import Scan from 'lucide-react-native/icons/scan';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
 import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography, Opacity } from '@/theme';
-import { OfflineBanner, TextButton } from '@/components';
+import { Button, OfflineBanner, TextButton } from '@/components';
 import { celebrateXpLevelUp, useAuth, useCreditCosts, useCreditsGate, useNetworkStatus } from '@/hooks';
 import { diagnosePlant, getPlantSpeciesInfo, identifyPlant, InsufficientCreditsError, plantSpeciesInfoQueryKey } from '@/services';
 import type { PlantDiagnosis } from '@/types';
@@ -237,9 +237,7 @@ export default function CaptureScreen() {
         <ModeToggle mode={mode} onChange={setMode} />
         <Text style={styles.title}>{copy.title}</Text>
         <Text style={styles.subtitle}>{t('cameraPermissionMessage')}</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>{t('allowCameraCta')}</Text>
-        </Pressable>
+        <Button label={t('allowCameraCta')} onPress={requestPermission} style={styles.permissionButton} />
         <TextButton label={t('chooseFromGalleryCta')} tone="primary" onPress={handlePickFromGallery} style={styles.galleryLink} />
       </View>
     );
@@ -321,14 +319,7 @@ const makeStyles = (colors: ThemeColors) =>
     marginBottom: Metrics.spacing.xl,
   },
   permissionButton: {
-    backgroundColor: colors.primary,
-    borderRadius: Metrics.radius.full,
-    paddingVertical: Metrics.spacing.md,
-    paddingHorizontal: Metrics.spacing.xl,
-  },
-  permissionButtonText: {
-    color: colors.primaryForeground,
-    ...Typography.headingMedium,
+    alignSelf: 'center',
   },
   galleryLink: {
     marginTop: Metrics.spacing.lg,

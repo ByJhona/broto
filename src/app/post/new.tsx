@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ImagePlus from 'lucide-react-native/icons/image-plus';
 import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography } from '@/theme';
-import { Avatar, FloatingScreenControls, IconButton, PillSelector } from '@/components';
+import { Avatar, FilterChipRow, FloatingScreenControls, IconButton } from '@/components';
 import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
 import { PostPhotoStrip } from '@/components/communityPost/PostPhotoStrip';
 import { celebrateXpLevelUp, useAuth } from '@/hooks';
@@ -136,7 +136,7 @@ export default function NewPostScreen() {
           <PostPhotoStrip photoUris={imageUris} onRemove={handleRemovePhoto} />
 
           <Text style={styles.typeLabel}>{t('postTypeLabel')}</Text>
-          <PillSelector options={postTypeOptions} value={postType} onChange={handleSelectPostType} />
+          <FilterChipRow wrap options={postTypeOptions} selected={postType ? [postType] : []} onChange={handleSelectPostType} />
         </View>
       </KeyboardAwareScrollView>
 

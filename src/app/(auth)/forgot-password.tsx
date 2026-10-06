@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from '@/i18n';
-import { AuthLayout, FormError, FormField, SubmitButton } from '@/components';
+import { AuthLayout, Button, FormError, FormField } from '@/components';
 import { useNetworkStatus } from '@/hooks';
 import { requestPasswordReset } from '@/services';
 import { authErrorMessage, hasFieldErrors, validateEmailOnly, type AuthFieldErrors } from '@/utils';
@@ -42,7 +42,7 @@ export default function ForgotPasswordScreen() {
         isOffline={isOffline}
         offlineMessage={t('loginOfflineMessage')}
       >
-        <SubmitButton label={t('backToLogin')} onPress={() => router.replace('/(auth)/login')} />
+        <Button label={t('backToLogin')} onPress={() => router.replace('/(auth)/login')} />
       </AuthLayout>
     );
   }
@@ -65,7 +65,7 @@ export default function ForgotPasswordScreen() {
         error={fieldErrors.email}
       />
       <FormError>{error}</FormError>
-      <SubmitButton label={t('sendResetLinkCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
+      <Button label={t('sendResetLinkCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
     </AuthLayout>
   );
 }

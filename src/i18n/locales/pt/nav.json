@@ -2,8 +2,8 @@
   "search": "Buscar",
   "messages": "Mensagens",
   "chat": "Conversa",
-  "updateAvailableTitle": "Atualização disponível",
-  "updateAvailableMessage": "Uma nova versão do broto está disponível na loja.",
+  "updateAvailableTitle": "Nova versão do broto",
+  "updateAvailableMessage": "Atualize para ter as novidades e correções mais recentes.",
   "updateLater": "Agora não",
-  "updateNow": "Atualizar"
+  "updateNow": "Atualizar agora"
 }

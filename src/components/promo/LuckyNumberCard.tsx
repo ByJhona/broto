@@ -5,7 +5,7 @@ import { useTranslation } from '@/i18n';
 import { formatLuckyNumber, type LuckyNumber } from '@/services';
 import { formatShortDate } from '@/utils';
 import { Card } from '../Card';
-import { SubmitButton } from '../SubmitButton';
+import { Button } from '../Button';
 
 function statusText(item: LuckyNumber, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (item.isWinner) return t('luckyStatusWinner');
@@ -31,7 +31,7 @@ export function LuckyNumberCard({ item }: Readonly<{ item: LuckyNumber }>) {
         </View>
       </View>
       {contactUserId ? (
-        <SubmitButton
+        <Button
           label={t('luckyContactAction')}
           onPress={() => router.push({ pathname: '/chat', params: { otherUserId: contactUserId } })}
         />

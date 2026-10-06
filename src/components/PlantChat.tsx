@@ -3,10 +3,10 @@ import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { useRouter } from 'expo-router';
 import Leaf from 'lucide-react-native/icons/leaf';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
-import Send from 'lucide-react-native/icons/send';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography, Motion, Opacity } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { IconBadge } from './IconBadge';
+import { SendButton } from './SendButton';
 import { useCreditCosts, useCreditsGate, useReduceMotion } from '@/hooks';
 import { askPlantQuestion, InsufficientCreditsError, type PlantChatMessage } from '@/services';
 import { Alert, Toast } from '@/utils';
@@ -231,16 +231,7 @@ export function PlantChat({ plantId = null, variant = 'embedded' }: Readonly<Pla
           multiline
           editable={!isSending}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('common:a11ySend')}
-          accessibilityState={{ disabled: !canSend }}
-          style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-          onPress={handleSend}
-          disabled={!canSend}
-        >
-          <Send size={Metrics.icon.small} color={colors.primaryForeground} strokeWidth={Metrics.icon.stroke.regular} />
-        </Pressable>
+        <SendButton disabled={!canSend} onPress={handleSend} />
       </View>
       <Text style={styles.costHint}>{t('chatCostHint', { cost: creditCost })}</Text>
     </View>
@@ -352,17 +343,6 @@ const makeStyles = (colors: ThemeColors) =>
     ...Typography.inputSmall,
     color: colors.foreground,
     backgroundColor: colors.card,
-  },
-  sendButton: {
-    width: Metrics.size.md,
-    height: Metrics.size.md,
-    borderRadius: Metrics.radius.full,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    opacity: Opacity.disabled,
   },
   costHint: {
     ...Typography.caption,

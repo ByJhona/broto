@@ -4,11 +4,12 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import X from 'lucide-react-native/icons/x';
+import MapPin from 'lucide-react-native/icons/map-pin';
 import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { formatDistanceTo } from '@/utils';
 import { Card } from '../Card';
-import { DistancePill } from '../DistancePill';
+import { InfoChip } from '../InfoChip';
 import { IconButton } from '../IconButton';
 import { PhotoBadge } from '../PhotoCard';
 import type { SelectedPin } from './mapPins';
@@ -56,7 +57,7 @@ export function SelectedPinCallout({ pin, userLocation, onClose }: Readonly<Sele
             <Text style={styles.title} numberOfLines={1}>
               {model.title}
             </Text>
-            <DistancePill label={formatDistanceTo(userLocation, model.coordinate.latitude, model.coordinate.longitude)} />
+            <InfoChip size="sm" icon={MapPin} value={formatDistanceTo(userLocation, model.coordinate.latitude, model.coordinate.longitude)} />
           </View>
           {model.subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>

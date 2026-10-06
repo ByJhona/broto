@@ -104,7 +104,7 @@ export function useGroupActions(group: PlantGroup | null) {
     openActions,
     openPicker,
     renameModalProps: rename.modalProps,
-    pickerProps: { visible: isPickerOpen, onToggle: togglePlant, onClose: () => setIsPickerOpen(false) },
+    pickerProps: { visible: isPickerOpen, onPressPlant: togglePlant, onClose: () => setIsPickerOpen(false) },
   };
 }
 

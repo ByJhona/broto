@@ -2,23 +2,12 @@ import { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import Camera from 'lucide-react-native/icons/camera';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import {
-  EmptyState,
-  FloatingScreenControls,
-  IconBadge,
-  ListRow,
-  PageTitle,
-  SearchField,
-  SkeletonBlock,
-  SubmitButton,
-  useScreenTopInset,
-} from '@/components';
+import { EmptyState, FloatingScreenControls, IconBadge, ListRow, PageTitle, SearchField, SkeletonBlock, Thumbnail, useScreenTopInset } from '@/components';
 import { searchPlantSpecies } from '@/services';
 import type { PlantSpeciesSearchResult } from '@/types';
 
@@ -49,26 +38,6 @@ function useSpeciesSearch(query: string) {
   }, [query]);
 
   return { results: query ? rawResults : EMPTY_RESULTS, isLoading };
-}
-
-type PlantThumbnailProps = {
-  item: PlantSpeciesSearchResult;
-  colors: ThemeColors;
-  styles: ReturnType<typeof makeStyles>;
-};
-
-function PlantThumbnail({ item, colors, styles }: Readonly<PlantThumbnailProps>) {
-  const photoUrl = item.referencePhotos[0]?.url;
-
-  if (!photoUrl) {
-    return (
-      <View style={[styles.thumb, styles.thumbPlaceholder]}>
-        <Leaf size={Metrics.icon.small} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
-      </View>
-    );
-  }
-
-  return <Image source={{ uri: photoUrl }} style={styles.thumb} contentFit="cover" />;
 }
 
 function ResultsSkeleton() {
@@ -121,8 +90,12 @@ export default function AddPlantManualScreen() {
     if (isLoading) return <ResultsSkeleton />;
     return (
       <View style={styles.emptyContainer}>
-        <EmptyState icon={Leaf} title={t('addPlantNotFoundTitle')} message={t('addPlantNotFoundMessage')} />
-        <SubmitButton label={t('addPlantIdentifyByPhoto')} onPress={handleIdentifyByPhoto} />
+        <EmptyState
+          icon={Leaf}
+          title={t('addPlantNotFoundTitle')}
+          message={t('addPlantNotFoundMessage')}
+          action={{ label: t('addPlantIdentifyByPhoto'), onPress: handleIdentifyByPhoto }}
+        />
       </View>
     );
   };
@@ -167,7 +140,7 @@ export default function AddPlantManualScreen() {
           <ListRow
             variant="card"
             style={styles.row}
-            leading={<PlantThumbnail item={item} colors={colors} styles={styles} />}
+            leading={<Thumbnail photoUrl={item.referencePhotos[0]?.url} size={Metrics.size.xl} />}
             title={item.commonNames[0] ?? item.scientificName}
             subtitle={item.commonNames[0] ? item.scientificName : undefined}
             trailing={chevron}
@@ -209,15 +182,5 @@ const makeStyles = (colors: ThemeColors) =>
     emptyContainer: {
       gap: Metrics.spacing.lg,
       paddingTop: Metrics.spacing.lg,
-    },
-    thumb: {
-      width: Metrics.size.xl,
-      height: Metrics.size.xl,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    thumbPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   });

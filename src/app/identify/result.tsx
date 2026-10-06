@@ -6,7 +6,7 @@ import Camera from 'lucide-react-native/icons/camera';
 import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, Overlays, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, NewBadgeModal, OutlineButton, PhotoBadge, PhotoPager, PromptModal, SubmitButton } from '@/components';
+import { BottomBar, Button, EmptyState, NewBadgeModal, PhotoBadge, PhotoPager, PromptModal } from '@/components';
 import { CandidateAlternatives } from '@/components/identify/CandidateAlternatives';
 import { CandidateHeader } from '@/components/identify/CandidateHeader';
 import { ReferencePhotosStrip } from '@/components/identify/ReferencePhotosStrip';
@@ -38,8 +38,11 @@ function NoCandidates() {
 
   return (
     <View style={[styles.container, styles.empty]}>
-      <EmptyState icon={Leaf} message={t('notFoundMessage')} />
-      <OutlineButton label={t('retakePhotoCta')} icon={Camera} onPress={retake} style={styles.emptyAction} />
+      <EmptyState
+        icon={Leaf}
+        message={t('notFoundMessage')}
+        action={{ label: t('retakePhotoCta'), icon: Camera, variant: 'outline', onPress: retake }}
+      />
       <FloatingScreenControls />
     </View>
   );
@@ -95,9 +98,9 @@ export default function IdentifyResultScreen() {
 
       <FloatingScreenControls />
 
-      <View style={[styles.submitBar, { paddingBottom: insets.bottom + Metrics.spacing.md }]}>
-        <SubmitButton label={t('addToGardenCta')} onPress={adding.open} />
-      </View>
+      <BottomBar>
+        <Button label={t('addToGardenCta')} onPress={adding.open} />
+      </BottomBar>
 
       <PromptModal
         {...adding.promptProps}
@@ -122,23 +125,9 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       padding: Metrics.spacing.xl,
     },
-    emptyAction: {
-      marginTop: Metrics.spacing.lg,
-    },
     content: {
       ...Metrics.layout.centeredContent,
       paddingHorizontal: Metrics.spacing.lg,
       paddingTop: Metrics.spacing.lg,
-    },
-    submitBar: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      paddingHorizontal: Metrics.spacing.lg,
-      paddingTop: Metrics.spacing.sm,
-      backgroundColor: colors.background,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
     },
   });

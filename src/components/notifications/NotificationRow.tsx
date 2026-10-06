@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import Bell from 'lucide-react-native/icons/bell';
 import Droplet from 'lucide-react-native/icons/droplet';
@@ -14,6 +13,7 @@ import type { Notification, NotificationType } from '@/types';
 import { formatTimeAgo, notificationCopy } from '@/utils';
 import { Avatar } from '../Avatar';
 import { IconBadge } from '../IconBadge';
+import { Thumbnail } from '../Thumbnail';
 
 const TYPE_ICONS: Record<NotificationType, LucideIcon> = {
   system: Bell,
@@ -96,9 +96,7 @@ export function NotificationRow({ notification, onPress, onDelete }: Readonly<No
         ) : null}
         <Text style={styles.time}>{formatTimeAgo(notification.createdAt)}</Text>
       </View>
-      {notification.previewPhotoUrl ? (
-        <Image source={{ uri: notification.previewPhotoUrl }} style={styles.preview} contentFit="cover" transition={200} />
-      ) : null}
+      {notification.previewPhotoUrl ? <Thumbnail photoUrl={notification.previewPhotoUrl} /> : null}
     </Pressable>
   );
 }
@@ -140,11 +138,5 @@ const makeStyles = (colors: ThemeColors) =>
     time: {
       ...Typography.caption,
       color: colors.mutedForeground,
-    },
-    preview: {
-      width: Metrics.size.lg,
-      height: Metrics.size.lg,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
     },
   });

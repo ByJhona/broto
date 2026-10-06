@@ -112,28 +112,8 @@ export const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.muted,
       marginTop: Metrics.spacing.xs,
     },
-    attachmentPreviewWrapper: {
-      position: 'relative',
-      width: Metrics.size.xl,
-      height: Metrics.size.xl,
-      marginTop: Metrics.spacing.xs,
-    },
     attachmentPreview: {
-      width: Metrics.size.xl,
-      height: Metrics.size.xl,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    attachmentRemoveButton: {
-      position: 'absolute',
-      top: -Metrics.spacing.xs,
-      right: -Metrics.spacing.xs,
-      width: Metrics.size.xs,
-      height: Metrics.size.xs,
-      borderRadius: Metrics.radius.full,
-      backgroundColor: colors.foreground,
-      justifyContent: 'center',
-      alignItems: 'center',
+      marginTop: Metrics.spacing.xs,
     },
     commentInputRow: {
       flexDirection: 'row',
@@ -163,17 +143,6 @@ export const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.card,
     },
     commentInputDisabled: {
-      opacity: Opacity.disabled,
-    },
-    commentSend: {
-      width: Metrics.size.md,
-      height: Metrics.size.md,
-      borderRadius: Metrics.radius.full,
-      backgroundColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    commentSendDisabled: {
       opacity: Opacity.disabled,
     },
   });

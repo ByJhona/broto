@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import CloudOff from 'lucide-react-native/icons/cloud-off';
 import RotateCw from 'lucide-react-native/icons/rotate-cw';
-import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import type { PlantSpeciesInfo } from '@/types';
 import { CardGroup } from '../CardGroup';
-import { OutlineButton } from '../OutlineButton';
+import { EmptyState } from '../EmptyState';
 import { SkeletonBlock } from '../Skeleton';
 import { AboutSpeciesSection } from './AboutSpeciesSection';
 import { CareProfileCard } from './CareProfileCard';
@@ -42,17 +42,17 @@ function SpeciesSectionsSkeleton() {
 }
 
 function SpeciesInfoError({ isRetrying, onRetry }: Readonly<{ isRetrying: boolean; onRetry: () => void }>) {
-  const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('species');
 
   return (
-    <View style={[styles.block, styles.errorCard]}>
-      <CloudOff size={Metrics.icon.normal} color={colors.mutedForeground} strokeWidth={Metrics.icon.stroke.regular} />
-      <Text style={styles.errorTitle}>{t('infoErrorTitle')}</Text>
-      <Text style={styles.errorMessage}>{t('infoErrorMessage')}</Text>
-      <OutlineButton label={t('common:tryAgain')} icon={RotateCw} onPress={onRetry} loading={isRetrying} style={styles.retry} />
-    </View>
+    <EmptyState
+      icon={CloudOff}
+      title={t('infoErrorTitle')}
+      message={t('infoErrorMessage')}
+      action={{ label: t('common:tryAgain'), icon: RotateCw, variant: 'outline', onPress: onRetry, loading: isRetrying }}
+      style={[styles.block, styles.errorCard]}
+    />
   );
 }
 
@@ -118,19 +118,5 @@ const makeStyles = (colors: ThemeColors) =>
       borderWidth: Metrics.borderWidth.sm,
       borderColor: colors.border,
       backgroundColor: colors.card,
-    },
-    errorTitle: {
-      ...Typography.heading,
-      color: colors.foreground,
-      textAlign: 'center',
-      marginTop: Metrics.spacing.xs,
-    },
-    errorMessage: {
-      ...Typography.bodySmall,
-      color: colors.mutedForeground,
-      textAlign: 'center',
-    },
-    retry: {
-      marginTop: Metrics.spacing.sm,
     },
   });

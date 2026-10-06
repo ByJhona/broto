@@ -8,7 +8,7 @@ import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, EmptyState, FloatingPill, OutlineButton, PhotoViewerModal } from '@/components';
+import { Avatar, EmptyState, FloatingPill, PhotoViewerModal } from '@/components';
 import { buildChatRows, type ChatRow } from '@/components/chat/chatRows';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatDayDivider } from '@/components/chat/ChatDayDivider';
@@ -160,8 +160,11 @@ export default function ChatScreen() {
     if (chat.isError) {
       return (
         <View style={styles.error}>
-          <EmptyState icon={TriangleAlert} message={t('loadError')} />
-          <OutlineButton label={t('retryButton')} icon={RefreshCw} onPress={chat.retry} />
+          <EmptyState
+            icon={TriangleAlert}
+            message={t('loadError')}
+            action={{ label: t('retryButton'), icon: RefreshCw, variant: 'outline', onPress: chat.retry }}
+          />
         </View>
       );
     }

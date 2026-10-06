@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Elevation, Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 
@@ -16,16 +16,17 @@ type FilterChipRowProps<T> = {
   onChange: (value: T) => void;
   trailing?: ReactNode;
   floating?: boolean;
+  wrap?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function FilterChipRow<T>({ options, selected, onChange, trailing, floating = false, style }: Readonly<FilterChipRowProps<T>>) {
+export function FilterChipRow<T>({ options, selected, onChange, trailing, floating = false, wrap = false, style }: Readonly<FilterChipRowProps<T>>) {
   const colors = useColors();
   const styles = useThemedStyles(makeStyles);
   const activeColor = floating ? colors.leafForeground : colors.leaf;
 
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.row, style]}>
+  const chips = (
+    <>
       {options.map((option) => {
         const isSelected = selected.includes(option.value);
         const Icon = option.icon;
@@ -61,6 +62,14 @@ export function FilterChipRow<T>({ options, selected, onChange, trailing, floati
         );
       })}
       {trailing}
+    </>
+  );
+
+  if (wrap) return <View style={[styles.row, styles.wrap, style]}>{chips}</View>;
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.row, style]}>
+      {chips}
     </ScrollView>
   );
 }
@@ -70,6 +79,9 @@ const makeStyles = (colors: ThemeColors) =>
     row: {
       flexDirection: 'row',
       gap: Metrics.spacing.sm,
+    },
+    wrap: {
+      flexWrap: 'wrap',
     },
     chip: {
       flexDirection: 'row',

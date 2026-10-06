@@ -12,9 +12,8 @@ import { planBenefits } from '@/utils';
 import { Card } from '../Card';
 import { IconBadge } from '../IconBadge';
 import { InfoChip } from '../InfoChip';
-import { OutlineButton } from '../OutlineButton';
+import { Button } from '../Button';
 import { SegmentedControl } from '../SegmentedControl';
-import { SubmitButton } from '../SubmitButton';
 import { annualSavingsPercent, billingLabelKey, monthlyPlanId, pricePeriodKey, type StoreOfferings } from './storePricing';
 
 type PremiumPlanCardProps = {
@@ -80,9 +79,9 @@ export function PremiumPlanCard({ plans, offerings, currentPlanId, purchasingId,
       </View>
 
       {isSubscribed ? (
-        <OutlineButton label={t('manageSubscription')} icon={CreditCard} onPress={onManage} />
+        <Button variant="outline" label={t('manageSubscription')} icon={CreditCard} onPress={onManage} />
       ) : (
-        <SubmitButton
+        <Button
           label={t('subscribeTo', { planName: selectedPlan.name })}
           onPress={() => onSubscribe(selectedPlan.id)}
           loading={purchasingId === selectedPlan.id}

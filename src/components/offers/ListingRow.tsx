@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Metrics, useColors, useThemedStyles } from '@/theme';
 import { isBoostActive } from '@/services';
 import type { PlantListing } from '@/types';
 import { LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingTypeLabel } from '@/utils';
 import { FeaturedBadge } from '../FeaturedBadge';
 import { ListRow } from '../ListRow';
+import { Thumbnail } from '../Thumbnail';
 import { makeRowStyles } from './styles';
 
 export type ListingRowData = Pick<PlantListing, 'title' | 'listingType' | 'photoUrls' | 'boostedUntil'>;
@@ -31,13 +31,7 @@ export function ListingRow({ listing, subtitle, trailing, onPress }: Readonly<Li
       style={styles.row}
       leading={
         <View style={styles.thumbWrapper}>
-          {coverPhotoUrl ? (
-            <Image source={{ uri: coverPhotoUrl }} style={styles.thumb} contentFit="cover" />
-          ) : (
-            <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: color }]}>
-              <Icon size={Metrics.icon.small} color={colors.white} strokeWidth={Metrics.icon.stroke.regular} />
-            </View>
-          )}
+          <Thumbnail photoUrl={coverPhotoUrl} icon={Icon} color={color} size={Metrics.size.xl} />
           {isBoostActive(listing.boostedUntil) ? <FeaturedBadge compact style={styles.thumbBadge} /> : null}
         </View>
       }

@@ -8,7 +8,7 @@ import Leaf from 'lucide-react-native/icons/leaf';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { EmptyState, ExchangePlantPickerModal, FeaturedBadge, FloatingScreenControls, InfoSection, ListingActionFooter, ListingProposalsSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice, type ListingProposal } from '@/components';
+import { EmptyState, FeaturedBadge, FloatingScreenControls, InfoSection, ListingActionFooter, ListingProposalsSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PlantPickerSheet, PromptModal, ScreenContent, StatusNotice, type ListingProposal } from '@/components';
 import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
 import {
   applyProposalStatusEverywhere,
@@ -417,10 +417,13 @@ export default function ListingDetailScreen() {
           />
         </ScreenContent>
 
-        <ExchangePlantPickerModal
+        <PlantPickerSheet
           visible={isPlantPickerOpen}
+          title={t('exchangePlantPickerTitle')}
+          emptyMessage={t('noPlantsRegistered')}
+          closeLabel={t('common:cancel')}
           plants={plants}
-          onSelect={handleProposeExchange}
+          onPressPlant={handleProposeExchange}
           onClose={() => setIsPlantPickerOpen(false)}
         />
 

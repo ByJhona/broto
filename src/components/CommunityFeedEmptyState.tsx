@@ -7,8 +7,7 @@ import Users from 'lucide-react-native/icons/users';
 import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { FOLLOWING_FEED_FILTER, OFFER_FEED_FILTER, type CommunityFeedFilter } from '@/types';
-import { EmptyState } from './EmptyState';
-import { SubmitButton } from './SubmitButton';
+import { EmptyState, type EmptyStateAction } from './EmptyState';
 
 type EmptyVariant = {
   icon: LucideIcon;
@@ -46,11 +45,15 @@ export function CommunityFeedEmptyState({
   const { t } = useTranslation('community');
   const variant = emptyVariant(filter, followsNobody);
 
+  const emptyAction = (action: typeof variant.action): EmptyStateAction | undefined => {
+    if (action === 'createPost') return { label: t('createPostAction'), onPress: onCreatePost };
+    if (action === 'findPeople') return { label: t('findPeopleAction'), onPress: onFindPeople };
+    return undefined;
+  };
+
   return (
     <View style={styles.container}>
-      <EmptyState icon={variant.icon} title={t(variant.titleKey)} message={t(variant.messageKey)} />
-      {variant.action === 'createPost' ? <SubmitButton label={t('createPostAction')} onPress={onCreatePost} /> : null}
-      {variant.action === 'findPeople' ? <SubmitButton label={t('findPeopleAction')} onPress={onFindPeople} /> : null}
+      <EmptyState icon={variant.icon} title={t(variant.titleKey)} message={t(variant.messageKey)} action={emptyAction(variant.action)} />
     </View>
   );
 }

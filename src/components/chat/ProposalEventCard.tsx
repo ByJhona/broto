@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import ArrowLeftRight from 'lucide-react-native/icons/arrow-left-right';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
@@ -12,10 +11,10 @@ import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } fro
 import { useTranslation } from '@/i18n';
 import { OFFER_STATUS, type OfferStatus, type Proposal } from '@/types';
 import { formatTime } from '@/utils';
+import { Button } from '../Button';
 import { Card } from '../Card';
 import { InfoChip } from '../InfoChip';
-import { OutlineButton } from '../OutlineButton';
-import { SubmitButton } from '../SubmitButton';
+import { Thumbnail } from '../Thumbnail';
 
 type ProposalEventCardProps = {
   proposal: Proposal;
@@ -63,7 +62,7 @@ function ProposalActions({ proposal, isMine, onRespond, onViewOffer }: Readonly<
   };
 
   if (isPending && proposal.proposalType === 'offer') {
-    return <OutlineButton label={t('offer:viewOfferAction')} icon={ArrowLeftRight} onPress={() => onViewOffer(proposal.id)} />;
+    return <Button variant="outline" label={t('offer:viewOfferAction')} icon={ArrowLeftRight} onPress={() => onViewOffer(proposal.id)} />;
   }
 
   if (!isPending || isMine) {
@@ -76,8 +75,8 @@ function ProposalActions({ proposal, isMine, onRespond, onViewOffer }: Readonly<
 
   return (
     <View style={styles.actions}>
-      <SubmitButton label={t('acceptButton')} onPress={() => respond(true)} loading={isResponding} />
-      <OutlineButton label={t('declineButton')} icon={CircleX} onPress={() => respond(false)} disabled={isResponding} />
+      <Button label={t('acceptButton')} onPress={() => respond(true)} loading={isResponding} />
+      <Button variant="outline" label={t('declineButton')} icon={CircleX} onPress={() => respond(false)} disabled={isResponding} />
     </View>
   );
 }
@@ -91,13 +90,7 @@ export function ProposalEventCard({ proposal, isMine, onRespond, onViewOffer, on
   return (
     <Card style={styles.card} onPress={() => onOpenListing(proposal.listingId)}>
       <View style={styles.header}>
-        {proposal.listingPhotoUrl ? (
-          <Image source={{ uri: proposal.listingPhotoUrl }} style={styles.photo} contentFit="cover" />
-        ) : (
-          <View style={[styles.photo, styles.photoPlaceholder]}>
-            <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
-          </View>
-        )}
+        <Thumbnail photoUrl={proposal.listingPhotoUrl} icon={Leaf} size={Metrics.size.xxl} />
         <View style={styles.headerText}>
           <Text style={styles.eyebrow}>
             {isOffer ? t('offerCardTitle') : t('interestCardTitle')} · {formatTime(new Date(proposal.createdAt))}
@@ -129,16 +122,6 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: Metrics.spacing.md,
-    },
-    photo: {
-      width: Metrics.size.xxl,
-      height: Metrics.size.xxl,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-    },
-    photoPlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     headerText: {
       flex: 1,

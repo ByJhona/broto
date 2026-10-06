@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
@@ -14,6 +13,7 @@ import {
   ListRow,
   ScreenHeader,
   SkeletonBlock,
+  Thumbnail,
   useScreenTopInset,
 } from '@/components';
 import { useAuth } from '@/hooks';
@@ -84,7 +84,7 @@ export default function DiagnosisHistoryScreen() {
             <ListRow
               key={item.id}
               style={styles.row}
-              leading={<Image source={{ uri: item.photoUrl }} style={styles.thumb} contentFit="cover" />}
+              leading={<Thumbnail photoUrl={item.photoUrl} />}
               title={meta.label}
               titleColor={meta.color}
               subtitle={formatShortDate(item.createdAt)}
@@ -126,12 +126,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     row: {
       paddingVertical: Metrics.spacing.sm,
-    },
-    thumb: {
-      width: Metrics.size.lg,
-      height: Metrics.size.lg,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
     },
     skeletonRow: {
       flexDirection: 'row',

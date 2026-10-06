@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Users from 'lucide-react-native/icons/users';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
-import { EmptyState, EventAttendeesSection, FeaturedBadge, FloatingScreenControls, InfoSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice, SubmitButton } from '@/components';
+import { Button, EmptyState, EventAttendeesSection, FeaturedBadge, FloatingScreenControls, InfoSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice } from '@/components';
 import { useEventDetail } from '@/hooks';
 import { isBoostActive } from '@/services';
 import { ActionSheet, closeAlertButton, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
@@ -163,10 +163,11 @@ export default function EventDetailScreen() {
           <EventAttendeesSection attendees={detail.attendeesQuery.data} onPressAttendee={detail.handlePressAttendee} />
 
           {detail.canRsvp ? (
-            <SubmitButton
+            <Button
               label={event.isAttending ? t('cancelAttendance') : t('confirmAttendance')}
               onPress={detail.handleToggleAttendance}
               loading={detail.isActing}
+              style={styles.rsvp}
             />
           ) : null}
         </ScreenContent>
@@ -214,6 +215,9 @@ const makeStyles = (colors: ThemeColors) =>
     },
     content: {
       paddingTop: Metrics.spacing.sm,
+    },
+    rsvp: {
+      marginTop: Metrics.spacing.sm,
     },
     description: {
       ...Typography.body,

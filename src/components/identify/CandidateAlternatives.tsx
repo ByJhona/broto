@@ -6,6 +6,7 @@ import type { PlantCandidate } from '@/types';
 import { InfoSection } from '../InfoSection';
 import { confidencePercent } from './confidence';
 import { TextButton } from '../TextButton';
+import { ScientificName } from '../ScientificName';
 
 type AlternativeRowProps = {
   candidate: PlantCandidate;
@@ -31,9 +32,7 @@ function AlternativeRow({ candidate, onPress }: Readonly<AlternativeRowProps>) {
           {name}
         </Text>
         {candidate.commonName ? (
-          <Text style={styles.species} numberOfLines={1}>
-            {candidate.scientificName}
-          </Text>
+          <ScientificName name={candidate.scientificName} compact />
         ) : null}
       </View>
       <Text style={styles.percent}>{percent}</Text>
@@ -96,11 +95,6 @@ const makeStyles = (colors: ThemeColors) =>
     name: {
       ...Typography.headingMedium,
       color: colors.foreground,
-    },
-    species: {
-      ...Typography.bodySmall,
-      fontStyle: 'italic',
-      color: colors.mutedForeground,
     },
     percent: {
       ...Typography.bodySmall,

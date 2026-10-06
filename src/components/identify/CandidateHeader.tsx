@@ -8,6 +8,7 @@ import type { PlantCandidate } from '@/types';
 import { InfoChip } from '../InfoChip';
 import { confidencePercent, confidenceTier, type ConfidenceTier } from './confidence';
 import { PageTitle } from '../PageTitle';
+import { ScientificName } from '../ScientificName';
 
 const TIER_LABEL_KEYS: Record<ConfidenceTier, string> = {
   high: 'confidenceHigh',
@@ -54,7 +55,7 @@ export function CandidateHeader({ candidate, plantType, showConfidence, onRetake
     <View style={styles.block}>
       {showConfidence ? <ConfidenceTag score={candidate.score} /> : null}
       <PageTitle>{candidate.commonName ?? candidate.scientificName}</PageTitle>
-      {candidate.commonName ? <Text style={styles.species}>{candidate.scientificName}</Text> : null}
+      {candidate.commonName ? <ScientificName name={candidate.scientificName} /> : null}
 
       <View style={styles.tags}>
         {candidate.family ? <InfoChip size="sm" icon={Leaf} value={candidate.family} /> : null}
@@ -106,12 +107,6 @@ const makeStyles = (colors: ThemeColors) =>
     name: {
       ...Typography.display,
       color: colors.foreground,
-    },
-    species: {
-      ...Typography.body,
-      fontStyle: 'italic',
-      color: colors.mutedForeground,
-      marginTop: Metrics.spacing.xs,
     },
     tags: {
       flexDirection: 'row',

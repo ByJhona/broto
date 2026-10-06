@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from '@/i18n';
-import { AuthLayout, FormError, FormField, LoadingScreen, SubmitButton } from '@/components';
+import { AuthLayout, Button, FormError, FormField, LoadingScreen } from '@/components';
 import { useNetworkStatus } from '@/hooks';
 import { exchangeRecoveryCode, updatePassword } from '@/services';
 import { authErrorMessage, hasFieldErrors, Toast, validateNewPassword, type AuthFieldErrors } from '@/utils';
@@ -31,7 +31,7 @@ function InvalidLink({ isOffline }: Readonly<{ isOffline: boolean }>) {
       isOffline={isOffline}
       offlineMessage={t('loginOfflineMessage')}
     >
-      <SubmitButton label={t('requestNewLinkCta')} onPress={() => router.replace('/(auth)/forgot-password')} />
+      <Button label={t('requestNewLinkCta')} onPress={() => router.replace('/(auth)/forgot-password')} />
     </AuthLayout>
   );
 }
@@ -81,7 +81,7 @@ function NewPasswordForm({ isOffline }: Readonly<{ isOffline: boolean }>) {
         error={fieldErrors.password}
       />
       <FormError>{error}</FormError>
-      <SubmitButton label={t('saveNewPasswordCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
+      <Button label={t('saveNewPasswordCta')} onPress={handleSubmit} loading={isSubmitting} disabled={isOffline} />
     </AuthLayout>
   );
 }

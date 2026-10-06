@@ -65,6 +65,7 @@
   "promoExpired": "Esse código não está mais valendo.",
   "promoExhausted": "Esse código já foi usado.",
   "promoAlreadyRedeemed": "Você já participou dessa campanha.",
+  "promoTooManyAttempts": "Muitas tentativas. Espere um pouco e tente de novo.",
   "promoUnknownError": "Não foi possível ativar agora. Tente de novo em instantes.",
   "promoSuccessTitle": "Código ativado!",
   "promoLuckyNumberLabel": "Seu número da sorte",

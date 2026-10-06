@@ -1,6 +1,7 @@
 import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 import * as Linking from 'expo-linking';
 import { i18n } from '@/i18n';
+import { unregisterPushToken } from './pushTokens';
 import { supabase } from './supabase';
 
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
@@ -43,6 +44,7 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signOutUser() {
+  await unregisterPushToken();
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }

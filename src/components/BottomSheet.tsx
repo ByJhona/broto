@@ -6,6 +6,7 @@ import {
   PanResponder,
   Pressable,
   StyleSheet,
+  Text,
   View,
   useWindowDimensions,
   type StyleProp,
@@ -13,7 +14,7 @@ import {
 } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Metrics, Overlays, type ThemeColors, useThemedStyles, Motion, Opacity } from '@/theme';
+import { Metrics, Motion, Opacity, Overlays, type ThemeColors, Typography, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { useReduceMotion } from '@/hooks';
 
@@ -36,6 +37,7 @@ const EXIT_ANIMATION = {
 
 type BottomSheetProps = PropsWithChildren<{
   visible: boolean;
+  title?: string;
   onClose: () => void;
   sheetStyle?: StyleProp<ViewStyle>;
 }>;
@@ -81,7 +83,7 @@ function useDragToClose(visible: boolean, onClose: () => void) {
   return { dragY, panHandlers: panResponder.panHandlers };
 }
 
-export function BottomSheet({ visible, onClose, sheetStyle, children }: Readonly<BottomSheetProps>) {
+export function BottomSheet({ visible, title, onClose, sheetStyle, children }: Readonly<BottomSheetProps>) {
   const styles = useThemedStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -113,6 +115,7 @@ export function BottomSheet({ visible, onClose, sheetStyle, children }: Readonly
           <View style={styles.handleArea} {...panHandlers}>
             <View style={styles.handle} />
           </View>
+          {title ? <Text style={styles.title}>{title}</Text> : null}
           {children}
         </Animated.View>
       </KeyboardStickyView>
@@ -143,6 +146,11 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       paddingTop: Metrics.spacing.sm,
       paddingBottom: Metrics.spacing.md,
+    },
+    title: {
+      ...Typography.title,
+      color: colors.foreground,
+      marginBottom: Metrics.spacing.md,
     },
     handle: {
       width: Metrics.size.md,

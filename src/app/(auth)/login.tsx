@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Mail from 'lucide-react-native/icons/mail';
-import { Metrics, Opacity, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
+import { Metrics } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { AuthFooterLink, AuthLayout, GoogleSignInButton } from '@/components';
+import { AuthFooterLink, AuthLayout, Button, GoogleSignInButton } from '@/components';
 import { EmailLoginForm } from '@/components/auth/EmailLoginForm';
 import { useGoogleSignIn } from '@/components/auth/useGoogleSignIn';
 import { useNetworkStatus } from '@/hooks';
 
 export default function LoginScreen() {
-  const colors = useColors();
-  const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('auth');
   const { isOffline } = useNetworkStatus();
   const { isGoogleSubmitting, handleGoogleSignIn } = useGoogleSignIn();
@@ -36,14 +34,13 @@ export default function LoginScreen() {
           <EmailLoginForm disabled={isOffline || isGoogleSubmitting} />
         </View>
       ) : (
-        <Pressable
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.emailButton, pressed && styles.pressed]}
+        <Button
+          label={t('continueWithEmail')}
+          variant="secondary"
+          icon={Mail}
           onPress={() => setIsEmailFormOpen(true)}
-        >
-          <Mail size={Metrics.icon.small} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
-          <Text style={styles.emailButtonText}>{t('continueWithEmail')}</Text>
-        </Pressable>
+          style={styles.emailButton}
+        />
       )}
 
       <AuthFooterLink href="/(auth)/signup" label={t('noAccountSignupLink')} />
@@ -51,24 +48,11 @@ export default function LoginScreen() {
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    emailButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Metrics.spacing.sm,
-      paddingVertical: Metrics.spacing.md,
-      marginTop: Metrics.spacing.sm,
-    },
-    pressed: {
-      opacity: Opacity.pressed,
-    },
-    emailButtonText: {
-      ...Typography.headingMedium,
-      color: colors.foreground,
-    },
-    emailForm: {
-      marginTop: Metrics.spacing.lg,
-    },
-  });
+const styles = StyleSheet.create({
+  emailButton: {
+    marginTop: Metrics.spacing.sm,
+  },
+  emailForm: {
+    marginTop: Metrics.spacing.lg,
+  },
+});

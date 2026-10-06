@@ -2,8 +2,8 @@
   "search": "Search",
   "messages": "Messages",
   "chat": "Chat",
-  "updateAvailableTitle": "Update available",
-  "updateAvailableMessage": "A new version of broto is available on the store.",
+  "updateAvailableTitle": "A new broto is here",
+  "updateAvailableMessage": "Update to get the latest features and fixes.",
   "updateLater": "Not now",
-  "updateNow": "Update"
+  "updateNow": "Update now"
 }

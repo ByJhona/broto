@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Clock from 'lucide-react-native/icons/clock';
-import Leaf from 'lucide-react-native/icons/leaf';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import {
   CardGroup,
+  FilterChipRow,
   FloatingScreenControls,
   InfoSection,
   ListRow,
-  PillSelector,
+  PlantAvatar,
   PlantPickerRow,
   useScreenTopInset,
 } from '@/components';
@@ -36,7 +35,6 @@ function dateForTime(hour: number, minute: number): Date {
 }
 
 function LockedPlantRow({ plant }: Readonly<{ plant: PlantSummary }>) {
-  const colors = useColors();
   const styles = useThemedStyles(makeStyles);
 
   return (
@@ -44,13 +42,7 @@ function LockedPlantRow({ plant }: Readonly<{ plant: PlantSummary }>) {
       <ListRow
         style={styles.plantRow}
         leading={
-          <View style={styles.plantThumb}>
-            {plant.photoUrl ? (
-              <Image source={{ uri: plant.photoUrl }} style={styles.plantThumbImage} contentFit="cover" />
-            ) : (
-              <Leaf size={Metrics.icon.normal} color={colors.leaf} strokeWidth={Metrics.icon.stroke.regular} />
-            )}
-          </View>
+          <PlantAvatar photoUrl={plant.photoUrl} />
         }
         title={plant.name}
       />
@@ -178,7 +170,7 @@ export default function NewTaskScreen() {
         ) : null}
 
         <InfoSection title={t('categoryLabel')}>
-          <PillSelector options={taskCategories.map(({ value, label }) => ({ value, label }))} value={category} onChange={setCategory} />
+          <FilterChipRow wrap options={taskCategories.map(({ value, label }) => ({ value, label }))} selected={[category]} onChange={setCategory} />
         </InfoSection>
 
         <InfoSection title={t('whenLabel')}>
@@ -222,19 +214,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     plantRow: {
       paddingVertical: Metrics.spacing.sm,
-    },
-    plantThumb: {
-      width: Metrics.size.lg,
-      height: Metrics.size.lg,
-      borderRadius: Metrics.radius.md,
-      backgroundColor: colors.muted,
-      justifyContent: 'center',
-      alignItems: 'center',
-      overflow: 'hidden',
-    },
-    plantThumbImage: {
-      width: '100%',
-      height: '100%',
     },
     hint: {
       ...Typography.caption,
