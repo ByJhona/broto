@@ -7,11 +7,13 @@ import { useQuery } from '@tanstack/react-query';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import CircleHelp from 'lucide-react-native/icons/circle-question-mark';
 import CreditCard from 'lucide-react-native/icons/credit-card';
+import FileText from 'lucide-react-native/icons/file-text';
 import Crown from 'lucide-react-native/icons/crown';
 import Gift from 'lucide-react-native/icons/gift';
 import LogOut from 'lucide-react-native/icons/log-out';
 import ShieldCheck from 'lucide-react-native/icons/shield-check';
 import TicketPercent from 'lucide-react-native/icons/ticket-percent';
+import UserMinus from 'lucide-react-native/icons/user-minus';
 import UserX from 'lucide-react-native/icons/user-x';
 import { Metrics, useAppTheme, useColors, type ThemeColors, type ThemePreference, useThemedStyles, Typography } from '@/theme';
 import { useLanguage, useTranslation, type Language } from '@/i18n';
@@ -55,7 +57,7 @@ export default function ProfileSettingsScreen() {
   const insets = useSafeAreaInsets();
   const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation('settings');
+  const { t } = useTranslation(['settings', 'moderation']);
   const { preference, setPreference } = useAppTheme();
   const { language, setLanguage } = useLanguage();
   const { session, user, signOut, deleteAccount } = useAuth();
@@ -165,6 +167,8 @@ ${t('deleteAccountSubscriptionNote')}` : t('deleteAccountMessage');
         <InfoSection title={t('support')}>
           <CardGroup>
             <SettingsListItem icon={ShieldCheck} label={t('privacyAndSecurity')} onPress={() => router.push('/privacy')} />
+            <SettingsListItem icon={FileText} label={t('moderation:termsGateTitle')} onPress={() => router.push('/terms')} />
+            <SettingsListItem icon={UserMinus} label={t('moderation:blockedUsersTitle')} onPress={() => router.push('/profile/blocked')} />
             <SettingsListItem icon={CircleHelp} label={t('help')} onPress={() => router.push('/profile/help')} />
           </CardGroup>
         </InfoSection>

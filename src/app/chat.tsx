@@ -4,11 +4,12 @@ import { KeyboardChatScrollView } from 'react-native-keyboard-controller';
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import ArrowDown from 'lucide-react-native/icons/arrow-down';
+import EllipsisVertical from 'lucide-react-native/icons/ellipsis-vertical';
 import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, EmptyState, FloatingPill, PhotoViewerModal } from '@/components';
+import { Avatar, EmptyState, FloatingPill, IconButton, PhotoViewerModal } from '@/components';
 import { buildChatRows, type ChatRow } from '@/components/chat/chatRows';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatDayDivider } from '@/components/chat/ChatDayDivider';
@@ -16,7 +17,7 @@ import { ChatIntro } from '@/components/chat/ChatIntro';
 import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { ProposalEventCard } from '@/components/chat/ProposalEventCard';
-import { useChat } from '@/hooks';
+import { useChat, useModerationActions } from '@/hooks';
 import { getProfile, setActiveChatUser } from '@/services';
 import { ActionSheet, confirmCloseListing, pickPhoto, Toast } from '@/utils';
 
@@ -51,6 +52,7 @@ export default function ChatScreen() {
   const [viewerPhotoUrl, setViewerPhotoUrl] = useState<string | null>(null);
   const { t } = useTranslation(['chat', 'common']);
   const chat = useChat(otherUserId);
+  const moderation = useModerationActions();
   const rows = useMemo(() => buildChatRows(chat.timeline, chat.currentUserId).reverse(), [chat.timeline, chat.currentUserId]);
   const newMessages = useNewMessagesIndicator(rows[0]);
 
@@ -73,6 +75,12 @@ export default function ChatScreen() {
   const scrollToLatest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
 
   const handlePressProfile = () => router.push({ pathname: '/profile/[id]', params: { id: otherUserId } });
+  const openChatActions = () => moderation.openUserActions({ id: otherUserId, name: otherUserName }, [], () => router.back());
+  const reportMessage = (messageId: string) =>
+    ActionSheet.show(t('moderation:reportMessageAction'), [
+      moderation.reportButton({ type: 'message', id: messageId }, t('moderation:reportMessageAction')),
+      moderation.cancelButton,
+    ]);
 
   const handleOpenListing = (listingId: string) => router.push({ pathname: '/listing/[id]', params: { id: listingId } });
 
@@ -151,6 +159,7 @@ export default function ChatScreen() {
         endsGroup={item.endsGroup}
         onPressPhoto={setViewerPhotoUrl}
         onPressFailed={handlePressFailed}
+        onLongPress={item.isMine ? undefined : reportMessage}
       />
     );
   };
@@ -205,6 +214,11 @@ export default function ChatScreen() {
                 {otherUserName}
               </Text>
             </Pressable>
+          ),
+          headerRight: () => (
+            <IconButton accessibilityLabel={t('common:a11yMoreOptions')} size={Metrics.size.md} onPress={openChatActions}>
+              <EllipsisVertical size={Metrics.icon.normal} color={colors.foreground} strokeWidth={Metrics.icon.stroke.regular} />
+            </IconButton>
           ),
         }}
       />

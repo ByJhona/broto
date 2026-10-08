@@ -1,24 +1,44 @@
 {
   "lastUpdated": "Última atualização: 8 de outubro de 2026",
   "intro": "Esta Política de Privacidade se aplica ao aplicativo Bulbo (anteriormente \"Broto: Plantas em Movimento\"), disponível na Google Play com o identificador com.byjhona.broto, desenvolvido e mantido por Jhonatan Borges. Ela explica quais dados o app coleta, como usamos essas informações e quais são os seus direitos.",
-  "section1Title": "Quais dados coletamos",
-  "section1Body": "• Dados de cadastro: nome, nome de usuário, e-mail e senha, ou os dados básicos da sua conta Google (nome, e-mail e foto) se você entrar com o Google.\n• Foto de perfil, se você escolher adicionar uma.\n• Fotos de plantas que você tira com a câmera ou escolhe na galeria, usadas para identificação, diagnóstico, acompanhamento de crescimento, anúncios de troca, doação ou venda e publicações na comunidade.\n• Localização aproximada, usada apenas enquanto você usa o mapa ou vê a distância até uma oferta ou evento. O Bulbo não acessa sua localização em segundo plano.\n• Conteúdo que você cria: plantas cadastradas, tarefas de cuidado, publicações, comentários, curtidas, anúncios, eventos e mensagens trocadas com outros usuários no chat.\n• Mensagens enviadas ao assistente de inteligência artificial do Bulbo.\n• Identificador de notificações push do aparelho, para enviar lembretes e avisos.\n• Informações de assinatura e créditos (plano, status e datas). Não temos acesso ao número do seu cartão: os pagamentos são processados pela Google Play, pela Apple e pela RevenueCat.",
-  "section2Title": "Permissões do aparelho",
-  "section2Body": "• Câmera: para fotografar plantas.\n• Fotos e mídia: para escolher imagens da galeria.\n• Localização (somente durante o uso): para mostrar plantas, ofertas e eventos próximos.\n• Notificações: para lembretes de cuidado, mensagens e atividade na comunidade.\n• Calendário (opcional): para adicionar seus lembretes de cuidado ao calendário do aparelho, se você ativar essa opção. Não lemos outros eventos do seu calendário.",
-  "section3Title": "Como usamos seus dados",
-  "section3Body": "• Criar e manter sua conta.\n• Identificar plantas e diagnosticar problemas usando inteligência artificial.\n• Mostrar plantas, ofertas e eventos de outros usuários perto de você.\n• Permitir a comunidade: publicações, comentários, curtidas, chat e emblemas.\n• Enviar notificações e lembretes.\n• Gerenciar sua assinatura e seu saldo de créditos.\n• Manter a segurança do app e prevenir abusos.",
-  "section4Title": "Com quem compartilhamos seus dados",
-  "section4Body": "Não vendemos seus dados. Compartilhamos informações apenas com prestadores de serviço necessários para o funcionamento do app:\n\n• OpenAI: processa as fotos e textos enviados para identificação, diagnóstico, acompanhamento de crescimento e conversas com o assistente.\n• Supabase: hospeda o banco de dados, o login, o armazenamento de fotos e as funções do servidor.\n• RevenueCat: gerencia assinaturas e compras dentro do app.\n• Google: login com conta Google, exibição de mapas (Google Maps) e entrega de notificações (Firebase Cloud Messaging).\n• Expo: encaminha as notificações push até o seu aparelho.\n\nO conteúdo que você publica na comunidade, nos anúncios e nos eventos (como nome de usuário, foto de perfil, fotos e textos) fica visível para outros usuários do app.\n\nO Bulbo não usa ferramentas de publicidade nem de analytics de comportamento.",
-  "section5Title": "Segurança e armazenamento",
-  "section5Body": "Os dados trafegam de forma criptografada (HTTPS) e ficam armazenados nos servidores do Supabase, com regras de acesso que garantem que cada usuário veja apenas seus próprios dados privados, como diagnósticos e mensagens.",
-  "section6Title": "Retenção e exclusão de dados",
-  "section6Body": "Quando você exclui uma planta, publicação, evento ou anúncio, ele deixa de aparecer imediatamente. O registro pode ser mantido por um período limitado por segurança antes de ser removido definitivamente.\n\nPara excluir sua conta, toque em Perfil > Configurações > Excluir conta e confirme. A conta e todos os dados associados (perfil, plantas, fotos, publicações, anúncios, eventos, mensagens, créditos e emblemas) são apagados na hora. A exclusão da conta não cancela uma assinatura ativa: cancele na Google Play para não ser cobrado de novo.\n\nSe não conseguir acessar o app, peça a exclusão pelo e-mail no final desta página com o assunto \"Pedido de exclusão de conta\". Atendemos em até 30 dias.",
-  "section7Title": "Seus direitos (LGPD)",
-  "section7Body": "De acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você pode:\n\n• Confirmar se tratamos seus dados e acessá-los;\n• Corrigir dados incompletos, inexatos ou desatualizados;\n• Solicitar a exclusão dos seus dados;\n• Saber com quem compartilhamos seus dados;\n• Revogar o seu consentimento a qualquer momento.\n\nPara exercer qualquer desses direitos, escreva para o e-mail no final desta página.",
-  "section8Title": "Crianças e adolescentes",
-  "section8Body": "O Bulbo não é direcionado a menores de 18 anos. Se você é responsável por um menor que usou o app sem autorização, entre em contato para removermos os dados.",
-  "section9Title": "Alterações nesta política",
-  "section9Body": "Podemos atualizar esta política para refletir mudanças no app ou na legislação. Alterações relevantes serão comunicadas dentro do app, e a data no topo desta página será atualizada.",
+  "sections": [
+    {
+      "title": "Quais dados coletamos",
+      "body": "• Dados de cadastro: nome, nome de usuário, e-mail e senha, ou os dados básicos da sua conta Google (nome, e-mail e foto) se você entrar com o Google.\n• Foto de perfil, se você escolher adicionar uma.\n• Fotos de plantas que você tira com a câmera ou escolhe na galeria, usadas para identificação, diagnóstico, acompanhamento de crescimento, anúncios de troca, doação ou venda e publicações na comunidade.\n• Localização aproximada, usada apenas enquanto você usa o mapa ou vê a distância até uma oferta ou evento. O Bulbo não acessa sua localização em segundo plano.\n• Conteúdo que você cria: plantas cadastradas, tarefas de cuidado, publicações, comentários, curtidas, anúncios, eventos e mensagens trocadas com outros usuários no chat.\n• Mensagens enviadas ao assistente de inteligência artificial do Bulbo.\n• Identificador de notificações push do aparelho, para enviar lembretes e avisos.\n• Informações de assinatura e créditos (plano, status e datas). Não temos acesso ao número do seu cartão: os pagamentos são processados pela Google Play, pela Apple e pela RevenueCat."
+    },
+    {
+      "title": "Permissões do aparelho",
+      "body": "• Câmera: para fotografar plantas.\n• Fotos e mídia: para escolher imagens da galeria.\n• Localização (somente durante o uso): para mostrar plantas, ofertas e eventos próximos.\n• Notificações: para lembretes de cuidado, mensagens e atividade na comunidade.\n• Calendário (opcional): para adicionar seus lembretes de cuidado ao calendário do aparelho, se você ativar essa opção. Não lemos outros eventos do seu calendário."
+    },
+    {
+      "title": "Como usamos seus dados",
+      "body": "• Criar e manter sua conta.\n• Identificar plantas e diagnosticar problemas usando inteligência artificial.\n• Mostrar plantas, ofertas e eventos de outros usuários perto de você.\n• Permitir a comunidade: publicações, comentários, curtidas, chat e emblemas.\n• Enviar notificações e lembretes.\n• Gerenciar sua assinatura e seu saldo de créditos.\n• Manter a segurança do app e prevenir abusos."
+    },
+    {
+      "title": "Com quem compartilhamos seus dados",
+      "body": "Não vendemos seus dados. Compartilhamos informações apenas com prestadores de serviço necessários para o funcionamento do app:\n\n• OpenAI: processa as fotos e textos enviados para identificação, diagnóstico, acompanhamento de crescimento e conversas com o assistente.\n• Supabase: hospeda o banco de dados, o login, o armazenamento de fotos e as funções do servidor.\n• RevenueCat: gerencia assinaturas e compras dentro do app.\n• Google: login com conta Google, exibição de mapas (Google Maps) e entrega de notificações (Firebase Cloud Messaging).\n• Expo: encaminha as notificações push até o seu aparelho.\n\nO conteúdo que você publica na comunidade, nos anúncios e nos eventos (como nome de usuário, foto de perfil, fotos e textos) fica visível para outros usuários do app.\n\nO Bulbo não usa ferramentas de publicidade nem de analytics de comportamento."
+    },
+    {
+      "title": "Segurança e armazenamento",
+      "body": "Os dados trafegam de forma criptografada (HTTPS) e ficam armazenados nos servidores do Supabase, com regras de acesso que garantem que cada usuário veja apenas seus próprios dados privados, como diagnósticos e mensagens."
+    },
+    {
+      "title": "Retenção e exclusão de dados",
+      "body": "Quando você exclui uma planta, publicação, evento ou anúncio, ele deixa de aparecer imediatamente. O registro pode ser mantido por um período limitado por segurança antes de ser removido definitivamente.\n\nPara excluir sua conta, toque em Perfil > Configurações > Excluir conta e confirme. A conta e todos os dados associados (perfil, plantas, fotos, publicações, anúncios, eventos, mensagens, créditos e emblemas) são apagados na hora. A exclusão da conta não cancela uma assinatura ativa: cancele na Google Play para não ser cobrado de novo.\n\nSe não conseguir acessar o app, peça a exclusão pelo e-mail no final desta página com o assunto \"Pedido de exclusão de conta\". Atendemos em até 30 dias."
+    },
+    {
+      "title": "Seus direitos (LGPD)",
+      "body": "De acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você pode:\n\n• Confirmar se tratamos seus dados e acessá-los;\n• Corrigir dados incompletos, inexatos ou desatualizados;\n• Solicitar a exclusão dos seus dados;\n• Saber com quem compartilhamos seus dados;\n• Revogar o seu consentimento a qualquer momento.\n\nPara exercer qualquer desses direitos, escreva para o e-mail no final desta página."
+    },
+    {
+      "title": "Crianças e adolescentes",
+      "body": "O Bulbo não é direcionado a menores de 18 anos. Se você é responsável por um menor que usou o app sem autorização, entre em contato para removermos os dados."
+    },
+    {
+      "title": "Alterações nesta política",
+      "body": "Podemos atualizar esta política para refletir mudanças no app ou na legislação. Alterações relevantes serão comunicadas dentro do app, e a data no topo desta página será atualizada."
+    }
+  ],
   "contactTitle": "Contato",
   "contactBody": "Responsável: Jhonatan Borges. Dúvidas sobre privacidade ou sobre seus dados? Fale com a gente:",
   "contactEmail": "jhonatantecno23@gmail.com"

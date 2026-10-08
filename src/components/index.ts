@@ -50,6 +50,7 @@ export * from './MultiSelectHeaderActions';
 export * from './NewBadgeModal';
 export * from './OfflineBanner';
 export * from './OwnerRow';
+export * from './LegalDocument';
 export * from './PageTitle';
 export * from './PixelBadge';
 export * from './PhotoCard';
@@ -77,4 +78,4 @@ export * from './StatusNotice';
 export * from './TextButton';
 export * from './Thumbnail';
 export * from './ToastHost';
-
+export * from './TermsGate';

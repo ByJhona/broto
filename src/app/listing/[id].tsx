@@ -9,7 +9,7 @@ import MapPin from 'lucide-react-native/icons/map-pin';
 import { Metrics, Overlays, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { EmptyState, FeaturedBadge, FloatingScreenControls, InfoSection, ListingActionFooter, ListingProposalsSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PlantPickerSheet, PromptModal, ScreenContent, StatusNotice, type ListingProposal } from '@/components';
-import { useAuth, useCreditCosts, useListings, usePlants } from '@/hooks';
+import { useAuth, useCreditCosts, useListings, useModerationActions, usePlants } from '@/hooks';
 import {
   applyProposalStatusEverywhere,
   BOOST_DURATION_HOURS,
@@ -135,6 +135,7 @@ export default function ListingDetailScreen() {
   });
 
   const listing = listingQuery.data;
+  const moderation = useModerationActions();
   const isOwner = !!user && listing?.userId === user.id;
   const isExchange = listing?.listingType === LISTING_TYPE.EXCHANGE;
 
@@ -337,6 +338,13 @@ export default function ListingDetailScreen() {
     }
   };
 
+  const handleOpenOtherActions = () =>
+    moderation.openUserActions(
+      { id: listing.userId, name: listing.ownerName ?? t('moderation:someone') },
+      [moderation.reportButton({ type: 'listing', id: listing.id }, t('moderation:reportListingAction'))],
+      () => router.back()
+    );
+
   const handleOpenActions = () => {
     ActionSheet.show(
       t('editListingTitle'),
@@ -439,7 +447,7 @@ export default function ListingDetailScreen() {
           onCancel={() => setIsShareModalOpen(false)}
         />
       </ScrollView>
-      <FloatingScreenControls onOpenActions={isOwner ? handleOpenActions : undefined} isBusy={isActing} />
+      <FloatingScreenControls onOpenActions={isOwner ? handleOpenActions : handleOpenOtherActions} isBusy={isActing} />
     </View>
   );
 }

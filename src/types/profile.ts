@@ -4,6 +4,7 @@ export type UserProfile = {
   username: string;
   avatar_url: string | null;
   locale: 'en' | 'pt';
+  terms_accepted_at?: string | null;
   created_at?: string;
   updated_at?: string;
 };

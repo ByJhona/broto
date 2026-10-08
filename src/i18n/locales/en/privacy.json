@@ -1,24 +1,44 @@
 {
   "lastUpdated": "Last updated: October 8, 2026",
   "intro": "This Privacy Policy applies to the Bulbo app (formerly \"Broto: Plantas em Movimento\"), available on Google Play under the identifier com.byjhona.broto, developed and maintained by Jhonatan Borges. It explains what data the app collects, how we use that information, and what your rights are.",
-  "section1Title": "What data we collect",
-  "section1Body": "• Sign-up details: name, username, email and password, or the basic details of your Google account (name, email and photo) if you sign in with Google.\n• A profile photo, if you choose to add one.\n• Plant photos you take with the camera or pick from your gallery, used for identification, diagnosis, growth tracking, trade, giveaway or sale listings and community posts.\n• Approximate location, used only while you use the map or check the distance to a listing or event. Bulbo does not access your location in the background.\n• Content you create: saved plants, care tasks, posts, comments, likes, listings, events and messages exchanged with other users in chat.\n• Messages you send to Bulbo's AI assistant.\n• Your device's push notification identifier, used to send reminders and alerts.\n• Subscription and credit information (plan, status and dates). We never have access to your card number: payments are processed by Google Play, Apple and RevenueCat.",
-  "section2Title": "Device permissions",
-  "section2Body": "• Camera: to photograph plants.\n• Photos and media: to pick images from your gallery.\n• Location (only while in use): to show nearby plants, listings and events.\n• Notifications: for care reminders, messages and community activity.\n• Calendar (optional): to add your care reminders to your device calendar, if you turn this on. We don't read other events in your calendar.",
-  "section3Title": "How we use your data",
-  "section3Body": "• Create and maintain your account.\n• Identify plants and diagnose problems using artificial intelligence.\n• Show you plants, listings and events from other users near you.\n• Power the community: posts, comments, likes, chat and badges.\n• Send notifications and reminders.\n• Manage your subscription and credit balance.\n• Keep the app secure and prevent abuse.",
-  "section4Title": "Who we share your data with",
-  "section4Body": "We never sell your data. We only share information with service providers needed to run the app:\n\n• OpenAI: processes the photos and text you submit for identification, diagnosis, growth tracking and conversations with the assistant.\n• Supabase: hosts the database, login, photo storage and server functions.\n• RevenueCat: manages subscriptions and in-app purchases.\n• Google: Google sign-in, maps (Google Maps) and notification delivery (Firebase Cloud Messaging).\n• Expo: relays push notifications to your device.\n\nContent you publish in the community, listings and events (such as your username, profile photo, photos and text) is visible to other users of the app.\n\nBulbo does not use advertising or behavior analytics tools.",
-  "section5Title": "Security and storage",
-  "section5Body": "Your data travels encrypted (HTTPS) and is stored on Supabase's servers, with access rules that ensure each user can only see their own private data, such as diagnoses and messages.",
-  "section6Title": "Data retention and deletion",
-  "section6Body": "When you delete a plant, post, event or listing, it stops appearing immediately. The record may be kept for a limited period for security before being permanently removed.\n\nTo delete your account, tap Profile > Settings > Delete account and confirm. Your account and all associated data (profile, plants, photos, posts, listings, events, messages, credits and badges) are erased right away. Deleting your account doesn't cancel an active subscription: cancel it on Google Play so you aren't charged again.\n\nIf you can't access the app, request deletion by emailing the address at the bottom of this page with the subject \"Account deletion request\". We handle requests within 30 days.",
-  "section7Title": "Your rights",
-  "section7Body": "Under Brazil's General Data Protection Law (LGPD, Law No. 13,709/2018) and similar regulations, you can:\n\n• Confirm whether we process your data and access it;\n• Correct incomplete, inaccurate or outdated data;\n• Request deletion of your data;\n• Know who we share your data with;\n• Withdraw your consent at any time.\n\nTo exercise any of these rights, write to the email at the bottom of this page.",
-  "section8Title": "Children and teenagers",
-  "section8Body": "Bulbo is not directed at anyone under 18. If you're responsible for a minor who used the app without your authorization, contact us so we can remove their data.",
-  "section9Title": "Changes to this policy",
-  "section9Body": "We may update this policy to reflect changes to the app or to applicable law. Significant changes will be announced inside the app, and the date at the top of this page will be updated.",
+  "sections": [
+    {
+      "title": "What data we collect",
+      "body": "• Sign-up details: name, username, email and password, or the basic details of your Google account (name, email and photo) if you sign in with Google.\n• A profile photo, if you choose to add one.\n• Plant photos you take with the camera or pick from your gallery, used for identification, diagnosis, growth tracking, trade, giveaway or sale listings and community posts.\n• Approximate location, used only while you use the map or check the distance to a listing or event. Bulbo does not access your location in the background.\n• Content you create: saved plants, care tasks, posts, comments, likes, listings, events and messages exchanged with other users in chat.\n• Messages you send to Bulbo's AI assistant.\n• Your device's push notification identifier, used to send reminders and alerts.\n• Subscription and credit information (plan, status and dates). We never have access to your card number: payments are processed by Google Play, Apple and RevenueCat."
+    },
+    {
+      "title": "Device permissions",
+      "body": "• Camera: to photograph plants.\n• Photos and media: to pick images from your gallery.\n• Location (only while in use): to show nearby plants, listings and events.\n• Notifications: for care reminders, messages and community activity.\n• Calendar (optional): to add your care reminders to your device calendar, if you turn this on. We don't read other events in your calendar."
+    },
+    {
+      "title": "How we use your data",
+      "body": "• Create and maintain your account.\n• Identify plants and diagnose problems using artificial intelligence.\n• Show you plants, listings and events from other users near you.\n• Power the community: posts, comments, likes, chat and badges.\n• Send notifications and reminders.\n• Manage your subscription and credit balance.\n• Keep the app secure and prevent abuse."
+    },
+    {
+      "title": "Who we share your data with",
+      "body": "We never sell your data. We only share information with service providers needed to run the app:\n\n• OpenAI: processes the photos and text you submit for identification, diagnosis, growth tracking and conversations with the assistant.\n• Supabase: hosts the database, login, photo storage and server functions.\n• RevenueCat: manages subscriptions and in-app purchases.\n• Google: Google sign-in, maps (Google Maps) and notification delivery (Firebase Cloud Messaging).\n• Expo: relays push notifications to your device.\n\nContent you publish in the community, listings and events (such as your username, profile photo, photos and text) is visible to other users of the app.\n\nBulbo does not use advertising or behavior analytics tools."
+    },
+    {
+      "title": "Security and storage",
+      "body": "Your data travels encrypted (HTTPS) and is stored on Supabase's servers, with access rules that ensure each user can only see their own private data, such as diagnoses and messages."
+    },
+    {
+      "title": "Data retention and deletion",
+      "body": "When you delete a plant, post, event or listing, it stops appearing immediately. The record may be kept for a limited period for security before being permanently removed.\n\nTo delete your account, tap Profile > Settings > Delete account and confirm. Your account and all associated data (profile, plants, photos, posts, listings, events, messages, credits and badges) are erased right away. Deleting your account doesn't cancel an active subscription: cancel it on Google Play so you aren't charged again.\n\nIf you can't access the app, request deletion by emailing the address at the bottom of this page with the subject \"Account deletion request\". We handle requests within 30 days."
+    },
+    {
+      "title": "Your rights",
+      "body": "Under Brazil's General Data Protection Law (LGPD, Law No. 13,709/2018) and similar regulations, you can:\n\n• Confirm whether we process your data and access it;\n• Correct incomplete, inaccurate or outdated data;\n• Request deletion of your data;\n• Know who we share your data with;\n• Withdraw your consent at any time.\n\nTo exercise any of these rights, write to the email at the bottom of this page."
+    },
+    {
+      "title": "Children and teenagers",
+      "body": "Bulbo is not directed at anyone under 18. If you're responsible for a minor who used the app without your authorization, contact us so we can remove their data."
+    },
+    {
+      "title": "Changes to this policy",
+      "body": "We may update this policy to reflect changes to the app or to applicable law. Significant changes will be announced inside the app, and the date at the top of this page will be updated."
+    }
+  ],
   "contactTitle": "Contact",
   "contactBody": "Data controller: Jhonatan Borges. Questions about privacy or your data? Reach out to us:",
   "contactEmail": "jhonatantecno23@gmail.com"

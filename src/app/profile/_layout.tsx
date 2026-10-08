@@ -15,6 +15,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="badges" options={{ headerShown: false, title: t('badge:catalogTitle') }} />
       <Stack.Screen name="redeem-code" options={{ headerShown: false, title: t('settings:redeemCode') }} />
       <Stack.Screen name="help" options={{ headerShown: false, title: t('helpTitle') }} />
+      <Stack.Screen name="blocked" options={{ headerShown: false, title: t('moderation:blockedUsersTitle') }} />
     </Stack>
   );
 }

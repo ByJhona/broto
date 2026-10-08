@@ -29,6 +29,7 @@ export * from './supabase';
 export * from './profile';
 export * from './community';
 export * from './communityFeed';
+export * from './moderation';
 export * from './follows';
 export * from './pushTokens';
 export * from './queryClient';

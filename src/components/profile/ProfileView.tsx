@@ -12,7 +12,7 @@ import { ProfileGridRowView } from './ProfileGridRowView';
 import { ProfileHeader } from './ProfileHeader';
 import { ProfileGridSkeleton, ProfileSkeleton, ProfileTabEmpty } from './ProfileStates';
 import { buildProfileRows, PROFILE_TAB, type ProfileGridRow, type ProfileTab } from './profileTabs';
-import { useAuth, useFollow, usePostActions, useUserLocation, useXp } from '@/hooks';
+import { useAuth, useBlockedUsers, useFollow, useModerationActions, usePostActions, useUserLocation, useXp } from '@/hooks';
 import {
   authorPostsQueryKey,
   getCommunityPosts,
@@ -30,6 +30,19 @@ type ProfileViewProps = {
   showBack?: boolean;
 };
 
+function useProfileControls(id: string, isOwnProfile: boolean) {
+  const router = useRouter();
+  const { t } = useTranslation('profile');
+  const moderation = useModerationActions();
+  const blockedUsers = useBlockedUsers(!isOwnProfile);
+  const isBlocked = blockedUsers.data?.some((blocked) => blocked.profile.id === id) ?? false;
+
+  if (isOwnProfile) {
+    return () => ({ onOpenActions: () => router.push('/profile/settings'), actionIcon: Settings, actionLabel: t('settingsTitle') });
+  }
+  return (name: string) => ({ onOpenActions: () => moderation.openProfileActions({ id, name }, isBlocked, () => router.back()) });
+}
+
 export function ProfileView({ userId: id, showBack = true }: Readonly<ProfileViewProps>) {
   const router = useRouter();
   const colors = useColors();
@@ -43,6 +56,7 @@ export function ProfileView({ userId: id, showBack = true }: Readonly<ProfileVie
   const xp = useXp(id);
   const [tab, setTab] = useState<ProfileTab>(PROFILE_TAB.POSTS);
   const isOwnProfile = id === user?.id;
+  const profileControls = useProfileControls(id, isOwnProfile);
 
   const profileQuery = useQuery({
     queryKey: ['profile', id],
@@ -179,9 +193,7 @@ export function ProfileView({ userId: id, showBack = true }: Readonly<ProfileVie
       />
       <FloatingScreenControls
         showBack={showBack}
-        onOpenActions={isOwnProfile ? () => router.push('/profile/settings') : undefined}
-        actionIcon={Settings}
-        actionLabel={t('settingsTitle')}
+        {...profileControls(name)}
       />
     </View>
   );

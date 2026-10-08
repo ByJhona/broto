@@ -14,7 +14,21 @@ type MessageBubbleProps = {
   endsGroup: boolean;
   onPressPhoto: (photoUrl: string) => void;
   onPressFailed: (messageId: string) => void;
+  onLongPress?: (messageId: string) => void;
 };
+
+function bubblePressProps(
+  messageId: string,
+  isFailed: boolean,
+  onPressFailed: (messageId: string) => void,
+  onLongPress: ((messageId: string) => void) | undefined
+) {
+  return {
+    onPress: isFailed ? () => onPressFailed(messageId) : undefined,
+    onLongPress: onLongPress ? () => onLongPress(messageId) : undefined,
+    disabled: !isFailed && !onLongPress,
+  };
+}
 
 function bubbleCorners(isMine: boolean, startsGroup: boolean, endsGroup: boolean) {
   const top = startsGroup ? Metrics.radius.lg : Metrics.radius.md;
@@ -52,7 +66,7 @@ function MessageMeta({ createdAt, delivery, isMine }: Readonly<MessageMetaProps>
   );
 }
 
-export function MessageBubble({ message, delivery, isMine, startsGroup, endsGroup, onPressPhoto, onPressFailed }: Readonly<MessageBubbleProps>) {
+export function MessageBubble({ message, delivery, isMine, startsGroup, endsGroup, onPressPhoto, onPressFailed, onLongPress }: Readonly<MessageBubbleProps>) {
   const styles = useThemedStyles(makeStyles);
   const { t } = useTranslation('common');
   const { photoUrl, body } = message;
@@ -68,8 +82,7 @@ export function MessageBubble({ message, delivery, isMine, startsGroup, endsGrou
           bubbleCorners(isMine, startsGroup, endsGroup),
           delivery !== null && styles.bubblePending,
         ]}
-        onPress={() => onPressFailed(message.id)}
-        disabled={!isFailed}
+        {...bubblePressProps(message.id, isFailed, onPressFailed, onLongPress)}
       >
         {photoUrl ? (
           <Pressable

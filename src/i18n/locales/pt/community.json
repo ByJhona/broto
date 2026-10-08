@@ -25,15 +25,6 @@
   "sharePostMessage": "Veja essa publicação de {{author}} no Bulbo: {{link}}",
   "reportPostAction": "Denunciar publicação",
   "reportCommentAction": "Denunciar recado",
-  "reportReasonTitle": "Por que você está denunciando?",
-  "reportReason": {
-    "spam": "Spam ou propaganda",
-    "inappropriate": "Conteúdo ofensivo ou impróprio",
-    "scam": "Golpe ou venda proibida",
-    "other": "Outro motivo"
-  },
-  "reportSuccess": "Obrigado! Vamos analisar a denúncia.",
-  "reportError": "Não foi possível enviar a denúncia. Tente novamente.",
   "boostSuccess": "Publicação impulsionada por {{hours}}h!",
   "boostError": "Não foi possível impulsionar a publicação.",
   "insufficientCreditsTitle": "Créditos insuficientes",

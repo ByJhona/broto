@@ -3,6 +3,7 @@ import { AppUpdateHost } from '@/components/AppUpdateHost';
 import { AlertHost } from '@/components/AlertHost';
 import { BadgeCelebrationHost } from '@/components/BadgeCelebrationHost';
 import { LevelUpHost } from '@/components/LevelUpHost';
+import { TermsGate } from '@/components/TermsGate';
 import { ToastHost } from '@/components/ToastHost';
 import { useAuth } from '@/hooks';
 import { LanguageProvider, useLanguage, useTranslation } from '@/i18n';
@@ -107,7 +108,9 @@ function RootNavigator() {
 
         <Stack.Screen name="reset-password" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
+        <Stack.Screen name="terms" options={{ headerShown: false }} />
       </Stack>
+      {session ? <TermsGate userId={session.user.id} /> : null}
       <AlertHost />
       <ActionSheetHost />
       <ToastHost />

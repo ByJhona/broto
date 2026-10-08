@@ -1,15 +1,9 @@
 import { Share } from 'react-native';
 import { createURL } from 'expo-linking';
+import { useModerationActions } from '@/hooks';
 import { useTranslation } from '@/i18n';
-import { reportContent } from '@/services';
-import {
-  CONTENT_REPORT_REASONS,
-  type CommunityComment,
-  type CommunityPost,
-  type ContentReportReason,
-  type ContentReportTarget,
-} from '@/types';
-import { ActionSheet, type AlertButton, confirm, Toast } from '@/utils';
+import type { CommunityComment, CommunityPost } from '@/types';
+import { ActionSheet, confirm } from '@/utils';
 
 export type PostActionsHandlers = {
   onDelete?: (postId: string) => void;
@@ -23,27 +17,8 @@ export function usePostActions(
   { onDelete, onDeleteComment, onBoost }: PostActionsHandlers
 ) {
   const { t } = useTranslation(['community', 'common']);
-  const cancelButton: AlertButton = { text: t('common:cancel'), style: 'cancel' };
+  const { cancelButton, reportButton, blockButton } = useModerationActions();
   const isOwn = (authorId: string) => !!currentUserId && currentUserId === authorId;
-
-  const submitReport = async (target: ContentReportTarget, reason: ContentReportReason) => {
-    try {
-      await reportContent(target, reason);
-      Toast.success(t('community:reportSuccess'));
-    } catch (err) {
-      console.error(err);
-      Toast.error(t('community:reportError'));
-    }
-  };
-
-  const openReportReasons = (target: ContentReportTarget) =>
-    ActionSheet.show(t('community:reportReasonTitle'), [
-      ...CONTENT_REPORT_REASONS.map((reason) => ({
-        text: t(`community:reportReason.${reason}`),
-        onPress: () => submitReport(target, reason),
-      })),
-      cancelButton,
-    ]);
 
   const sharePost = () => {
     const invite = t('community:sharePostMessage', { author: post.authorName, link: createURL(`post/${post.id}`) });
@@ -77,11 +52,8 @@ export function usePostActions(
     } else {
       ActionSheet.show(t('community:otherPostActionsTitle', { name: post.authorName }), [
         { text: t('community:sharePostAction'), onPress: sharePost },
-        {
-          text: t('community:reportPostAction'),
-          style: 'destructive',
-          onPress: () => openReportReasons({ type: 'post', id: post.id }),
-        },
+        reportButton({ type: 'post', id: post.id }, t('community:reportPostAction')),
+        blockButton({ id: post.authorId, name: post.authorName }),
         cancelButton,
       ]);
     }
@@ -95,11 +67,8 @@ export function usePostActions(
       ]);
     } else {
       ActionSheet.show(t('community:otherCommentActionsTitle', { name: comment.authorName }), [
-        {
-          text: t('community:reportCommentAction'),
-          style: 'destructive',
-          onPress: () => openReportReasons({ type: 'comment', id: comment.id }),
-        },
+        reportButton({ type: 'comment', id: comment.id }, t('community:reportCommentAction')),
+        blockButton({ id: comment.authorId, name: comment.authorName }),
         cancelButton,
       ]);
     }

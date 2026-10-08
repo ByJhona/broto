@@ -11,8 +11,6 @@ import {
   type CommunityContentFilter,
   type CommunityPost,
   type CommunityPostType,
-  type ContentReportReason,
-  type ContentReportTarget,
   type ListingStatus,
   type ListingType,
 } from '@/types';
@@ -308,13 +306,6 @@ export async function deleteComment(commentId: string): Promise<void> {
   ensureWriteApplied(
     await supabase.from('post_comments').update({ deleted_at: new Date().toISOString() }, { count: 'exact' }).eq('id', commentId)
   );
-}
-
-export async function reportContent(target: ContentReportTarget, reason: ContentReportReason): Promise<void> {
-  const column = target.type === 'post' ? 'post_id' : 'comment_id';
-  const { error } = await supabase.from('content_reports').insert({ [column]: target.id, reason });
-  if (error?.code === '23505') return;
-  if (error) throw error;
 }
 
 export type CommunityPostsQueryData = InfiniteData<CommunityFeedPage>;

@@ -15,7 +15,13 @@ export type CommunityFeedFilter = CommunityContentFilter | typeof FOLLOWING_FEED
 
 export const CONTENT_REPORT_REASONS = ['spam', 'inappropriate', 'scam', 'other'] as const;
 export type ContentReportReason = (typeof CONTENT_REPORT_REASONS)[number];
-export type ContentReportTarget = { type: 'post' | 'comment'; id: string };
+export type ContentReportTargetType = 'post' | 'comment' | 'listing' | 'event' | 'message' | 'user';
+export type ContentReportTarget = { type: ContentReportTargetType; id: string };
+
+export type BlockedUser = {
+  blocked_at: string;
+  profile: { id: string; name: string; username: string; avatar_url: string | null };
+};
 
 export type CommunityComment = {
   id: string;

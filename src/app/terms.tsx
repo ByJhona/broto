@@ -4,15 +4,15 @@ import { Metrics, type ThemeColors, useThemedStyles } from '@/theme';
 import { useTranslation } from '@/i18n';
 import { FloatingScreenControls, LegalDocument, useScreenTopInset } from '@/components';
 
-export default function PrivacyScreen() {
+export default function TermsScreen() {
   const insets = useSafeAreaInsets();
   const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation('profile');
+  const { t } = useTranslation('moderation');
 
   return (
     <View style={styles.container}>
-      <LegalDocument namespace="privacy" title={t('privacyTitle')} topInset={topInset} bottomInset={insets.bottom + Metrics.spacing.xl} />
+      <LegalDocument namespace="terms" title={t('termsGateTitle')} topInset={topInset} bottomInset={insets.bottom + Metrics.spacing.xl} />
       <FloatingScreenControls />
     </View>
   );

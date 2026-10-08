@@ -1,11 +1,11 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Users from 'lucide-react-native/icons/users';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { Button, EmptyState, EventAttendeesSection, FeaturedBadge, FloatingScreenControls, InfoSection, LoadingScreen, MetaRow, OwnerRow, PageTitle, PhotoBadge, PhotoPager, PromptModal, ScreenContent, StatusNotice } from '@/components';
-import { useEventDetail } from '@/hooks';
+import { useEventDetail, useModerationActions } from '@/hooks';
 import { isBoostActive } from '@/services';
 import { ActionSheet, closeAlertButton, EVENT_COLOR, EVENT_ICON, formatEventDateTime, type AlertButton } from '@/utils';
 import type { PlantEvent } from '@/types';
@@ -97,7 +97,9 @@ export default function EventDetailScreen() {
   const insets = useSafeAreaInsets();
   const styles = useThemedStyles(makeStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const detail = useEventDetail(id);
+  const moderation = useModerationActions();
   const { t } = useTranslation(['event', 'common']);
 
   if (detail.isLoading) {
@@ -129,6 +131,13 @@ export default function EventDetailScreen() {
     });
     ActionSheet.show(t('editEventActionsTitle'), buttons);
   };
+
+  const handleOpenOtherActions = () =>
+    moderation.openUserActions(
+      { id: event.userId, name: event.ownerName ?? t('moderation:someone') },
+      [moderation.reportButton({ type: 'event', id: event.id }, t('moderation:reportEventAction'))],
+      () => router.back()
+    );
 
   const statusNotice = eventStatusNotice(t, detail.isCancelled, detail.isPast);
 
@@ -184,7 +193,7 @@ export default function EventDetailScreen() {
           onCancel={detail.closeShareModal}
         />
       </ScrollView>
-      <FloatingScreenControls onOpenActions={detail.isOwner ? handleOpenActions : undefined} isBusy={detail.isActing} />
+      <FloatingScreenControls onOpenActions={detail.isOwner ? handleOpenActions : handleOpenOtherActions} isBusy={detail.isActing} />
     </View>
   );
 }

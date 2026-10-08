@@ -33,6 +33,8 @@ import task from './task.json';
 import home from './home.json';
 import photo from './photo.json';
 import privacy from './privacy.json';
+import moderation from './moderation.json';
+import terms from './terms.json';
 
 export default {
   article,
@@ -70,4 +72,6 @@ export default {
   home,
   photo,
   privacy,
+  moderation,
+  terms,
 };
