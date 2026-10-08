@@ -36,7 +36,7 @@ export function ReasonDialog({ title, description, confirmLabel, isPending, onCl
         <p className="muted small">{description}</p>
         <label className="field" htmlFor="reason-input">
           Motivo (opcional)
-          <textarea id="reason-input" className="input" value={reason} onChange={(event) => setReason(event.target.value)} />
+          <textarea id="reason-input" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         <div className="dialog-actions">
           <button type="button" className="button button-outline" onClick={onClose}>
@@ -86,7 +86,7 @@ export function SuspendDialog({ profile, isPending, onClose, onConfirm }: Readon
         </div>
         <label className="field" htmlFor="suspend-reason">
           Motivo (opcional)
-          <textarea id="suspend-reason" className="input" value={reason} onChange={(event) => setReason(event.target.value)} />
+          <textarea id="suspend-reason" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         <div className="dialog-actions">
           <button type="button" className="button button-outline" onClick={onClose}>
