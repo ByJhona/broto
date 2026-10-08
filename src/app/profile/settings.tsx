@@ -1,4 +1,5 @@
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
 import Constants from 'expo-constants';
@@ -54,10 +55,11 @@ export default function ProfileSettingsScreen() {
   const insets = useSafeAreaInsets();
   const topInset = useScreenTopInset();
   const styles = useThemedStyles(makeStyles);
-  const { t } = useTranslation(['settings', 'privacy']);
+  const { t } = useTranslation('settings');
   const { preference, setPreference } = useAppTheme();
   const { language, setLanguage } = useLanguage();
-  const { session, user, signOut } = useAuth();
+  const { session, user, signOut, deleteAccount } = useAuth();
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const { credits } = useCredits();
   const handleManageSubscription = useManageSubscription();
   const { data: profile = null } = useQuery({
@@ -89,18 +91,25 @@ export default function ProfileSettingsScreen() {
     if (confirmed) await signOut();
   };
 
+  const confirmDeleteAccount = async () => {
+    const message = isPaidPlan ? `${t('deleteAccountMessage')}
+
+${t('deleteAccountSubscriptionNote')}` : t('deleteAccountMessage');
+    const confirmed = await confirm(t('deleteAccountTitle'), message, { confirmLabel: t('deleteAccountContinue'), destructive: true });
+    if (!confirmed) return false;
+    return confirm(t('deleteAccountFinalTitle'), t('deleteAccountFinalMessage'), { confirmLabel: t('deleteAccountConfirm'), destructive: true });
+  };
+
   const handleDeleteAccount = async () => {
-    const confirmed = await confirm(t('deleteAccountTitle'), t('deleteAccountMessage'), {
-      confirmLabel: t('deleteAccountContact'),
-    });
-    if (!confirmed) return;
-    const email = t('privacy:contactEmail');
-    const subject = encodeURIComponent(t('deleteAccountEmailSubject'));
+    if (isDeletingAccount || !(await confirmDeleteAccount())) return;
+    setIsDeletingAccount(true);
     try {
-      await Linking.openURL(`mailto:${email}?subject=${subject}`);
+      await deleteAccount();
+      Toast.success(t('deleteAccountDone'));
     } catch (err) {
-      console.error(err);
-      Toast.info(t('deleteAccountEmailFallback', { email }));
+      console.error('Erro excluindo a conta:', err);
+      Toast.error(t('deleteAccountError'));
+      setIsDeletingAccount(false);
     }
   };
 
@@ -162,7 +171,12 @@ export default function ProfileSettingsScreen() {
 
         <CardGroup>
           <SettingsListItem icon={LogOut} label={t('signOut')} destructive onPress={handleSignOut} />
-          <SettingsListItem icon={UserX} label={t('deleteAccount')} destructive onPress={handleDeleteAccount} />
+          <SettingsListItem
+            icon={UserX}
+            label={isDeletingAccount ? t('deleteAccountInProgress') : t('deleteAccount')}
+            destructive
+            onPress={handleDeleteAccount}
+          />
         </CardGroup>
 
         {version ? <Text style={styles.version}>{t('appVersion', { version })}</Text> : null}

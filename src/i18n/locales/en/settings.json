@@ -22,9 +22,14 @@
   "appVersion": "Bulbo · version {{version}}",
   "deleteAccount": "Delete account",
   "deleteAccountTitle": "Delete your account",
-  "deleteAccountMessage": "Deleting your account and all of your data is handled by our support team. Send us an email and we'll take care of it.",
-  "deleteAccountContact": "Send email",
-  "deleteAccountEmailSubject": "Account deletion request",
-  "deleteAccountEmailFallback": "We couldn't find an email app. Write to {{email}}.",
+  "deleteAccountMessage": "Your account and all of your data will be erased: plants, photos, posts, listings, events, messages, credits and badges. This can't be undone.",
+  "deleteAccountSubscriptionNote": "Your subscription isn't canceled automatically. Cancel it in the Play Store so you aren't charged again.",
+  "deleteAccountContinue": "Continue",
+  "deleteAccountFinalTitle": "Are you sure?",
+  "deleteAccountFinalMessage": "This is the last confirmation. Your account will be deleted now.",
+  "deleteAccountConfirm": "Delete account",
+  "deleteAccountInProgress": "Deleting account...",
+  "deleteAccountDone": "Your account was deleted.",
+  "deleteAccountError": "We couldn't delete your account. Try again in a moment.",
   "redeemCode": "Redeem code"
 }

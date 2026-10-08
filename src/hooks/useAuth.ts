@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { signInWithEmail, signInWithGoogle, signOutUser, signUpWithEmail } from '@/services';
+import { deleteAccount, signInWithEmail, signInWithGoogle, signOutUser, signUpWithEmail } from '@/services';
 import { useAuthContext } from '@/store';
 
 export function useAuth() {
@@ -12,6 +12,7 @@ export function useAuth() {
   );
   const signInGoogle = useCallback(() => signInWithGoogle(), []);
   const signOut = useCallback(() => signOutUser(), []);
+  const deleteUserAccount = useCallback(() => deleteAccount(), []);
 
   return {
     session,
@@ -21,5 +22,6 @@ export function useAuth() {
     signUp,
     signInWithGoogle: signInGoogle,
     signOut,
+    deleteAccount: deleteUserAccount,
   };
 }

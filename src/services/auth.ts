@@ -49,6 +49,12 @@ export async function signOutUser() {
   if (error) throw error;
 }
 
+export async function deleteAccount() {
+  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  if (error) throw error;
+  await supabase.auth.signOut({ scope: 'local' });
+}
+
 export async function signInWithGoogle() {
   if (!googleWebClientId) {
     console.error('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID não está definido.');
