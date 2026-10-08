@@ -18,6 +18,7 @@ export type ReportedPost = {
   caption: string | null;
   image_urls: string[];
   created_at: string;
+  deleted_at: string | null;
   author: Profile | null;
 };
 
@@ -26,6 +27,7 @@ export type ReportedComment = {
   text: string | null;
   photo_url: string | null;
   created_at: string;
+  deleted_at: string | null;
   author: Profile | null;
 };
 

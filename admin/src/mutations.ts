@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { hideContent, resolveReport, setUserRole, suspendUser, unsuspendUser } from './api';
+import { hideContent, resolveReport, setUserRole, suspendUser, unsuspendUser, type SuspendInput } from './api';
 import { useToast } from './components';
 import { errorMessage } from './format';
 import type { AppRole, ContentType } from './types';
@@ -43,6 +43,26 @@ export function useResolveReport() {
 
 export function useSuspendUser() {
   return useModerationMutation(suspendUser, ['suspensions'], 'Usuário suspenso.', 'Não foi possível suspender o usuário.');
+}
+
+type SuspendFromReportInput = SuspendInput & {
+  reportId: string;
+  content: { type: ContentType; id: string } | null;
+};
+
+async function suspendFromReport({ reportId, content, ...suspension }: SuspendFromReportInput): Promise<void> {
+  if (content) await hideContent(content.type, content.id, suspension.reason);
+  await suspendUser(suspension);
+  if (!content) await resolveReport(reportId, 'actioned');
+}
+
+export function useSuspendFromReport() {
+  return useModerationMutation(
+    suspendFromReport,
+    ['reports', 'suspensions'],
+    'Autor suspenso e denúncia resolvida.',
+    'Não foi possível concluir a suspensão.'
+  );
 }
 
 export function useUnsuspendUser() {

@@ -16,8 +16,8 @@ const PAGE_SIZE = 100;
 const REPORT_FIELDS = `
   id, reason, status, created_at, resolved_at, post_id, comment_id,
   reporter:profiles!content_reports_reporter_id_fkey(${PROFILE_FIELDS}),
-  post:posts(id, caption, image_urls, created_at, author:profiles!posts_user_id_fkey(${PROFILE_FIELDS})),
-  comment:post_comments(id, text, photo_url, created_at, author:profiles!post_comments_user_id_fkey(${PROFILE_FIELDS}))
+  post:posts(id, caption, image_urls, created_at, deleted_at, author:profiles!posts_user_id_fkey(${PROFILE_FIELDS})),
+  comment:post_comments(id, text, photo_url, created_at, deleted_at, author:profiles!post_comments_user_id_fkey(${PROFILE_FIELDS}))
 `;
 
 export type ReportFilter = 'open' | 'resolved';

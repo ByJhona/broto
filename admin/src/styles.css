@@ -478,6 +478,21 @@ textarea.input {
   min-height: 88px;
 }
 
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--leaf);
+}
+
 .empty {
   display: flex;
   flex-direction: column;

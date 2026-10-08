@@ -53,18 +53,20 @@ export function ReasonDialog({ title, description, confirmLabel, isPending, onCl
 
 type SuspendDialogProps = {
   profile: Profile;
+  hideContentLabel?: string;
   isPending: boolean;
   onClose: () => void;
-  onConfirm: (days: number | null, reason: string | null) => void;
+  onConfirm: (days: number | null, reason: string | null, hideContent: boolean) => void;
 };
 
-export function SuspendDialog({ profile, isPending, onClose, onConfirm }: Readonly<SuspendDialogProps>) {
+export function SuspendDialog({ profile, hideContentLabel, isPending, onClose, onConfirm }: Readonly<SuspendDialogProps>) {
   const [days, setDays] = useState<number | null>(7);
   const [reason, setReason] = useState('');
+  const [hideContent, setHideContent] = useState(true);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    onConfirm(days, cleanReason(reason));
+    onConfirm(days, cleanReason(reason), hideContentLabel !== undefined && hideContent);
   };
 
   return (
@@ -88,6 +90,12 @@ export function SuspendDialog({ profile, isPending, onClose, onConfirm }: Readon
           Motivo (opcional)
           <textarea id="suspend-reason" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
+        {hideContentLabel ? (
+          <label className="checkbox" htmlFor="suspend-hide-content">
+            <input id="suspend-hide-content" type="checkbox" checked={hideContent} onChange={(event) => setHideContent(event.target.checked)} />
+            {hideContentLabel}
+          </label>
+        ) : null}
         <div className="dialog-actions">
           <button type="button" className="button button-outline" onClick={onClose}>
             Cancelar
