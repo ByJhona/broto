@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { getAuthenticatedUser } from '../_shared/auth.ts';
+import { corsResponse } from '../_shared/cors.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -44,24 +45,28 @@ function banDuration(request: ModerateUserRequest): string {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return corsResponse('ok', 200);
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return corsResponse('Method not allowed', 405);
   }
 
   const auth = await getAuthenticatedUser(req);
   if (!auth) {
-    return new Response('Unauthorized', { status: 401 });
+    return corsResponse('Unauthorized', 401);
   }
 
   const request = parseRequest(await req.json().catch(() => ({})));
   if (!request || request.userId === auth.user.id) {
-    return new Response('Bad request', { status: 400 });
+    return corsResponse('Bad request', 400);
   }
 
   try {
     const moderatorRole = await roleOf(auth.user.id);
     if (!moderatorRole || !canModerate(moderatorRole, await roleOf(request.userId))) {
-      return new Response('Forbidden', { status: 403 });
+      return corsResponse('Forbidden', 403);
     }
 
     const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(request.userId, {
@@ -79,8 +84,8 @@ Deno.serve(async (req) => {
     if (logError) throw logError;
   } catch (error) {
     console.error('Erro moderando o usuário:', error);
-    return new Response('Internal error', { status: 500 });
+    return corsResponse('Internal error', 500);
   }
 
-  return new Response('OK', { status: 200 });
+  return corsResponse('OK', 200);
 });
