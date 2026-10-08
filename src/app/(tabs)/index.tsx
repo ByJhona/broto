@@ -8,7 +8,7 @@ import { Metrics, Motion, useAppTheme, useColors, useThemedStyles } from '@/them
 import { useTranslation } from '@/i18n';
 import { CreateChoiceSheet, FilterChipRow, HomeHeader, type FilterChipOption } from '@/components';
 import { MapActionButtons } from '@/components/home/MapActionButtons';
-import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS, toggleMapFilter, type MapFilter } from '@/components/home/mapFilter';
+import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS, type MapFilter } from '@/components/home/mapFilter';
 import { ClusterMarker } from '@/components/home/ClusterMarker';
 import { buildClusterIndex, visibleMapItems, type MapCluster } from '@/components/home/mapClusters';
 import { MapPinMarker } from '@/components/home/MapPinMarker';
@@ -24,7 +24,7 @@ import { useNearbySheet } from '@/components/home/useNearbySheet';
 import { usePlacementPublishing } from '@/components/home/usePlacementPublishing';
 import { useEvents, useListings } from '@/hooks';
 import type { ListingType } from '@/types';
-import { EVENT_COLOR, EVENT_ICON, listingTypes, Toast } from '@/utils';
+import { EVENT_COLOR, EVENT_ICON, listingTypes, Toast, toggleListItem } from '@/utils';
 
 const MAP_STYLE = [
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
@@ -132,7 +132,7 @@ export default function HomeScreen() {
 
   const handleChangeFilter = (filter: MapFilter) => {
     setSelectedPin(null);
-    setMapFilters((current) => toggleMapFilter(current, filter));
+    setMapFilters((current) => toggleListItem(current, filter));
   };
 
   const handleSelectNearby = (pin: SelectedPin) => {

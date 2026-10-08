@@ -16,34 +16,34 @@ type EmptyVariant = {
   action?: 'createPost' | 'findPeople';
 };
 
-function emptyVariant(filter: CommunityFeedFilter | null, followsNobody: boolean): EmptyVariant {
+function emptyVariant(filters: CommunityFeedFilter[], followsNobody: boolean): EmptyVariant {
   if (followsNobody) {
     return { icon: UserPlus, titleKey: 'emptyFollowingTitle', messageKey: 'emptyFollowingMessage', action: 'findPeople' };
   }
-  if (filter === FOLLOWING_FEED_FILTER) {
+  if (filters.includes(FOLLOWING_FEED_FILTER)) {
     return { icon: Users, titleKey: 'emptyFollowedPostsTitle', messageKey: 'emptyFollowedPostsMessage' };
   }
-  if (filter === OFFER_FEED_FILTER) {
+  if (filters.length === 1 && filters[0] === OFFER_FEED_FILTER) {
     return { icon: Leaf, titleKey: 'emptyOffersTitle', messageKey: 'emptyOffersMessage' };
   }
   return { icon: MessageSquare, titleKey: 'emptyFeedTitle', messageKey: 'emptyFeedMessage', action: 'createPost' };
 }
 
 type CommunityFeedEmptyStateProps = {
-  filter: CommunityFeedFilter | null;
+  filters: CommunityFeedFilter[];
   followsNobody: boolean;
   onCreatePost: () => void;
   onFindPeople: () => void;
 };
 
 export function CommunityFeedEmptyState({
-  filter,
+  filters,
   followsNobody,
   onCreatePost,
   onFindPeople,
 }: Readonly<CommunityFeedEmptyStateProps>) {
   const { t } = useTranslation('community');
-  const variant = emptyVariant(filter, followsNobody);
+  const variant = emptyVariant(filters, followsNobody);
 
   const emptyAction = (action: typeof variant.action): EmptyStateAction | undefined => {
     if (action === 'createPost') return { label: t('createPostAction'), onPress: onCreatePost };

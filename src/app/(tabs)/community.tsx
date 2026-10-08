@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ArrowUp from 'lucide-react-native/icons/arrow-up';
+import Leaf from 'lucide-react-native/icons/leaf';
 import Search from 'lucide-react-native/icons/search';
+import Users from 'lucide-react-native/icons/users';
 import { useRouter } from 'expo-router';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
@@ -23,6 +25,7 @@ import {
   CommunityFeedEmptyState,
   CommunityPostCard,
   FilterChipRow,
+  type FilterChipOption,
   FloatingCreateButton,
   FloatingPill,
   IconButton,
@@ -35,19 +38,29 @@ import {
   OFFER_FEED_FILTER,
   type CommunityFeedFilter,
   type CommunityPost,
+  type CommunityPostType,
 } from '@/types';
 import { useCommunityFeed } from '@/hooks';
+import { communityPostTypeColor, communityPostTypes } from '@/utils';
 
 const SKELETON_POSTS = [0, 1, 2];
 
-function getFeedFilters(t: (key: string) => string): { value: CommunityFeedFilter | null; label: string }[] {
+const FEED_FILTER_LABEL_KEYS: Record<CommunityPostType, string> = {
+  [COMMUNITY_POST_TYPE.CONQUISTA]: 'feedFilterAchievements',
+  [COMMUNITY_POST_TYPE.DUVIDA]: 'feedFilterQuestions',
+  [COMMUNITY_POST_TYPE.DICA]: 'feedFilterTips',
+};
+
+function feedFilterOptions(t: (key: string) => string, colors: ThemeColors): FilterChipOption<CommunityFeedFilter>[] {
   return [
-    { value: null, label: t('feedFilterAll') },
-    { value: FOLLOWING_FEED_FILTER, label: t('feedFilterFollowing') },
-    { value: OFFER_FEED_FILTER, label: t('feedFilterOffers') },
-    { value: COMMUNITY_POST_TYPE.CONQUISTA, label: t('feedFilterAchievements') },
-    { value: COMMUNITY_POST_TYPE.DUVIDA, label: t('feedFilterQuestions') },
-    { value: COMMUNITY_POST_TYPE.DICA, label: t('feedFilterTips') },
+    { value: FOLLOWING_FEED_FILTER, label: t('feedFilterFollowing'), icon: Users, color: colors.foreground },
+    { value: OFFER_FEED_FILTER, label: t('feedFilterOffers'), icon: Leaf, color: colors.accent },
+    ...communityPostTypes().map(({ value, icon }) => ({
+      value,
+      label: t(FEED_FILTER_LABEL_KEYS[value]),
+      icon,
+      color: communityPostTypeColor(value, colors),
+    })),
   ];
 }
 
@@ -81,7 +94,13 @@ function CommunityFeedHeader({ feed, colors, styles, onSearch, onCreatePost, onC
       </View>
 
       <View style={styles.filtersRow}>
-        <FilterChipRow options={getFeedFilters(t)} selected={[feed.filter]} onChange={feed.setFilter} />
+        <FilterChipRow
+          floating
+          options={feedFilterOptions(t, colors)}
+          selected={feed.filters}
+          onChange={feed.toggleFilter}
+          style={styles.filtersContent}
+        />
       </View>
     </View>
   );
@@ -145,7 +164,7 @@ export default function CommunityScreen() {
   };
 
   const openSearch = () => router.push('/search');
-  const openNewPost = () => router.push({ pathname: '/post/new', params: feed.filter ? { type: feed.filter } : {} });
+  const openNewPost = () => router.push({ pathname: '/post/new', params: feed.filters.length === 1 ? { type: feed.filters[0] } : {} });
 
   const renderItem = useCallback(
     ({ item }: { item: CommunityPost }) => (
@@ -195,7 +214,7 @@ export default function CommunityScreen() {
             <PostSkeletonList />
           ) : (
             <CommunityFeedEmptyState
-              filter={feed.filter}
+              filters={feed.filters}
               followsNobody={feed.followsNobody}
               onCreatePost={openNewPost}
               onFindPeople={openSearch}
@@ -247,7 +266,12 @@ const makeStyles = (colors: ThemeColors) =>
       marginBottom: Metrics.spacing.md,
     },
     filtersRow: {
-      marginBottom: Metrics.spacing.lg,
+      marginHorizontal: -Metrics.spacing.lg,
+      marginBottom: Metrics.spacing.md,
+    },
+    filtersContent: {
+      paddingHorizontal: Metrics.spacing.lg,
+      paddingVertical: Metrics.spacing.xs,
     },
     loader: {
       marginVertical: Metrics.spacing.lg,

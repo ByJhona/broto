@@ -76,7 +76,7 @@ export function ProfileView({ userId: id, showBack = true }: Readonly<ProfileVie
 
   const postsQuery = useInfiniteQuery({
     queryKey: postsQueryKey,
-    queryFn: ({ pageParam }) => getCommunityPosts(user!.id, pageParam, null, [id]),
+    queryFn: ({ pageParam }) => getCommunityPosts(user!.id, pageParam, [], [id]),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!id && !!user?.id,

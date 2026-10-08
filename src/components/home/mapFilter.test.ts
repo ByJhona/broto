@@ -1,5 +1,5 @@
 import { LISTING_STATUS, LISTING_TYPE, type ListingType, type PlantEvent, type PlantListing } from '@/types';
-import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS, toggleMapFilter } from './mapFilter';
+import { filterMapItems, isEventsOnly, MAP_FILTER_EVENTS } from './mapFilter';
 
 function listing(id: string, listingType: ListingType): PlantListing {
   return {
@@ -49,16 +49,6 @@ describe('filterMapItems', () => {
 
     expect(result.listings.map((item) => item.id)).toEqual(['exchange']);
     expect(result.events).toEqual([event]);
-  });
-});
-
-describe('toggleMapFilter', () => {
-  it('adds a filter that is not selected', () => {
-    expect(toggleMapFilter([LISTING_TYPE.SALE], MAP_FILTER_EVENTS)).toEqual([LISTING_TYPE.SALE, MAP_FILTER_EVENTS]);
-  });
-
-  it('removes a filter that is already selected', () => {
-    expect(toggleMapFilter([LISTING_TYPE.SALE, MAP_FILTER_EVENTS], LISTING_TYPE.SALE)).toEqual([MAP_FILTER_EVENTS]);
   });
 });
 

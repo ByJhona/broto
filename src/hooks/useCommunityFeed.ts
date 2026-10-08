@@ -8,9 +8,11 @@ import {
   getFollowingIds,
   subscribeToNewPosts,
   communityFeedQueryKey,
+  contentFilters,
   interleaveFeaturedPosts,
   postMatchesFeed,
 } from '@/services';
+import { toggleListItem } from '@/utils';
 import { FOLLOWING_FEED_FILTER, type CommunityFeedFilter } from '@/types';
 import { usePostActions } from './usePostActions';
 
@@ -21,9 +23,9 @@ export function useCommunityFeed() {
   const router = useRouter();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<CommunityFeedFilter | null>(null);
+  const [filters, setFilters] = useState<CommunityFeedFilter[]>([]);
   const [newPostsCount, setNewPostsCount] = useState(0);
-  const isFollowingFeed = filter === FOLLOWING_FEED_FILTER;
+  const isFollowingFeed = filters.includes(FOLLOWING_FEED_FILTER);
 
   const followingIdsQuery = useQuery({
     queryKey: ['following-ids', user?.id],
@@ -40,17 +42,12 @@ export function useCommunityFeed() {
     enabled: !!user?.id,
   });
 
-  const queryKey = useMemo(() => communityFeedQueryKey(filter, user?.id), [filter, user?.id]);
+  const queryKey = useMemo(() => communityFeedQueryKey(filters, user?.id), [filters, user?.id]);
 
   const postsQuery = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) =>
-      getCommunityPosts(
-        user!.id,
-        pageParam,
-        filter === FOLLOWING_FEED_FILTER ? null : filter,
-        isFollowingFeed ? followedAuthorIds : null
-      ),
+      getCommunityPosts(user!.id, pageParam, contentFilters(filters), isFollowingFeed ? followedAuthorIds : null),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!user?.id && (!isFollowingFeed || followedAuthorIds !== null),
@@ -61,9 +58,9 @@ export function useCommunityFeed() {
 
   const posts = useMemo(() => {
     const regular = postsQuery.data?.pages.flatMap((page) => page.posts) ?? [];
-    const featured = (featuredPostsQuery.data ?? []).filter((post) => postMatchesFeed(post, filter, followedAuthorIds));
+    const featured = (featuredPostsQuery.data ?? []).filter((post) => postMatchesFeed(post, filters, followedAuthorIds));
     return interleaveFeaturedPosts(regular, featured, isFeedComplete);
-  }, [postsQuery.data, featuredPostsQuery.data, filter, followedAuthorIds, isFeedComplete]);
+  }, [postsQuery.data, featuredPostsQuery.data, filters, followedAuthorIds, isFeedComplete]);
 
   const postActions = usePostActions(posts);
 
@@ -75,15 +72,15 @@ export function useCommunityFeed() {
 
     const unsubscribe = subscribeToNewPosts((event) => {
       if (event.authorId === user.id) return;
-      if (postMatchesFeed(event, filter, followedAuthorIds)) setNewPostsCount((count) => count + 1);
+      if (postMatchesFeed(event, filters, followedAuthorIds)) setNewPostsCount((count) => count + 1);
     });
 
     return unsubscribe;
-  }, [user?.id, filter, followedAuthorIds]);
+  }, [user?.id, filters, followedAuthorIds]);
 
-  const handleSetFilter = (nextFilter: CommunityFeedFilter | null) => {
+  const handleToggleFilter = (filter: CommunityFeedFilter) => {
     setNewPostsCount(0);
-    setFilter(nextFilter);
+    setFilters((current) => toggleListItem(current, filter));
   };
 
   const handleShowNewPosts = async () => {
@@ -125,8 +122,8 @@ export function useCommunityFeed() {
     followsNobody,
     refreshing,
     postsQuery,
-    filter,
-    setFilter: handleSetFilter,
+    filters,
+    toggleFilter: handleToggleFilter,
     newPostsCount,
     handleShowNewPosts,
     handleRefresh,

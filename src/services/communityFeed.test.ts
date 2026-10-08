@@ -1,4 +1,4 @@
-import type { CommunityPost } from '@/types';
+import type { CommunityFeedFilter, CommunityPost } from '@/types';
 import {
   authorPostsQueryKey,
   communityFeedQueryKey,
@@ -33,23 +33,37 @@ const ids = (posts: CommunityPost[]) => posts.map((post) => post.id);
 
 describe('postMatchesFeed', () => {
   it('accepts every post when there is no filter', () => {
-    expect(postMatchesFeed(makePost('a'), null, null)).toBe(true);
+    expect(postMatchesFeed(makePost('a'), [], null)).toBe(true);
   });
 
   it('matches offers by the linked listing', () => {
-    expect(postMatchesFeed(makePost('a', { listingId: 'l1' }), 'oferta', null)).toBe(true);
-    expect(postMatchesFeed(makePost('b'), 'oferta', null)).toBe(false);
+    expect(postMatchesFeed(makePost('a', { listingId: 'l1' }), ['oferta'], null)).toBe(true);
+    expect(postMatchesFeed(makePost('b'), ['oferta'], null)).toBe(false);
   });
 
   it('matches post types exactly', () => {
-    expect(postMatchesFeed(makePost('a', { postType: 'dica' }), 'dica', null)).toBe(true);
-    expect(postMatchesFeed(makePost('b', { postType: 'duvida' }), 'dica', null)).toBe(false);
+    expect(postMatchesFeed(makePost('a', { postType: 'dica' }), ['dica'], null)).toBe(true);
+    expect(postMatchesFeed(makePost('b', { postType: 'duvida' }), ['dica'], null)).toBe(false);
   });
 
   it('matches the following feed only for followed authors', () => {
-    expect(postMatchesFeed(makePost('a', { authorId: 'friend' }), 'seguindo', ['friend'])).toBe(true);
-    expect(postMatchesFeed(makePost('b', { authorId: 'stranger' }), 'seguindo', ['friend'])).toBe(false);
-    expect(postMatchesFeed(makePost('c', { authorId: 'friend' }), 'seguindo', null)).toBe(false);
+    expect(postMatchesFeed(makePost('a', { authorId: 'friend' }), ['seguindo'], ['friend'])).toBe(true);
+    expect(postMatchesFeed(makePost('b', { authorId: 'stranger' }), ['seguindo'], ['friend'])).toBe(false);
+    expect(postMatchesFeed(makePost('c', { authorId: 'friend' }), ['seguindo'], null)).toBe(false);
+  });
+
+  it('matches any of the selected content filters', () => {
+    const filters: CommunityFeedFilter[] = ['dica', 'oferta'];
+    expect(postMatchesFeed(makePost('a', { postType: 'dica' }), filters, null)).toBe(true);
+    expect(postMatchesFeed(makePost('b', { listingId: 'l1' }), filters, null)).toBe(true);
+    expect(postMatchesFeed(makePost('c', { postType: 'duvida' }), filters, null)).toBe(false);
+  });
+
+  it('restricts selected content filters to followed authors', () => {
+    const filters: CommunityFeedFilter[] = ['seguindo', 'dica'];
+    expect(postMatchesFeed(makePost('a', { authorId: 'friend', postType: 'dica' }), filters, ['friend'])).toBe(true);
+    expect(postMatchesFeed(makePost('b', { authorId: 'friend', postType: 'duvida' }), filters, ['friend'])).toBe(false);
+    expect(postMatchesFeed(makePost('c', { authorId: 'stranger', postType: 'dica' }), filters, ['friend'])).toBe(false);
   });
 });
 
@@ -62,10 +76,11 @@ describe('feedAcceptsNewPost', () => {
   });
 
   it('adds a new post to the community feeds it matches', () => {
-    expect(feedAcceptsNewPost(communityFeedQueryKey(null, 'me'), tip)).toBe(true);
-    expect(feedAcceptsNewPost(communityFeedQueryKey('dica', 'me'), tip)).toBe(true);
-    expect(feedAcceptsNewPost(communityFeedQueryKey('duvida', 'me'), tip)).toBe(false);
-    expect(feedAcceptsNewPost(communityFeedQueryKey('seguindo', 'me'), tip)).toBe(false);
+    expect(feedAcceptsNewPost(communityFeedQueryKey([], 'me'), tip)).toBe(true);
+    expect(feedAcceptsNewPost(communityFeedQueryKey(['dica'], 'me'), tip)).toBe(true);
+    expect(feedAcceptsNewPost(communityFeedQueryKey(['duvida'], 'me'), tip)).toBe(false);
+    expect(feedAcceptsNewPost(communityFeedQueryKey(['seguindo'], 'me'), tip)).toBe(false);
+    expect(feedAcceptsNewPost(communityFeedQueryKey(['duvida', 'dica'], 'me'), tip)).toBe(true);
   });
 });
 

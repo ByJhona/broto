@@ -136,10 +136,17 @@ function formatPost(row: PostRow): CommunityPost {
   };
 }
 
+function contentFilterClause(filters: CommunityContentFilter[]): string {
+  const postTypes = filters.filter((filter) => filter !== OFFER_FEED_FILTER);
+  const clauses = postTypes.length > 0 ? [`post_type.in.(${postTypes.join(',')})`] : [];
+  if (filters.includes(OFFER_FEED_FILTER)) clauses.push('listing_id.not.is.null');
+  return clauses.join(',');
+}
+
 export async function getCommunityPosts(
   userId: string,
   cursor: string | null = null,
-  filter: CommunityContentFilter | null = null,
+  filters: CommunityContentFilter[] = [],
   authorIds: string[] | null = null
 ): Promise<CommunityFeedPage> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -160,10 +167,8 @@ export async function getCommunityPosts(
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
-  if (filter === OFFER_FEED_FILTER) {
-    query = query.not('listing_id', 'is', null);
-  } else if (filter) {
-    query = query.eq('post_type', filter);
+  if (filters.length > 0) {
+    query = query.or(contentFilterClause(filters));
   }
 
   if (authorIds) {

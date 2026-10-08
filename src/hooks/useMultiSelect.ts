@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toggleListItem } from '@/utils';
 
 export function useMultiSelect() {
   const [isSelecting, setIsSelecting] = useState(false);
@@ -12,7 +13,7 @@ export function useMultiSelect() {
   };
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+    setSelectedIds((current) => toggleListItem(current, id));
   };
 
   return { isSelecting, selectedIds, startSelecting, stopSelecting, toggleSelected };
