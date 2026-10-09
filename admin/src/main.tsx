@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import { ToastProvider } from './components';
+import { followSystemTheme } from './theme';
 import './styles.css';
+
+followSystemTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import { Flag, History, LogOut, Newspaper, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
 import { getMyRole } from './api';
-import { BrandLogo, ErrorState, LoadingState } from './components';
+import { BrandLogo, ErrorState, LoadingState, ThemeToggle } from './components';
 import { ROLE_LABELS } from './format';
 import { ArticlePage } from './pages/ArticlePage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -105,6 +105,7 @@ function Shell({ session, role }: Readonly<{ session: Session; role: AppRole }>)
             <div className="person-name">{session.user.email}</div>
             <div className="muted caption">{ROLE_LABELS[role]}</div>
           </div>
+          <ThemeToggle />
           <button type="button" className="nav-item" onClick={signOut}>
             <LogOut size={16} strokeWidth={2} />
             Sair

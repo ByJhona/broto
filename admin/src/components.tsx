@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { Moon, Sun, SunMoon, type LucideIcon } from 'lucide-react';
 import { initials } from './format';
+import { readThemeChoice, saveThemeChoice, THEME_CHOICES, type ThemeChoice } from './theme';
 import type { Profile } from './types';
 
 type ToastState = { message: string; isError: boolean } | null;
@@ -122,9 +123,33 @@ export function Dialog({ open, title, onClose, children }: Readonly<DialogProps>
 
 export function BrandLogo({ className }: Readonly<{ className: string }>) {
   return (
-    <picture>
-      <source srcSet="/logo-dark.svg" media="(prefers-color-scheme: dark)" />
-      <img className={className} src="/logo.svg" alt="Muda Vai Vem" />
-    </picture>
+    <>
+      <img className={`${className} logo-light`} src="/logo.svg" alt="Muda Vai Vem" />
+      <img className={`${className} logo-dark`} src="/logo-dark.svg" alt="Muda Vai Vem" />
+    </>
+  );
+}
+
+const THEME_OPTIONS: Record<ThemeChoice, { label: string; icon: LucideIcon }> = {
+  auto: { label: 'Tema automático', icon: SunMoon },
+  light: { label: 'Tema claro', icon: Sun },
+  dark: { label: 'Tema escuro', icon: Moon },
+};
+
+export function ThemeToggle() {
+  const [choice, setChoice] = useState(readThemeChoice);
+  const { label, icon: Icon } = THEME_OPTIONS[choice];
+
+  const cycle = () => {
+    const next = THEME_CHOICES[(THEME_CHOICES.indexOf(choice) + 1) % THEME_CHOICES.length];
+    saveThemeChoice(next);
+    setChoice(next);
+  };
+
+  return (
+    <button type="button" className="nav-item" onClick={cycle}>
+      <Icon size={16} strokeWidth={2} />
+      {label}
+    </button>
   );
 }

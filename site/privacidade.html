@@ -7,8 +7,8 @@
   <meta name="description" content="Como o Muda Vai Vem coleta, usa e protege os dados dos seus usuários." />
   <meta name="robots" content="noindex" />
 
-  <meta name="theme-color" content="#FAF5EB" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0F140F" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#FAF5EB" />
+  <script src="theme.js"></script>
   <link rel="icon" href="assets/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -66,11 +66,14 @@
   <header class="site-header">
     <div class="wrap">
       <a href="index.html" class="brand">
-        <picture>
-          <source srcset="assets/logo-dark.svg" media="(prefers-color-scheme: dark)" />
-          <img src="assets/logo.svg" alt="Muda Vai Vem" width="130" height="36" />
-        </picture>
+        <img class="logo-light" src="assets/logo.svg" alt="Muda Vai Vem" width="130" height="36" />
+        <img class="logo-dark" src="assets/logo-dark.svg" alt="Muda Vai Vem" width="130" height="36" />
       </a>
+      <button class="theme-toggle" type="button" aria-label="Tema automático" title="Tema automático">
+          <svg class="theme-icon theme-icon--auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/></svg>
+          <svg class="theme-icon theme-icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          <svg class="theme-icon theme-icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
     </div>
   </header>
 
@@ -182,10 +185,8 @@ Para exercer qualquer desses direitos, escreva para o e-mail no final desta pág
   <footer class="site-footer">
     <div class="wrap">
       <div class="footer-brand">
-        <picture>
-          <source srcset="assets/logo-dark.svg" media="(prefers-color-scheme: dark)" />
-          <img src="assets/logo.svg" alt="Muda Vai Vem" width="94" height="26" />
-        </picture>
+        <img class="logo-light" src="assets/logo.svg" alt="Muda Vai Vem" width="94" height="26" />
+        <img class="logo-dark" src="assets/logo-dark.svg" alt="Muda Vai Vem" width="94" height="26" />
       </div>
       <p class="footer-copy">© 2026 Muda Vai Vem. Disponível para Android.</p>
     </div>

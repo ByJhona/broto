@@ -44,27 +44,25 @@
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root[data-theme="dark"] {
+  color-scheme: dark;
 
-    --bg: #0F140F;
-    --fg: #F7F4EC;
-    --card: #1B221B;
-    --primary: #E9946E;
-    --primary-fg: #21100A;
-    --secondary: #452E20;
-    --secondary-fg: #F7EBDC;
-    --accent: #8EB087;
-    --accent-fg: #EDF2E7;
-    --leaf: #7BA77C;
-    --leaf-fg: #071308;
-    --muted: #262D26;
-    --muted-fg: #BCBDB1;
-    --border: rgba(255, 255, 255, 0.14);
+  --bg: #0F140F;
+  --fg: #F7F4EC;
+  --card: #1B221B;
+  --primary: #E9946E;
+  --primary-fg: #21100A;
+  --secondary: #452E20;
+  --secondary-fg: #F7EBDC;
+  --accent: #8EB087;
+  --accent-fg: #EDF2E7;
+  --leaf: #7BA77C;
+  --leaf-fg: #071308;
+  --muted: #262D26;
+  --muted-fg: #BCBDB1;
+  --border: rgba(255, 255, 255, 0.14);
 
-    --shadow-color: 0 0 0;
-  }
+  --shadow-color: 0 0 0;
 }
 
 * {
@@ -325,7 +323,8 @@ p {
   gap: var(--space-3);
 }
 
-.nav-toggle {
+.nav-toggle,
+.theme-toggle {
   display: none;
   width: 40px;
   height: 40px;
@@ -338,9 +337,30 @@ p {
   cursor: pointer;
 }
 
-.nav-toggle svg {
+.theme-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.nav-toggle svg,
+.theme-toggle svg {
   width: 20px;
   height: 20px;
+}
+
+.theme-toggle .theme-icon {
+  display: none;
+}
+
+[data-theme-choice="auto"] .theme-icon--auto,
+[data-theme-choice="light"] .theme-icon--light,
+[data-theme-choice="dark"] .theme-icon--dark {
+  display: block;
+}
+
+:root:not([data-theme="dark"]) .logo-dark,
+[data-theme="dark"] .logo-light {
+  display: none;
 }
 
 .mobile-menu {
@@ -634,10 +654,8 @@ body.menu-open .mobile-menu {
   box-shadow: var(--shadow-lg);
 }
 
-@media (prefers-color-scheme: dark) {
-  .map-mock {
-    background: linear-gradient(165deg, #1B241B 0%, #212820 55%, #262C22 100%);
-  }
+[data-theme="dark"] .map-mock {
+  background: linear-gradient(165deg, #1B241B 0%, #212820 55%, #262C22 100%);
 }
 
 .map-mock__art {
