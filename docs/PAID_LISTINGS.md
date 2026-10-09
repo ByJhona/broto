@@ -1,12 +1,12 @@
 # Ofertas pagas (Venda)
 
-Como funciona o tipo de oferta "Venda", que permite vender uma planta por um preço fixo dentro do broto.
+Como funciona o tipo de oferta "Venda", que permite vender uma planta por um preço fixo dentro do Muda Vai Vem.
 
 ## Visão geral
 
 `ListingType` ganhou um quarto valor, `sale` ("Venda"), ao lado de `donation`, `exchange` e `discard`. Uma oferta de venda tem tudo que as outras têm (fotos, título, descrição, localização) mais um preço obrigatório em `price_cents`.
 
-O broto **não processa pagamento nenhum**: a "venda" aqui é só o anúncio. A negociação (combinar forma de pagamento, entrega, etc.) acontece pelo mesmo fluxo de chat que já existe pra doação e resgate — quem se interessa toca em "Quero comprar", isso envia uma mensagem de interesse (`sendInterestMessage`, `message_type = 'interest'` em `chat_messages`) exatamente como uma doação, e o dono da oferta vê o card da proposta na própria conversa e aceita ou recusa por ali. Nenhuma lógica nova de negociação foi criada; só o rótulo do botão muda.
+O Muda Vai Vem **não processa pagamento nenhum**: a "venda" aqui é só o anúncio. A negociação (combinar forma de pagamento, entrega, etc.) acontece pelo mesmo fluxo de chat que já existe pra doação e resgate — quem se interessa toca em "Quero comprar", isso envia uma mensagem de interesse (`sendInterestMessage`, `message_type = 'interest'` em `chat_messages`) exatamente como uma doação, e o dono da oferta vê o card da proposta na própria conversa e aceita ou recusa por ali. Nenhuma lógica nova de negociação foi criada; só o rótulo do botão muda.
 
 ## Modelo de dados
 

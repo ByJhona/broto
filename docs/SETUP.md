@@ -1,6 +1,6 @@
-# Configuração do projeto broto
+# Configuração do projeto Muda Vai Vem
 
-Guia para configurar o broto do zero exatamente como ele está hoje: app Expo (SDK 57, só Android), Supabase como backend, RevenueCat para assinaturas/créditos e EAS para build e distribuição.
+Guia para configurar o Muda Vai Vem do zero exatamente como ele está hoje: app Expo (SDK 57, só Android), Supabase como backend, RevenueCat para assinaturas/créditos e EAS para build e distribuição.
 
 ## 1. Requisitos
 
@@ -9,7 +9,7 @@ Guia para configurar o broto do zero exatamente como ele está hoje: app Expo (S
 - Android SDK (`ANDROID_HOME` configurado) — necessário para build local
 - Conta Supabase com acesso ao projeto `by_jhona/broto`
 - Conta EAS/Expo com acesso ao projeto `@by_jhona/broto`
-- Conta RevenueCat com acesso ao projeto do broto
+- Conta RevenueCat com acesso ao projeto do Muda Vai Vem
 - Conta Firebase com acesso ao projeto ligado ao app Android `com.byjhona.broto`
 
 ## 2. Instalar dependências

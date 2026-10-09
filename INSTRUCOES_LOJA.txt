@@ -1,11 +1,11 @@
 COMO ADICIONAR OS NOVOS PRODUTOS (PLAY CONSOLE + REVENUECAT)
 ==============================================================
 
-Isso cobre os 5 produtos novos que já estão prontos no banco do broto,
+Isso cobre os 5 produtos novos que já estão prontos no banco do Muda Vai Vem,
 esperando um produto real na loja com o MESMO nome (id) pra funcionar:
 
-  - premium_annual  → assinatura "Broto+ Anual"
-  - credits_30      → Pacote Broto      (30 créditos)
+  - premium_annual  → assinatura "Muda+ Anual"
+  - credits_30      → Pacote Muda       (30 créditos)
   - credits_80      → Pacote Verde      (80 créditos)
   - credits_200     → Pacote Floresta   (200 créditos)
   - credits_500     → Pacote Jardim     (500 créditos)
@@ -15,11 +15,11 @@ EXATAMENTE igual ao nome de cada item acima (sem maiúscula, sem espaço,
 sem sufixo automático). É assim que o app encontra o preço e que o
 webhook do RevenueCat sabe quantos créditos liberar quando alguém compra.
 
-ANTES DE TUDO: o plano mensal "Broto+" já existe na loja com preço de
-R$ 9,90. Ele foi redefinido pra R$ 14,90 — vá em Play Console >
-Assinaturas > premium > editar preço, e atualize pra R$ 14,90 antes de
-seguir os passos abaixo (o anual e os pacotes de crédito já estão
-calculados em cima desse novo valor).
+ANTES DE TUDO: o plano mensal já existe na loja (Product ID premium),
+ainda com o nome antigo "Broto+" e preço de R$ 9,90. Vá em Play Console >
+Assinaturas > premium, troque o nome pra "Muda+" e atualize o preço pra
+R$ 14,90 antes de seguir os passos abaixo (o anual e os pacotes de
+crédito já estão calculados em cima desse novo valor).
 
 
 1. PLAY CONSOLE — criar os produtos
@@ -27,14 +27,14 @@ calculados em cima desse novo valor).
 
 Acesse: Play Console > seu app > Monetizar > Produtos
 
-a) Assinatura "Broto+ Anual"
+a) Assinatura "Muda+ Anual"
    - Vá em "Assinaturas" > Criar assinatura
    - NÃO adicione como um novo "plano base" dentro da assinatura "premium"
      que já existe hoje — crie uma assinatura NOVA e separada. Isso evita
      um jeito diferente (e mais confuso) de nomear produto que o Google
      usa pra planos base dentro da mesma assinatura.
    - Product ID: premium_annual
-   - Nome: Broto+ Anual
+   - Nome: Muda+ Anual
    - Período de cobrança: 1 ano
    - Preço sugerido: R$ 119,90/ano (equivale a ~R$ 9,99/mês, uns 33%
      mais barato que pagar o mensal de R$ 14,90 os 12 meses do ano
@@ -42,13 +42,13 @@ a) Assinatura "Broto+ Anual"
      no código)
    - Ative o produto.
 
-b) Pacotes de crédito (Broto, Verde, Floresta, Jardim)
+b) Pacotes de crédito (Muda, Verde, Floresta, Jardim)
    - Vá em "Produtos no app" > Criar produto (produto gerenciado, compra única)
    - Crie os 4, um de cada vez, com esses Product IDs exatos:
 
        Product ID       Nome                Preço sugerido
        ---------------  ------------------  --------------
-       credits_30       Pacote Broto        R$ 9,90
+       credits_30       Pacote Muda         R$ 9,90
        credits_80       Pacote Verde        R$ 19,90
        credits_200      Pacote Floresta     R$ 39,90
        credits_500      Pacote Jardim       R$ 79,90
@@ -57,7 +57,7 @@ b) Pacotes de crédito (Broto, Verde, Floresta, Jardim)
 
 c) Despublicar os pacotes antigos
    - Os produtos antigos credits_10, credits_25 e credits_60 não existem
-     mais no banco do broto (foram substituídos pelos 4 acima). Despublique
+     mais no banco do Muda Vai Vem (foram substituídos pelos 4 acima). Despublique
      ou desative esses 3 no Play Console pra ninguém comprar algo que o
      app não vai mais reconhecer.
 
@@ -74,7 +74,7 @@ a) Espere alguns minutos depois de ativar no Play Console — o RevenueCat
 
 b) Assinatura anual → mesmo Entitlement do plano mensal
    - Vá em "Entitlements" > broto_prod (o entitlement que o plano
-     "Broto+" mensal já usa)
+     "Muda+" mensal já usa)
    - Em "Attached Products", adicione premium_annual também.
    - Isso é essencial: é o que garante que quem assina o anual ganha
      exatamente os mesmos recursos de quem assina o mensal.
