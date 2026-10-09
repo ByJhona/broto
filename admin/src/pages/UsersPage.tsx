@@ -4,7 +4,7 @@ import { ArrowLeft, Search, UserCheck } from 'lucide-react';
 import { getActivePenalties, getPenalties, getProfiles, searchProfiles } from '../api';
 import { EmptyState, ErrorState, LoadingState, PageHeader, Person } from '../components';
 import { PenaltyDialog, type PenaltyChoice } from '../dialogs';
-import { formatDate, formatDateTime, PENALTY_LABELS } from '../format';
+import { formatDate, formatDateTime, PENALTY_LABELS, penaltyStatus } from '../format';
 import { isActivePenalty, suggestPenalty } from '../moderation';
 import { useApplyPenalty, useRevokePenalty } from '../mutations';
 import { StandingPills } from '../views';
@@ -64,7 +64,7 @@ function UserDetail({ profile, onBack }: Readonly<{ profile: Profile; onBack: ()
 
   return (
     <div className="stack">
-      <button type="button" className="button button-outline" onClick={onBack}>
+      <button type="button" className="button button-outline self-start" onClick={onBack}>
         <ArrowLeft size={16} strokeWidth={2} />
         Voltar
       </button>
@@ -142,7 +142,7 @@ function UserList({ term, onSelect }: Readonly<{ term: string; onSelect: (profil
             <div className="grow">
               <Person profile={profile} />
             </div>
-            {penalty ? <StandingPills penalties={[penalty]} /> : null}
+            {penalty ? <span className="pill pill-danger">{penaltyStatus(penalty)}</span> : null}
           </div>
         </button>
       ))}

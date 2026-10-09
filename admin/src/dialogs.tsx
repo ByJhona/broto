@@ -39,7 +39,7 @@ export function ReasonDialog({ title, description, confirmLabel, isPending, onCl
         <p className="muted small">{description}</p>
         <label className="field" htmlFor="reason-input">
           Motivo (aparece para a pessoa)
-          <textarea id="reason-input" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
+          <textarea id="reason-input" className="input" data-autofocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         <div className="dialog-actions">
           <button type="button" className="button button-outline" onClick={onClose}>
@@ -119,7 +119,7 @@ export function PenaltyDialog({ profile, suggestion, hideContentLabel, isPending
         {needsDuration(kind) ? <DurationChips days={days} onChange={setDays} /> : null}
         <label className="field" htmlFor="penalty-reason">
           Motivo (aparece para a pessoa)
-          <textarea id="penalty-reason" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
+          <textarea id="penalty-reason" className="input" data-autofocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         {hideContentLabel ? (
           <label className="checkbox" htmlFor="penalty-hide-content">
