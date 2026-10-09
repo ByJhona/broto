@@ -1,3 +1,4 @@
+import { parseArticleBody, readingMinutes, slugify } from './articleBody';
 import { supabase } from './supabase';
 import type { AppRole, ContentReport, ContentType, ModerationAction, Penalty, PenaltyKind, Profile, ReportStatus, UserRole } from './types';
 
@@ -148,5 +149,48 @@ export async function getUserRoles(): Promise<UserRole[]> {
 
 export async function setUserRole(userId: string, role: AppRole | null): Promise<void> {
   const { error } = await supabase.rpc('set_user_role', { p_user_id: userId, p_role: role });
+  if (error) throw error;
+}
+
+export type ArticleLocale = 'pt' | 'en';
+
+export type ArticleInput = {
+  locale: ArticleLocale;
+  category: string;
+  title: string;
+  dek: string;
+  body: string;
+  cover: File | null;
+  isFeatured: boolean;
+};
+
+export async function getArticleCategories(locale: ArticleLocale): Promise<string[]> {
+  const { data, error } = await supabase.from('articles').select('category').eq('locale', locale);
+  if (error) throw error;
+  return [...new Set(data.map((row) => row.category))].sort();
+}
+
+async function uploadArticleCover(file: File): Promise<string> {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage.from('article-covers').upload(path, file, { contentType: file.type });
+  if (error) throw error;
+  return supabase.storage.from('article-covers').getPublicUrl(path).data.publicUrl;
+}
+
+export async function createArticle(input: ArticleInput): Promise<void> {
+  const coverUrl = input.cover ? await uploadArticleCover(input.cover) : null;
+  const { error } = await supabase.from('articles').insert({
+    locale: input.locale,
+    slug: slugify(input.title),
+    category: input.category,
+    title: input.title,
+    dek: input.dek,
+    cover_url: coverUrl,
+    reading_minutes: readingMinutes(input.body),
+    body: parseArticleBody(input.body),
+    is_featured: input.isFeatured,
+    published_at: new Date().toISOString(),
+  });
   if (error) throw error;
 }
