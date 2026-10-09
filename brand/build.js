@@ -182,16 +182,14 @@ async function png(svgText, relativePath, width, height = width) {
   await sharp(Buffer.from(svgText), { density: 300 }).resize(width, height, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(target);
 }
 
-function shareImageSvg(mark) {
-  const width = 1200;
-  const height = 630;
-  const scale = 640 / (mark.box.x2 - mark.box.x1);
+function shareImageSvg(mark, width = 1200, height = 630, markWidth = 640) {
+  const scale = markWidth / (mark.box.x2 - mark.box.x1);
   const markHeight = (mark.box.y2 - mark.box.y1) * scale;
-  const slogan = wordPath(layoutWord(semi, 'muda vai, muda vem', 34), 0, 0);
+  const slogan = wordPath(layoutWord(semi, 'muda vai, muda vem', (34 * markWidth) / 640), 0, 0);
   const sloganBox = slogan.getBoundingBox();
-  const gap = 56;
+  const gap = (56 * markWidth) / 640;
   const top = (height - markHeight - gap - (sloganBox.y2 - sloganBox.y1)) / 2;
-  const markX = (width - 640) / 2 - mark.box.x1 * scale;
+  const markX = (width - markWidth) / 2 - mark.box.x1 * scale;
   const markY = top - mark.box.y1 * scale;
   const sloganX = (width - (sloganBox.x2 - sloganBox.x1)) / 2 - sloganBox.x1;
   const sloganY = top + markHeight + gap - sloganBox.y1;
@@ -251,7 +249,11 @@ async function main() {
   console.log('Marca gerada.');
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+module.exports = { COLORS, bold, semi, layoutWord, wordPath, lockup, symbol, shapes, squareSvg, wideSvg, shareImageSvg };
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
