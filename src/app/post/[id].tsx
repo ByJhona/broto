@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MessageSquare from 'lucide-react-native/icons/message-square';
 import { Metrics, useColors, type ThemeColors, useThemedStyles } from '@/theme';
 import { CommunityPostCard, EmptyState, FloatingScreenControls, PostCardSkeleton, useScreenTopInset } from '@/components';
-import { celebrateXpLevelUp, useAuth } from '@/hooks';
+import { celebrateXpLevelUp, useActiveRestriction, useAuth } from '@/hooks';
 import {
   addComment,
   applyPostUpdateEverywhere,
@@ -66,8 +66,14 @@ export default function PostDetailScreen() {
     }
   };
 
+  const restriction = useActiveRestriction();
+
   const handleAddComment = async (postId: string, text: string, photoUri?: string) => {
     if (!user?.id) return;
+    if (restriction) {
+      Toast.error(restriction);
+      return;
+    }
     try {
       await addComment(postId, user.id, text, photoUri);
       const updated = await getPostById(postId, user.id);

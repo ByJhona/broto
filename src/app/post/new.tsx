@@ -9,7 +9,7 @@ import { Metrics, type ThemeColors, useColors, useThemedStyles, Typography } fro
 import { Avatar, FilterChipRow, FloatingScreenControls, IconButton } from '@/components';
 import { ComposeFooter, COMPOSE_FOOTER_CLEARANCE } from '@/components/compose/ComposeFooter';
 import { PostPhotoStrip } from '@/components/communityPost/PostPhotoStrip';
-import { celebrateXpLevelUp, useAuth } from '@/hooks';
+import { celebrateXpLevelUp, useActiveRestriction, useAuth } from '@/hooks';
 import { addPostToFeeds, createPost, getPostById, getProfile, MAX_POST_PHOTOS } from '@/services';
 import { COMMUNITY_POST_TYPE, type CommunityPostType } from '@/types';
 import { communityPostTypeColor, communityPostTypes, pickPhoto, Toast } from '@/utils';
@@ -57,6 +57,7 @@ export default function NewPostScreen() {
   const [imageUris, setImageUris] = useState<string[]>([]);
   const [postType, setPostType] = useState<CommunityPostType | null>(() => initialPostType(type));
   const [isPosting, setIsPosting] = useState(false);
+  const restriction = useActiveRestriction();
   const canPost = text.trim().length > 0 || imageUris.length > 0;
   const canAddPhoto = imageUris.length < MAX_POST_PHOTOS && !isPosting;
   const isShortPost = text.length <= SHORT_POST_MAX_LENGTH;
@@ -144,7 +145,8 @@ export default function NewPostScreen() {
         label={t('community:postButtonLabel')}
         onPress={handlePost}
         loading={isPosting}
-        disabled={!canPost}
+        disabled={!canPost || restriction !== null}
+        error={restriction}
         leading={photoButton}
       />
       <FloatingScreenControls />

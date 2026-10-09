@@ -14,6 +14,7 @@ import { ShareToCommunityGroup } from '@/components/compose/ShareToCommunityGrou
 import { DraftPhotoGallery } from '@/components/DraftPhotoGallery';
 import { EVENT_COLOR, EVENT_ICON, formatEventDateTime, formatLongDate, formatTime, pickPhoto } from '@/utils';
 import { useTranslation } from '@/i18n';
+import { useActiveRestriction } from '@/hooks';
 
 const MAX_EVENT_PHOTOS = 1;
 
@@ -40,6 +41,7 @@ export default function NewEventScreen() {
   const [shareToCommunity, setShareToCommunity] = useState(true);
   const [communityCaption, setCommunityCaption] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const restriction = useActiveRestriction();
 
   const applyDatePart = (mode: PickerMode, date: Date) => {
     setEventDate((current) => {
@@ -168,7 +170,7 @@ export default function NewEventScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <ComposeFooter label={t('chooseLocationCta')} onPress={handleContinue} error={error} />
+      <ComposeFooter label={t('chooseLocationCta')} onPress={handleContinue} error={restriction ?? error} disabled={restriction !== null} />
       <FloatingScreenControls />
     </View>
   );

@@ -11,7 +11,7 @@ import { ComposeTitleBlock } from '@/components/compose/ComposeTitleBlock';
 import { ShareToCommunityGroup } from '@/components/compose/ShareToCommunityGroup';
 import { DraftPhotoGallery } from '@/components/DraftPhotoGallery';
 import { ListingTypePicker } from '@/components/offers/ListingTypePicker';
-import { useCredits, usePlants } from '@/hooks';
+import { useActiveRestriction, useCredits, usePlants } from '@/hooks';
 import { formatPrice, LISTING_TYPE_COLORS, LISTING_TYPE_ICONS, listingShareVerb, listingTypeLabel, pickPhoto } from '@/utils';
 import { LISTING_TYPE, type ListingType } from '@/types';
 
@@ -60,6 +60,7 @@ export default function NewListingScreen() {
   const [shareToCommunity, setShareToCommunity] = useState(true);
   const [communityCaption, setCommunityCaption] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const restriction = useActiveRestriction();
 
   const handleSelectPlant = (selectedPlantId: string | null) => {
     const plant = plants.find((item) => item.id === selectedPlantId) ?? null;
@@ -167,7 +168,7 @@ export default function NewListingScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <ComposeFooter label={t('chooseLocationCta')} onPress={handleContinue} error={error} />
+      <ComposeFooter label={t('chooseLocationCta')} onPress={handleContinue} error={restriction ?? error} disabled={restriction !== null} />
       <FloatingScreenControls />
     </View>
   );

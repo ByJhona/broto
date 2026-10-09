@@ -46,3 +46,20 @@ export async function acceptTerms(userId: string): Promise<string> {
   if (error) throw error;
   return acceptedAt;
 }
+
+export const MY_RESTRICTION_QUERY_KEY = ['my-restriction'] as const;
+
+export async function getMyActiveRestriction(userId: string): Promise<{ ends_at: string | null } | null> {
+  const { data, error } = await supabase
+    .from('user_penalties')
+    .select('ends_at')
+    .eq('user_id', userId)
+    .in('kind', ['restriction', 'suspension', 'ban'])
+    .is('revoked_at', null)
+    .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
+    .order('ends_at', { ascending: false, nullsFirst: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
