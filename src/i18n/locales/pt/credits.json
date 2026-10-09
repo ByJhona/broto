@@ -58,7 +58,7 @@
   "promoTitle": "Ativar código",
   "promoSubtitle": "Digite o código do cartão ou da campanha para receber sua recompensa.",
   "promoCodeLabel": "Código",
-  "promoCodePlaceholder": "BULBO-XXXXXXXX",
+  "promoCodePlaceholder": "MUDA-XXXXXXXX",
   "promoRedeem": "Ativar",
   "promoEmpty": "Digite um código.",
   "promoInvalid": "Código inválido. Confira e tente de novo.",

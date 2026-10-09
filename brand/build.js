@@ -217,6 +217,7 @@ async function main() {
   await png(squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, fill: 0.5 }), 'assets/images/android-icon-foreground.png', 1024);
   await png(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="${COLORS.cream}"/></svg>`, 'assets/images/android-icon-background.png', 1024);
   await png(squareSvg(mark, { textFill: COLORS.white, sproutFill: COLORS.white, fill: 0.5 }), 'assets/images/android-icon-monochrome.png', 1024);
+  await png(squareSvg(mark, { textFill: COLORS.white, sproutFill: COLORS.white, fill: 0.84 }), 'assets/images/notification-icon.png', 96);
   await png(squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, fill: 0.62 }), 'assets/images/splash-icon.png', 1024);
   await png(squareSvg(mark, { textFill: COLORS.cream, sproutFill: COLORS.lightLeaf, fill: 0.62 }), 'assets/images/splash-icon-dark.png', 1024);
   await png(symbolSvg, 'assets/images/favicon.png', 196);
