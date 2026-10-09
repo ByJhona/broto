@@ -6,7 +6,7 @@ import { DarkTheme, LightTheme, type ThemeColors } from './colors';
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type ResolvedScheme = 'light' | 'dark';
 
-const THEME_PREFERENCE_KEY = 'broto:theme-preference';
+const THEME_PREFERENCE_KEY = 'mudavaivem:theme-preference';
 
 type ThemeContextValue = {
   colors: ThemeColors;

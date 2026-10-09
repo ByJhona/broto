@@ -8,7 +8,7 @@ import pt from './locales/pt';
 
 export type Language = 'en' | 'pt';
 
-const LANGUAGE_PREFERENCE_KEY = 'broto:language-preference';
+const LANGUAGE_PREFERENCE_KEY = 'mudavaivem:language-preference';
 
 function isLanguage(value: string | null): value is Language {
   return value === 'en' || value === 'pt';
