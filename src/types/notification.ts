@@ -7,6 +7,7 @@ export const NOTIFICATION_TYPES = [
   'care_reminder',
   'promo_winner',
   'promo_result',
+  'moderation',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

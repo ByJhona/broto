@@ -8,5 +8,6 @@
   "usernameTaken": "This username is already taken.",
   "networkError": "No internet connection. Please try again.",
   "installGooglePlayServices": "Install or update Google Play Services to continue.",
-  "usernameAlreadyInUse": "This username is already taken."
+  "usernameAlreadyInUse": "This username is already taken.",
+  "accountSuspended": "Your account is suspended for violating the Terms of Use. To appeal, write to jhonatantecno23@gmail.com."
 }

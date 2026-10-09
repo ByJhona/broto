@@ -1,31 +1,30 @@
 import { supabase } from './supabase';
-import type {
-  AppRole,
-  ContentReport,
-  ContentType,
-  ModerationAction,
-  Profile,
-  ReportStatus,
-  Suspension,
-  UserRole,
-} from './types';
+import type { AppRole, ContentReport, ContentType, ModerationAction, Penalty, PenaltyKind, Profile, ReportStatus, UserRole } from './types';
 
 const PROFILE_FIELDS = 'id, name, username, avatar_url';
 const PAGE_SIZE = 100;
 
 const REPORT_FIELDS = `
-  id, reason, status, created_at, resolved_at, post_id, comment_id,
+  id, reason, status, created_at, resolved_at, post_id, comment_id, listing_id, event_id, message_id, reported_user_id,
   reporter:profiles!content_reports_reporter_id_fkey(${PROFILE_FIELDS}),
   post:posts(id, caption, image_urls, created_at, deleted_at, author:profiles!posts_user_id_fkey(${PROFILE_FIELDS})),
-  comment:post_comments(id, text, photo_url, created_at, deleted_at, author:profiles!post_comments_user_id_fkey(${PROFILE_FIELDS}))
+  comment:post_comments(id, text, photo_url, created_at, deleted_at, author:profiles!post_comments_user_id_fkey(${PROFILE_FIELDS})),
+  listing:plant_listings(id, title, description, photo_urls, created_at, deleted_at, author:profiles!plant_listings_user_id_fkey(${PROFILE_FIELDS})),
+  event:events(id, title, description, photo_url, created_at, deleted_at, author:profiles!events_user_id_fkey(${PROFILE_FIELDS})),
+  message:chat_messages(id, body, photo_url, created_at, author:profiles!plant_listing_messages_sender_id_fkey(${PROFILE_FIELDS})),
+  reported_user:profiles!content_reports_reported_user_id_fkey(${PROFILE_FIELDS})
 `;
+
+const PENALTY_FIELDS = 'id, user_id, kind, reason, ends_at, created_by, created_at, revoked_at';
 
 export type ReportFilter = 'open' | 'resolved';
 
-export type SuspendInput = {
+export type PenaltyInput = {
   userId: string;
+  kind: PenaltyKind;
   days: number | null;
   reason: string | null;
+  reportIds: string[];
 };
 
 export async function getMyRole(): Promise<AppRole | null> {
@@ -40,7 +39,7 @@ export async function getReports(filter: ReportFilter): Promise<ContentReport[]>
     .from('content_reports')
     .select(REPORT_FIELDS)
     .in('status', statuses)
-    .order('created_at', { ascending: filter === 'open' })
+    .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
   if (error) throw error;
   return data as unknown as ContentReport[];
@@ -55,8 +54,8 @@ export async function hideContent(contentType: ContentType, contentId: string, r
   if (error) throw error;
 }
 
-export async function resolveReport(reportId: string, status: Exclude<ReportStatus, 'open'>): Promise<void> {
-  const { error } = await supabase.rpc('resolve_content_report', { p_report_id: reportId, p_status: status });
+export async function resolveReports(reportIds: string[], status: Exclude<ReportStatus, 'open'>): Promise<void> {
+  const { error } = await supabase.rpc('resolve_content_reports', { p_report_ids: reportIds, p_status: status });
   if (error) throw error;
 }
 
@@ -84,23 +83,51 @@ export async function getProfiles(ids: string[]): Promise<Map<string, Profile>> 
   return new Map(data.map((profile) => [profile.id, profile]));
 }
 
-export async function getSuspensions(userIds?: string[]): Promise<Map<string, string>> {
-  const { data, error } = await supabase.rpc('get_suspensions', { p_user_ids: userIds ?? null });
+export async function getPenalties(userIds: string[]): Promise<Penalty[]> {
+  if (userIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('user_penalties')
+    .select(PENALTY_FIELDS)
+    .in('user_id', [...new Set(userIds)])
+    .order('created_at', { ascending: false });
   if (error) throw error;
-  return new Map((data as Suspension[]).map((item) => [item.user_id, item.banned_until]));
+  return data as Penalty[];
 }
 
-async function moderateUser(body: Record<string, unknown>): Promise<void> {
-  const { error } = await supabase.functions.invoke('moderate-user', { body });
+export async function getActivePenalties(): Promise<Penalty[]> {
+  const { data, error } = await supabase
+    .from('user_penalties')
+    .select(PENALTY_FIELDS)
+    .neq('kind', 'warning')
+    .is('revoked_at', null)
+    .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
+    .order('created_at', { ascending: false })
+    .limit(PAGE_SIZE);
+  if (error) throw error;
+  return data as Penalty[];
+}
+
+async function syncUserBan(userId: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('sync-user-ban', { body: { userId } });
   if (error) throw error;
 }
 
-export function suspendUser({ userId, days, reason }: SuspendInput): Promise<void> {
-  return moderateUser({ userId, action: 'suspend', days, reason });
+export async function applyPenalty({ userId, kind, days, reason, reportIds }: PenaltyInput): Promise<void> {
+  const { error } = await supabase.rpc('apply_penalty', {
+    p_user_id: userId,
+    p_kind: kind,
+    p_days: days,
+    p_reason: reason,
+    p_report_ids: reportIds.length > 0 ? reportIds : null,
+  });
+  if (error) throw error;
+  if (kind === 'suspension' || kind === 'ban') await syncUserBan(userId);
 }
 
-export function unsuspendUser(userId: string): Promise<void> {
-  return moderateUser({ userId, action: 'unsuspend' });
+export async function revokePenalty(penalty: Penalty): Promise<void> {
+  const { error } = await supabase.rpc('revoke_penalty', { p_penalty_id: penalty.id });
+  if (error) throw error;
+  if (penalty.kind === 'suspension' || penalty.kind === 'ban') await syncUserBan(penalty.user_id);
 }
 
 export async function getModerationActions(): Promise<ModerationAction[]> {

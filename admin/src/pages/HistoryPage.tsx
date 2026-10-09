@@ -2,16 +2,31 @@ import { useQuery } from '@tanstack/react-query';
 import { History } from 'lucide-react';
 import { getModerationActions, getProfiles } from '../api';
 import { Avatar, EmptyState, ErrorState, LoadingState, PageHeader } from '../components';
-import { CONTENT_LABELS, formatDateTime, ROLE_LABELS } from '../format';
+import { formatDateTime, ROLE_LABELS, TARGET_LABELS } from '../format';
 import type { ModerationAction, ModerationActionType, Profile } from '../types';
 
 type Describe = (action: ModerationAction, target: string) => string;
 
+function forDays(action: ModerationAction): string {
+  const days = action.details.days;
+  if (!days) return '';
+  return days === 1 ? ' por 1 dia' : ` por ${days} dias`;
+}
+
+function resolvedReports(action: ModerationAction): string {
+  const count = action.details.count ?? 1;
+  const verb = action.details.status === 'dismissed' ? 'descartou' : 'resolveu';
+  return count === 1 ? `${verb} uma denúncia` : `${verb} ${count} denúncias`;
+}
+
 const DESCRIPTIONS: Record<ModerationActionType, Describe> = {
-  hide_content: (action, target) => `escondeu um ${CONTENT_LABELS[action.content_type ?? 'post']} de ${target}`,
-  resolve_report: (action) => (action.details.status === 'dismissed' ? 'descartou uma denúncia' : 'resolveu uma denúncia'),
-  suspend_user: (action, target) =>
-    action.details.days ? `suspendeu ${target} por ${action.details.days} dias` : `suspendeu ${target} permanentemente`,
+  hide_content: (action, target) => `removeu um ${TARGET_LABELS[action.content_type ?? 'post']} de ${target}`,
+  resolve_report: (action) => resolvedReports(action),
+  warn_user: (_action, target) => `advertiu ${target}`,
+  restrict_user: (action, target) => `restringiu ${target}${forDays(action)}`,
+  suspend_user: (action, target) => (action.details.days ? `suspendeu ${target}${forDays(action)}` : `suspendeu ${target}`),
+  ban_user: (_action, target) => `baniu ${target}`,
+  revoke_penalty: (_action, target) => `removeu uma penalidade de ${target}`,
   unsuspend_user: (_action, target) => `reativou ${target}`,
   set_role: (action, target) => `tornou ${target} ${ROLE_LABELS[action.details.role ?? 'moderator']}`,
   remove_role: (_action, target) => `removeu o papel de ${target}`,
@@ -36,7 +51,7 @@ function HistoryItem({ action, profiles }: Readonly<{ action: ModerationAction; 
       <Avatar profile={moderator ?? null} small />
       <div className="grow">
         <p className="small">
-          <strong>{moderator?.name ?? 'Moderador removido'}</strong> {DESCRIPTIONS[action.action](action, handle(target))}
+          <strong>{moderator?.name ?? 'Sistema'}</strong> {DESCRIPTIONS[action.action](action, handle(target))}
         </p>
         {action.reason ? <p className="small muted">Motivo: {action.reason}</p> : null}
         <p className="caption muted">{formatDateTime(action.created_at)}</p>

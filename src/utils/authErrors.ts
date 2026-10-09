@@ -26,6 +26,9 @@ export function authErrorMessage(error: unknown, fallback: string): string {
   if (message.includes('profiles_username_key')) {
     return i18n.t('errors:usernameTaken');
   }
+  if (message.includes('User is banned')) {
+    return i18n.t('errors:accountSuspended');
+  }
   if (message.includes('Network request failed')) {
     return i18n.t('errors:networkError');
   }

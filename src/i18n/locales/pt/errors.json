@@ -8,5 +8,6 @@
   "usernameTaken": "Esse nome de usuário já está em uso.",
   "networkError": "Sem conexão com a internet. Tente novamente.",
   "installGooglePlayServices": "Instale ou atualize o Google Play Services para continuar.",
-  "usernameAlreadyInUse": "Este nome de usuário já está em uso."
+  "usernameAlreadyInUse": "Este nome de usuário já está em uso.",
+  "accountSuspended": "Sua conta está suspensa por violar os Termos de Uso. Para contestar, escreva para jhonatantecno23@gmail.com."
 }

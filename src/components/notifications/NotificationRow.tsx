@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import Bell from 'lucide-react-native/icons/bell';
 import Droplet from 'lucide-react-native/icons/droplet';
+import ShieldCheck from 'lucide-react-native/icons/shield-check';
 import Heart from 'lucide-react-native/icons/heart';
 import MessageCircle from 'lucide-react-native/icons/message-circle';
 import Sprout from 'lucide-react-native/icons/sprout';
@@ -24,6 +25,7 @@ const TYPE_ICONS: Record<NotificationType, LucideIcon> = {
   care_reminder: Droplet,
   promo_winner: Trophy,
   promo_result: Ticket,
+  moderation: ShieldCheck,
 };
 
 function typeColor(type: NotificationType, colors: ThemeColors): string {

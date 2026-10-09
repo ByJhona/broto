@@ -1,16 +1,19 @@
 import { useState, type FormEvent } from 'react';
 import { Dialog } from './components';
-import type { Profile } from './types';
+import { PENALTY_EFFECTS, PENALTY_LABELS } from './format';
+import type { PenaltySuggestion } from './moderation';
+import type { PenaltyKind, Profile } from './types';
 
-const SUSPENSION_OPTIONS: { days: number | null; label: string }[] = [
-  { days: 1, label: '1 dia' },
-  { days: 7, label: '7 dias' },
-  { days: 30, label: '30 dias' },
-  { days: null, label: 'Permanente' },
-];
+const PENALTY_KINDS: PenaltyKind[] = ['warning', 'restriction', 'suspension', 'ban'];
+const DURATION_OPTIONS = [1, 7, 30];
+const DEFAULT_DURATION = 7;
 
 function cleanReason(reason: string): string | null {
   return reason.trim() || null;
+}
+
+function needsDuration(kind: PenaltyKind): boolean {
+  return kind === 'restriction' || kind === 'suspension';
 }
 
 type ReasonDialogProps = {
@@ -35,7 +38,7 @@ export function ReasonDialog({ title, description, confirmLabel, isPending, onCl
       <form className="stack" onSubmit={handleSubmit}>
         <p className="muted small">{description}</p>
         <label className="field" htmlFor="reason-input">
-          Motivo (opcional)
+          Motivo (aparece para a pessoa)
           <textarea id="reason-input" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         <div className="dialog-actions">
@@ -51,48 +54,76 @@ export function ReasonDialog({ title, description, confirmLabel, isPending, onCl
   );
 }
 
-type SuspendDialogProps = {
+export type PenaltyChoice = {
+  kind: PenaltyKind;
+  days: number | null;
+  reason: string | null;
+  hideContent: boolean;
+};
+
+type PenaltyDialogProps = {
   profile: Profile;
+  suggestion: PenaltySuggestion;
   hideContentLabel?: string;
   isPending: boolean;
   onClose: () => void;
-  onConfirm: (days: number | null, reason: string | null, hideContent: boolean) => void;
+  onConfirm: (choice: PenaltyChoice) => void;
 };
 
-export function SuspendDialog({ profile, hideContentLabel, isPending, onClose, onConfirm }: Readonly<SuspendDialogProps>) {
-  const [days, setDays] = useState<number | null>(7);
+function KindChips({ kind, suggested, onChange }: Readonly<{ kind: PenaltyKind; suggested: PenaltyKind; onChange: (kind: PenaltyKind) => void }>) {
+  return (
+    <div className="chips" role="group" aria-label="Penalidade">
+      {PENALTY_KINDS.map((option) => (
+        <button key={option} type="button" className="chip" aria-pressed={kind === option} onClick={() => onChange(option)}>
+          {PENALTY_LABELS[option]}
+          {option === suggested ? ' · sugerido' : ''}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DurationChips({ days, onChange }: Readonly<{ days: number; onChange: (days: number) => void }>) {
+  return (
+    <div className="chips" role="group" aria-label="Duração">
+      {DURATION_OPTIONS.map((option) => (
+        <button key={option} type="button" className="chip" aria-pressed={days === option} onClick={() => onChange(option)}>
+          {option === 1 ? '1 dia' : `${option} dias`}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function PenaltyDialog({ profile, suggestion, hideContentLabel, isPending, onClose, onConfirm }: Readonly<PenaltyDialogProps>) {
+  const [kind, setKind] = useState<PenaltyKind>(suggestion.kind);
+  const [days, setDays] = useState(suggestion.days ?? DEFAULT_DURATION);
   const [reason, setReason] = useState('');
   const [hideContent, setHideContent] = useState(true);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    onConfirm(days, cleanReason(reason), hideContentLabel !== undefined && hideContent);
+    onConfirm({
+      kind,
+      days: needsDuration(kind) ? days : null,
+      reason: cleanReason(reason),
+      hideContent: hideContentLabel !== undefined && hideContent,
+    });
   };
 
   return (
-    <Dialog open title={`Suspender @${profile.username}`} onClose={onClose}>
+    <Dialog open title={`Penalidade para @${profile.username}`} onClose={onClose}>
       <form className="stack" onSubmit={handleSubmit}>
-        <p className="muted small">A pessoa não consegue mais entrar no app até o fim da suspensão. Quem já está logado sai em até 1 hora.</p>
-        <div className="chips" role="group" aria-label="Duração">
-          {SUSPENSION_OPTIONS.map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              className="chip"
-              aria-pressed={days === option.days}
-              onClick={() => setDays(option.days)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-        <label className="field" htmlFor="suspend-reason">
-          Motivo (opcional)
-          <textarea id="suspend-reason" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
+        <KindChips kind={kind} suggested={suggestion.kind} onChange={setKind} />
+        <p className="muted small">{PENALTY_EFFECTS[kind]}</p>
+        {needsDuration(kind) ? <DurationChips days={days} onChange={setDays} /> : null}
+        <label className="field" htmlFor="penalty-reason">
+          Motivo (aparece para a pessoa)
+          <textarea id="penalty-reason" className="input" autoFocus value={reason} onChange={(event) => setReason(event.target.value)} />
         </label>
         {hideContentLabel ? (
-          <label className="checkbox" htmlFor="suspend-hide-content">
-            <input id="suspend-hide-content" type="checkbox" checked={hideContent} onChange={(event) => setHideContent(event.target.checked)} />
+          <label className="checkbox" htmlFor="penalty-hide-content">
+            <input id="penalty-hide-content" type="checkbox" checked={hideContent} onChange={(event) => setHideContent(event.target.checked)} />
             {hideContentLabel}
           </label>
         ) : null}
@@ -101,7 +132,7 @@ export function SuspendDialog({ profile, hideContentLabel, isPending, onClose, o
             Cancelar
           </button>
           <button type="submit" className="button button-danger" disabled={isPending}>
-            Suspender
+            Aplicar {PENALTY_LABELS[kind].toLowerCase()}
           </button>
         </div>
       </form>

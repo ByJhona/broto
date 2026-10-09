@@ -1,14 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { hideContent, resolveReport, setUserRole, suspendUser, unsuspendUser, type SuspendInput } from './api';
+import { applyPenalty, hideContent, resolveReports, revokePenalty, setUserRole, type PenaltyInput } from './api';
 import { useToast } from './components';
 import { errorMessage } from './format';
-import type { AppRole, ContentType } from './types';
+import type { AppRole, ContentType, Penalty } from './types';
+
+const MODERATION_QUERIES = ['reports', 'penalties', 'history'];
 
 function useModerationMutation<T>(
   mutationFn: (input: T) => Promise<void>,
-  invalidate: string[],
   successMessage: string,
-  failureMessage: string
+  failureMessage: string,
+  invalidate: string[] = MODERATION_QUERIES
 ) {
   const queryClient = useQueryClient();
   const showToast = useToast();
@@ -16,7 +18,7 @@ function useModerationMutation<T>(
   return useMutation({
     mutationFn,
     onSuccess: () => {
-      [...invalidate, 'history'].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+      invalidate.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
       showToast(successMessage);
     },
     onError: (error) => showToast(errorMessage(failureMessage, error), true),
@@ -26,54 +28,39 @@ function useModerationMutation<T>(
 export function useHideContent() {
   return useModerationMutation(
     ({ type, id, reason }: { type: ContentType; id: string; reason: string | null }) => hideContent(type, id, reason),
-    ['reports'],
-    'Conteúdo escondido.',
-    'Não foi possível esconder o conteúdo.'
+    'Conteúdo removido e denúncias resolvidas.',
+    'Não foi possível remover o conteúdo.'
   );
 }
 
-export function useResolveReport() {
+export function useResolveReports() {
   return useModerationMutation(
-    ({ id, status }: { id: string; status: 'dismissed' | 'actioned' }) => resolveReport(id, status),
-    ['reports'],
-    'Denúncia resolvida.',
-    'Não foi possível resolver a denúncia.'
+    ({ ids, status }: { ids: string[]; status: 'dismissed' | 'actioned' }) => resolveReports(ids, status),
+    'Denúncias atualizadas.',
+    'Não foi possível atualizar as denúncias.'
   );
 }
 
-export function useSuspendUser() {
-  return useModerationMutation(suspendUser, ['suspensions'], 'Usuário suspenso.', 'Não foi possível suspender o usuário.');
+type PenaltyWithContent = PenaltyInput & { hide: { type: ContentType; id: string } | null };
+
+async function applyPenaltyWithContent({ hide, ...penalty }: PenaltyWithContent): Promise<void> {
+  if (hide) await hideContent(hide.type, hide.id, penalty.reason);
+  await applyPenalty(penalty);
 }
 
-type SuspendFromReportInput = SuspendInput & {
-  reportId: string;
-  content: { type: ContentType; id: string } | null;
-};
-
-async function suspendFromReport({ reportId, content, ...suspension }: SuspendFromReportInput): Promise<void> {
-  if (content) await hideContent(content.type, content.id, suspension.reason);
-  await suspendUser(suspension);
-  if (!content) await resolveReport(reportId, 'actioned');
+export function useApplyPenalty() {
+  return useModerationMutation(applyPenaltyWithContent, 'Penalidade aplicada.', 'Não foi possível aplicar a penalidade.');
 }
 
-export function useSuspendFromReport() {
-  return useModerationMutation(
-    suspendFromReport,
-    ['reports', 'suspensions'],
-    'Autor suspenso e denúncia resolvida.',
-    'Não foi possível concluir a suspensão.'
-  );
-}
-
-export function useUnsuspendUser() {
-  return useModerationMutation(unsuspendUser, ['suspensions'], 'Usuário reativado.', 'Não foi possível reativar o usuário.');
+export function useRevokePenalty() {
+  return useModerationMutation((penalty: Penalty) => revokePenalty(penalty), 'Penalidade removida.', 'Não foi possível remover a penalidade.');
 }
 
 export function useSetUserRole() {
   return useModerationMutation(
     ({ userId, role }: { userId: string; role: AppRole | null }) => setUserRole(userId, role),
-    ['roles'],
     'Papel atualizado.',
-    'Não foi possível atualizar o papel.'
+    'Não foi possível atualizar o papel.',
+    ['roles', 'history']
   );
 }

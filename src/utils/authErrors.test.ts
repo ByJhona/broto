@@ -22,6 +22,7 @@ describe('authErrorMessage', () => {
     ['Unable to validate email address', 'errors:invalidEmail'],
     ['invalid format for field email', 'errors:invalidEmail'],
     ['duplicate key value violates unique constraint "profiles_username_key"', 'errors:usernameTaken'],
+    ['User is banned', 'errors:accountSuspended'],
     ['Network request failed', 'errors:networkError'],
   ])('maps a raw error containing %p to the user-facing message for %p', (rawMessage, translationKey) => {
     expect(authErrorMessage(new Error(rawMessage), FALLBACK)).toBe(i18n.t(translationKey));

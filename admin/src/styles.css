@@ -270,6 +270,18 @@ textarea {
   background: var(--card);
 }
 
+.card-button {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.card-button:hover {
+  border-color: var(--leaf);
+}
+
 .list {
   display: flex;
   flex-direction: column;
