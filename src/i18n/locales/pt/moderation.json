@@ -31,7 +31,5 @@
   "termsGateIntro": "Para continuar usando o Bulbo, leia e aceite os Termos de Uso. Eles explicam o que pode ser publicado e como funciona a moderação.",
   "termsAccept": "Li e aceito os Termos de Uso",
   "termsAcceptError": "Não foi possível registrar o aceite. Tente novamente.",
-  "someone": "esta pessoa",
-  "restrictedUntil": "Você não pode publicar até {{date}} por violar os Termos de Uso. O motivo está nas suas notificações.",
-  "restrictedIndefinitely": "Você não pode mais publicar por violar os Termos de Uso. O motivo está nas suas notificações."
+  "someone": "esta pessoa"
 }

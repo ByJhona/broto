@@ -9,7 +9,7 @@ import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 import TriangleAlert from 'lucide-react-native/icons/triangle-alert';
 import { Metrics, useColors, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { Avatar, EmptyState, FloatingPill, IconButton, PhotoViewerModal, StatusNotice } from '@/components';
+import { Avatar, EmptyState, FloatingPill, IconButton, PhotoViewerModal } from '@/components';
 import { buildChatRows, type ChatRow } from '@/components/chat/chatRows';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatDayDivider } from '@/components/chat/ChatDayDivider';
@@ -17,7 +17,7 @@ import { ChatIntro } from '@/components/chat/ChatIntro';
 import { ChatSkeleton } from '@/components/chat/ChatSkeleton';
 import { MessageBubble } from '@/components/chat/MessageBubble';
 import { ProposalEventCard } from '@/components/chat/ProposalEventCard';
-import { useActiveRestriction, useChat, useModerationActions } from '@/hooks';
+import { useChat, useModerationActions } from '@/hooks';
 import { getProfile, setActiveChatUser } from '@/services';
 import { ActionSheet, confirmCloseListing, pickPhoto, Toast } from '@/utils';
 
@@ -53,7 +53,6 @@ export default function ChatScreen() {
   const { t } = useTranslation(['chat', 'common']);
   const chat = useChat(otherUserId);
   const moderation = useModerationActions();
-  const restriction = useActiveRestriction();
   const rows = useMemo(() => buildChatRows(chat.timeline, chat.currentUserId).reverse(), [chat.timeline, chat.currentUserId]);
   const newMessages = useNewMessagesIndicator(rows[0]);
 
@@ -226,20 +225,14 @@ export default function ChatScreen() {
 
       <View style={styles.body}>{renderBody()}</View>
 
-      {restriction ? (
-        <View style={styles.restricted}>
-          <StatusNotice text={restriction} />
-        </View>
-      ) : (
-        <ChatComposer
-          draft={draft}
-          onChangeDraft={setDraft}
-          attachedPhotoUri={attachedPhotoUri}
-          onPickPhoto={handlePickPhoto}
-          onRemovePhoto={() => setAttachedPhotoUri(null)}
-          onSend={handleSend}
-        />
-      )}
+      <ChatComposer
+        draft={draft}
+        onChangeDraft={setDraft}
+        attachedPhotoUri={attachedPhotoUri}
+        onPickPhoto={handlePickPhoto}
+        onRemovePhoto={() => setAttachedPhotoUri(null)}
+        onSend={handleSend}
+      />
       <PhotoViewerModal photoUrl={viewerPhotoUrl} onClose={() => setViewerPhotoUrl(null)} />
     </View>
   );
@@ -250,12 +243,6 @@ const makeStyles = (colors: ThemeColors) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    restricted: {
-      paddingHorizontal: Metrics.spacing.lg,
-      paddingTop: Metrics.spacing.md,
-      borderTopWidth: Metrics.borderWidth.sm,
-      borderTopColor: colors.border,
     },
     headerTitle: {
       flexDirection: 'row',

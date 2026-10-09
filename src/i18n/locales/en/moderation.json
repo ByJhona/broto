@@ -31,7 +31,5 @@
   "termsGateIntro": "To keep using Bulbo, please read and accept the Terms of Use. They explain what can be posted and how moderation works.",
   "termsAccept": "I've read and accept the Terms of Use",
   "termsAcceptError": "Couldn't save your acceptance. Please try again.",
-  "someone": "this person",
-  "restrictedUntil": "You can't post until {{date}} for violating the Terms of Use. You'll find the reason in your notifications.",
-  "restrictedIndefinitely": "You can no longer post for violating the Terms of Use. You'll find the reason in your notifications."
+  "someone": "this person"
 }

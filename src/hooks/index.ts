@@ -25,4 +25,3 @@ export * from './useRecentlyCatalogedSpecies';
 export * from './useUserLocation';
 export * from './useXp';
 export * from './useModerationActions';
-export * from './useActiveRestriction';
