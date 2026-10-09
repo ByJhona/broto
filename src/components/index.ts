@@ -6,7 +6,7 @@ export * from './Avatar';
 export * from './BadgeCard';
 export * from './BadgeDetailModal';
 export * from './BottomBar';
-export * from './BrotoLogo';
+export * from './BrandLogo';
 export * from './Button';
 export * from './Card';
 export * from './CardGroup';

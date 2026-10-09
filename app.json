@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bulbo",
+    "name": "Muda Vai Vem",
     "slug": "broto",
     "version": "1.0.48",
     "orientation": "default",
@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#EAF1E3",
+        "backgroundColor": "#FAF5EB",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,21 +32,25 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#EAF1E3",
+          "backgroundColor": "#FAF5EB",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 320
+          "imageWidth": 200,
+          "dark": {
+            "backgroundColor": "#0F140F",
+            "image": "./assets/images/splash-icon-dark.png"
+          }
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "O Bulbo usa suas fotos para você adicionar uma imagem da sua planta."
+          "photosPermission": "O Muda Vai Vem usa suas fotos para você adicionar uma imagem da sua planta."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "O Bulbo usa a câmera para você fotografar suas plantas.",
+          "cameraPermission": "O Muda Vai Vem usa a câmera para você fotografar suas plantas.",
           "microphonePermission": false,
           "barcodeScannerEnabled": false
         }
@@ -56,7 +60,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "O Bulbo usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
+          "locationWhenInUsePermission": "O Muda Vai Vem usa sua localização pra mostrar plantas disponíveis perto de você no mapa."
         }
       ],
       "@react-native-google-signin/google-signin",

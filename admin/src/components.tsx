@@ -119,3 +119,12 @@ export function Dialog({ open, title, onClose, children }: Readonly<DialogProps>
     </dialog>
   );
 }
+
+export function BrandLogo({ className }: Readonly<{ className: string }>) {
+  return (
+    <picture>
+      <source srcSet="/logo-dark.svg" media="(prefers-color-scheme: dark)" />
+      <img className={className} src="/logo.svg" alt="Muda Vai Vem" />
+    </picture>
+  );
+}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../supabase';
 import { errorMessage } from '../format';
+import { BrandLogo } from '../components';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -30,8 +31,8 @@ export function LoginPage() {
     <main className="center-screen">
       <div className="card login-card stack">
         <div className="login-brand">
-          <img src="/logo-mark.png" alt="" />
-          <h1>Moderação do Bulbo</h1>
+          <BrandLogo className="login-logo" />
+          <h1>Moderação</h1>
           <p className="muted small">Entre com a mesma conta que você usa no app.</p>
         </div>
         {error ? <p className="error">{error}</p> : null}

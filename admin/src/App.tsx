@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import { Flag, History, LogOut, Newspaper, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
 import { getMyRole } from './api';
-import { ErrorState, LoadingState } from './components';
+import { BrandLogo, ErrorState, LoadingState } from './components';
 import { ROLE_LABELS } from './format';
 import { ArticlePage } from './pages/ArticlePage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -54,7 +54,7 @@ function NoAccess() {
     <main className="center-screen">
       <div className="card login-card stack">
         <div className="login-brand">
-          <img src="/logo-mark.png" alt="" />
+          <BrandLogo className="login-logo" />
           <h1>Sem acesso</h1>
           <p className="muted small">Esta conta não faz parte da equipe de moderação. Peça a um admin para adicionar você.</p>
         </div>
@@ -83,11 +83,8 @@ function Shell({ session, role }: Readonly<{ session: Session; role: AppRole }>)
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/logo-mark.png" alt="" />
-          <div>
-            <div className="brand-name">Bulbo</div>
-            <div className="brand-tag">Moderação</div>
-          </div>
+          <BrandLogo className="brand-logo" />
+          <div className="brand-tag">Moderação</div>
         </div>
         <nav className="nav" aria-label="Seções">
           {navItems.map(({ page: itemPage, label, icon: Icon }) => (

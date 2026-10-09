@@ -1,0 +1,13 @@
+{
+  "name": "muda-vai-vem-brand",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Generates the Muda Vai Vem logo files and app icons from the Fredoka font.",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "opentype.js": "1.3.4",
+    "sharp": "0.35.5"
+  }
+}

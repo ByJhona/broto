@@ -181,21 +181,15 @@ textarea {
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  flex-direction: column;
+  gap: var(--space-xs);
   padding: 0 var(--space-sm);
 }
 
-.brand img {
-  width: 22px;
+.brand-logo {
+  display: block;
   height: 36px;
-}
-
-.brand-name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 28px;
+  width: auto;
 }
 
 .brand-tag {
@@ -608,9 +602,10 @@ textarea.input {
   text-align: center;
 }
 
-.login-brand img {
-  width: 30px;
+.login-logo {
+  display: block;
   height: 48px;
+  width: auto;
 }
 
 .divider {

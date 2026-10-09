@@ -3,7 +3,7 @@ import { canAfford, type CreditsState } from './credits';
 function makeCredits(overrides: Partial<CreditsState> = {}): CreditsState {
   return {
     planId: 'premium',
-    planName: 'Bulbo+',
+    planName: 'Muda+',
     monthlyCredits: 40,
     balance: 10,
     creditRenewalPeriod: 'weekly',

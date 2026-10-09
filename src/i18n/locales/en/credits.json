@@ -69,7 +69,7 @@
   "promoUnknownError": "Could not redeem right now. Try again in a moment.",
   "promoSuccessTitle": "Code redeemed!",
   "promoLuckyNumberLabel": "Your lucky number",
-  "promoLuckyNumberHint": "Keep this number. The draw happens live on Bulbo's Instagram.",
+  "promoLuckyNumberHint": "Keep this number. The draw happens live on Muda Vai Vem's Instagram.",
   "promoCreditsEarned_one": "+{{count}} credit added to your account",
   "promoCreditsEarned_other": "+{{count}} credits added to your account",
   "promoDone": "Done",
@@ -78,5 +78,5 @@
   "luckyStatusPendingUntil": "Waiting for the draw · ends {{date}}",
   "luckyStatusDrawn": "Draw done. Not this time.",
   "luckyStatusWinner": "You won!",
-  "luckyContactAction": "Talk to Bulbo"
+  "luckyContactAction": "Talk to us"
 }

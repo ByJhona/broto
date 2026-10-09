@@ -99,7 +99,7 @@ function AddMember() {
 export function RolesPage({ currentUserId }: Readonly<{ currentUserId: string }>) {
   return (
     <div className="content">
-      <PageHeader title="Equipe" subtitle="Quem pode moderar o Bulbo. Moderadores cuidam das denúncias e suspensões; admins também gerenciam a equipe." />
+      <PageHeader title="Equipe" subtitle="Quem pode moderar o Muda Vai Vem. Moderadores cuidam das denúncias e suspensões; admins também gerenciam a equipe." />
       <TeamList currentUserId={currentUserId} />
       <AddMember />
     </div>

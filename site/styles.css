@@ -277,23 +277,14 @@ p {
 
 .brand {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
   text-decoration: none;
   flex-shrink: 0;
 }
 
 .brand img {
-  width: 24px;
-  height: auto;
-  margin-bottom: -2px;
-}
-
-.brand span {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.25rem;
-  color: var(--fg);
+  display: block;
+  height: 36px;
+  width: auto;
 }
 
 .nav-links {
@@ -925,18 +916,12 @@ body.menu-open .mobile-menu {
 
 .footer-brand {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
 }
 
 .footer-brand img {
-  width: 18px;
-  margin-bottom: -1px;
-}
-
-.footer-brand span {
-  font-family: var(--font-display);
-  font-weight: 600;
+  display: block;
+  height: 26px;
+  width: auto;
 }
 
 .footer-copy {

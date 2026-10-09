@@ -5,7 +5,7 @@ import { useRouter, type Href } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Metrics, type ThemeColors, useThemedStyles, Typography } from '@/theme';
 import { useTranslation } from '@/i18n';
-import { BrotoLogo } from './BrotoLogo';
+import { BrandLogo } from './BrandLogo';
 import { FloatingScreenControls } from './FloatingScreenControls';
 import { OfflineBanner } from './OfflineBanner';
 import { TextButton } from './TextButton';
@@ -51,7 +51,7 @@ export function AuthLayout({
         bottomOffset={Metrics.spacing.lg}
       >
         <View style={styles.logo}>
-          <BrotoLogo size={Metrics.size.hero} />
+          <BrandLogo height={Metrics.size.xl} />
         </View>
 
         <Text style={styles.title} accessibilityRole="header">

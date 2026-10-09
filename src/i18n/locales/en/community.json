@@ -22,7 +22,7 @@
   "otherPostActionsTitle": "{{name}}'s post",
   "otherCommentActionsTitle": "{{name}}'s comment",
   "sharePostAction": "Share",
-  "sharePostMessage": "Check out this post by {{author}} on Bulbo: {{link}}",
+  "sharePostMessage": "Check out this post by {{author}} on Muda Vai Vem: {{link}}",
   "reportPostAction": "Report post",
   "reportCommentAction": "Report comment",
   "boostSuccess": "Post boosted for {{hours}}h!",

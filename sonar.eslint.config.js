@@ -12,6 +12,6 @@ module.exports = defineConfig([
     },
   },
   {
-    ignores: ['dist/*', 'admin/*'],
+    ignores: ['dist/*', 'admin/*', 'brand/*'],
   },
 ]);

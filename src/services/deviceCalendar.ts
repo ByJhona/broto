@@ -1,7 +1,8 @@
 import * as Calendar from 'expo-calendar';
 import type { CareTask } from '@/types';
 
-const APP_CALENDAR_TITLE = 'Bulbo';
+const APP_CALENDAR_TITLE = 'Muda Vai Vem';
+const KNOWN_CALENDAR_TITLES = new Set([APP_CALENDAR_TITLE, 'Bulbo']);
 const APP_CALENDAR_COLOR = '#455F40';
 const EVENT_DURATION_MINUTES = 30;
 
@@ -9,7 +10,9 @@ let cachedCalendarId: string | null = null;
 
 async function findExistingCalendar(): Promise<Calendar.ExpoCalendar | undefined> {
   const calendars = await Calendar.getCalendars(Calendar.EntityTypes.EVENT);
-  return calendars.find((calendar) => calendar.title === APP_CALENDAR_TITLE);
+  const existing = calendars.find((calendar) => KNOWN_CALENDAR_TITLES.has(calendar.title));
+  if (existing?.isVisible && existing.title !== APP_CALENDAR_TITLE) await existing.update({ title: APP_CALENDAR_TITLE });
+  return existing;
 }
 
 async function createAppCalendar(): Promise<Calendar.ExpoCalendar> {

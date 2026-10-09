@@ -22,7 +22,7 @@
   "otherPostActionsTitle": "Publicação de {{name}}",
   "otherCommentActionsTitle": "Recado de {{name}}",
   "sharePostAction": "Compartilhar",
-  "sharePostMessage": "Veja essa publicação de {{author}} no Bulbo: {{link}}",
+  "sharePostMessage": "Veja essa publicação de {{author}} no Muda Vai Vem: {{link}}",
   "reportPostAction": "Denunciar publicação",
   "reportCommentAction": "Denunciar recado",
   "boostSuccess": "Publicação impulsionada por {{hours}}h!",

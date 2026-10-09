@@ -69,7 +69,7 @@
   "promoUnknownError": "Não foi possível ativar agora. Tente de novo em instantes.",
   "promoSuccessTitle": "Código ativado!",
   "promoLuckyNumberLabel": "Seu número da sorte",
-  "promoLuckyNumberHint": "Guarde esse número. O sorteio é feito ao vivo no Instagram do Bulbo.",
+  "promoLuckyNumberHint": "Guarde esse número. O sorteio é feito ao vivo no Instagram do Muda Vai Vem.",
   "promoCreditsEarned_one": "+{{count}} crédito na sua conta",
   "promoCreditsEarned_other": "+{{count}} créditos na sua conta",
   "promoDone": "Concluir",
@@ -78,5 +78,5 @@
   "luckyStatusPendingUntil": "Aguardando sorteio · encerra em {{date}}",
   "luckyStatusDrawn": "Sorteio realizado. Não foi dessa vez.",
   "luckyStatusWinner": "Você ganhou!",
-  "luckyContactAction": "Falar com o Bulbo"
+  "luckyContactAction": "Falar com a gente"
 }
