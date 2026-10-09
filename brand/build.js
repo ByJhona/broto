@@ -182,6 +182,23 @@ async function png(svgText, relativePath, width, height = width) {
   await sharp(Buffer.from(svgText), { density: 300 }).resize(width, height, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(target);
 }
 
+function shareImageSvg(mark) {
+  const width = 1200;
+  const height = 630;
+  const scale = 640 / (mark.box.x2 - mark.box.x1);
+  const markHeight = (mark.box.y2 - mark.box.y1) * scale;
+  const slogan = wordPath(layoutWord(semi, 'muda vai, muda vem', 34), 0, 0);
+  const sloganBox = slogan.getBoundingBox();
+  const gap = 56;
+  const top = (height - markHeight - gap - (sloganBox.y2 - sloganBox.y1)) / 2;
+  const markX = (width - 640) / 2 - mark.box.x1 * scale;
+  const markY = top - mark.box.y1 * scale;
+  const sloganX = (width - (sloganBox.x2 - sloganBox.x1)) / 2 - sloganBox.x1;
+  const sloganY = top + markHeight + gap - sloganBox.y1;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}"><rect width="${width}" height="${height}" fill="${COLORS.cream}"/><g transform="translate(${markX.toFixed(2)} ${markY.toFixed(2)}) scale(${scale.toFixed(4)})">${shapes(mark, COLORS.ink, COLORS.leaf)}</g><path fill="${COLORS.leaf}" transform="translate(${sloganX.toFixed(2)} ${sloganY.toFixed(2)})" d="${slogan.toPathData(2)}"/></svg>
+`;
+}
+
 function typescriptModule(mark) {
   const width = mark.box.x2 - mark.box.x1;
   const height = mark.box.y2 - mark.box.y1;
@@ -224,6 +241,7 @@ async function main() {
 
   write('site/assets/logo.svg', logoLight);
   write('site/assets/logo-dark.svg', logoDark);
+  await png(shareImageSvg(full), 'site/assets/og-image.png', 1200, 630);
   await png(symbolSvg, 'site/assets/favicon.png', 196);
   write('admin/public/logo.svg', logoLight);
   write('admin/public/logo-dark.svg', logoDark);
