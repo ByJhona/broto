@@ -150,19 +150,3 @@ export async function setUserRole(userId: string, role: AppRole | null): Promise
   const { error } = await supabase.rpc('set_user_role', { p_user_id: userId, p_role: role });
   if (error) throw error;
 }
-
-export type PostType = 'conquista' | 'duvida' | 'dica';
-
-async function uploadPostImage(userId: string, file: File): Promise<string> {
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const path = `${userId}/${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from('posts').upload(path, file, { contentType: file.type });
-  if (error) throw error;
-  return supabase.storage.from('posts').getPublicUrl(path).data.publicUrl;
-}
-
-export async function createPost(userId: string, caption: string, postType: PostType | null, images: File[]): Promise<void> {
-  const imageUrls = await Promise.all(images.map((file) => uploadPostImage(userId, file)));
-  const { error } = await supabase.from('posts').insert({ user_id: userId, caption, post_type: postType, image_urls: imageUrls });
-  if (error) throw error;
-}
