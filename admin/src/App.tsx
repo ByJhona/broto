@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
-import { Flag, History, LogOut, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
+import { Flag, History, LogOut, ShieldCheck, SquarePen, Users, type LucideIcon } from 'lucide-react';
 import { getMyRole } from './api';
 import { ErrorState, LoadingState } from './components';
 import { ROLE_LABELS } from './format';
 import { HistoryPage } from './pages/HistoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { PublishPage } from './pages/PublishPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { RolesPage } from './pages/RolesPage';
 import { UsersPage } from './pages/UsersPage';
 import { supabase } from './supabase';
 import type { AppRole } from './types';
 
-type Page = 'reports' | 'users' | 'history' | 'roles';
+type Page = 'reports' | 'users' | 'history' | 'publish' | 'roles';
 
 const NAV_ITEMS: { page: Page; label: string; icon: LucideIcon; adminOnly: boolean }[] = [
   { page: 'reports', label: 'Denúncias', icon: Flag, adminOnly: false },
   { page: 'users', label: 'Usuários', icon: Users, adminOnly: false },
   { page: 'history', label: 'Histórico', icon: History, adminOnly: false },
+  { page: 'publish', label: 'Publicar', icon: SquarePen, adminOnly: true },
   { page: 'roles', label: 'Equipe', icon: ShieldCheck, adminOnly: true },
 ];
 
@@ -67,6 +69,7 @@ function NoAccess() {
 function CurrentPage({ page, userId }: Readonly<{ page: Page; userId: string }>) {
   if (page === 'users') return <UsersPage />;
   if (page === 'history') return <HistoryPage />;
+  if (page === 'publish') return <PublishPage userId={userId} />;
   if (page === 'roles') return <RolesPage currentUserId={userId} />;
   return <ReportsPage />;
 }
