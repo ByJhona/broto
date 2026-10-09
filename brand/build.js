@@ -52,32 +52,36 @@ function wordPath(word, left, top) {
   return result;
 }
 
-const LEAF_ANGLE = (32 * Math.PI) / 180;
-const LEAF_LENGTH = 40;
-const LEAF_WIDTH = 16;
+const STEM_BEND = 3;
+const RIGHT_LEAF = { angle: 30, length: 46, width: 16.5, rise: 4 };
+const LEFT_LEAF = { angle: 22, length: 38, width: 13.5, rise: 7 };
 
-function leafPath(baseX, baseY, direction) {
-  const along = { x: Math.cos(LEAF_ANGLE), y: -Math.sin(LEAF_ANGLE) };
-  const up = { x: -Math.sin(LEAF_ANGLE), y: -Math.cos(LEAF_ANGLE) };
+function leafPath(baseX, baseY, direction, leaf) {
+  const radians = (leaf.angle * Math.PI) / 180;
+  const along = { x: Math.cos(radians), y: -Math.sin(radians) };
+  const up = { x: -Math.sin(radians), y: -Math.cos(radians) };
   const point = (x, y) => {
-    const dx = x * LEAF_LENGTH;
-    const dy = y * LEAF_WIDTH;
+    const dx = x * leaf.length;
+    const dy = y * leaf.width;
     return [baseX + direction * (dx * along.x + dy * up.x), baseY + dx * along.y + dy * up.y];
   };
-  const leaf = new opentype.Path();
-  leaf.moveTo(...point(0, 0));
-  leaf.curveTo(...point(0.02, 1.35), ...point(0.75, 1.5), ...point(1, (0.06 * LEAF_LENGTH) / LEAF_WIDTH));
-  leaf.curveTo(...point(0.95, -0.9), ...point(0.2, -1.1), ...point(0, 0));
-  leaf.close();
-  return leaf;
+  const shape = new opentype.Path();
+  shape.moveTo(...point(0, 0));
+  shape.curveTo(...point(0.12, 1.15), ...point(0.62, 1.45), ...point(1, (0.1 * leaf.length) / leaf.width));
+  shape.curveTo(...point(0.86, -0.55), ...point(0.3, -0.85), ...point(0, 0));
+  shape.close();
+  return shape;
 }
 
 function stemPath(centerX, top, bottom, halfWidth) {
+  const middle = (top + bottom) / 2;
+  const topX = centerX + STEM_BEND;
   const stem = new opentype.Path();
-  stem.moveTo(centerX - halfWidth, top + halfWidth);
-  stem.quadTo(centerX - halfWidth, top, centerX, top);
-  stem.quadTo(centerX + halfWidth, top, centerX + halfWidth, top + halfWidth);
-  stem.lineTo(centerX + halfWidth, bottom - halfWidth);
+  stem.moveTo(centerX - halfWidth, bottom - halfWidth);
+  stem.quadTo(centerX - halfWidth, middle, topX - halfWidth, top + halfWidth);
+  stem.quadTo(topX - halfWidth, top, topX, top);
+  stem.quadTo(topX + halfWidth, top, topX + halfWidth, top + halfWidth);
+  stem.quadTo(centerX + halfWidth, middle, centerX + halfWidth, bottom - halfWidth);
   stem.quadTo(centerX + halfWidth, bottom, centerX, bottom);
   stem.quadTo(centerX - halfWidth, bottom, centerX - halfWidth, bottom - halfWidth);
   stem.close();
@@ -85,7 +89,13 @@ function stemPath(centerX, top, bottom, halfWidth) {
 }
 
 function sprout(centerX, stemBottom) {
-  return [stemPath(centerX, -10, stemBottom, 6), leafPath(centerX, -6, -1), leafPath(centerX, -6, 1)];
+  const top = -12;
+  const leafX = centerX + STEM_BEND;
+  return [
+    stemPath(centerX, top, stemBottom, 6),
+    leafPath(leafX, top + LEFT_LEAF.rise, -1, LEFT_LEAF),
+    leafPath(leafX, top + RIGHT_LEAF.rise, 1, RIGHT_LEAF),
+  ];
 }
 
 function centerOf(pathObject) {
