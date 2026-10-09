@@ -52,15 +52,22 @@ function wordPath(word, left, top) {
   return result;
 }
 
-function leafPath(baseX, baseY, direction, unit) {
-  const tipX = baseX + direction * 34 * unit;
-  const tipY = baseY - 30 * unit;
-  const midX = (baseX + tipX) / 2;
-  const midY = (baseY + tipY) / 2;
+const LEAF_ANGLE = (32 * Math.PI) / 180;
+const LEAF_LENGTH = 40;
+const LEAF_WIDTH = 16;
+
+function leafPath(baseX, baseY, direction) {
+  const along = { x: Math.cos(LEAF_ANGLE), y: -Math.sin(LEAF_ANGLE) };
+  const up = { x: -Math.sin(LEAF_ANGLE), y: -Math.cos(LEAF_ANGLE) };
+  const point = (x, y) => {
+    const dx = x * LEAF_LENGTH;
+    const dy = y * LEAF_WIDTH;
+    return [baseX + direction * (dx * along.x + dy * up.x), baseY + dx * along.y + dy * up.y];
+  };
   const leaf = new opentype.Path();
-  leaf.moveTo(baseX, baseY);
-  leaf.quadTo(midX - direction * 8.6 * unit, midY - 9.75 * unit, tipX, tipY);
-  leaf.quadTo(midX + direction * 8.6 * unit, midY + 9.75 * unit, baseX, baseY);
+  leaf.moveTo(...point(0, 0));
+  leaf.curveTo(...point(0.02, 1.35), ...point(0.75, 1.5), ...point(1, (0.06 * LEAF_LENGTH) / LEAF_WIDTH));
+  leaf.curveTo(...point(0.95, -0.9), ...point(0.2, -1.1), ...point(0, 0));
   leaf.close();
   return leaf;
 }
@@ -77,12 +84,8 @@ function stemPath(centerX, top, bottom, halfWidth) {
   return stem;
 }
 
-function sprout(centerX, stemBottom, unit) {
-  return [
-    stemPath(centerX, -20 * unit, stemBottom, 6 * unit),
-    leafPath(centerX, -12 * unit, -1, unit),
-    leafPath(centerX, -12 * unit, 1, unit),
-  ];
+function sprout(centerX, stemBottom) {
+  return [stemPath(centerX, -10, stemBottom, 6), leafPath(centerX, -6, -1), leafPath(centerX, -6, 1)];
 }
 
 function centerOf(pathObject) {
@@ -116,21 +119,21 @@ function lockup() {
   const rightX = muda.width + CAP * BLOCK_GAP_RATIO;
   const text = new opentype.Path();
   [wordPath(muda, 0, 0), wordPath(vai, rightX, 0), wordPath(vem, rightX, lineCap + lineGap)].forEach((p) => text.extend(p));
-  const sproutParts = sprout(centerOf(glyphPath(muda, 1, 0, 0)), 55, 1);
-  return { text, sprout: sproutParts, box: unionBox([text, ...sproutParts]) };
+  const sproutParts = sprout(centerOf(glyphPath(muda, 1, 0, 0)), 55);
+  return { text, sprout: sproutParts, sproutBehind: false, box: unionBox([text, ...sproutParts]) };
 }
 
 function symbol() {
   const m = layoutWord(bold, 'M', CAP);
   const text = wordPath(m, 0, 0);
-  const sproutParts = sprout(centerOf(text), innerNotchTop(text) - 8, 1);
-  return { text, sprout: sproutParts, box: unionBox([text, ...sproutParts]) };
+  const sproutParts = sprout(centerOf(text), innerNotchTop(text) + 16);
+  return { text, sprout: sproutParts, sproutBehind: true, box: unionBox([text, ...sproutParts]) };
 }
 
 function shapes(mark, textFill, sproutFill) {
   const textShape = `<path fill="${textFill}" d="${mark.text.toPathData(2)}"/>`;
   const sproutShapes = mark.sprout.map((part) => `<path fill="${sproutFill}" d="${part.toPathData(2)}"/>`).join('');
-  return textShape + sproutShapes;
+  return mark.sproutBehind ? sproutShapes + textShape : textShape + sproutShapes;
 }
 
 function placed(mark, size, maxWidth, maxHeight) {
