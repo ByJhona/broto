@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const sharp = require('sharp');
-const { COLORS, bold, semi, layoutWord, wordPath, lockup, symbol, squareSvg, wideSvg, shareImageSvg } = require('./build');
+const { COLORS, appIconSvg, bold, semi, layoutWord, wordPath, lockup, symbol, squareSvg, wideSvg, shareImageSvg } = require('./build');
 
 const BRAND_COLORS = [
   { name: 'Tinta', hex: COLORS.ink, use: 'Texto e letras do logo' },
@@ -108,7 +108,7 @@ li { margin-bottom: 3px; }
 <div class="pair"><div class="light">${logo}</div><div class="dark">${logoDark}</div></div>
 
 <h2>Símbolo</h2>
-<p>O M com o broto é usado onde o logo completo não cabe: ícone do app, foto de perfil, favicon e carimbos. O caule nasce de trás do M.</p>
+<p>O M com o broto é usado onde o logo completo não cabe: foto de perfil, favicon, notificações e carimbos. O caule nasce de trás do M. O ícone do app usa o logo completo sobre o verde Folha.</p>
 <div class="pair small"><div class="light">${mark}</div><div class="dark">${markDark}</div><div class="light" style="background:${COLORS.leaf}">${markDark}</div></div>
 
 <h2 class="page-break">Cores</h2>
@@ -165,7 +165,8 @@ async function main() {
   await render(squareSvg(full, { ...variants.cor, background: COLORS.cream, fill: 0.8 }), out('1 Logo', 'Logo - fundo creme.png'), 2000);
   await render(squareSvg(full, { ...variants.claro, background: COLORS.leaf, fill: 0.8 }), out('1 Logo', 'Logo - fundo verde.png'), 2000);
   await render(squareSvg(full, { ...variants.claro, background: COLORS.night, fill: 0.8 }), out('1 Logo', 'Logo - fundo escuro.png'), 2000);
-  await render(squareSvg(mark, { ...variants.cor, background: COLORS.cream, radius: 180, fill: 0.62 }), out('2 Simbolo', 'Simbolo - icone do app.png'), 1024);
+  await render(appIconSvg(full), out('1 Logo', 'Icone do app.png'), 1024);
+  await render(appIconSvg(full), out('1 Logo', 'Icone da Play Store.png'), 512);
 
   await render(squareSvg(mark, { ...variants.cor, background: COLORS.cream, fill: 0.5 }), out('3 Redes sociais', 'Foto de perfil - creme.png'), 1080);
   await render(squareSvg(mark, { ...variants.claro, background: COLORS.leaf, fill: 0.5 }), out('3 Redes sociais', 'Foto de perfil - verde.png'), 1080);

@@ -182,6 +182,12 @@ async function png(svgText, relativePath, width, height = width) {
   await sharp(Buffer.from(svgText), { density: 300 }).resize(width, height, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(target);
 }
 
+const ADAPTIVE_ICON_FILL = 0.58;
+
+function appIconSvg(mark) {
+  return squareSvg(mark, { textFill: COLORS.cream, sproutFill: COLORS.lightLeaf, background: COLORS.leaf, fill: 0.8 });
+}
+
 function shareImageSvg(mark, width = 1200, height = 630, markWidth = 640) {
   const scale = markWidth / (mark.box.x2 - mark.box.x1);
   const markHeight = (mark.box.y2 - mark.box.y1) * scale;
@@ -228,10 +234,10 @@ async function main() {
   const symbolSvg = squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, background: COLORS.cream, radius: 180, fill: 0.62 });
   write('brand/logo/simbolo.svg', symbolSvg);
 
-  await png(squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, background: COLORS.cream, fill: 0.6 }), 'assets/images/icon.png', 1024);
-  await png(squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, fill: 0.5 }), 'assets/images/android-icon-foreground.png', 1024);
-  await png(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="${COLORS.cream}"/></svg>`, 'assets/images/android-icon-background.png', 1024);
-  await png(squareSvg(mark, { textFill: COLORS.white, sproutFill: COLORS.white, fill: 0.5 }), 'assets/images/android-icon-monochrome.png', 1024);
+  await png(appIconSvg(full), 'assets/images/icon.png', 1024);
+  await png(squareSvg(full, { textFill: COLORS.cream, sproutFill: COLORS.lightLeaf, fill: ADAPTIVE_ICON_FILL }), 'assets/images/android-icon-foreground.png', 1024);
+  await png(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="${COLORS.leaf}"/></svg>`, 'assets/images/android-icon-background.png', 1024);
+  await png(squareSvg(full, { textFill: COLORS.white, sproutFill: COLORS.white, fill: ADAPTIVE_ICON_FILL }), 'assets/images/android-icon-monochrome.png', 1024);
   await png(squareSvg(mark, { textFill: COLORS.white, sproutFill: COLORS.white, fill: 0.84 }), 'assets/images/notification-icon.png', 96);
   await png(squareSvg(mark, { textFill: COLORS.ink, sproutFill: COLORS.leaf, fill: 0.62 }), 'assets/images/splash-icon.png', 1024);
   await png(squareSvg(mark, { textFill: COLORS.cream, sproutFill: COLORS.lightLeaf, fill: 0.62 }), 'assets/images/splash-icon-dark.png', 1024);
@@ -249,7 +255,7 @@ async function main() {
   console.log('Marca gerada.');
 }
 
-module.exports = { COLORS, bold, semi, layoutWord, wordPath, lockup, symbol, shapes, squareSvg, wideSvg, shareImageSvg };
+module.exports = { COLORS, appIconSvg, bold, semi, layoutWord, wordPath, lockup, symbol, shapes, squareSvg, wideSvg, shareImageSvg };
 
 if (require.main === module) {
   main().catch((error) => {
