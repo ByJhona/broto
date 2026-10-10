@@ -2,7 +2,7 @@
   "expo": {
     "name": "Muda Vai Vem",
     "slug": "broto",
-    "version": "1.0.48",
+    "version": "1.0.49",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "com.byjhona.broto",
@@ -19,7 +19,7 @@
         "android.permission.CAMERA"
       ],
       "package": "com.byjhona.broto",
-      "versionCode": 56,
+      "versionCode": 57,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
