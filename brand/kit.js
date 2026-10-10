@@ -142,8 +142,7 @@ li { margin-bottom: 3px; }
 }
 
 async function main() {
-  const outDir = process.argv[2];
-  if (!outDir) throw new Error('Informe a pasta de destino: npm run kit -- "<pasta>"');
+  const outDir = process.argv[2] ?? path.join(__dirname, 'identidade-visual');
 
   const full = lockup();
   const mark = symbol();
